@@ -23,20 +23,20 @@ Then open the printed `http://localhost:PORT` URL. (Opening `index.html` directl
 
 ## Deploy to GitHub Pages
 
-1. Create a new GitHub repository (e.g. `portfolio`, or `aminullah112.github.io` if you want it at the root of your GitHub domain).
+1. Create a new GitHub repository (e.g. `portfolio`, or `aminullah112-oss.github.io` if you want it at the root of your GitHub domain).
 2. From this folder, run:
    ```bash
    git init
    git add .
    git commit -m "Initial portfolio"
    git branch -M main
-   git remote add origin https://github.com/aminullah112/<your-repo-name>.git
+   git remote add origin https://github.com/aminullah112-oss/<your-repo-name>.git
    git push -u origin main
    ```
 3. On GitHub: go to the repo's **Settings → Pages**, set **Source** to `Deploy from a branch`, branch `main`, folder `/ (root)`, then **Save**.
 4. After a minute or two, your site will be live at:
-   - `https://aminullah112.github.io/<your-repo-name>/` (normal repo), or
-   - `https://aminullah112.github.io/` (if the repo is named exactly `aminullah112.github.io`)
+   - `https://aminullah112-oss.github.io/<your-repo-name>/` (normal repo), or
+   - `https://aminullah112-oss.github.io/` (if the repo is named exactly `aminullah112-oss.github.io`)
 
 ## Editing content later
 
