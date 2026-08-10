@@ -36,6 +36,8 @@ git push
 ```
 GitHub Pages is served from the `main` branch root and rebuilds automatically within a minute or two of each push.
 
+**After editing `css/style.css`**, bump the version query string on its `<link>` tag in `index.html` (e.g. `style.css?v=2` → `?v=3`). GitHub Pages' CDN caches CSS for 10 minutes with no versioning of its own, so without this bump, visitors (and you) can see a stale stylesheet for a while after a redeploy even though the new file is live. If a change looks like it "didn't take," hard-refresh (`Ctrl+Shift+R`) before assuming something broke.
+
 ## Editing content later
 
 - Real project links: search `index.html` for `href="#"`-style placeholders once you have live URLs for Gumroad, LinkedIn, etc.
