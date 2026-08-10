@@ -1,5 +1,9 @@
 // Aminullah portfolio — interactivity
 
+// Paste your deployed Google Apps Script Web App URL here (see README: "Lead Capture Backend Setup").
+// Leave blank and the form will tell visitors to email you directly instead of failing silently.
+var LEADS_ENDPOINT = '';
+
 document.addEventListener('DOMContentLoaded', function () {
 
     /* Reveal on scroll */
@@ -113,4 +117,55 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     window.addEventListener('scroll', setActiveNav);
     setActiveNav();
+
+    /* Lead capture form */
+    var leadForm = document.getElementById('leadForm');
+    if (leadForm) {
+        var leadStatus = document.getElementById('leadFormStatus');
+        var leadSubmit = document.getElementById('leadFormSubmit');
+
+        leadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!leadForm.checkValidity()) {
+                leadForm.reportValidity();
+                return;
+            }
+
+            // Honeypot: real visitors never fill this hidden field.
+            var honeypot = leadForm.querySelector('[name="website"]');
+            if (honeypot && honeypot.value) {
+                leadStatus.className = 'lead-form-status success';
+                leadStatus.textContent = "Thanks! I'll be in touch soon.";
+                leadForm.reset();
+                return;
+            }
+
+            if (!LEADS_ENDPOINT) {
+                leadStatus.className = 'lead-form-status error';
+                leadStatus.textContent = "This form isn't connected yet — please email aminullah112@gmail.com directly for now.";
+                console.warn('LEADS_ENDPOINT is not set in js/main.js — see README "Lead Capture Backend Setup".');
+                return;
+            }
+
+            leadStatus.className = 'lead-form-status sending';
+            leadStatus.textContent = 'Sending…';
+            leadSubmit.disabled = true;
+
+            var formData = new FormData(leadForm);
+            fetch(LEADS_ENDPOINT, { method: 'POST', mode: 'no-cors', body: formData })
+                .then(function () {
+                    leadStatus.className = 'lead-form-status success';
+                    leadStatus.textContent = "Thanks! I've got your details and will follow up soon.";
+                    leadForm.reset();
+                })
+                .catch(function () {
+                    leadStatus.className = 'lead-form-status error';
+                    leadStatus.textContent = 'Something went wrong — please email aminullah112@gmail.com directly.';
+                })
+                .finally(function () {
+                    leadSubmit.disabled = false;
+                });
+        });
+    }
 });

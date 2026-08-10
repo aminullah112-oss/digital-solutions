@@ -670,6 +670,53 @@ a { text-decoration: none; }
 .contact-panel h2 { position: relative; z-index: 1; font-size: 2.3rem; }
 .contact-panel p { position: relative; z-index: 1; color: var(--text-on-dark-muted); max-width: 520px; margin: 14px auto 32px; }
 .contact-actions { position: relative; z-index: 1; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.contact-divider { display: flex; align-items: center; gap: 14px; max-width: 560px; margin: 0 auto; color: var(--text-on-dark-muted); font-family: var(--mono-font); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.contact-divider::before, .contact-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
+
+/* ---------- Lead capture form ---------- */
+.lead-form-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 44px;
+    box-shadow: 0 20px 45px rgba(16,24,40,0.08);
+    border: 1px solid #eef1f4;
+    max-width: 760px;
+    margin: 40px auto 0;
+    text-align: left;
+}
+.lead-form-card h3 { font-size: 1.4rem; margin-bottom: 6px; }
+.lead-form-card .sub { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 26px; }
+.lead-form .form-label {
+    font-family: var(--mono-font);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.lead-form .form-control, .lead-form .form-select {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: var(--body-font);
+    font-size: 0.95rem;
+}
+.lead-form .form-control:focus, .lead-form .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(14,165,164,0.14);
+}
+.lead-form .honeypot-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.lead-form .form-check-label { font-size: 0.85rem; color: var(--text-muted); }
+.lead-form-status {
+    margin-top: 16px;
+    font-size: 0.88rem;
+    display: none;
+    padding: 11px 16px;
+    border-radius: 10px;
+}
+.lead-form-status.sending { display: block; background: #f1f5f9; color: #475569; }
+.lead-form-status.success { display: block; background: #ecfdf5; color: #16a34a; border: 1px solid #bbf7d0; }
+.lead-form-status.error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
 /* ---------- Footer ---------- */
 footer {
@@ -695,14 +742,19 @@ body.dark-mode .identity-card,
 body.dark-mode .track-card,
 body.dark-mode .project-card,
 body.dark-mode .process-card,
+body.dark-mode .lead-form-card,
 body.dark-mode .skill-tag { background-color: var(--dark-card); border-color: var(--dark-border); color: var(--text-on-dark); }
 body.dark-mode .track-card p,
 body.dark-mode .project-card p.desc,
 body.dark-mode .process-card p,
 body.dark-mode .credential-list li,
+body.dark-mode .lead-form-card .sub,
 body.dark-mode .section-title .sub { color: var(--text-on-dark-muted); }
 body.dark-mode .stack-tag { background: rgba(255,255,255,0.06); color: var(--text-on-dark-muted); }
 body.dark-mode .filter-btn { background: var(--dark-card); border-color: var(--dark-border); color: var(--text-on-dark-muted); }
+body.dark-mode .lead-form .form-control,
+body.dark-mode .lead-form .form-select { background-color: #101a2c; border-color: var(--dark-border); color: var(--text-on-dark); }
+body.dark-mode .lead-form .form-check-label { color: var(--text-on-dark-muted); }
 body.dark-mode h2, body.dark-mode h3, body.dark-mode h5, body.dark-mode h6 { color: var(--text-on-dark); }
 
 @media (max-width: 991px) {
