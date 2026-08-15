@@ -17,15 +17,23 @@ export interface NormalizedInboundMessage {
  * payload into `NormalizedInboundMessage` and calls this function.
  */
 export async function ingestChannelMessage(input: NormalizedInboundMessage): Promise<PipelineResult> {
+  // Prefer matching by phone (WhatsApp), then by the channel's own sender id
+  // (Instagram/Facebook PSID, website session id) so repeat senders reuse
+  // the same customer record instead of spawning a new one every message.
   let customer = input.customerPhone
     ? await prisma.customer.findUnique({ where: { phone: input.customerPhone } })
     : null;
+
+  if (!customer) {
+    customer = await prisma.customer.findUnique({ where: { externalId: input.externalCustomerId } });
+  }
 
   if (!customer) {
     customer = await prisma.customer.create({
       data: {
         name: input.customerName,
         phone: input.customerPhone,
+        externalId: input.customerPhone ? null : input.externalCustomerId,
         source: input.channel,
         status: "NEW",
       },

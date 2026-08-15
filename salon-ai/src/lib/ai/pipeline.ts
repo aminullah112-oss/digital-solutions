@@ -4,6 +4,7 @@ import { getServiceLexicon, getBusinessSettings, getActivePromotionSnippet } fro
 import { scoreConversationTurn, aggregateScore, classifyTemperature, estimateBookingProbability } from "./scoring";
 import { evaluateHandoff } from "./handoff";
 import { getAIProvider } from "./provider";
+import { sendChannelMessage } from "@/lib/channels/senders";
 import type { Channel, Language } from "@prisma/client";
 
 export interface InboundMessageInput {
@@ -258,6 +259,11 @@ export async function processInboundMessage(input: InboundMessageInput): Promise
     });
     aiResponded = !shouldQueue;
     events.push({ type: "AI_RESPONDED", summary: reply.text.slice(0, 80) });
+
+    if (!shouldQueue) {
+      const recipient = conversation.channel === "WHATSAPP" ? conversation.customer.phone : conversation.customer.externalId;
+      await sendChannelMessage(conversation.channel, recipient, reply.text);
+    }
 
     if (nlp.askedToBook && nlp.extracted.preferredDate && nlp.extracted.preferredTime && matchedService) {
       const booking = await prisma.booking.create({

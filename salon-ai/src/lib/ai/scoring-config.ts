@@ -34,7 +34,7 @@ export const SCORING_REASON_LABELS: Record<ScoringReasonKey, string> = {
 };
 
 /** Services at/above this price count as "high value" for scoring purposes. */
-export const HIGH_VALUE_SERVICE_THRESHOLD = 300;
+export const HIGH_VALUE_SERVICE_THRESHOLD = 3000; // INR
 
 export const TEMPERATURE_BANDS = [
   { max: 29, label: "COLD" as const },

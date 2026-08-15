@@ -6,6 +6,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { formatRupees } from "@/lib/utils";
 
 interface Option {
   id: string;
@@ -94,7 +95,7 @@ export function NewBookingDialog({
               <SelectContent>
                 {services.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.name} — SAR {s.price}
+                    {s.name} — {formatRupees(s.price)}
                   </SelectItem>
                 ))}
               </SelectContent>

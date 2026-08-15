@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { getSession } from "@/lib/auth/session";
+import { sendChannelMessage } from "@/lib/channels/senders";
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -11,12 +12,15 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
   const text = typeof body.text === "string" ? body.text.trim() : "";
   if (!text) return NextResponse.json({ error: "Message text is required" }, { status: 400 });
 
-  const conversation = await prisma.conversation.findUnique({ where: { id } });
+  const conversation = await prisma.conversation.findUnique({ where: { id }, include: { customer: true } });
   if (!conversation) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
 
   const message = await prisma.message.create({
     data: { conversationId: id, sender: "STAFF", text },
   });
+
+  const recipient = conversation.channel === "WHATSAPP" ? conversation.customer.phone : conversation.customer.externalId;
+  await sendChannelMessage(conversation.channel, recipient, text);
 
   await prisma.conversation.update({
     where: { id },

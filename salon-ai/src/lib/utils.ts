@@ -5,8 +5,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Formats an amount as Indian Rupees using the Indian numbering system
+ * (lakh/crore) rather than the Western thousand/million grouping.
+ * - >= 1,00,00,000 (1 crore)  -> "₹1.25 Cr"
+ * - >= 1,00,000 (1 lakh)      -> "₹4.50 L"
+ * - below that                -> "₹45,000" (Indian digit grouping)
+ */
 export function formatCurrency(value: number) {
-  return `SAR ${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  if (abs >= 1_00_00_000) return `${sign}₹${(abs / 1_00_00_000).toFixed(2)} Cr`;
+  if (abs >= 1_00_000) return `${sign}₹${(abs / 1_00_000).toFixed(2)} L`;
+  return `${sign}₹${abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+}
+
+/** Full, non-abbreviated Indian-grouped rupee amount — for places a compact "L/Cr" reads oddly (e.g. a single service price). */
+export function formatRupees(value: number) {
+  return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 }
 
 export function formatRelativeTime(date: Date | string) {

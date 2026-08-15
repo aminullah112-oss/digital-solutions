@@ -207,6 +207,8 @@ model Customer {
   phone            String?        @unique
   email            String?
   avatarSeed       String?
+  /// Channel-specific sender id (Instagram/Facebook PSID) used to deliver outbound replies via the Graph API when there's no phone number to key off of.
+  externalId       String?        @unique
   source           Channel
   status           CustomerStatus @default(NEW)
   leadScore        Int            @default(0)

@@ -1,4 +1,5 @@
 import type { AIReplyContext, AIReplyResult } from "./provider";
+import { formatRupees } from "@/lib/utils";
 
 const AR_GREETINGS = ["اهلا", "أهلاً"];
 
@@ -16,8 +17,8 @@ export async function buildTemplateReply(ctx: AIReplyContext): Promise<AIReplyRe
         return {
           confidence: 0.9,
           text: ar
-            ? `أهلاً ${name}! ${ctx.serviceName} يبدأ من ${ctx.servicePrice} ريال. تحبين أشوف لك موعد متاح؟`
-            : `Hi ${name}! ${ctx.serviceName} starts from SAR ${ctx.servicePrice}. Would you like me to check available appointments?`,
+            ? `أهلاً ${name}! ${ctx.serviceName} يبدأ من ${formatRupees(ctx.servicePrice)}. تحبين أشوف لك موعد متاح؟`
+            : `Hi ${name}! ${ctx.serviceName} starts from ${formatRupees(ctx.servicePrice)}. Would you like me to check available appointments?`,
         };
       }
       return {

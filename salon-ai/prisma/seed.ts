@@ -69,21 +69,21 @@ async function main() {
 
   // ── Services ─────────────────────────────────────────────────────────
   const serviceDefs = [
-    { name: "Haircut & Blow Dry", nameAr: "قص وتصفيف الشعر", description: "Precision cut and professional blow-dry finish.", price: 120, durationMin: 45, category: "Hair" },
-    { name: "Hair Coloring", nameAr: "صبغة شعر", description: "Full color service using ammonia-free formulas.", price: 450, durationMin: 150, category: "Hair" },
-    { name: "Balayage & Highlights", nameAr: "بالياج وهايلايت", description: "Hand-painted highlights for a natural sun-kissed look.", price: 550, durationMin: 180, category: "Hair" },
-    { name: "Keratin Treatment", nameAr: "كيراتين", description: "Smoothing treatment that reduces frizz for up to 4 months.", price: 700, durationMin: 180, category: "Hair" },
-    { name: "Hair Styling", nameAr: "تصفيف الشعر", description: "Blow-dry, curls, or updo styling for any occasion.", price: 180, durationMin: 45, category: "Hair" },
-    { name: "Classic Manicure", nameAr: "مانيكير كلاسيك", description: "Nail shaping, cuticle care, and polish.", price: 90, durationMin: 40, category: "Nails" },
-    { name: "Gel Manicure", nameAr: "مانيكير جل", description: "Long-lasting gel polish manicure.", price: 140, durationMin: 50, category: "Nails" },
-    { name: "Spa Pedicure", nameAr: "بديكير سبا", description: "Relaxing foot soak, exfoliation, and polish.", price: 160, durationMin: 60, category: "Nails" },
-    { name: "Classic Facial", nameAr: "تنظيف بشرة كلاسيكي", description: "Deep cleansing facial suited to all skin types.", price: 250, durationMin: 60, category: "Skin" },
-    { name: "Hydrafacial", nameAr: "هايدرافيشل", description: "Medical-grade hydradermabrasion for instant glow.", price: 480, durationMin: 75, category: "Skin" },
-    { name: "Full Body Massage", nameAr: "مساج كامل الجسم", description: "60-minute relaxation massage with aromatic oils.", price: 320, durationMin: 60, category: "Spa" },
-    { name: "Moroccan Bath", nameAr: "حمام مغربي", description: "Traditional exfoliating bath and steam ritual.", price: 280, durationMin: 90, category: "Spa" },
-    { name: "Bridal Makeup", nameAr: "مكياج عروس", description: "Full bridal makeup with trial session included.", price: 900, durationMin: 120, category: "Makeup" },
-    { name: "Party Makeup", nameAr: "مكياج سهرة", description: "Glam makeup application for events.", price: 350, durationMin: 60, category: "Makeup" },
-    { name: "Waxing (Arms & Legs)", nameAr: "إزالة شعر بالشمع", description: "Full arms and legs waxing.", price: 150, durationMin: 45, category: "Skin" },
+    { name: "Haircut & Blow Dry", nameAr: "قص وتصفيف الشعر", description: "Precision cut and professional blow-dry finish.", price: 600, durationMin: 45, category: "Hair" },
+    { name: "Hair Coloring", nameAr: "صبغة شعر", description: "Full color service using ammonia-free formulas.", price: 3500, durationMin: 150, category: "Hair" },
+    { name: "Balayage & Highlights", nameAr: "بالياج وهايلايت", description: "Hand-painted highlights for a natural sun-kissed look.", price: 5500, durationMin: 180, category: "Hair" },
+    { name: "Keratin Treatment", nameAr: "كيراتين", description: "Smoothing treatment that reduces frizz for up to 4 months.", price: 6500, durationMin: 180, category: "Hair" },
+    { name: "Hair Styling", nameAr: "تصفيف الشعر", description: "Blow-dry, curls, or updo styling for any occasion.", price: 900, durationMin: 45, category: "Hair" },
+    { name: "Classic Manicure", nameAr: "مانيكير كلاسيك", description: "Nail shaping, cuticle care, and polish.", price: 400, durationMin: 40, category: "Nails" },
+    { name: "Gel Manicure", nameAr: "مانيكير جل", description: "Long-lasting gel polish manicure.", price: 700, durationMin: 50, category: "Nails" },
+    { name: "Spa Pedicure", nameAr: "بديكير سبا", description: "Relaxing foot soak, exfoliation, and polish.", price: 800, durationMin: 60, category: "Nails" },
+    { name: "Classic Facial", nameAr: "تنظيف بشرة كلاسيكي", description: "Deep cleansing facial suited to all skin types.", price: 1200, durationMin: 60, category: "Skin" },
+    { name: "Hydrafacial", nameAr: "هايدرافيشل", description: "Medical-grade hydradermabrasion for instant glow.", price: 3800, durationMin: 75, category: "Skin" },
+    { name: "Full Body Massage", nameAr: "مساج كامل الجسم", description: "60-minute relaxation massage with aromatic oils.", price: 2200, durationMin: 60, category: "Spa" },
+    { name: "Moroccan Bath", nameAr: "حمام مغربي", description: "Traditional exfoliating bath and steam ritual.", price: 1800, durationMin: 90, category: "Spa" },
+    { name: "Bridal Makeup", nameAr: "مكياج عروس", description: "Full bridal makeup with trial session included.", price: 35000, durationMin: 120, category: "Makeup" },
+    { name: "Party Makeup", nameAr: "مكياج سهرة", description: "Glam makeup application for events.", price: 6000, durationMin: 60, category: "Makeup" },
+    { name: "Waxing (Arms & Legs)", nameAr: "إزالة شعر بالشمع", description: "Full arms and legs waxing.", price: 900, durationMin: 45, category: "Skin" },
   ];
   const services = await Promise.all(
     serviceDefs.map((s) => prisma.service.create({ data: { ...s, active: true } }))
@@ -225,7 +225,7 @@ async function main() {
         source: scenario.channel,
         status: "NEW",
         totalBookings: scenario.previousCustomer ? 2 : 0,
-        totalSpend: scenario.previousCustomer ? 640 : 0,
+        totalSpend: scenario.previousCustomer ? 6500 : 0,
         lastVisitAt: scenario.previousCustomer ? inDays(-20) : null,
       },
     });
@@ -266,7 +266,7 @@ async function main() {
         source: (["WHATSAPP", "INSTAGRAM", "FACEBOOK", "WEBSITE"] as const)[i % 4],
         status: isActive ? "ACTIVE_CUSTOMER" : i % 5 === 0 ? "INACTIVE" : "LEAD",
         totalBookings: isActive ? 3 : 0,
-        totalSpend: isActive ? 980 : 0,
+        totalSpend: isActive ? 9500 : 0,
         totalConversations: 0,
         lastVisitAt: isActive ? inDays(-15) : null,
       },
@@ -276,7 +276,7 @@ async function main() {
   // Mark two long-time customers as VIP for CRM status diversity
   const vipCandidates = await prisma.customer.findMany({ where: { status: "ACTIVE_CUSTOMER" }, take: 2 });
   for (const c of vipCandidates) {
-    await prisma.customer.update({ where: { id: c.id }, data: { status: "VIP", totalSpend: 2400, totalBookings: 8 } });
+    await prisma.customer.update({ where: { id: c.id }, data: { status: "VIP", totalSpend: 42000, totalBookings: 8 } });
   }
 
   // ── A few completed / confirmed bookings with history for revenue analytics ──

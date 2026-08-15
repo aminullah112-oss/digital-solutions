@@ -76,7 +76,9 @@ Every lead score is backed by `LeadScore` rows recorded at the moment they're ea
 3. Register the webhook URLs with Meta's Cloud API / Messenger Platform, pointing at `/api/webhooks/{whatsapp,instagram,facebook}`.
 4. Point your website's chat widget at `/api/webhooks/website` with an `Authorization: Bearer <WEBSITE_CHAT_TOKEN>` header.
 
-Nothing else changes — the same pipeline, scoring, and UI already work against real traffic.
+Nothing else changes — the same pipeline, scoring, and UI already work against real traffic. Outbound replies (AI and staff) are delivered back to the customer automatically via `src/lib/channels/senders.ts` once the matching access token (`INSTAGRAM_ACCESS_TOKEN`, `WHATSAPP_ACCESS_TOKEN`, `FACEBOOK_PAGE_ACCESS_TOKEN`) is set.
+
+For a full walkthrough of connecting a real Instagram account — Meta app setup, webhook subscription, tokens, and how to test with multiple accounts — see [`docs/INSTAGRAM_SETUP.md`](docs/INSTAGRAM_SETUP.md).
 
 ## Roles & permissions
 

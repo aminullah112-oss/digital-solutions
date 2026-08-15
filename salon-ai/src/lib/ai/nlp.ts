@@ -42,7 +42,7 @@ function detectLanguage(text: string): Language {
 }
 
 const BOOKING_WORDS = ["book", "appointment", "reserve", "schedule", "slot", "احجز", "حجز", "موعد"];
-const PRICE_WORDS = ["price", "cost", "how much", "sar", "ريال", "سعر", "كم سعر", "تكلفة"];
+const PRICE_WORDS = ["price", "cost", "how much", "inr", "rupees", "rs.", "rs ", "₹", "سعر", "كم سعر", "تكلفة", "روبية"];
 const AVAILABILITY_WORDS = ["available", "availability", "free", "open", "tomorrow", "today", "متاح", "فاضي", "بكرة", "اليوم"];
 const CANCEL_WORDS = ["cancel", "cancellation", "الغاء", "إلغاء"];
 const RESCHEDULE_WORDS = ["reschedule", "change my", "move my appointment", "تأجيل", "تغيير الموعد"];
@@ -110,10 +110,10 @@ function extractPreferredTime(text: string): string | null {
 }
 
 function extractBudget(text: string): number | null {
-  const match = text.match(/(?:sar|ريال)?\s?(\d{2,4})\s?(?:sar|ريال)?/i);
+  const match = text.match(/(?:₹|rs\.?|inr)?\s?(\d{2,6})\s?(?:₹|rs\.?|inr|روبية)?/i);
   if (!match) return null;
   const n = Number(match[1]);
-  return n >= 20 && n <= 5000 ? n : null;
+  return n >= 100 && n <= 200000 ? n : null;
 }
 
 export function runNlp(text: string, services: ServiceLexicon[]): NlpResult {
