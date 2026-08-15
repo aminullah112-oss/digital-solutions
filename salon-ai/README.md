@@ -39,6 +39,10 @@ The app is a Progressive Web App — once it's hosted somewhere with a real URL 
 
 Either way you get a real home-screen icon that opens full-screen with no browser bar, like a native app. This only affects presentation — it's still the same web app underneath, so it needs to be deployed (Vercel, Docker on any host, etc.) rather than "installed" as a package.
 
+## Deploying
+
+For a real, always-on URL: see [`docs/DEPLOY_RAILWAY.md`](docs/DEPLOY_RAILWAY.md) for a step-by-step Railway walkthrough (recommended — runs the Dockerfile below unmodified, so the live demo simulator keeps working; Render is covered too). Any host that can run a Dockerfile plus a Postgres database works the same way.
+
 ## Docker
 
 ```bash

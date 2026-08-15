@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env
+.env.local
+npm-debug.log*
+*.tsbuildinfo
+.agents
+.claude/skills
+.windsurf
+skills-lock.json
+README.md
+docs

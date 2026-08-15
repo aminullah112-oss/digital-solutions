@@ -14,7 +14,9 @@ RUN npm run build
 
 FROM base AS runner
 ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
+# Must come from the build stage, not deps — that's the one with the
+# generated Prisma Client (`npx prisma generate` runs after `npm ci`).
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/prisma ./prisma
