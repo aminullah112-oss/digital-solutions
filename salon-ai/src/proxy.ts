@@ -5,11 +5,13 @@ import { SESSION_COOKIE } from "@/lib/auth/session";
 
 const SECRET = process.env.AUTH_SECRET ?? "dev-only-insecure-secret-change-me";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/apple-icon"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // PWA install metadata must be reachable without a session — the OS reads
+  // these before/without ever loading an authenticated page.
   if (PUBLIC_PATHS.some((p) => pathname === p)) {
     return NextResponse.next();
   }

@@ -30,6 +30,15 @@ Visit `http://localhost:3000/login`. Demo accounts (all password `salon123`):
 | manager@lumiere.sa | Manager |
 | staff@lumiere.sa | Staff |
 
+## Install on your phone (PWA)
+
+The app is a Progressive Web App — once it's hosted somewhere with a real URL (it can't be installed straight out of a local `npm run dev`/temporary session), open that URL on your phone and:
+
+- **Android (Chrome)**: tap the **⋮** menu → **Add to Home screen** / **Install app**.
+- **iOS (Safari)**: tap the **Share** icon → **Add to Home Screen**.
+
+Either way you get a real home-screen icon that opens full-screen with no browser bar, like a native app. This only affects presentation — it's still the same web app underneath, so it needs to be deployed (Vercel, Docker on any host, etc.) rather than "installed" as a package.
+
 ## Docker
 
 ```bash
