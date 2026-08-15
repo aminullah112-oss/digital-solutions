@@ -9,7 +9,6 @@ import {
 } from "@/lib/data/analytics";
 import { BarPanel } from "@/components/analytics/bar-panel";
 import { FunnelPanel } from "@/components/analytics/funnel-panel";
-import { formatCurrency } from "@/lib/utils";
 
 function formatSeconds(s: number) {
   if (s < 60) return `${s}s`;
@@ -75,7 +74,7 @@ export default async function AnalyticsPage() {
           dataKey="revenue"
           labelKey="channel"
           color="var(--revenue)"
-          valueFormatter={formatCurrency}
+          format="currency"
         />
         <BarPanel
           title="Revenue by Service"
@@ -83,7 +82,7 @@ export default async function AnalyticsPage() {
           dataKey="revenue"
           labelKey="name"
           color="var(--success)"
-          valueFormatter={formatCurrency}
+          format="currency"
         />
         <BarPanel
           title="Revenue by Staff"
@@ -91,7 +90,7 @@ export default async function AnalyticsPage() {
           dataKey="revenue"
           labelKey="name"
           color="var(--accent)"
-          valueFormatter={formatCurrency}
+          format="currency"
         />
       </div>
     </div>

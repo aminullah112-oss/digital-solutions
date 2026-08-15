@@ -1,5 +1,6 @@
 "use client";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatCurrency } from "@/lib/utils";
 
 export function BarPanel({
   title,
@@ -7,7 +8,7 @@ export function BarPanel({
   dataKey,
   labelKey,
   color = "var(--accent)",
-  valueFormatter,
+  format,
   layout = "vertical",
 }: {
   title: string;
@@ -15,7 +16,10 @@ export function BarPanel({
   dataKey: string;
   labelKey: string;
   color?: string;
-  valueFormatter?: (v: number) => string;
+  /** "currency" formats values as INR (₹); omit for plain numbers. A function
+   * prop can't be passed here since this page is rendered from a Server
+   * Component — Next can't serialize functions across that boundary. */
+  format?: "currency";
   layout?: "vertical" | "horizontal";
 }) {
   return (
@@ -49,7 +53,7 @@ export function BarPanel({
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
               contentStyle={{ background: "#10151f", border: "1px solid rgba(148,163,184,0.15)", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#e7ecf5" }}
-              formatter={(v) => (valueFormatter && typeof v === "number" ? valueFormatter(v) : v)}
+              formatter={(v) => (format === "currency" && typeof v === "number" ? formatCurrency(v) : v)}
             />
             <Bar dataKey={dataKey} fill={color} radius={[4, 4, 4, 4]} />
           </BarChart>
