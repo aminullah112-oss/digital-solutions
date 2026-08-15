@@ -1,0 +1,29 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db/prisma";
+import { getSession } from "@/lib/auth/session";
+
+export async function POST(_req: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await context.params;
+  const followUp = await prisma.followUp.findUnique({ where: { id } });
+  if (!followUp) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (followUp.conversationId) {
+    await prisma.message.create({
+      data: { conversationId: followUp.conversationId, sender: "STAFF", text: followUp.suggestedMessage },
+    });
+    await prisma.conversation.update({
+      where: { id: followUp.conversationId },
+      data: { status: "WAITING_CUSTOMER", lastMessageAt: new Date() },
+    });
+  }
+
+  await prisma.followUp.update({
+    where: { id },
+    data: { status: "SENT", completedAt: new Date(), approvedById: session.sub },
+  });
+
+  return NextResponse.json({ ok: true });
+}

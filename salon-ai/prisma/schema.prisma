@@ -1,0 +1,479 @@
+// Salon AI Command Center — data model
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum Channel {
+  WHATSAPP
+  INSTAGRAM
+  FACEBOOK
+  WEBSITE
+}
+
+enum Language {
+  EN
+  AR
+  MIXED
+}
+
+enum Intent {
+  BOOKING
+  PRICE_INQUIRY
+  SERVICE_INFORMATION
+  AVAILABILITY
+  PROMOTION
+  COMPLAINT
+  FOLLOW_UP
+  CANCELLATION
+  RESCHEDULE
+  GENERAL_INQUIRY
+  OTHER
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LeadTemperature {
+  COLD
+  WARM
+  QUALIFIED
+  HOT
+  VERY_HOT
+}
+
+enum CustomerStatus {
+  NEW
+  LEAD
+  QUALIFIED
+  BOOKED
+  ACTIVE_CUSTOMER
+  VIP
+  INACTIVE
+  LOST
+}
+
+enum ConversationStatus {
+  OPEN
+  AI_HANDLING
+  HUMAN_REQUIRED
+  WAITING_CUSTOMER
+  RESOLVED
+  ESCALATED
+}
+
+enum MessageSender {
+  CUSTOMER
+  AI
+  STAFF
+  SYSTEM
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum FollowUpStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  COMPLETED
+  IGNORED
+}
+
+enum AIResponseMode {
+  FULL_AUTO
+  ASSISTED
+  HUMAN_APPROVAL
+}
+
+enum AiEventType {
+  PROCESSING
+  AI_RESPONDED
+  HUMAN_HANDOFF
+  BOOKING_CREATED
+  LEAD_SCORED
+  FOLLOW_UP_CREATED
+  CUSTOMER_IDENTIFIED
+}
+
+enum HandoffReason {
+  COMPLAINT
+  MANAGER_REQUESTED
+  OUT_OF_KNOWLEDGE
+  REFUND_REQUEST
+  SENSITIVE_ISSUE
+  LOW_AI_CONFIDENCE
+  REPEATED_REJECTION
+  STAFF_REQUIRED
+}
+
+enum HandoffPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Auth / Staff
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  staff         Staff?
+  auditLogs     AuditLog[]
+  approvedSends FollowUp[] @relation("FollowUpApprovedBy")
+}
+
+model Staff {
+  id             String   @id @default(cuid())
+  userId         String?  @unique
+  user           User?    @relation(fields: [userId], references: [id])
+  name           String
+  role           String
+  workingHours   String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  services       StaffService[]
+  conversations  Conversation[]
+  bookings       Booking[]
+}
+
+model StaffService {
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Customer / Conversation / Message
+// ─────────────────────────────────────────────────────────────────────────
+
+model Customer {
+  id               String         @id @default(cuid())
+  name             String
+  phone            String?        @unique
+  email            String?
+  avatarSeed       String?
+  source           Channel
+  status           CustomerStatus @default(NEW)
+  leadScore        Int            @default(0)
+  totalConversations Int          @default(0)
+  totalBookings    Int            @default(0)
+  totalSpend       Float          @default(0)
+  favoriteServiceId String?
+  firstContactAt   DateTime       @default(now())
+  lastContactAt    DateTime       @default(now())
+  lastVisitAt      DateTime?
+  language         Language       @default(EN)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  conversations Conversation[]
+  leads         Lead[]
+  bookings      Booking[]
+  followUps     FollowUp[]
+}
+
+model Conversation {
+  id            String              @id @default(cuid())
+  customerId    String
+  customer      Customer            @relation(fields: [customerId], references: [id])
+  channel       Channel
+  status        ConversationStatus  @default(OPEN)
+  assignedStaffId String?
+  assignedStaff Staff?              @relation(fields: [assignedStaffId], references: [id])
+  unreadCount   Int                 @default(0)
+  lastMessageAt DateTime            @default(now())
+  createdAt     DateTime            @default(now())
+
+  messages    Message[]
+  lead        Lead?
+  tags        ConversationTag[]
+  aiEvents    AiEvent[]
+  followUps   FollowUp[]
+  handoffs    HumanHandoff[]
+  bookings    Booking[]
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  externalId     String?
+  sender         MessageSender
+  text           String
+  language       Language      @default(EN)
+  attachments    Json?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model ConversationTag {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  label          String
+  createdAt      DateTime     @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Lead / Scoring / AI
+// ─────────────────────────────────────────────────────────────────────────
+
+model Lead {
+  id                 String          @id @default(cuid())
+  customerId         String
+  customer           Customer        @relation(fields: [customerId], references: [id])
+  conversationId     String?         @unique
+  conversation       Conversation?   @relation(fields: [conversationId], references: [id])
+  serviceId          String?
+  service            Service?        @relation(fields: [serviceId], references: [id])
+  intent             Intent          @default(GENERAL_INQUIRY)
+  sentiment          Sentiment       @default(NEUTRAL)
+  urgency            Urgency         @default(LOW)
+  buyingStage        String?
+  preferredDate      String?
+  preferredTime      String?
+  budget             Float?
+  location            String?
+  score              Int             @default(0)
+  temperature        LeadTemperature @default(COLD)
+  estimatedValue     Float           @default(0)
+  bookingProbability Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  scoreEvents LeadScore[]
+  followUps   FollowUp[]
+}
+
+model LeadScore {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  reason    String
+  points    Int
+  createdAt DateTime @default(now())
+}
+
+model AiEvent {
+  id             String       @id @default(cuid())
+  type           AiEventType
+  channel        Channel
+  customerName   String
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  summary        String
+  detail         Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([createdAt])
+}
+
+model HumanHandoff {
+  id             String          @id @default(cuid())
+  conversationId String
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  reason         HandoffReason
+  priority       HandoffPriority
+  note           String?
+  resolved       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  resolvedAt     DateTime?
+}
+
+model FollowUp {
+  id              String         @id @default(cuid())
+  customerId      String
+  customer        Customer       @relation(fields: [customerId], references: [id])
+  conversationId  String?
+  conversation    Conversation?  @relation(fields: [conversationId], references: [id])
+  leadId          String?
+  lead            Lead?          @relation(fields: [leadId], references: [id])
+  reason          String
+  suggestedMessage String
+  status          FollowUpStatus @default(PENDING)
+  scheduledFor    DateTime?
+  approvedById    String?
+  approvedBy      User?          @relation("FollowUpApprovedBy", fields: [approvedById], references: [id])
+  createdAt       DateTime       @default(now())
+  completedAt     DateTime?
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Booking / Service / Knowledge base
+// ─────────────────────────────────────────────────────────────────────────
+
+model Booking {
+  id             String        @id @default(cuid())
+  customerId     String
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  serviceId      String
+  service        Service       @relation(fields: [serviceId], references: [id])
+  staffId        String?
+  staff          Staff?        @relation(fields: [staffId], references: [id])
+  date           DateTime
+  durationMin    Int
+  status         BookingStatus @default(PENDING)
+  source         Channel
+  price          Float
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String
+  price       Float
+  durationMin Int
+  category    String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  staff    StaffService[]
+  bookings Booking[]
+  leads    Lead[]
+  promotions PromotionService[]
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+}
+
+model Policy {
+  id        String   @id @default(cuid())
+  type      String   // cancellation | refund | late_arrival | booking | payment
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  discountPct Int
+  startDate   DateTime
+  endDate     DateTime
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  services PromotionService[]
+}
+
+model PromotionService {
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, serviceId])
+}
+
+model BusinessSettings {
+  id            String   @id @default("default")
+  salonName     String
+  address       String
+  phone         String
+  openingHours  Json
+  socials       Json
+  aiMode        AIResponseMode @default(ASSISTED)
+  demoMode      Boolean  @default(true)
+  notifyHotLead Boolean  @default(true)
+  notifyComplaint Boolean @default(true)
+  notifyBooking Boolean  @default(true)
+  notifyHandoff Boolean  @default(true)
+  channelsEnabled Json
+  updatedAt     DateTime @updatedAt
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  channel     Channel
+  startDate   DateTime
+  endDate     DateTime?
+  budget      Float?
+  leadsGenerated Int   @default(0)
+  bookingsGenerated Int @default(0)
+  revenue     Float    @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  type       String
+  channel    Channel?
+  serviceId  String?
+  staffId    String?
+  campaignId String?
+  value      Float?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([type, createdAt])
+}

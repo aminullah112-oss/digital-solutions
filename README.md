@@ -4,6 +4,10 @@ A static, interactive portfolio site positioning **ProtectionGrid** (GCC enginee
 
 Built with plain HTML/CSS/JS + Bootstrap 5 — no build step required.
 
+## Salon AI Command Center
+
+`salon-ai/` is a separate, full-stack Next.js application living alongside this static site — an omnichannel AI lead-management platform for a salon business (WhatsApp/Instagram/Facebook/website intake, AI intent detection and lead scoring, booking, analytics, and an AI business advisor). It has its own dependencies, database, and dev server; see [`salon-ai/README.md`](salon-ai/README.md) for setup. It does not affect or get deployed with the static portfolio site below.
+
 ## Structure
 
 ```

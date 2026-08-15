@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05070d;
+  --surface: #0b0f18;
+  --surface-2: #10151f;
+  --panel-border: rgba(148, 163, 184, 0.12);
+  --foreground: #e7ecf5;
+  --muted: #8b96a8;
+  --muted-2: #5b6576;
+
+  --accent: #22d3ee;      /* cyan — AI / live */
+  --accent-2: #818cf8;    /* indigo — secondary */
+  --accent-soft: rgba(34, 211, 238, 0.12);
+
+  --hot: #fb7185;         /* rose — hot leads */
+  --warm: #fbbf24;        /* amber — warm */
+  --cold: #64748b;        /* slate — cold */
+  --success: #34d399;     /* emerald — booking / positive */
+  --danger: #f87171;      /* red — complaint / risk */
+  --revenue: #a78bfa;     /* violet — revenue */
+
+  --wa: #25d366;
+  --ig: #e1306c;
+  --fb: #1877f2;
+  --web: #38bdf8;
+
+  --radius: 0.65rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-hot: var(--hot);
+  --color-warm: var(--warm);
+  --color-cold: var(--cold);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-revenue: var(--revenue);
+}
+
+* {
+  border-color: var(--panel-border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(34, 211, 238, 0.06), transparent 60%),
+    radial-gradient(1000px 600px at 100% 0%, rgba(129, 140, 248, 0.05), transparent 55%),
+    var(--background);
+  color: var(--foreground);
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.18); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.3); }
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+}
+
+.mono-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+  50% { opacity: 0.55; }
+}
+.live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes slide-in-fade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.event-enter {
+  animation: slide-in-fade 0.35s ease-out;
+}
+
+@keyframes count-flash {
+  0% { color: var(--accent); }
+  100% { color: inherit; }
+}
+.count-flash {
+  animation: count-flash 0.8s ease-out;
+}
+
+[dir="rtl"] .flip-rtl {
+  transform: scaleX(-1);
+}

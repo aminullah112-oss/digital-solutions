@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: salon
+      POSTGRES_PASSWORD: salon_dev_pw
+      POSTGRES_DB: salon_ai
+    volumes:
+      - salon_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://salon:salon_dev_pw@db:5432/salon_ai?schema=public
+      DEMO_MODE: "true"
+      AI_PROVIDER: rule-based
+      AUTH_SECRET: change-me-in-production
+    ports:
+      - "3000:3000"
+
+volumes:
+  salon_db_data:
