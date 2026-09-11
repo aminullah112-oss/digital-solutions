@@ -12,6 +12,107 @@ const COLUMN_ORDER = [
 
 let kfactorTable = null;
 let batch = []; // list of {values, kFactor, extrapolated, problems}
+let backendReady = false;
+
+const BACKEND_URL_STORAGE_KEY = "sheetmetal_backend_url";
+
+function getBackendUrl() {
+  return document.getElementById("backendUrl").value.trim().replace(/\/+$/, "");
+}
+
+function setBackendStatus(text, cls) {
+  const el = document.getElementById("backend-status");
+  el.textContent = text;
+  el.className = "muted small " + (cls || "");
+}
+
+async function checkBackend() {
+  const url = getBackendUrl();
+  backendReady = false;
+  document.getElementById("generate-btn").disabled = true;
+
+  if (!url) {
+    setBackendStatus("No backend configured — form still validates locally, \"Generate real part\" stays disabled until one connects.");
+    return;
+  }
+  setBackendStatus("Checking " + url + " ...");
+  try {
+    const res = await fetch(url + "/health", { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    backendReady = true;
+    localStorage.setItem(BACKEND_URL_STORAGE_KEY, url);
+    setBackendStatus(`Connected — FreeCAD ${data.freecad_version} on ${url}`, "result-line ok");
+  } catch (e) {
+    setBackendStatus(
+      `Could not reach ${url} (${e.message}). Check the URL, that the server is running, ` +
+      `and that its ALLOWED_ORIGINS includes this page's origin (${location.origin}).`,
+      "result-line bad"
+    );
+  }
+  // Re-evaluate generate-btn against whatever the last validation result was.
+  if (window._lastEval) {
+    const ok = window._lastEval.problems.length === 0 && !window._lastEval.kFactorError;
+    document.getElementById("generate-btn").disabled = !(ok && backendReady);
+  }
+}
+
+async function generateRealPart() {
+  const evalResult = window._lastEval;
+  if (!evalResult || evalResult.problems.length > 0 || evalResult.kFactorError || !backendReady) return;
+
+  const btn = document.getElementById("generate-btn");
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Generating...";
+
+  const p = evalResult.p;
+  const url = getBackendUrl();
+  try {
+    const res = await fetch(url + "/api/build", {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        job_id: p.jobId,
+        material: p.material,
+        plate_length: p.plateLength,
+        plate_width: p.plateWidth,
+        thickness: p.thickness,
+        flange_length: p.flangeLength,
+        bend_angle: p.bendAngle,
+        bend_radius: p.bendRadius,
+        hole_dia: p.holeDia,
+        hole_x: p.holeX,
+        hole_y: p.holeY,
+      }),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.error || `HTTP ${res.status}`);
+    }
+
+    const blob = await res.blob();
+    const dlUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = dlUrl;
+    a.download = `${p.jobId}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(dlUrl);
+
+    const panel = document.getElementById("result");
+    panel.innerHTML += `<div class="result-line ok">Backend generated ${p.jobId}.zip (STEP + DXF) — check your downloads</div>`;
+  } catch (e) {
+    const panel = document.getElementById("result");
+    panel.innerHTML += `<div class="result-line bad">Generation failed: ${escapeHtml(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
 
 async function loadKFactorTable() {
   const res = await fetch("../config/kfactor_table.json");
@@ -125,6 +226,7 @@ function renderResult(evalResult) {
   panel.innerHTML = lines.join("");
 
   document.getElementById("add-row-btn").disabled = !ok;
+  document.getElementById("generate-btn").disabled = !(ok && backendReady);
   return ok;
 }
 
@@ -251,6 +353,14 @@ async function init() {
     select.appendChild(opt);
   });
   if (kfactorTable.default_material) select.value = kfactorTable.default_material;
+
+  const savedBackendUrl = localStorage.getItem(BACKEND_URL_STORAGE_KEY);
+  if (savedBackendUrl) {
+    document.getElementById("backendUrl").value = savedBackendUrl;
+    checkBackend();
+  }
+  document.getElementById("check-backend-btn").addEventListener("click", checkBackend);
+  document.getElementById("generate-btn").addEventListener("click", generateRealPart);
 
   document.getElementById("part-form").addEventListener("submit", (e) => {
     e.preventDefault();

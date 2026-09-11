@@ -1,0 +1,6 @@
+# Installed via conda in the Dockerfile (conda-forge builds link against
+# the same runtime as FreeCAD's own conda-forge build), not pip -- this
+# file documents the versions, it isn't `pip install -r`'d directly.
+flask
+flask-cors
+gunicorn

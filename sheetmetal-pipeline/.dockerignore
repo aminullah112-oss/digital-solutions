@@ -1,0 +1,7 @@
+output
+reports
+ui
+input
+.git
+__pycache__
+*.pyc

@@ -19,19 +19,33 @@
 <main class="wrap">
 
   <section class="notice">
-    <strong>What this page actually does, and doesn't.</strong>
-    This runs in your browser only — there is no server behind it. It cannot
-    run FreeCAD, and it will not generate STEP or DXF files. What it does do
-    for real: validate a part's dimensions against the exact same
-    manufacturability rules and bend-allowance math as the Python pipeline
-    (<code>bracket_model.py</code>), look up K-factor from the same
-    <a href="../config/kfactor_table.json">kfactor_table.json</a> the batch
-    script uses, and let you build a real <code>.xlsx</code> file with the
-    correct columns to hand to
-    <code>freecadcmd scripts/run_batch.py</code> — see the
-    <a href="../README.md">pipeline README</a> for that step. Generating
-    the actual 3D part and flat pattern always requires running that script
-    somewhere FreeCAD is installed; no static site can do that part.
+    <strong>What this page does on its own vs. with a backend.</strong>
+    This page runs in your browser — GitHub Pages is static hosting, it has
+    no server of its own. Without a backend configured below, it validates
+    dimensions against the exact same manufacturability rules and
+    bend-allowance math as the Python pipeline (<code>bracket_model.py</code>),
+    looks up K-factor from the live
+    <a href="../config/kfactor_table.json">kfactor_table.json</a>, and builds
+    a real <code>.xlsx</code> to hand to <code>freecadcmd scripts/run_batch.py</code>
+    yourself. <strong>With a backend URL configured</strong> (see
+    <a href="../backend/README.md">backend/README.md</a> to deploy one), the
+    "Generate real part" button below actually calls it and downloads a real
+    STEP + DXF pair — the backend runs the identical <code>build_bracket()</code>
+    this whole pipeline has used since Stage 2.
+  </section>
+
+  <section class="card">
+    <h2>Backend (optional — enables real generation)</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="backendUrl">Backend URL</label>
+        <input type="text" id="backendUrl" placeholder="https://your-server:8000">
+      </div>
+      <div class="field" style="flex: 0 0 auto; align-self: flex-end;">
+        <button id="check-backend-btn" class="btn-secondary">Check connection</button>
+      </div>
+    </div>
+    <p id="backend-status" class="muted small">No backend configured — form still validates locally, "Generate real part" stays disabled until one connects.</p>
   </section>
 
   <div class="grid">
@@ -99,6 +113,7 @@
       <div id="result" class="result-panel">
         <p class="muted">Fill in the form and click Validate.</p>
       </div>
+      <button id="generate-btn" class="btn-primary" disabled style="margin-bottom: 20px;">Generate real part (STEP + DXF)</button>
 
       <h2>3. Batch</h2>
       <p class="muted small">Rows added here build a real <code>.xlsx</code> matching <code>run_batch.py</code>'s expected columns.</p>
