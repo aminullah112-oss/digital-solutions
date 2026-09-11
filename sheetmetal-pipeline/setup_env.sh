@@ -40,6 +40,12 @@ if ! "$CONDA_PREFIX_DIR/envs/freecad/bin/python" -c "import networkx" 2>/dev/nul
   "$CONDA" install -y -n freecad -c conda-forge networkx
 fi
 
+# openpyxl for Stage 4's Excel I/O.
+if ! "$CONDA_PREFIX_DIR/envs/freecad/bin/python" -c "import openpyxl" 2>/dev/null; then
+  echo "Installing openpyxl (for Excel I/O) ..."
+  "$CONDA" install -y -n freecad -c conda-forge openpyxl
+fi
+
 FREECADCMD="$CONDA_PREFIX_DIR/envs/freecad/bin/freecadcmd"
 
 USER_APP_DATA_DIR="$("$FREECADCMD" -c "import FreeCAD; print(FreeCAD.getUserAppDataDir())" 2>/dev/null | tail -1)"

@@ -139,6 +139,50 @@ def expected_flat_length(plate_length, thickness, flange_length, bend_angle, ben
     return plate_length + 2 * (flange_length + ba_per_bend)
 
 
+# Manufacturability guards -- the SheetMetal workbench itself enforces none
+# of this (see Stage 3 findings in README.md: it happily built a zero-radius
+# bend and an 8mm-gauge part with a 2mm bend radius). These are placeholder
+# heuristics pending real shop/material specs, not authoritative standards --
+# tune them once real job data exists.
+MIN_BEND_RADIUS_TO_THICKNESS_RATIO = 1.0  # inside radius >= 1x gauge, a commonly-cited conservative minimum
+MIN_FLANGE_LENGTH_FACTOR = 4.0  # min flange length >= 4x thickness + bend radius (tooling clearance rule of thumb)
+
+
+def validate_params(plate_length, plate_width, thickness, flange_length, bend_angle, bend_radius, k_factor, **_):
+    """Return a list of manufacturability violations (empty = valid).
+
+    Pure business-rule checks on top of the geometry engine -- FreeCAD/
+    SheetMetal will build all of these without complaint (confirmed in
+    Stage 3), but no real press brake can.
+    """
+    problems = []
+    if thickness <= 0:
+        problems.append(f"thickness must be > 0 (got {thickness})")
+    if plate_length <= 0 or plate_width <= 0:
+        problems.append(f"plate_length and plate_width must be > 0 (got {plate_length}, {plate_width})")
+    if bend_radius < 0:
+        problems.append(f"bend_radius must be >= 0 (got {bend_radius})")
+    if flange_length <= 0:
+        problems.append(f"flange_length must be > 0 (got {flange_length})")
+    if not (0 < bend_angle <= 180):
+        problems.append(f"bend_angle must be in (0, 180] degrees (got {bend_angle})")
+    if not (0.0 <= k_factor <= 1.0):
+        problems.append(f"k_factor must be in [0, 1] (got {k_factor})")
+
+    if thickness > 0 and bend_radius < MIN_BEND_RADIUS_TO_THICKNESS_RATIO * thickness:
+        problems.append(
+            f"bend_radius {bend_radius}mm is below {MIN_BEND_RADIUS_TO_THICKNESS_RATIO}x "
+            f"thickness ({thickness}mm) -- material will likely crack on a real press brake"
+        )
+    min_flange = MIN_FLANGE_LENGTH_FACTOR * thickness + bend_radius
+    if flange_length > 0 and flange_length < min_flange:
+        problems.append(
+            f"flange_length {flange_length}mm is below the minimum {min_flange:.2f}mm "
+            f"({MIN_FLANGE_LENGTH_FACTOR}x thickness + bend_radius) -- too short for tooling clearance"
+        )
+    return problems
+
+
 def build_bracket(
     plate_length,
     plate_width,

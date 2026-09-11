@@ -209,4 +209,53 @@ parts no shop can actually bend. Stage 4's per-row validation should reject
 tooling clearance margin -- these are business-rule checks this pipeline
 needs to add itself, not something to expect from the CAD engine.
 
-## Stage 4 — Excel I/O (next)
+## Stage 4 — Excel I/O (done)
+
+`scripts/excel_io.py` reads one row per part from an `.xlsx` via openpyxl
+(no geometry/type logic -- just header row -> dict per data row).
+`scripts/run_batch.py` loops the rows, validates each (Stage 3's
+manufacturability checks, now enforced rather than just reported), builds
+via `bracket_model.build_bracket`, and writes `{JobID}_folded.step` +
+`{JobID}_flat.dxf` per row. Every row is independently wrapped in
+try/except -- a bad cell value or a failed validation check is logged and
+the batch moves to the next row, never aborts the run.
+
+Expected columns: `JobID, PlateLength, PlateWidth, Thickness, FlangeLength,
+BendAngle, BendRadius, KFactor, HoleDia, HoleX, HoleY`.
+
+Run it:
+
+```bash
+/opt/miniconda3/envs/freecad/bin/python scripts/make_sample_input.py  # generates input/parts_sample.xlsx
+/opt/miniconda3/envs/freecad/bin/freecadcmd scripts/run_batch.py       # defaults to that file
+# or: freecadcmd scripts/run_batch.py path/to/your.xlsx
+```
+
+`input/parts_sample.xlsx` (committed) has 5 rows: 3 valid (varying
+gauge/size), 2 deliberately bad, to exercise both real failure modes a
+batch run has to survive without dying:
+
+| Job ID | Status | Detail |
+|---|---|---|
+| BR-001 | OK | flat=168.671x60.0mm |
+| BR-002 | OK | flat=114.964x50.0mm |
+| BR-003 | OK | flat=247.593x80.0mm |
+| BR-004 | FAIL | manufacturability check failed: bend_radius 1.0mm is below 1.0x thickness (5.0mm) -- material will likely crack on a real press brake |
+| BR-005 | FAIL | column 'Thickness' is not a number: 'N/A' |
+
+(Full log: [`reports/stage4_sample_batch_log.md`](reports/stage4_sample_batch_log.md).
+Per-row STEP/DXF outputs go to `output/batch/`, gitignored like all
+generated CAD exports.)
+
+**Another freecadcmd gotcha, alongside Stage 1's `__name__` one:**
+`sys.argv` under freecadcmd is shifted one further than a normal Python
+script -- `argv[0]` is the `freecadcmd` binary itself, `argv[1]` is the
+script's own path, and real CLI arguments start at `argv[2]`, not
+`argv[1]`. Got this wrong on the first pass (`run_batch.py` tried to open
+its own `.py` file as an Excel workbook); fixed and documented inline.
+
+## Stage 5 — K-factor / bend allowance table (next)
+
+Replace the hardcoded `K_FACTOR = 0.38` with a lookup table (material x
+thickness -> K-factor) as an external config file, wired into flange
+creation so bend allowance is looked up, not assumed.
