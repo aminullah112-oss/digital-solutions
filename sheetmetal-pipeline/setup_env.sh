@@ -33,6 +33,13 @@ if [ ! -x "$CONDA_PREFIX_DIR/envs/freecad/bin/freecadcmd" ]; then
   "$CONDA" create -y -n freecad -c conda-forge "freecad=$FREECAD_VERSION"
 fi
 
+# networkx enables SheetMetal's newer (recommended) unfolder -- without it,
+# the workbench silently falls back to the older, less capable unfolder.
+if ! "$CONDA_PREFIX_DIR/envs/freecad/bin/python" -c "import networkx" 2>/dev/null; then
+  echo "Installing networkx (for SheetMetal's new unfolder) ..."
+  "$CONDA" install -y -n freecad -c conda-forge networkx
+fi
+
 FREECADCMD="$CONDA_PREFIX_DIR/envs/freecad/bin/freecadcmd"
 
 USER_APP_DATA_DIR="$("$FREECADCMD" -c "import FreeCAD; print(FreeCAD.getUserAppDataDir())" 2>/dev/null | tail -1)"

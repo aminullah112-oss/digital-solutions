@@ -86,8 +86,82 @@ STEP export OK: output/smoke_test.step (6909 bytes)
 SMOKE TEST PASSED
 ```
 
-## Stage 2 — One hardcoded part (next)
+## Stage 2 — One hardcoded part (done)
 
-Full pipeline for the target part family with fixed dimensions: sketch →
-base wall → edge flange(s) → hole cuts → STEP export (folded) → unfold →
-DXF export (flat pattern).
+Built the target part as a **U-channel bracket**: a 100×60mm base plate
+(2mm gauge), a 90° edge flange bent up from each of the two short ends
+(30mm leg each), a 4-hole M6 bolt pattern in the base, folded to STEP and
+unfolded to a flat-pattern DXF. (Called an "L-bracket with two edge
+flanges" in the original brief — built as a symmetric U-channel here since
+a literal L has only one bend; two bends on opposite edges is the closest
+sane reading of "two edge flanges.")
+
+Run it:
+
+```bash
+/opt/miniconda3/envs/freecad/bin/freecadcmd scripts/build_bracket.py
+```
+
+Pipeline: sketch → `SheetMetalBaseCmd.SMBaseBend` (base wall) →
+`SheetMetalCmd.SMBendWall` × 2 (edge flanges, second one chained onto the
+first's resulting shape so both flanges end up in the same solid) →
+`Part::Cut` (bolt holes) → STEP export → `SheetMetalUnfoldCmd.SMUnfold` →
+DXF export of the generated flat-pattern sketch.
+
+**Dimensional sanity check.** Cross-checked FreeCAD's own unfold output
+against the bend-allowance formula the SheetMetal workbench documents itself
+(`tools/calc-unfold.py` in shaise/FreeCAD_SheetMetal):
+
+```
+t = K_factor * thickness
+bend_allowance = 2*pi*(radius + t) * (angle / 360)
+expected_flat_length = base_length + 2 * (flange_leg_length + bend_allowance)
+```
+
+With thickness=2mm, K=0.38 (ANSI), radius=2mm, angle=90°: bend allowance =
+4.335mm per bend. Expected flat length = 100 + 2×(30 + 4.335) =
+**168.671mm**. FreeCAD's unfolder measured **168.671mm** — matches to the
+6th decimal place. Flat pattern width (60mm) is also checked and confirmed
+unchanged from the plate width, since both bends run parallel to it. Both
+checks are automated in the script and fail the build (non-zero exit) if
+they drift.
+
+**A real headless bug in the SheetMetal workbench, found and worked
+around:** with the networkx-based "new" unfolder (the default once
+`networkx` is installed — recommended over the old unfolder, so installed
+it into the conda env), `SMUnfold` with `GenerateSketch=True` and its
+default `ShowBendAngles=True` crashes under `freecadcmd`:
+
+```
+AttributeError: 'NoneType' object has no attribute 'PointSize'
+  (SheetMetalNewUnfolder.py: bend_labels_doc_obj.ViewObject.PointSize = 0)
+```
+
+`ViewObject` is always `None` with no GUI; the bend-angle-label code path
+doesn't check `FreeCAD.GuiUp` before touching it. Workaround: set
+`unfold.ShowBendAngles = False`. This only suppresses in-sketch bend-angle
+text annotations — it does not touch the actual flat-pattern geometry
+(outline, bend lines, hole positions), which is unaffected and was
+independently verified above. `scripts/build_bracket.py::unfold_part` sets
+this and documents why inline.
+
+**Another export gotcha, avoided rather than worked around:** exporting the
+raw 3D unfolded *solid* directly to DXF (`importDXF.export([unfold_obj], ...)`)
+produces duplicate overlapping entities — every hole came out as 4 identical
+overlapping circles instead of 1, because the exporter walks every edge of
+the still-3mm-thick solid (top face rim, bottom face rim, and OCCT's
+periodic-surface seam splitting each into two). The workbench's own intended
+path avoids this: request `GenerateSketch=True` on the `SMUnfold` object and
+export the resulting 2D `Sketch` object instead — genuinely flat, no
+duplicate geometry (verified: exactly 4 circles, one per hole, correct
+6mm diameter). `scripts/build_bracket.py` uses this path.
+
+Output (gitignored, sent to the user directly since they're binary):
+`output/bracket_folded.step`, `output/bracket_flat.dxf`.
+
+## Stage 3 — Parametrize (next)
+
+Turn the hardcoded dimensions in `build_bracket.py` into function arguments
+and test across a range of values, including edge cases (very short flange,
+tight bend radius, thin vs. thick gauge) -- logging which combinations
+produce bad geometry rather than papering over failures.
