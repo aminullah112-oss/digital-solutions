@@ -1,0 +1,24 @@
+{
+  "_note": "Placeholder ANSI K-factor bands by material and gauge thickness, pending real shop/material-supplier data. Widely-cited rule-of-thumb approximations (K roughly 0.33 for thin gauge up to roughly 0.44+ for thick gauge on mild steel, adjusted per material family here), NOT certified values -- replace with your shop's actual measured/supplied K-factors before using this for production parts. Each material's bands are checked in ascending thickness_max order; a part's thickness uses the first band whose thickness_max is >= its thickness. A thickness beyond every band's thickness_max falls back to the last (largest) band and is reported as extrapolated.",
+  "default_material": "mild_steel",
+  "materials": {
+    "mild_steel": [
+      {"thickness_max": 1.0, "k_factor": 0.33},
+      {"thickness_max": 3.0, "k_factor": 0.38},
+      {"thickness_max": 6.0, "k_factor": 0.41},
+      {"thickness_max": 12.0, "k_factor": 0.44}
+    ],
+    "stainless_304": [
+      {"thickness_max": 1.0, "k_factor": 0.30},
+      {"thickness_max": 3.0, "k_factor": 0.35},
+      {"thickness_max": 6.0, "k_factor": 0.38},
+      {"thickness_max": 12.0, "k_factor": 0.41}
+    ],
+    "aluminum_5052": [
+      {"thickness_max": 1.0, "k_factor": 0.35},
+      {"thickness_max": 3.0, "k_factor": 0.40},
+      {"thickness_max": 6.0, "k_factor": 0.43},
+      {"thickness_max": 12.0, "k_factor": 0.46}
+    ]
+  }
+}

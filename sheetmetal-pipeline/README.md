@@ -220,8 +220,10 @@ via `bracket_model.build_bracket`, and writes `{JobID}_folded.step` +
 try/except -- a bad cell value or a failed validation check is logged and
 the batch moves to the next row, never aborts the run.
 
-Expected columns: `JobID, PlateLength, PlateWidth, Thickness, FlangeLength,
-BendAngle, BendRadius, KFactor, HoleDia, HoleX, HoleY`.
+Expected columns: `JobID, Material, PlateLength, PlateWidth, Thickness,
+FlangeLength, BendAngle, BendRadius, HoleDia, HoleX, HoleY`. (`Material`
+resolves to a K-factor via Stage 5's lookup table below, rather than being
+supplied directly as a number.)
 
 Run it:
 
@@ -231,22 +233,6 @@ Run it:
 # or: freecadcmd scripts/run_batch.py path/to/your.xlsx
 ```
 
-`input/parts_sample.xlsx` (committed) has 5 rows: 3 valid (varying
-gauge/size), 2 deliberately bad, to exercise both real failure modes a
-batch run has to survive without dying:
-
-| Job ID | Status | Detail |
-|---|---|---|
-| BR-001 | OK | flat=168.671x60.0mm |
-| BR-002 | OK | flat=114.964x50.0mm |
-| BR-003 | OK | flat=247.593x80.0mm |
-| BR-004 | FAIL | manufacturability check failed: bend_radius 1.0mm is below 1.0x thickness (5.0mm) -- material will likely crack on a real press brake |
-| BR-005 | FAIL | column 'Thickness' is not a number: 'N/A' |
-
-(Full log: [`reports/stage4_sample_batch_log.md`](reports/stage4_sample_batch_log.md).
-Per-row STEP/DXF outputs go to `output/batch/`, gitignored like all
-generated CAD exports.)
-
 **Another freecadcmd gotcha, alongside Stage 1's `__name__` one:**
 `sys.argv` under freecadcmd is shifted one further than a normal Python
 script -- `argv[0]` is the `freecadcmd` binary itself, `argv[1]` is the
@@ -254,8 +240,49 @@ script's own path, and real CLI arguments start at `argv[2]`, not
 `argv[1]`. Got this wrong on the first pass (`run_batch.py` tried to open
 its own `.py` file as an Excel workbook); fixed and documented inline.
 
-## Stage 5 — K-factor / bend allowance table (next)
+## Stage 5 — K-factor / bend allowance table (done)
 
-Replace the hardcoded `K_FACTOR = 0.38` with a lookup table (material x
-thickness -> K-factor) as an external config file, wired into flange
-creation so bend allowance is looked up, not assumed.
+`config/kfactor_table.json` replaces the hardcoded `K_FACTOR = 0.38` with a
+material x thickness-band lookup (`scripts/kfactor_lookup.py`), wired into
+`run_batch.py`: each row supplies a `Material` name instead of a raw
+K-factor number, and the batch script resolves it against the table before
+calling `build_bracket`. Three materials seeded (`mild_steel`,
+`stainless_304`, `aluminum_5052`) with placeholder ANSI-style bands by
+gauge -- **explicitly flagged in the table's own `_note` field as widely-
+cited rule-of-thumb approximations, not certified data** -- swap in your
+shop's actual measured/supplied K-factors before using this on real parts.
+A thickness beyond a material's characterized range extrapolates from the
+largest band and prints a warning rather than failing outright; an unknown
+material raises cleanly (`KeyError`, caught like any other bad-row failure).
+
+`input/parts_sample.xlsx` (committed) now has 6 rows: 3 valid (one per
+seeded material, varying gauge/size), 3 deliberately bad, covering every
+distinct failure mode a batch run has to survive without dying:
+
+| Job ID | Status | Detail |
+|---|---|---|
+| BR-001 | OK | mild_steel, 2mm -> K=0.38 (matches Stages 2-4's hardcoded value -- continuity check), flat=168.671x60.0mm |
+| BR-002 | OK | aluminum_5052, 1mm -> K=0.35, flat=114.869x50.0mm |
+| BR-003 | OK | stainless_304, 4mm -> K=0.38, flat=247.342x80.0mm |
+| BR-004 | FAIL | manufacturability check failed: bend_radius 1.0mm is below 1.0x thickness (5.0mm) |
+| BR-005 | FAIL | column 'Thickness' is not a number: 'N/A' |
+| BR-006 | FAIL | unknown material 'unobtainium' (known materials: aluminum_5052, mild_steel, stainless_304) |
+
+(Full log: [`reports/stage4_sample_batch_log.md`](reports/stage4_sample_batch_log.md).
+Per-row STEP/DXF outputs go to `output/batch/`, gitignored like all
+generated CAD exports.)
+
+## Status
+
+All 5 stages complete. Everything above ran headless via `freecadcmd`, end
+to end: Excel row in, validated against real manufacturability limits, STEP
++ DXF out, K-factor from a real (if placeholder) material table rather than
+a guess.
+
+**What's still placeholder, not real:** the target part family (a U-channel
+built from the brief's own example text, since real job specs were never
+provided), the manufacturability thresholds in `bracket_model.py`
+(`MIN_BEND_RADIUS_TO_THICKNESS_RATIO`, `MIN_FLANGE_LENGTH_FACTOR`), and the
+K-factor table's actual numbers. All three are called out inline/in this
+README everywhere they appear -- replace them with real shop/material data
+before trusting this for production parts.
