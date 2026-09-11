@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sheet Metal Job Builder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128295;</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="wrap">
+    <h1>Sheet Metal Job Builder</h1>
+    <p class="subtitle">Spec sheet builder + validator for the Excel &rarr; SheetMetal &rarr; DXF pipeline</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="notice">
+    <strong>What this page actually does, and doesn't.</strong>
+    This runs in your browser only — there is no server behind it. It cannot
+    run FreeCAD, and it will not generate STEP or DXF files. What it does do
+    for real: validate a part's dimensions against the exact same
+    manufacturability rules and bend-allowance math as the Python pipeline
+    (<code>bracket_model.py</code>), look up K-factor from the same
+    <a href="../config/kfactor_table.json">kfactor_table.json</a> the batch
+    script uses, and let you build a real <code>.xlsx</code> file with the
+    correct columns to hand to
+    <code>freecadcmd scripts/run_batch.py</code> — see the
+    <a href="../README.md">pipeline README</a> for that step. Generating
+    the actual 3D part and flat pattern always requires running that script
+    somewhere FreeCAD is installed; no static site can do that part.
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. Part parameters</h2>
+      <form id="part-form">
+        <div class="field">
+          <label for="jobId">Job ID</label>
+          <input type="text" id="jobId" value="BR-001" required>
+        </div>
+        <div class="field">
+          <label for="material">Material</label>
+          <select id="material" required></select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="plateLength">Plate length (mm)</label>
+            <input type="number" id="plateLength" value="100" step="any" required>
+          </div>
+          <div class="field">
+            <label for="plateWidth">Plate width (mm)</label>
+            <input type="number" id="plateWidth" value="60" step="any" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="thickness">Thickness / gauge (mm)</label>
+            <input type="number" id="thickness" value="2" step="any" required>
+          </div>
+          <div class="field">
+            <label for="flangeLength">Flange leg length (mm)</label>
+            <input type="number" id="flangeLength" value="30" step="any" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="bendAngle">Bend angle (deg)</label>
+            <input type="number" id="bendAngle" value="90" step="any" required>
+          </div>
+          <div class="field">
+            <label for="bendRadius">Bend radius (mm)</label>
+            <input type="number" id="bendRadius" value="2" step="any" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="holeDia">Hole diameter (mm)</label>
+            <input type="number" id="holeDia" value="6" step="any" required>
+          </div>
+          <div class="field">
+            <label for="holeX">Hole X offset (mm)</label>
+            <input type="number" id="holeX" value="30" step="any" required>
+          </div>
+          <div class="field">
+            <label for="holeY">Hole Y offset (mm)</label>
+            <input type="number" id="holeY" value="15" step="any" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Validate</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>2. Result</h2>
+      <div id="result" class="result-panel">
+        <p class="muted">Fill in the form and click Validate.</p>
+      </div>
+
+      <h2>3. Batch</h2>
+      <p class="muted small">Rows added here build a real <code>.xlsx</code> matching <code>run_batch.py</code>'s expected columns.</p>
+      <div class="batch-actions">
+        <button id="add-row-btn" class="btn-secondary" disabled>Add validated row to batch</button>
+        <button id="download-btn" class="btn-secondary" disabled>Download batch (.xlsx)</button>
+        <button id="clear-btn" class="btn-secondary">Clear batch</button>
+      </div>
+      <div class="table-wrap">
+        <table id="batch-table">
+          <thead>
+            <tr>
+              <th>JobID</th><th>Material</th><th>L</th><th>W</th><th>T</th>
+              <th>Flange</th><th>Angle</th><th>Radius</th><th>K</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="batch-empty" class="muted small">No rows yet.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Preview an existing .xlsx</h2>
+    <p class="muted small">
+      Upload a spec workbook (same columns as <a href="../input/parts_sample.xlsx">input/parts_sample.xlsx</a>)
+      to re-run every row through this same validation before spending time on the real FreeCAD batch.
+    </p>
+    <input type="file" id="file-input" accept=".xlsx">
+    <div id="preview-wrap" class="table-wrap"></div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <p class="muted small">
+    Part of the <a href="../README.md">Excel &rarr; Sheet-Metal &rarr; DXF pipeline</a>.
+    Validation rules and bend-allowance formula mirror <code>scripts/bracket_model.py</code> exactly
+    (same thresholds, same math) — see that file and the README's Stage 3/5 notes for where these numbers come from.
+  </p>
+</footer>
+
+<script src="xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
