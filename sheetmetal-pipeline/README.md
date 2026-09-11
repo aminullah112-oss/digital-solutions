@@ -159,9 +159,54 @@ duplicate geometry (verified: exactly 4 circles, one per hole, correct
 Output (gitignored, sent to the user directly since they're binary):
 `output/bracket_folded.step`, `output/bracket_flat.dxf`.
 
-## Stage 3 — Parametrize (next)
+## Stage 3 — Parametrize (done)
 
-Turn the hardcoded dimensions in `build_bracket.py` into function arguments
-and test across a range of values, including edge cases (very short flange,
-tight bend radius, thin vs. thick gauge) -- logging which combinations
-produce bad geometry rather than papering over failures.
+`scripts/bracket_model.py` now holds the parametrized `build_bracket()`
+function -- every dimension Stage 2 hardcoded (plate length/width, gauge,
+flange length, bend angle, bend radius, K-factor) is a function argument.
+`build_bracket.py` is now a thin wrapper calling it with Stage 2's exact
+values (confirmed identical output -- same bbox, same volume, same flat
+length to the mm, so the refactor changed nothing observable).
+
+`scripts/test_matrix.py` sweeps 15 cases -- the baseline plus the edge
+cases asked for (very short flange, tight bend radius, thin vs. thick
+gauge) -- and writes results to
+[`reports/stage3_test_matrix.md`](reports/stage3_test_matrix.md). Run it:
+
+```bash
+/opt/miniconda3/envs/freecad/bin/freecadcmd scripts/test_matrix.py
+```
+
+**Result: 13 passed, 2 failed.** The 2 failures are clean and expected --
+`flange_length=0` and `flange_length=-5` both raise
+`RuntimeError: Flange1: empty/null shape`, caught and logged, no crash, no
+silent bad geometry.
+
+**The real finding here isn't the failures -- it's what didn't fail and
+arguably should have.** Every bend-radius and gauge extreme I threw at it
+built successfully at the FreeCAD/OCCT level, including several that are
+not physically buildable on a real press brake:
+
+- **`bend_radius=0.0`** (a mathematically sharp, zero-radius bend) built
+  fine and exported valid geometry. Real sheet metal has a material-
+  dependent minimum bend radius (cracks/tears below it); this tool enforces
+  none of that.
+- **`thickness=8.0` with `bend_radius=2.0`** (radius well under a common
+  rule-of-thumb minimum of roughly 1x material thickness for many
+  materials/tempers) also built fine.
+- **`flange_length=1.0` with `bend_radius=2.0`, `thickness=2.0`** -- a 1mm
+  flat leg on a bend that itself consumes ~4mm of material -- built fine
+  and unfolded to a sane-looking flat length. No real press brake tooling
+  clears a flange that short; it'd be crushed into the bend.
+
+None of this is a SheetMetal workbench bug -- it's a plain geometry kernel
+doing exactly what it's told, with zero manufacturability opinion. **This
+matters for Stage 4/5**: reading dimensions out of an Excel sheet and
+handing them straight to this pipeline will happily produce STEP/DXF for
+parts no shop can actually bend. Stage 4's per-row validation should reject
+(not just log) at minimum: `bend_radius` below some fraction of
+`thickness`, and `flange_length` below `bend_radius + thickness` plus a
+tooling clearance margin -- these are business-rule checks this pipeline
+needs to add itself, not something to expect from the CAD engine.
+
+## Stage 4 — Excel I/O (next)
