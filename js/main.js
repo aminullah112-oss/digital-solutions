@@ -6,6 +6,52 @@ var LEADS_ENDPOINT = '';
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    /* 3D cursor-tracked tilt — only on devices with a real mouse, and only when the
+       visitor hasn't asked for reduced motion. Touch/keyboard users keep the plain
+       CSS :hover lift as a fallback (see css/style.css). */
+    var canTilt = window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function init3DTilt(selector, maxTilt, lift) {
+        if (!canTilt) return;
+        document.querySelectorAll(selector).forEach(function (el) {
+            el.addEventListener('mousemove', function (e) {
+                var rect = el.getBoundingClientRect();
+                var x = (e.clientX - rect.left) / rect.width;
+                var y = (e.clientY - rect.top) / rect.height;
+                var rotateY = (x - 0.5) * maxTilt * 2;
+                var rotateX = (0.5 - y) * maxTilt * 2;
+                el.style.transform = 'perspective(900px) rotateX(' + rotateX.toFixed(2) + 'deg) ' +
+                    'rotateY(' + rotateY.toFixed(2) + 'deg) translateY(-' + lift + 'px) translateZ(10px)';
+            });
+            el.addEventListener('mouseleave', function () {
+                el.style.transform = '';
+            });
+        });
+    }
+    init3DTilt('.project-card', 6, 8);
+    init3DTilt('.product-chip', 5, 3);
+    init3DTilt('.track-card', 6, 4);
+    init3DTilt('.process-card', 6, 4);
+    init3DTilt('.identity-card', 4, 2);
+
+    /* Hero panels tilt together toward the cursor, as one rigid group */
+    var heroTilt = document.getElementById('heroTilt');
+    var heroSection = document.getElementById('home');
+    if (canTilt && heroTilt && heroSection) {
+        heroSection.addEventListener('mousemove', function (e) {
+            var rect = heroSection.getBoundingClientRect();
+            var x = (e.clientX - rect.left) / rect.width;
+            var y = (e.clientY - rect.top) / rect.height;
+            var rotateY = (x - 0.5) * 16;
+            var rotateX = (0.5 - y) * 10;
+            heroTilt.style.transform = 'rotateX(' + rotateX.toFixed(2) + 'deg) rotateY(' + rotateY.toFixed(2) + 'deg)';
+        });
+        heroSection.addEventListener('mouseleave', function () {
+            heroTilt.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        });
+    }
+
     /* Reveal on scroll */
     var reveals = document.querySelectorAll('.reveal');
     function reveal() {

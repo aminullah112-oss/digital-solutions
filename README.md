@@ -8,8 +8,9 @@ Built with plain HTML/CSS/JS + Bootstrap 5 — no build step required.
 
 ```
 index.html            Main page
-css/style.css         Design system + dark mode
-js/main.js            Scroll reveals, project filter, stat counters, theme toggle, lead form
+css/style.css         Design system + dark mode + 3D tilt transitions
+js/main.js            Scroll reveals, project filter, stat counters, theme toggle, lead form, cursor 3D tilt
+js/hero3d.js           Three.js animated wireframe background for the hero (degrades to nothing if WebGL/CDN is unavailable)
 leads-backend/Code.gs  Google Apps Script backend for the contact-section lead form (see below)
 .claude/launch.json   Local dev-preview config (npx serve)
 ```
@@ -37,7 +38,7 @@ git push
 ```
 GitHub Pages is served from the `main` branch root and rebuilds automatically within a minute or two of each push.
 
-**After editing `css/style.css` or `js/main.js`**, bump that file's version query string in `index.html` (e.g. `style.css?v=3` → `?v=4`, `main.js?v=2` → `?v=3`). GitHub Pages' CDN caches these for 10 minutes with no versioning of its own, so without this bump, visitors (and you) can see a stale file for a while after a redeploy even though the new one is live. If a change looks like it "didn't take," hard-refresh (`Ctrl+Shift+R`) before assuming something broke.
+**After editing `css/style.css`, `js/main.js`, or `js/hero3d.js`**, bump that file's version query string in `index.html` (e.g. `style.css?v=3` → `?v=4`, `main.js?v=2` → `?v=3`, `hero3d.js?v=1` → `?v=2`). GitHub Pages' CDN caches these for 10 minutes with no versioning of its own, so without this bump, visitors (and you) can see a stale file for a while after a redeploy even though the new one is live. If a change looks like it "didn't take," hard-refresh (`Ctrl+Shift+R`) before assuming something broke.
 
 ## Lead Capture Backend Setup (Google Sheets + Apps Script)
 
