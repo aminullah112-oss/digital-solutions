@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { protectionGrid } from '../../data/content';
 import { useReveal } from '../../lib/useReveal';
 import { useSectionProgress } from '../../lib/useSectionProgress';
 import { useInteraction } from '../../lib/InteractionContext';
+import { useReducedMotion } from '../../lib/useMediaQuery';
 import StatusBadge from '../ui/StatusBadge';
 
 export default function ProtectionGrid() {
   const ref = useSectionProgress('protectiongrid');
   useReveal(ref);
   const { protectionGridActive, setProtectionGridActive } = useInteraction();
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => () => setProtectionGridActive(null), [setProtectionGridActive]);
 
@@ -41,12 +44,16 @@ export default function ProtectionGrid() {
                   : 'border-graphite-border bg-graphite-900/85 hover:border-graphite-600'
               }`}
             >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <h3 className="text-base font-semibold text-ink-0 leading-snug">{p.name}</h3>
-                <StatusBadge status={p.status} />
-              </div>
-              {p.meta && <p className="font-mono-label text-[0.6rem] text-ink-3 mb-2">{p.meta}</p>}
-              <p className="text-sm text-ink-2 leading-relaxed">{p.body}</p>
+              {/* Tap-scale on an inner element — the outer <button> is GSAP's for the
+                  scroll-reveal entrance; two engines animating one node's transform fight. */}
+              <motion.div whileTap={reducedMotion ? undefined : { scale: 0.98 }} transition={{ duration: 0.12 }}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="text-base font-semibold text-ink-0 leading-snug">{p.name}</h3>
+                  <StatusBadge status={p.status} />
+                </div>
+                {p.meta && <p className="font-mono-label text-[0.6rem] text-ink-3 mb-2">{p.meta}</p>}
+                <p className="text-sm text-ink-2 leading-relaxed">{p.body}</p>
+              </motion.div>
             </button>
           ))}
         </div>

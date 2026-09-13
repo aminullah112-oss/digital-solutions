@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { gsap } from '../../lib/gsapSetup';
 import { useIsTouch, useReducedMotion } from '../../lib/useMediaQuery';
 
@@ -38,7 +39,16 @@ export default function MagneticButton({ as: Tag = 'a', className = '', children
 
   return (
     <Tag ref={ref} className={className} data-cursor="expand" {...props}>
-      {children}
+      {/* Tap-scale lives on an inner element, separate from the outer node GSAP
+          translates for the magnetic follow — two animation engines writing
+          `transform` on the same DOM node fight each other. */}
+      <motion.span
+        className="inline-block"
+        whileTap={isTouch || reducedMotion ? undefined : { scale: 0.94 }}
+        transition={{ duration: 0.15 }}
+      >
+        {children}
+      </motion.span>
     </Tag>
   );
 }

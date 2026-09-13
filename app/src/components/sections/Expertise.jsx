@@ -1,12 +1,15 @@
+import { motion } from 'framer-motion';
 import { expertise } from '../../data/content';
 import { useReveal } from '../../lib/useReveal';
 import { useSectionProgress } from '../../lib/useSectionProgress';
 import { useInteraction } from '../../lib/InteractionContext';
+import { useReducedMotion } from '../../lib/useMediaQuery';
 
 export default function Expertise() {
   const ref = useSectionProgress('expertise');
   useReveal(ref);
   const { expertiseActive, setExpertiseActive } = useInteraction();
+  const reducedMotion = useReducedMotion();
 
   return (
     <section id="expertise" ref={ref} className="relative py-28 md:py-36">
@@ -27,7 +30,7 @@ export default function Expertise() {
                   const nodeId = `${group.id}:${skill}`;
                   const isActive = expertiseActive === nodeId;
                   return (
-                    <button
+                    <motion.button
                       key={skill}
                       type="button"
                       data-cursor="expand"
@@ -35,14 +38,16 @@ export default function Expertise() {
                       onMouseLeave={() => setExpertiseActive((cur) => (cur === nodeId ? null : cur))}
                       onFocus={() => setExpertiseActive(nodeId)}
                       onBlur={() => setExpertiseActive((cur) => (cur === nodeId ? null : cur))}
-                      className={`text-sm px-4 py-2.5 rounded-lg border backdrop-blur-md transition-all duration-300 ${
+                      whileHover={reducedMotion ? undefined : { scale: 1.05 }}
+                      whileTap={reducedMotion ? undefined : { scale: 0.96 }}
+                      className={`text-sm px-4 py-2.5 rounded-lg border backdrop-blur-md transition-colors duration-300 ${
                         isActive
                           ? 'border-cyan/60 bg-graphite-900/95 text-cyan'
                           : 'border-graphite-border bg-graphite-900/85 text-ink-1 hover:border-graphite-600 hover:text-ink-0'
                       }`}
                     >
                       {skill}
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
