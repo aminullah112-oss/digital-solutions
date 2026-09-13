@@ -1,133 +1,92 @@
-// All copy and structured data below is ported directly from the existing site
-// (aminullah112-oss.github.io/digital-solutions) — no invented clients, numbers,
-// certifications, or projects. Wording is tightened for this new layout, facts unchanged.
+// All copy and structured data below reflects real work only — no invented clients,
+// numbers, certifications, or projects. Positioning is scoped to digital products and
+// solutions for small businesses; nothing here claims an engineering background.
 
 export const nav = [
   { n: '01', label: 'About', href: '#about' },
-  { n: '02', label: 'Engineering', href: '#engineering' },
-  { n: '03', label: 'Digital Solutions', href: '#solutions' },
-  { n: '04', label: 'Products', href: '#products' },
-  { n: '05', label: 'Expertise', href: '#expertise' },
-  { n: '06', label: 'Contact', href: '#contact' },
+  { n: '02', label: 'Services', href: '#products' },
+  { n: '03', label: 'Case Studies', href: '#solutions' },
+  { n: '04', label: 'Expertise', href: '#expertise' },
+  { n: '05', label: 'Contact', href: '#contact' },
 ];
 
 export const hero = {
   status: 'Available for new projects',
   headline: 'I build digital products that solve real problems.',
-  sub: '15+ years of engineering, testing and QMS discipline — now applied to software, automation and digital products.',
+  sub: 'Small business systems, AI automation, and digital products — built fast, iterated honestly, and handed off clean.',
   stats: [
-    { value: 15, suffix: '+', label: 'Years in Engineering' },
-    { value: 12, suffix: '', label: 'Digital Products Shipped' },
-    { value: 5, suffix: '', label: 'Industries Served' },
+    { value: 7, suffix: '', label: 'Digital Products Shipped' },
+    { value: 4, suffix: '', label: 'Industries Served' },
+    { value: 11, suffix: '+', label: 'Tools in the Stack' },
   ],
 };
 
 export const about = {
   kicker: 'Who I Am',
-  title: 'One engineer, two ways to help your business',
-  body: "Fifteen years of protection, testing, and QMS discipline from audit-grade industrial programs — now applied to building fast, reliable digital products for clients outside engineering too. Most engineers stop at the drawing. Most developers never set foot on a panel floor. I do both — which means when I build a tool, it's shaped by someone who has actually run the ATP, filled out the SCAR, and sat through the audit.",
-  credentials: [
-    '15+ years in protection, testing & MV/HV systems',
-    'AS9100 / ISO 9001 QMS documentation background',
-    'Audit-grade QC discipline from high-compliance industrial test programs',
-    'Self-taught full-stack builder — Python, Flask, React, n8n',
+  title: 'A builder who ships, not just plans',
+  body: "I'm a self-taught full-stack builder — Python, Flask, React, n8n — who takes a business problem from a messy spreadsheet or a manual process to a working, documented system. No agency overhead and no account manager standing between you and the build: you work directly with the person shipping it.",
+  perks: [
+    'Direct access — you work with the person building it, not an account manager',
+    'Documented, handover-ready systems — no black boxes only I can maintain',
+    'Real iteration — I rebuild until it fits how you actually work',
+    'Full-stack range — ERPs, automation, AI pipelines, and the site to sell it',
   ],
-  tracks: [
+  process: [
     {
-      id: 'engineering',
-      title: 'Engineering Track',
-      body: 'Estimation, configurator, and commissioning tools for LV/MV panel builders and EPC contractors across the GCC — sold as ProtectionGrid, my flagship product line.',
+      id: 'understand',
+      title: 'Understand',
+      body: "I start with what's actually slow or manual — not a feature wishlist.",
     },
     {
-      id: 'digital',
-      title: 'Digital Solutions Track',
-      body: 'ERPs, booking systems, AI content pipelines, and compliance documentation systems, built for small businesses and teams outside engineering.',
-    },
-  ],
-};
-
-export const engineering = {
-  kicker: 'Engineering',
-  title: 'Built from the panel floor.',
-  body: "Fifteen years running ATPs, FATs, and audits on LV/MV/HV systems — the same discipline now shapes every tool I ship.",
-  capabilities: [
-    { label: 'Protection & Automation', group: 'domain' },
-    { label: 'MV / HV Systems', group: 'domain' },
-    { label: 'LV Control Panels', group: 'domain' },
-    { label: 'Testing & Commissioning', group: 'domain' },
-    { label: 'ATP / FAT', group: 'domain' },
-    { label: 'ETAP', group: 'tool' },
-    { label: 'EPLAN P8', group: 'tool' },
-    { label: 'AutoCAD Electrical', group: 'tool' },
-    { label: 'NI DAQmx', group: 'tool' },
-    { label: 'NI FlexLogger', group: 'tool' },
-    { label: 'AS9100', group: 'qms' },
-    { label: 'ISO 9001', group: 'qms' },
-    { label: 'QMS Documentation', group: 'qms' },
-  ],
-};
-
-export const protectionGrid = {
-  kicker: 'Flagship Product Line',
-  title: 'ProtectionGrid',
-  subtitle: "Engineering tools built by someone who's actually run the ATP.",
-  body: 'A focused product line for GCC LV/MV panel builders, commissioning engineers, and EPC contractors — estimation, configuration, and testing tools grounded in 15 years of real panel-floor and QMS experience.',
-  products: [
-    {
-      id: 'estimation-tool',
-      name: 'LV Control Panel Estimation Tool',
-      status: 'Commercial',
-      body: 'Costing & estimation tool for LV control panel builds, built from years of real quotation and BOM experience.',
+      id: 'build',
+      title: 'Build',
+      body: 'Working software, not mockups. You see something real within days.',
     },
     {
-      id: 'genset-configurator',
-      name: 'Genset Product Configurator',
-      status: 'Delivered',
-      body: 'Excel-based configurator that turns genset specs into accurate proposals in minutes instead of hours.',
-    },
-    {
-      id: 'atp-fat-pack',
-      name: 'ATP/FAT Excel Tool Pack',
-      status: 'Live',
-      meta: '5 Tools',
-      body: 'A pack of five acceptance and factory test tools for commissioning engineers, distributed on Gumroad.',
-    },
-    {
-      id: 'commissioning-toolkit',
-      name: 'Commissioning & Testing Essentials Toolkit',
-      status: 'In Build',
-      body: 'Checklists, report templates, calculators, SOPs, AI prompts, and a project tracker for commissioning teams.',
-    },
-    {
-      id: 'content-pipeline',
-      name: 'Automated Content Pipeline',
-      status: 'Live',
-      body: 'n8n workflow: Google Sheets → Claude API → Telegram approval → auto-posted to LinkedIn, feeding a 100% organic community.',
-    },
-    {
-      id: 'ptn-community',
-      name: 'Protection & Test Engineers Network',
-      status: 'Active',
-      body: 'A LinkedIn community built and grown around ProtectionGrid content — the distribution channel behind the product line.',
+      id: 'iterate',
+      title: 'Iterate',
+      body: 'Ship, get real feedback, adjust — until it fits how the team actually works.',
     },
   ],
-};
-
-export const statusTone = {
-  Commercial: 'delivered',
-  Delivered: 'delivered',
-  Live: 'live',
-  'In Build': 'build',
-  Active: 'live',
-  Prototype: 'prototype',
 };
 
 export const solutionCategories = [
-  { id: 'business', label: 'Small Business & Operations' },
-  { id: 'ai', label: 'AI & Automation' },
-  { id: 'branding', label: 'Branding & Marketing' },
-  { id: 'compliance', label: 'Compliance & Training Systems' },
+  {
+    id: 'business',
+    label: 'Small Business & Operations',
+    pitch:
+      'Replace spreadsheets and manual tracking with a real system — inventory, payroll, billing, or a full operations dashboard, built around how your team already works.',
+    deliverables: ['Custom ERP & inventory systems', 'Payroll & billing systems', 'Booking & scheduling tools'],
+  },
+  {
+    id: 'ai',
+    label: 'AI & Automation',
+    pitch:
+      'Automate the repetitive parts of running a business — content, approvals, customer replies — so your team spends time on what actually needs a human.',
+    deliverables: ['AI content & approval pipelines', 'WhatsApp / chat-based booking', 'Workflow automation (n8n)'],
+  },
+  {
+    id: 'branding',
+    label: 'Branding & Marketing',
+    pitch:
+      "A site and positioning that actually explain what you do, built fast — not a template with your logo pasted on.",
+    deliverables: ['Marketing sites & landing pages', 'Product positioning', 'Launch-ready copy & design'],
+  },
+  {
+    id: 'compliance',
+    label: 'Compliance & Training Systems',
+    pitch:
+      "Turn scattered SOPs and training material into something your team will actually use — structured, searchable, and easy to hand off.",
+    deliverables: ['SOP-to-video pipelines', 'Documentation systems', 'Training content workflows'],
+  },
 ];
+
+export const statusTone = {
+  Delivered: 'delivered',
+  Live: 'live',
+  Active: 'live',
+  Prototype: 'prototype',
+};
 
 export const projects = [
   {
@@ -171,27 +130,11 @@ export const projects = [
     stack: ['FastAPI', 'PostgreSQL', 'Redis'],
   },
   {
-    id: 'pg-marketing',
-    category: 'branding',
-    status: 'Delivered',
-    name: 'ProtectionGrid Marketing One-Pager',
-    body: 'A hand-coded HTML/CSS one-pager built as the core marketing asset for the ProtectionGrid product line.',
-    stack: ['HTML', 'CSS'],
-  },
-  {
-    id: 'community-growth',
-    category: 'branding',
-    status: 'Active',
-    name: 'Community-Led Growth',
-    body: 'Built and grew the "Protection and Test Engineers Network" on LinkedIn organically, using the automated content pipeline as the distribution engine.',
-    stack: ['LinkedIn', 'Content Ops'],
-  },
-  {
     id: 'mep-pitch',
     category: 'branding',
     status: 'Prototype',
-    name: 'MEP Contractor Website Pitch',
-    body: 'A pitched website concept for an MEP contractor, positioning their services with the same clarity-first approach used across my own product marketing.',
+    name: 'Contractor Website Pitch',
+    body: 'A pitched website concept for a contracting business, positioning their services with the same clarity-first approach used across my own product marketing.',
     stack: ['Web Design', 'Positioning'],
   },
   {
@@ -206,60 +149,39 @@ export const projects = [
 
 export const expertise = {
   kicker: 'My Expertise',
-  title: 'The stack behind both tracks',
+  title: 'The stack behind the systems',
   groups: [
     {
-      id: 'engineering',
-      label: 'Engineering',
-      skills: [
-        'ETAP',
-        'EPLAN P8',
-        'AutoCAD Electrical',
-        'EPLAN ProPanel 3D',
-        'NI FlexLogger',
-        'NI DAQmx',
-        'Protection & MV/HV Systems',
-        'AS9100 / ISO 9001 QMS',
-      ],
+      id: 'backend',
+      label: 'Backend & Automation',
+      skills: ['Python', 'Flask', 'FastAPI', 'n8n', 'PostgreSQL', 'Redis', 'SQLite'],
     },
     {
-      id: 'software',
-      label: 'Software',
-      skills: [
-        'Python',
-        'Tkinter',
-        'Flask',
-        'Plotly Dash',
-        'React',
-        'n8n',
-        'FastAPI',
-        'PostgreSQL',
-        'Redis',
-        'SQLite',
-        'Excel / openpyxl',
-      ],
+      id: 'product',
+      label: 'Product & Frontend',
+      skills: ['React', 'Tkinter', 'Plotly Dash', 'Excel / openpyxl'],
     },
   ],
 };
 
 export const process = {
   kicker: 'Why Work With Me',
-  title: 'Engineering discipline, applied to software delivery',
+  title: 'Real systems, shipped and documented',
   steps: [
     {
       n: '01',
-      title: 'Domain Credibility',
-      body: 'Fifteen years actually running panels, ATPs, and audits — not guessing at what your industry needs.',
+      title: 'Proof, Not Promises',
+      body: 'Seven real systems shipped for real businesses — this page is case studies, not concepts.',
     },
     {
       n: '02',
       title: 'Idea to Deployed Tool',
-      body: 'I ship — spreadsheets, desktop apps, PWAs, or full-stack apps, whichever gets your team a working tool fastest.',
+      body: 'Spreadsheets, desktop apps, PWAs, or full-stack apps — whichever gets your team a working tool fastest.',
     },
     {
       n: '03',
-      title: 'Documentation Rigor',
-      body: 'AS9100/ISO-grade documentation habits mean what I build is traceable, auditable, and handover-ready.',
+      title: 'Documentation & Handover',
+      body: 'Every project ships with docs that make sense to the next person — no black-box systems only I can maintain.',
     },
     {
       n: '04',
@@ -267,25 +189,6 @@ export const process = {
       body: 'The school furniture ERP was rebuilt three times to fit the client, not to fit a portfolio screenshot.',
     },
   ],
-};
-
-export const rd = {
-  title: 'Also in the Lab',
-  items: [
-    {
-      title: 'NSE Swing Trading System',
-      body: 'Python screener with Weinstein Stage 2 analysis, GitHub Actions scheduling, and a GitHub Pages dashboard.',
-    },
-    {
-      title: 'Crypto Three-Signal System',
-      body: 'EMA cross + RSI + volume confirmation for spot trading.',
-    },
-    {
-      title: 'TASI / Tadawul Screener',
-      body: 'In progress — extending the same screening logic to the Saudi market.',
-    },
-  ],
-  note: 'These are personal systems-building practice, not offered as an advisory, signals, or trading service.',
 };
 
 export const cta = {
@@ -296,12 +199,7 @@ export const cta = {
 export const contactCopy = {
   title: 'Get in touch',
   sub: 'Based in Chennai or working with a Chennai team? Say so below — local engagements get priority scheduling.',
-  interests: [
-    'Engineering & Panel Estimation (ProtectionGrid)',
-    'Small Business System / ERP',
-    'AI & Automation',
-    'Branding & Marketing',
-    'Compliance & Training',
-    'Not sure yet',
-  ],
+  // Derived from solutionCategories rather than duplicated, so a service's CTA can set
+  // the exact same string the contact form expects for that category.
+  interests: [...solutionCategories.map((c) => c.label), 'Not sure yet'],
 };

@@ -24,7 +24,7 @@ export default function Expertise() {
         <div className="mt-14 grid md:grid-cols-2 gap-10">
           {expertise.groups.map((group) => (
             <div key={group.id} data-reveal>
-              <p className="font-mono-label text-[0.62rem] text-amber mb-5">{group.label}</p>
+              <p className="font-mono-label text-[0.62rem] text-violet mb-5">{group.label}</p>
               <div className="flex flex-wrap gap-2.5">
                 {group.skills.map((skill) => {
                   const nodeId = `${group.id}:${skill}`;

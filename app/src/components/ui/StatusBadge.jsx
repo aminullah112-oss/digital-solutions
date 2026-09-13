@@ -3,7 +3,6 @@ import { statusTone } from '../../data/content';
 const TONE_CLASSES = {
   live: 'text-[#4ade80] border-[#4ade80]/35 bg-[#4ade80]/10',
   delivered: 'text-cyan border-cyan/35 bg-cyan-dim',
-  build: 'text-amber border-amber/35 bg-amber-dim',
   prototype: 'text-ink-2 border-ink-2/30 bg-white/5',
 };
 

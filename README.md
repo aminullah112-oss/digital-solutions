@@ -1,6 +1,6 @@
 # Aminullah — Digital Solutions Portfolio
 
-A cinematic, 3D-driven portfolio site positioning **ProtectionGrid** (GCC engineering tools) as the flagship product, alongside digital solutions for small business, AI/automation, branding, and compliance/training work.
+A cinematic, 3D-driven site marketing digital products and solutions for small businesses — ERPs, AI/automation, branding, and compliance/training systems — built to bring in new client work.
 
 Built with **React + Vite + React Three Fiber + GSAP** — a persistent, scroll-reactive WebGL scene sits behind normal DOM content, with a static HTML/CSS/JS fallback for reduced-motion or no-WebGL visitors.
 
@@ -11,12 +11,12 @@ app/                   React app source (this is what you edit)
   src/
     components/
       layout/           Navbar, mobile menu, custom cursor, scroll progress, footer
-      three/            The persistent 3D scene: EngineeringCore, ParticleField,
-                         TechnicalGrid, NodeNetwork (reused for the ProtectionGrid
-                         orbit, Digital Solutions category picker, and the
+      three/            The persistent 3D scene: DigitalCore, ParticleField,
+                         TechnicalGrid, NodeNetwork (reused for the Services
+                         orbit, the case-studies category picker, and the
                          Expertise constellation), CameraRig, SceneCanvas
       sections/         One component per page section
-      ui/               MagneticButton, StatusBadge, CountUp, SectionHeading
+      ui/               MagneticButton, StatusBadge, CountUp
     data/content.js      All real site copy/data in one place — edit this for
                          copy changes, not the section components
     lib/                 Scroll/GSAP/Lenis wiring, media-query hooks, the shared
@@ -59,7 +59,7 @@ git push
 
 ## The 3D system
 
-One `<Canvas>` (`components/three/SceneCanvas.jsx`) is mounted as a fixed full-viewport background behind the whole page — not a separate WebGL scene per section. A shared mutable object (`lib/sceneState.js`) is written to by mouse-move and GSAP ScrollTrigger callbacks and read every frame inside the R3F render loop, so the same `EngineeringCore` object that anchors the hero fades to an ambient background presence elsewhere on the page, and comes forward again for the closing CTA. `NodeNetwork` is the one reusable orbit/constellation component behind the ProtectionGrid product orbit, the Digital Solutions category picker, and the Expertise skills constellation.
+One `<Canvas>` (`components/three/SceneCanvas.jsx`) is mounted as a fixed full-viewport background behind the whole page — not a separate WebGL scene per section. A shared mutable object (`lib/sceneState.js`) is written to by mouse-move and GSAP ScrollTrigger callbacks and read every frame inside the R3F render loop, so the same `DigitalCore` object that anchors the hero fades to an ambient background presence elsewhere on the page, and comes forward again for the closing CTA. `NodeNetwork` is the one reusable orbit/constellation component behind the Services orbit, the case-studies category picker, and the Expertise skills constellation.
 
 **Performance guardrails**, in `SceneCanvas.jsx` and `App.jsx`:
 - The whole `three`/`@react-three/fiber`/`@react-three/drei` stack is behind a `React.lazy()` dynamic import — it's a separate chunk that never blocks the initial HTML/CSS paint.
@@ -96,6 +96,6 @@ If you ever redeploy the Apps Script (not just edit-and-save, but a *new* deploy
 
 ## Editing content later
 
-- All copy, product/project data, skills, and process steps live in [`app/src/data/content.js`](app/src/data/content.js) — edit there, not inside the section components, for anything that's just a copy change.
-- Real project links: search `app/src` for `href="#"` placeholders once you have live URLs for Gumroad, LinkedIn, etc.
-- Adding a new Digital Solutions project: add an entry to the `projects` array in `content.js` with a `category` matching one of `solutionCategories`' ids.
+- All copy, service offers, case studies, skills, and process steps live in [`app/src/data/content.js`](app/src/data/content.js) — edit there, not inside the section components, for anything that's just a copy change.
+- Adding a new case study: add an entry to the `projects` array in `content.js` with a `category` matching one of `solutionCategories`' ids.
+- Adding/editing a service offer: edit the matching entry in `solutionCategories` — `pitch` and `deliverables` drive the Services section, `label` drives both the case-studies filter and the contact form's interest dropdown.

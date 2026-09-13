@@ -6,20 +6,25 @@ import { createContext, useContext, useMemo, useState } from 'react';
 const InteractionContext = createContext(null);
 
 export function InteractionProvider({ children }) {
-  const [protectionGridActive, setProtectionGridActive] = useState(null);
   const [solutionsCategory, setSolutionsCategory] = useState('business');
   const [expertiseActive, setExpertiseActive] = useState(null);
+  const [servicesActive, setServicesActive] = useState(null);
+  // Set when a visitor clicks a service's CTA, so the contact form can preselect the
+  // matching "what do you need help with" option instead of making them pick it again.
+  const [contactInterest, setContactInterest] = useState('');
 
   const value = useMemo(
     () => ({
-      protectionGridActive,
-      setProtectionGridActive,
       solutionsCategory,
       setSolutionsCategory,
       expertiseActive,
       setExpertiseActive,
+      servicesActive,
+      setServicesActive,
+      contactInterest,
+      setContactInterest,
     }),
-    [protectionGridActive, solutionsCategory, expertiseActive]
+    [solutionsCategory, expertiseActive, servicesActive, contactInterest]
   );
 
   return <InteractionContext.Provider value={value}>{children}</InteractionContext.Provider>;

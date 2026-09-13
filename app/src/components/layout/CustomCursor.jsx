@@ -8,7 +8,7 @@ export default function CustomCursor() {
   const ringRef = useRef(null);
   const isTouch = useIsTouch();
   const reducedMotion = useReducedMotion();
-  const { protectionGridActive, expertiseActive } = useInteraction();
+  const { expertiseActive, servicesActive } = useInteraction();
   const active = isTouch || reducedMotion;
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function CustomCursor() {
 
   if (active) return null;
 
-  const hovering3D = Boolean(protectionGridActive || expertiseActive);
+  const hovering3D = Boolean(expertiseActive || servicesActive);
 
   return (
     <>
@@ -70,7 +70,7 @@ export default function CustomCursor() {
         ref={ringRef}
         aria-hidden="true"
         data-hover3d={hovering3D || undefined}
-        className="cursor-ring fixed top-0 left-0 z-[70] w-8 h-8 rounded-full border border-cyan/70 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-[width,height,border-color,background-color] duration-200 ease-out data-[state=expand]:w-14 data-[state=expand]:h-14 data-[state=expand]:bg-cyan/10 data-[hover3d]:w-16 data-[hover3d]:h-16 data-[hover3d]:border-amber data-[hover3d]:bg-amber/10"
+        className="cursor-ring fixed top-0 left-0 z-[70] w-8 h-8 rounded-full border border-cyan/70 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-[width,height,border-color,background-color] duration-200 ease-out data-[state=expand]:w-14 data-[state=expand]:h-14 data-[state=expand]:bg-cyan/10 data-[hover3d]:w-16 data-[hover3d]:h-16 data-[hover3d]:border-violet data-[hover3d]:bg-violet/10"
       />
     </>
   );

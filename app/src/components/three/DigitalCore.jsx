@@ -10,11 +10,11 @@ function sectionWeight(id) {
   return Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
 }
 
-// The hero's "digital engineering core" — nested wireframe icosahedra plus a couple
-// of thin holographic rings. Persists for the whole page at low opacity, and comes
-// forward again (fuller, slightly faster) for the closing CTA — the "more complete
-// system" callback the brief asks for, achieved with intensity, not new geometry.
-export default function EngineeringCore({ quality = 'high' }) {
+// The hero's core object — nested wireframe icosahedra plus a couple of thin
+// holographic rings. Persists for the whole page at low opacity, and comes forward
+// again (fuller, slightly faster) for the closing CTA — a "more complete system"
+// callback achieved with intensity, not new geometry.
+export default function DigitalCore({ quality = 'high' }) {
   const group = useRef(null);
   const core = useRef(null);
   const shell = useRef(null);
@@ -83,7 +83,7 @@ export default function EngineeringCore({ quality = 'high' }) {
         <meshBasicMaterial color="#4dd8e6" transparent opacity={0.22} />
       </mesh>
       <mesh ref={ringB} geometry={ringGeoB} rotation={[Math.PI / 1.7, 0.3, 0]}>
-        <meshBasicMaterial color="#e8a662" transparent opacity={0.14} />
+        <meshBasicMaterial color="#a78bfa" transparent opacity={0.14} />
       </mesh>
     </group>
   );

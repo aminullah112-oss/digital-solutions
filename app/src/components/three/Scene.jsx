@@ -1,34 +1,40 @@
 import CameraRig from './CameraRig';
-import EngineeringCore from './EngineeringCore';
+import DigitalCore from './DigitalCore';
 import ParticleField from './ParticleField';
 import TechnicalGrid from './TechnicalGrid';
 import NodeNetwork from './NodeNetwork';
 import { useInteraction } from '../../lib/InteractionContext';
-import { protectionGrid, solutionCategories, expertise } from '../../data/content';
+import { solutionCategories, expertise } from '../../data/content';
 
-const pgNodes = protectionGrid.products.map((p) => ({ id: p.id }));
-const solutionNodes = solutionCategories.map((c) => ({ id: c.id }));
+const serviceNodes = solutionCategories.map((c) => ({ id: c.id }));
 const expertiseNodes = expertise.groups.flatMap((g) => g.skills.map((s) => ({ id: `${g.id}:${s}` })));
 
 export default function Scene({ quality = 'high', particleCount = 220 }) {
-  const { protectionGridActive, setProtectionGridActive, solutionsCategory, setSolutionsCategory, expertiseActive, setExpertiseActive } =
-    useInteraction();
+  const {
+    servicesActive,
+    setServicesActive,
+    solutionsCategory,
+    setSolutionsCategory,
+    expertiseActive,
+    setExpertiseActive,
+  } = useInteraction();
 
   return (
     <>
       <CameraRig intensity={quality === 'low' ? 0.5 : 1} />
       <fog attach="fog" args={['#07090c', 8, 22]} />
 
-      <EngineeringCore quality={quality} />
+      <DigitalCore quality={quality} />
       <ParticleField count={particleCount} />
       {quality !== 'low' && <TechnicalGrid />}
 
+      {/* Services section — the primary offer, so it gets the strongest node network */}
       <NodeNetwork
-        sectionId="protectiongrid"
-        nodes={pgNodes}
-        activeId={protectionGridActive}
-        onNodeHover={setProtectionGridActive}
-        onNodeClick={setProtectionGridActive}
+        sectionId="products"
+        nodes={serviceNodes}
+        activeId={servicesActive}
+        onNodeHover={setServicesActive}
+        onNodeClick={setServicesActive}
         position={[0, 0, -1]}
         radius={2.3}
         colorActive="#4dd8e6"
@@ -36,13 +42,13 @@ export default function Scene({ quality = 'high', particleCount = 220 }) {
 
       <NodeNetwork
         sectionId="solutions"
-        nodes={solutionNodes}
+        nodes={serviceNodes}
         activeId={solutionsCategory}
         onNodeHover={() => {}}
         onNodeClick={setSolutionsCategory}
         position={[0.4, 0.1, -0.6]}
         radius={1.9}
-        colorActive="#e8a662"
+        colorActive="#a78bfa"
       />
 
       <NodeNetwork

@@ -11,11 +11,8 @@ import Footer from './components/layout/Footer';
 
 import Hero from './components/sections/Hero';
 import About from './components/sections/About';
-import Engineering from './components/sections/Engineering';
-import ProtectionGrid from './components/sections/ProtectionGrid';
-import DigitalSolutions from './components/sections/DigitalSolutions';
 import Products from './components/sections/Products';
-import RD from './components/sections/RD';
+import DigitalSolutions from './components/sections/DigitalSolutions';
 import Expertise from './components/sections/Expertise';
 import WhyWorkWithMe from './components/sections/WhyWorkWithMe';
 import CTA from './components/sections/CTA';
@@ -48,11 +45,8 @@ function AppShell() {
         <main id="main">
           <Hero />
           <About />
-          <Engineering />
-          <ProtectionGrid />
-          <DigitalSolutions />
           <Products />
-          <RD />
+          <DigitalSolutions />
           <Expertise />
           <WhyWorkWithMe />
           <CTA />

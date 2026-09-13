@@ -12,9 +12,9 @@ function sectionWeight(id) {
 
 /**
  * Reusable orbit / constellation visual: a small hub with N nodes arranged on a
- * tilted ring, each connected to the hub by a line. Used for the ProtectionGrid
- * product orbit, the Digital Solutions category selector, and the Expertise
- * constellation — same component, different node counts/colors/active state.
+ * tilted ring, each connected to the hub by a line. Used for the Services orbit,
+ * the case-studies category selector, and the Expertise constellation — same
+ * component, different node counts/colors/active state.
  *
  * Fades in only while its own section is in view (via sceneState.sectionProgress),
  * so three instances can stay mounted for the whole page life without competing

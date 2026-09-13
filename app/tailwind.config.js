@@ -25,9 +25,9 @@ export default {
           soft: '#8be9f2',
           dim: 'rgba(77,216,230,0.14)',
         },
-        amber: {
-          DEFAULT: '#e8a662',
-          dim: 'rgba(232,166,98,0.14)',
+        violet: {
+          DEFAULT: '#a78bfa',
+          dim: 'rgba(167,139,250,0.14)',
         },
         ink: {
           0: '#f4f6f8',
@@ -48,7 +48,7 @@ export default {
         content: '1440px',
       },
       transitionTimingFunction: {
-        engineered: 'cubic-bezier(.16,1,.3,1)',
+        swift: 'cubic-bezier(.16,1,.3,1)',
       },
     },
   },

@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { contactCopy } from '../../data/content';
 import { CONTACT_EMAIL, LEADS_ENDPOINT, submitLead } from '../../lib/leads';
 import { useReveal } from '../../lib/useReveal';
+import { useInteraction } from '../../lib/InteractionContext';
 
 const inputClass =
   'w-full rounded-lg border border-graphite-border bg-graphite-900/70 px-4 py-3 text-sm text-ink-0 placeholder:text-ink-3 focus:border-cyan/60 focus:outline-none transition-colors duration-300';
@@ -13,6 +14,14 @@ export default function Contact() {
   useReveal(ref);
   const [status, setStatus] = useState(null); // null | 'sending' | 'success' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
+  const { contactInterest } = useInteraction();
+  const [interest, setInterest] = useState('');
+
+  // A service's "Start a Project" CTA sets this — preselect it so the visitor
+  // doesn't have to pick the same thing twice.
+  useEffect(() => {
+    if (contactInterest) setInterest(contactInterest);
+  }, [contactInterest]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,6 +37,7 @@ export default function Contact() {
     if (data.get('website')) {
       setStatus('success');
       form.reset();
+      setInterest('');
       return;
     }
 
@@ -42,6 +52,7 @@ export default function Contact() {
       await submitLead(data);
       setStatus('success');
       form.reset();
+      setInterest('');
     } catch {
       setStatus('error');
       setErrorMsg(`Something went wrong — please email ${CONTACT_EMAIL} directly.`);
@@ -78,7 +89,14 @@ export default function Contact() {
             </div>
             <div>
               <label htmlFor="lf-interest" className={labelClass}>What do you need help with? *</label>
-              <select id="lf-interest" name="interest" required defaultValue="" className={inputClass}>
+              <select
+                id="lf-interest"
+                name="interest"
+                required
+                value={interest}
+                onChange={(e) => setInterest(e.target.value)}
+                className={inputClass}
+              >
                 <option value="" disabled>Select one</option>
                 {contactCopy.interests.map((opt) => (
                   <option key={opt} value={opt}>{opt}</option>

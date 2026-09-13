@@ -17,13 +17,13 @@ export default function DigitalSolutions() {
     <section id="solutions" ref={ref} className="relative py-28 md:py-36">
       <div className="max-w-content mx-auto px-5 sm:px-8">
         <p data-reveal className="font-mono-label text-cyan text-xs mb-4">
-          Beyond Engineering
+          Case Studies
         </p>
         <h2 data-reveal className="text-3xl sm:text-4xl md:text-5xl font-semibold text-ink-0 leading-[1.1]">
-          Beyond engineering.
+          The work, by category.
         </h2>
         <p data-reveal className="mt-4 max-w-xl text-ink-1 text-base md:text-lg leading-relaxed">
-          Digital systems for businesses outside engineering too.
+          Real systems shipped for real businesses — pick a category to see the proof.
         </p>
 
         <div data-reveal role="tablist" aria-label="Solution categories" className="mt-10 flex flex-wrap gap-3">
@@ -39,7 +39,7 @@ export default function DigitalSolutions() {
               whileTap={reducedMotion ? undefined : { scale: 0.97 }}
               className={`font-mono-label text-[0.68rem] px-4 py-2.5 rounded-full border transition-colors duration-300 ${
                 solutionsCategory === cat.id
-                  ? 'border-amber/60 bg-amber-dim text-amber'
+                  ? 'border-violet/60 bg-violet-dim text-violet'
                   : 'border-graphite-border text-ink-2 hover:text-ink-0 hover:border-graphite-600'
               }`}
             >

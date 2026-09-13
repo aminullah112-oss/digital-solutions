@@ -27,7 +27,7 @@ export default function Hero() {
           data-reveal
           className="max-w-4xl text-[2.4rem] leading-[1.08] sm:text-6xl md:text-[4.2rem] md:leading-[1.04] font-semibold text-ink-0"
         >
-          I build digital products that solve real problems.
+          {hero.headline}
         </h1>
 
         <p data-reveal className="mt-7 max-w-xl text-ink-1 text-base md:text-lg leading-relaxed">
@@ -74,7 +74,7 @@ export default function Hero() {
         aria-hidden="true"
         className="hidden md:block absolute top-[26%] right-[6%] font-mono-label text-[0.6rem] text-ink-3 text-right leading-relaxed"
       >
-        <p>ENGINEERING_CORE // ACTIVE</p>
+        <p>DIGITAL_CORE // ONLINE</p>
         <p>LAT 13.08&deg;N &middot; LON 80.27&deg;E</p>
       </div>
     </section>
