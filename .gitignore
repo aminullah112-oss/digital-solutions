@@ -1,5 +1,11 @@
 .claude/settings.local.json
 
+# React/Vite app (app/) — dependencies and intermediate build output.
+# The build's actual output is copied from /dist into the repo root and committed;
+# /dist itself is just the staging folder from `npm run build` and isn't kept.
+app/node_modules/
+/dist/
+
 # sheetmetal-pipeline: FreeCAD temp/backup files
 *.FCBak
 *.FCStd1
