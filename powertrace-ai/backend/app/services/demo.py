@@ -169,7 +169,8 @@ def _seed_controllers(db: Session, project: Project, rmap: RegisterMap) -> list[
     for index, name in enumerate(("EMCP DEMO 01", "EMCP DEMO 02"), start=1):
         controller = Controller(
             project_id=project.id, name=name,
-            manufacturer="(simulated)", model="(simulated)", controller_type="SIMULATOR",
+            manufacturer="PowerTrace", model="Simulated genset controller",
+            controller_type="SIMULATOR",
             description="Simulated controller — DEMO MODE. No physical device.",
             enabled=True, is_simulated=True, register_map_id=rmap.id,
         )
@@ -220,13 +221,21 @@ def _seed_circuit(db: Session, project: Project, controller: Controller) -> dict
     nodes: dict[str, CircuitNode] = {}
     # Layout coordinates: left-to-right by electrical position so the graph
     # reads like a ladder rather than a hairball.
+    # Columns 280 px apart, rows 170 px apart. Node cards render around
+    # 230 x 110 px once a long label is in them, so anything tighter overlaps.
     layout = {
-        "DC24_SOURCE": (0, 0), "F7": (180, 0), "CTRL_BUS": (360, 0),
-        "EMCP_DO07": (540, -120), "W105": (700, -120), "TB23_14": (860, -120),
-        "K12_COIL": (1020, -120), "DC0V_RETURN": (1400, 60),
-        "K12_CONTACT": (540, 80), "TB23_16": (760, 80), "CB1_CLOSE_COIL": (980, 80),
-        "CB1": (1180, 200), "CB1_AUX": (1000, 280), "EMCP_DI11": (780, 280),
-        "GEN_BUS": (1180, 380), "PT1": (1360, 440), "CT1": (1000, 440),
+        # Control supply rail
+        "DC24_SOURCE": (0, 0), "F7": (280, 0), "CTRL_BUS": (560, 0),
+        # Close command path, above the rail
+        "EMCP_DO07": (840, -190), "W105": (1120, -190), "TB23_14": (1400, -190),
+        "K12_COIL": (1680, -190),
+        # Close coil path, below the rail
+        "K12_CONTACT": (840, 190), "TB23_16": (1120, 190), "CB1_CLOSE_COIL": (1400, 190),
+        "DC0V_RETURN": (2000, 0),
+        # Breaker and its feedback
+        "CB1": (1680, 400), "CB1_AUX": (1400, 570), "EMCP_DI11": (1120, 570),
+        # Medium-voltage side
+        "GEN_BUS": (1680, 740), "CT1": (1400, 910), "PT1": (1960, 910),
     }
     for key, label, node_type, signal, nominal, expected in NODES:
         terminal = terminals.get(label if label in terminals else key.replace("_", "-"))

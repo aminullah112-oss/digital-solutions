@@ -187,8 +187,8 @@ class SimulatorAdapter(ProtocolAdapter):
             "voltage_L3_L1": (vll + s.noise(6.0), "V"),
             "voltage_L1_N": (vll / math.sqrt(3) if vll else 0.0, "V"),
             "current_L1": (current, "A"),
-            "current_L2": (current + s.noise(3.0), "A"),
-            "current_L3": (current + s.noise(3.0), "A"),
+            "current_L2": (_phase(current, s.noise(3.0)), "A"),
+            "current_L3": (_phase(current, s.noise(3.0)), "A"),
             "frequency": (freq, "Hz"),
             "rpm": (rpm, "rpm"),
             "kw": (kw, "kW"),
@@ -284,3 +284,14 @@ class SimulatorAdapter(ProtocolAdapter):
             return []
         code, text, severity = entry
         return [{"code": code, "description": text, "severity": severity}]
+
+
+def _phase(base: float, noise: float) -> float:
+    """Per-phase current with imbalance noise.
+
+    Zero stays exactly zero: a breaker-open machine showing a negative amp on
+    one phase reads as a broken instrument, not as measurement noise.
+    """
+    if base <= 0.0:
+        return 0.0
+    return max(0.0, base + noise)

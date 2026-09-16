@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-panel-900 text-slate-200 antialiased;
+    font-feature-settings: 'tnum' 1, 'cv05' 1;
+  }
+  /* Tabular numerals everywhere a value is shown: digits must not shift
+     position as a reading changes, or the eye can't track a trend. */
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0b0f16; }
+  ::-webkit-scrollbar-thumb { background: #27303f; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #374151; }
+}
+
+@layer components {
+  .panel {
+    @apply bg-panel-800 border border-edge rounded-md;
+  }
+  .panel-header {
+    @apply px-4 py-2.5 border-b border-edge flex items-center justify-between gap-3;
+  }
+  .label {
+    @apply text-2xs uppercase tracking-wider text-slate-500 font-medium;
+  }
+  .value {
+    @apply tnum font-semibold;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium
+           border border-edge bg-panel-700 text-slate-200 transition-colors
+           hover:bg-panel-600 hover:border-slate-600 disabled:opacity-40
+           disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-blue-600/90 border-blue-500 text-white hover:bg-blue-600 hover:border-blue-400;
+  }
+  .btn-danger {
+    @apply bg-red-600/80 border-red-500/60 text-white hover:bg-red-600;
+  }
+  .input {
+    @apply w-full bg-panel-900 border border-edge rounded px-2.5 py-1.5 text-sm
+           text-slate-100 placeholder:text-slate-600 outline-none
+           focus:border-blue-500/70 focus:ring-1 focus:ring-blue-500/30;
+  }
+  .table-row {
+    @apply border-b border-edge/60 hover:bg-panel-700/40 transition-colors;
+  }
+  .th {
+    @apply text-2xs uppercase tracking-wider text-slate-500 font-medium text-left
+           px-3 py-2 border-b border-edge;
+  }
+  .td {
+    @apply px-3 py-2 text-sm;
+  }
+}
+
+/* React Flow surface tuned to the panel palette. */
+.react-flow__background { background-color: #080b10; }
+.react-flow__attribution { display: none; }
+.react-flow__handle { background: #475569; border-color: #1f2836; width: 7px; height: 7px; }
+.react-flow__edge-path { stroke-width: 1.6; }
+.react-flow__controls-button {
+  background: #161d28; border-bottom: 1px solid #27303f; fill: #94a3b8;
+}
+.react-flow__controls-button:hover { background: #1f2836; }
