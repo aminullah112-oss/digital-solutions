@@ -11,19 +11,74 @@ interface SchematicRow {
   import_status: string; created_at: string
 }
 
+interface Attachment { kind: string; key: string }
+
 interface Proposal {
-  kind: string; key: string; payload: Record<string, unknown>
-  confidence: number; confidence_band: 'HIGH' | 'MEDIUM' | 'LOW'
-  page_number: number; basis: string
+  kind: string
+  key: string
+  payload: {
+    wire_number?: string | null
+    attachments?: Attachment[]
+    conflicting_wire_numbers?: string[]
+    from_terminal?: string
+    to_terminal?: string
+    [k: string]: unknown
+  }
+  confidence: number
+  confidence_band: 'HIGH' | 'MEDIUM' | 'LOW'
+  page_number: number
+  basis: string
+  geometry?: { bbox?: number[] } | null
+}
+
+interface ImportPage {
+  page_number: number
+  width?: number
+  height?: number
+  is_vector?: boolean
+  words?: number
+  segments?: number
+  conductors?: number
+  devices?: number
+  junction_dots?: number
+  characters: number
+  has_text: boolean
+  note?: string
+}
+
+interface NetSummary {
+  nets: number
+  labelled_nets: number
+  nets_with_two_endpoints: number
+  orphan_fragments: number
+  nets_with_conflicting_numbers: number
+  note: string
 }
 
 interface ImportResult {
   schematic_id: number
-  pages: Array<{ page_number: number; characters: number; has_text: boolean }>
+  pages: ImportPage[]
   proposals: Proposal[]
   counts: Record<string, number>
   log: Array<{ stage: string; status: string; detail: string }>
+  nets: Record<string, NetSummary>
   note: string
+}
+
+// Review order: traced conductors carry the connectivity and deserve the most
+// scrutiny, then the things they land on. A flagged conductor sorts to the very
+// top — it is the one most likely to be wrong.
+const KIND_ORDER: Record<string, number> = {
+  net: 0, connection: 1, component: 2, terminal: 3, wire: 4,
+}
+
+function byReviewPriority(a: Proposal, b: Proposal): number {
+  const aFlagged = (a.payload.conflicting_wire_numbers ?? []).length > 0
+  const bFlagged = (b.payload.conflicting_wire_numbers ?? []).length > 0
+  if (aFlagged !== bFlagged) return aFlagged ? -1 : 1
+  const order = (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9)
+  if (order !== 0) return order
+  return a.key.localeCompare(b.key)
 }
 
 const BAND_CLASS = {
@@ -58,10 +113,12 @@ export function Schematics() {
       form.append('name', file.name)
       const body = await api.upload<ImportResult>('/api/schematics/upload', form)
       setResult(body)
-      // Pre-select only HIGH-confidence proposals. Anything less should be an
-      // explicit decision by whoever knows the panel.
+      // Pre-select HIGH-confidence items only, and never anything the tracer
+      // itself flagged as ambiguous. Everything else is an explicit decision
+      // by whoever knows the panel.
       setAccepted(new Set(body.proposals
-        .filter((p) => p.confidence_band === 'HIGH')
+        .filter((p) => p.confidence_band === 'HIGH'
+          && !(p.payload.conflicting_wire_numbers ?? []).length)
         .map((p) => `${p.kind}:${p.key}`)))
       void reload()
     } catch (e) {
@@ -169,82 +226,168 @@ export function Schematics() {
       </div>
 
       {result && (
-        <Panel
-          title={`Review proposals — ${accepted.size} of ${result.proposals.length} selected`}
-          actions={
-            <>
-              <button className="btn" onClick={() => setAccepted(new Set(
-                result.proposals.map((p) => `${p.kind}:${p.key}`)))}>
-                Select all
-              </button>
-              <button className="btn" onClick={() => setAccepted(new Set())}>Clear</button>
-              <button className="btn btn-primary" disabled={busy || accepted.size === 0}
-                onClick={() => void commit()}>
-                <CheckCircle2 className="h-3.5 w-3.5" /> Accept into circuit model
-              </button>
-            </>
-          }
-          dense
-        >
-          <p className="px-4 py-2 text-2xs text-slate-500 border-b border-edge">{result.note}</p>
-          <div className="max-h-96 overflow-y-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="th w-px" />
-                  <th className="th">Kind</th>
-                  <th className="th">Item</th>
-                  <th className="th">Confidence</th>
-                  <th className="th">Read from</th>
-                  <th className="th">Page</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.proposals.map((p) => {
-                  const id = `${p.kind}:${p.key}`
-                  return (
-                    <tr key={id} className="table-row">
-                      <td className="td">
-                        <input type="checkbox" checked={accepted.has(id)}
-                          onChange={(e) => setAccepted((prev) => {
-                            const next = new Set(prev)
-                            if (e.target.checked) next.add(id)
-                            else next.delete(id)
-                            return next
-                          })} />
-                      </td>
-                      <td className="td text-2xs uppercase text-slate-500">{p.kind}</td>
-                      <td className="td font-mono text-xs text-slate-100">
-                        {p.kind === 'connection'
-                          ? `${p.payload.from_terminal} ↔ ${p.payload.to_terminal}`
-                          : p.key}
-                      </td>
-                      <td className="td">
-                        <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold
-                          ${BAND_CLASS[p.confidence_band]}`}>
-                          {p.confidence_band} {Math.round(p.confidence * 100)}%
-                        </span>
-                      </td>
-                      <td className="td text-2xs text-slate-500 font-mono truncate max-w-xs">
-                        {p.basis}
-                      </td>
-                      <td className="td text-2xs text-slate-500">{p.page_number}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+        <>
+          <Panel title="What was read from the drawing">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {result.pages.map((page) => {
+                const summary = result.nets[String(page.page_number)]
+                return (
+                  <div key={page.page_number}
+                    className="rounded border border-edge bg-panel-900/60 p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-semibold text-slate-100">
+                        Page {page.page_number}
+                      </span>
+                      <span className={`text-[10px] font-bold ${page.is_vector
+                        ? 'text-emerald-300' : 'text-amber-300'}`}>
+                        {page.is_vector ? 'VECTOR' : 'NO LINE GEOMETRY'}
+                      </span>
+                    </div>
+                    {page.is_vector ? (
+                      <dl className="grid grid-cols-2 gap-y-1 text-2xs">
+                        <Stat label="Conductor segments" value={page.conductors} />
+                        <Stat label="Device outlines" value={page.devices} />
+                        <Stat label="Junction dots" value={page.junction_dots} />
+                        <Stat label="Text runs" value={page.words} />
+                        {summary && <>
+                          <Stat label="Traced conductors" value={summary.nets} />
+                          <Stat label="With a wire number" value={summary.labelled_nets} />
+                        </>}
+                      </dl>
+                    ) : (
+                      <p className="text-2xs text-amber-200/80">{page.note}</p>
+                    )}
+                    {summary && summary.nets_with_conflicting_numbers > 0 && (
+                      <p className="text-2xs text-amber-300 mt-2">
+                        {summary.nets_with_conflicting_numbers} conductor(s) carry more than
+                        one wire number — check these first.
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            <SafetyNotice tone="info">
+              Crossing conductors are joined only where a junction dot is drawn, or where one
+              ends on the other. Two wires that merely cross are left unconnected, because
+              that is what the drawing means. Device symbols break the conductor, so a fuse
+              or a coil stays a component between two wires rather than dissolving into one.
+            </SafetyNotice>
+          </Panel>
 
-          <div className="px-4 py-2 border-t border-edge">
-            {result.log.map((entry, i) => (
-              <p key={i} className="text-2xs text-slate-600">
-                <span className="font-semibold text-slate-500">{entry.stage}</span>
-                {' — '}{entry.status}: {entry.detail}
-              </p>
-            ))}
-          </div>
-        </Panel>
+          <Panel
+            title={`Review proposals — ${accepted.size} of ${result.proposals.length} selected`}
+            actions={
+              <>
+                <button className="btn" onClick={() => setAccepted(new Set(
+                  result.proposals.filter((p) => p.confidence_band === 'HIGH')
+                    .map((p) => `${p.kind}:${p.key}`)))}>
+                  High only
+                </button>
+                <button className="btn" onClick={() => setAccepted(new Set(
+                  result.proposals.filter((p) => p.confidence_band !== 'LOW')
+                    .map((p) => `${p.kind}:${p.key}`)))}>
+                  High + medium
+                </button>
+                <button className="btn" onClick={() => setAccepted(new Set())}>Clear</button>
+                <button className="btn btn-primary" disabled={busy || accepted.size === 0}
+                  onClick={() => void commit()}>
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Accept into circuit model
+                </button>
+              </>
+            }
+            dense
+          >
+            <p className="px-4 py-2 text-2xs text-slate-500 border-b border-edge">
+              {result.note}
+            </p>
+            <div className="max-h-[32rem] overflow-y-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="th w-px" />
+                    <th className="th">Kind</th>
+                    <th className="th">Item</th>
+                    <th className="th">Lands on</th>
+                    <th className="th">Confidence</th>
+                    <th className="th">Read from the drawing</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...result.proposals].sort(byReviewPriority).map((p) => {
+                    const id = `${p.kind}:${p.key}`
+                    const conflicts = p.payload.conflicting_wire_numbers ?? []
+                    const attachments = p.payload.attachments ?? []
+                    return (
+                      <tr key={id} className={`table-row ${conflicts.length
+                        ? 'bg-amber-950/20' : ''}`}>
+                        <td className="td">
+                          <input type="checkbox" checked={accepted.has(id)}
+                            onChange={(e) => setAccepted((prev) => {
+                              const next = new Set(prev)
+                              if (e.target.checked) next.add(id)
+                              else next.delete(id)
+                              return next
+                            })} />
+                        </td>
+                        <td className="td text-2xs uppercase text-slate-500">
+                          {p.kind === 'net' ? 'conductor' : p.kind}
+                        </td>
+                        <td className="td font-mono text-xs text-slate-100">
+                          {p.kind === 'connection'
+                            ? `${p.payload.from_terminal} ↔ ${p.payload.to_terminal}`
+                            : p.key}
+                          {conflicts.length > 0 && (
+                            <div className="text-[10px] text-amber-300 font-sans mt-0.5">
+                              also numbered {conflicts.filter((w) => w !== p.key).join(', ')}
+                            </div>
+                          )}
+                        </td>
+                        <td className="td">
+                          {attachments.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {attachments.map((a) => (
+                                <span key={a.key} className={`px-1.5 py-0.5 rounded border
+                                  text-[10px] font-mono ${a.kind === 'terminal'
+                                    ? 'border-blue-500/40 bg-blue-500/10 text-blue-200'
+                                    : 'border-violet-500/40 bg-violet-500/10 text-violet-200'}`}>
+                                  {a.key}
+                                </span>
+                              ))}
+                            </div>
+                          ) : <span className="text-slate-700">—</span>}
+                        </td>
+                        <td className="td">
+                          <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold
+                            ${BAND_CLASS[p.confidence_band]}`}>
+                            {p.confidence_band} {Math.round(p.confidence * 100)}%
+                          </span>
+                        </td>
+                        <td className="td text-2xs text-slate-500 max-w-md">
+                          {p.basis}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="px-4 py-2 border-t border-edge">
+              {result.log.map((entry, i) => (
+                <p key={i} className="text-2xs text-slate-600">
+                  <span className="font-semibold text-slate-500">{entry.stage}</span>
+                  {' — '}
+                  <span className={entry.status === 'OK' ? 'text-emerald-400/70'
+                    : entry.status === 'UNAVAILABLE' ? 'text-amber-400/70' : ''}>
+                    {entry.status}
+                  </span>
+                  : {entry.detail}
+                </p>
+              ))}
+            </div>
+          </Panel>
+        </>
       )}
 
       {viewing && (
@@ -259,6 +402,15 @@ export function Schematics() {
  * Circuit Explorer, the untouched drawing here. A derived model that can't be
  * checked against the source is not trustworthy.
  */
+function Stat({ label, value }: { label: string; value: number | undefined }) {
+  return (
+    <>
+      <dt className="text-slate-500">{label}</dt>
+      <dd className="text-slate-200 tnum text-right">{value ?? '—'}</dd>
+    </>
+  )
+}
+
 function OriginalViewer({ schematic, onClose }: {
   schematic: SchematicRow; onClose: () => void
 }) {

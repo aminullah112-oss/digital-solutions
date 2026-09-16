@@ -12,14 +12,19 @@ psycopg[binary]>=3.1
 # Industrial protocols
 pymodbus>=3.6
 
+# Schematic reading. Required for anything beyond storing the uploaded file:
+# without it a PDF yields no text and no line geometry, and the importer
+# reports the capability as unavailable rather than guessing.
+pypdf>=4.0
+
 # Optional, feature-gated at runtime. The application starts and reports the
 # capability as unavailable rather than failing if these are absent.
-# pypdf>=4.0            # schematic text extraction
 # pytesseract>=0.3.10   # OCR of scanned drawings (also needs Tesseract)
 # Pillow>=10.0          # image handling for OCR
-# reportlab>=4.0        # PDF report rendering
+# reportlab>=4.0        # PDF report rendering, and the sample-schematic tool
 # httpx>=0.26           # AI provider calls
 
 # Development
 pytest>=8.0
 httpx>=0.26
+reportlab>=4.0          # tools/make_sample_schematic.py

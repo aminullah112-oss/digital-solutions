@@ -15,6 +15,7 @@ from ...models import (
     CircuitEdge, CircuitNode, Component, Connection, Project, Schematic, SchematicPage, Terminal,
     Wire,
 )
+from ...domain import EdgeType
 from ...security import current_user, requires
 from ...services import schematic_import
 
@@ -82,6 +83,7 @@ async def upload(file: UploadFile, project_id: int = Form(...), name: str = Form
     for page in result.pages:
         db.add(SchematicPage(
             schematic_id=schematic.id, page_number=page["page_number"],
+            width=page.get("width"), height=page.get("height"),
             extracted_text=[page["extracted_text"]] if page["extracted_text"] else [],
         ))
     schematic.page_count = len(result.pages)
@@ -143,9 +145,14 @@ def accept_proposals(schematic_id: int, proposals: list[dict],
     if schematic is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "schematic not found")
     project_id = schematic.project_id
-    created = {"components": 0, "terminals": 0, "wires": 0, "nodes": 0, "connections": 0}
+    created = {"components": 0, "terminals": 0, "wires": 0, "nodes": 0,
+               "connections": 0, "nets": 0}
 
     terminals: dict[str, Terminal] = {}
+    # Nets are committed after everything else so their attachments already
+    # exist as nodes.
+    net_proposals = [p for p in proposals if p.get("kind") == "net"]
+    proposals = [p for p in proposals if p.get("kind") != "net"]
     for proposal in proposals:
         kind = proposal.get("kind")
         payload = proposal.get("payload", {})
@@ -165,7 +172,8 @@ def accept_proposals(schematic_id: int, proposals: list[dict],
             created["components"] += 1
             _ensure_node(db, project_id, ref, component.component_type,
                          component_id=component.id,
-                         controller_signal=payload.get("controller_signal", ""))
+                         controller_signal=payload.get("controller_signal", ""),
+                         position=_layout_from(db, schematic_id, proposal))
             created["nodes"] += 1
         elif kind == "terminal":
             tag = payload.get("tag")
@@ -184,7 +192,8 @@ def accept_proposals(schematic_id: int, proposals: list[dict],
             terminals[tag] = terminal
             created["terminals"] += 1
             _ensure_node(db, project_id, tag.replace("-", "_"), NodeType.TERMINAL,
-                         terminal_id=terminal.id, label=tag)
+                         terminal_id=terminal.id, label=tag,
+                         position=_layout_from(db, schematic_id, proposal))
             created["nodes"] += 1
         elif kind == "wire":
             number = payload.get("wire_number")
@@ -220,21 +229,145 @@ def accept_proposals(schematic_id: int, proposals: list[dict],
                                verified=True))
             created["connections"] += 1
 
+    # --- traced conductors -------------------------------------------------
+    # A net becomes a WIRE node with an edge to everything that lands on it.
+    # Modelling the conductor as its own node keeps a device (a fuse, a coil)
+    # as a node between two conductors instead of dissolving it into a wire,
+    # which is what makes a trace stop at the component that broke.
+    for proposal in net_proposals:
+        payload = proposal.get("payload", {})
+        wire_number = payload.get("wire_number")
+        net_key = (wire_number or proposal.get("key") or "").replace("-", "_").upper()
+        if not net_key:
+            continue
+
+        wire_row = None
+        if wire_number:
+            wire_row = db.scalars(select(Wire).where(
+                Wire.project_id == project_id, Wire.wire_number == wire_number)).first()
+            if wire_row is None:
+                wire_row = Wire(project_id=project_id, wire_number=wire_number,
+                                description=proposal.get("basis", ""),
+                                confidence=1.0, verified=True)
+                db.add(wire_row)
+                db.flush()
+                created["wires"] += 1
+
+        net_node = _ensure_node(db, project_id, net_key, NodeType.WIRE,
+                                label=wire_number or net_key,
+                                position=_layout_from(db, schematic_id, proposal))
+        if wire_row is not None and net_node.wire_id is None:
+            net_node.wire_id = wire_row.id
+        net_node.schematic_page_id = net_node.schematic_page_id or _page_id(
+            db, schematic_id, proposal.get("page_number"))
+        created["nets"] += 1
+
+        for attachment in payload.get("attachments", []):
+            key = (attachment.get("key") or "").strip()
+            if not key:
+                continue
+            if attachment.get("kind") == "terminal":
+                terminal_row = terminals.get(key) or db.scalars(select(Terminal).where(
+                    Terminal.project_id == project_id, Terminal.tag == key)).first()
+                if terminal_row is None:
+                    terminal_row = Terminal(project_id=project_id, tag=key,
+                                            description=proposal.get("basis", "")[:200],
+                                            confidence=1.0, verified=True)
+                    db.add(terminal_row)
+                    db.flush()
+                    terminals[key] = terminal_row
+                    created["terminals"] += 1
+                node = _ensure_node(db, project_id, key.replace("-", "_"), NodeType.TERMINAL,
+                                    terminal_id=terminal_row.id, label=key)
+            else:
+                component_row = db.scalars(select(Component).where(
+                    Component.project_id == project_id,
+                    Component.reference_designator == key)).first()
+                node_type = schematic_import.node_type_for(key)
+                if component_row is None:
+                    component_row = Component(
+                        project_id=project_id, reference_designator=key,
+                        component_type=node_type, description=proposal.get("basis", "")[:200],
+                        confidence=1.0, verified=True)
+                    db.add(component_row)
+                    db.flush()
+                    created["components"] += 1
+                node = _ensure_node(db, project_id, key.replace("-", "_"), node_type,
+                                    component_id=component_row.id, label=key,
+                                    controller_signal=key.replace("-", "_")
+                                    if node_type in (NodeType.CONTROLLER_INPUT,
+                                                     NodeType.CONTROLLER_OUTPUT) else "")
+
+            existing = db.scalars(select(CircuitEdge).where(
+                CircuitEdge.project_id == project_id,
+                CircuitEdge.from_node_id == net_node.id,
+                CircuitEdge.to_node_id == node.id)).first()
+            if existing is None:
+                db.add(CircuitEdge(
+                    project_id=project_id, from_node_id=net_node.id, to_node_id=node.id,
+                    edge_type=EdgeType.CONNECTED_TO,
+                    wire_id=wire_row.id if wire_row else None,
+                    label=wire_number or "", confidence=1.0, verified=True,
+                    notes=proposal.get("basis", "")[:500],
+                ))
+                created["connections"] += 1
+
     schematic.import_status = "REVIEWED"
     db.commit()
     return {"schematic_id": schematic_id, "created": created}
 
 
+def _page_id(db: Session, schematic_id: int, page_number: int | None) -> int | None:
+    if not page_number:
+        return None
+    page = db.scalars(select(SchematicPage).where(
+        SchematicPage.schematic_id == schematic_id,
+        SchematicPage.page_number == page_number)).first()
+    return page.id if page else None
+
+
+#: Drawing points to canvas pixels. Schematics are drawn with generous spacing
+#: at 1 pt per unit; the interactive nodes are larger than the symbols they
+#: stand for, so the layout needs room.
+LAYOUT_SCALE = 1.6
+
+
+def _layout_from(db: Session, schematic_id: int, proposal: dict) -> tuple[float, float] | None:
+    """Place an imported node where it sits on the drawing.
+
+    A graph laid out like the page it came from is navigable; the same graph
+    with everything at the origin is not. PDF coordinates run bottom-up, the
+    canvas runs top-down, so y is flipped against the page height.
+    """
+    bbox = (proposal.get("geometry") or {}).get("bbox")
+    if not bbox or len(bbox) != 4:
+        return None
+    page = db.scalars(select(SchematicPage).where(
+        SchematicPage.schematic_id == schematic_id,
+        SchematicPage.page_number == proposal.get("page_number"))).first()
+    height = (page.height if page and page.height else None) or max(bbox[1], bbox[3])
+    cx = (bbox[0] + bbox[2]) / 2.0
+    cy = (bbox[1] + bbox[3]) / 2.0
+    return (round(cx * LAYOUT_SCALE, 1), round((height - cy) * LAYOUT_SCALE, 1))
+
+
 def _ensure_node(db: Session, project_id: int, key: str, node_type, *,
                  component_id: int | None = None, terminal_id: int | None = None,
-                 label: str = "", controller_signal: str = "") -> CircuitNode:
+                 label: str = "", controller_signal: str = "",
+                 position: tuple[float, float] | None = None) -> CircuitNode:
     node = db.scalars(select(CircuitNode).where(
         CircuitNode.project_id == project_id, CircuitNode.key == key)).first()
     if node:
+        # An existing node keeps its position: a hand-placed node should not be
+        # shoved around by a later import.
+        if position and node.x is None and node.y is None:
+            node.x, node.y = position
         return node
     node = CircuitNode(project_id=project_id, key=key, label=label or key,
                        node_type=node_type, component_id=component_id,
                        terminal_id=terminal_id, controller_signal=controller_signal,
+                       x=position[0] if position else None,
+                       y=position[1] if position else None,
                        confidence=1.0, verified=True)
     db.add(node)
     db.flush()

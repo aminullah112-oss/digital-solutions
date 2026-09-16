@@ -183,24 +183,81 @@ the deterministic findings do not depend on it.
 
 ---
 
-## Schematic import: what it does and does not do
+## Uploading real schematics
+
+Schematics exported from AutoCAD Electrical, EPLAN, SEE Electrical and similar tools are
+**vector** PDFs: the wires are real line segments with coordinates, and the tags are real
+text with coordinates. That is the difference between guessing at a drawing and reading
+it, and it is what the importer works on.
 
 | Stage | Status |
 |---|---|
-| Page detection | Implemented (pypdf; without it a PDF is treated as one page) |
-| Embedded text extraction | Implemented (requires pypdf) |
+| Page detection | Implemented |
+| Positioned text extraction | Implemented — every text run with its position on the page |
+| Line geometry extraction | Implemented — stroked segments, via a PDF content-stream interpreter |
+| Device / terminal outline detection | Implemented — closed outlines, split by size |
+| Junction dot detection | Implemented — small filled blobs |
+| Conductor (net) tracing | Implemented |
+| Designator / terminal / wire tag reading | Implemented, confidence-scored |
 | OCR of scanned pages | Optional (requires pytesseract + Tesseract) |
-| Reference designator detection | Implemented (pattern-based, confidence-scored) |
-| Terminal / wire number detection | Implemented |
-| Connection proposal | Implemented — **weak**, capped at MEDIUM confidence |
-| Symbol recognition | **Not implemented** |
-| Line / vector tracing | **Not implemented** |
+| Symbol classification by shape | **Not implemented** — a device's kind comes from its designator (K, F, CB…) |
+| Cross-sheet off-page references | **Not implemented** |
 
-There is no claim of automatic schematic understanding. Connectivity that exists only as
-a drawn line is not extracted. Everything the importer finds is a *proposal* with a
-confidence band (HIGH ≥ 85%, MEDIUM ≥ 60%, LOW below), and only what a reviewer
-explicitly accepts enters the circuit model. The original file is always preserved and
-viewable alongside the interactive model.
+### The rules it traces by
+
+These are the drawing conventions, not convenient approximations:
+
+* Two segments sharing an endpoint are the same conductor.
+* An endpoint landing on another segment's interior is a T-junction, and is the same
+  conductor.
+* **Two conductors whose interiors cross are NOT connected.** Wires cross on schematics
+  constantly without being joined. Joining them manufactures continuity that does not
+  exist, which in a fault-finding tool sends a technician to the wrong side of a panel.
+* A crossing is joined only where a junction dot is drawn — which is exactly what the
+  dot means.
+* **A closed symbol outline is a device, not a length of wire.** A coil, a fuse or a
+  controller block breaks the conductor, so it stays a component between two wires
+  instead of dissolving into one. Tracing straight through a component would hide the
+  very break someone is looking for.
+* A wire number binds to a conductor only when it sits alongside that conductor's body.
+  A tag that merely happens to be near a crossing line is not claimed by it.
+
+### Review
+
+Everything the importer produces is a *proposal* with a confidence band (HIGH ≥ 85%,
+MEDIUM ≥ 60%, LOW below) and the evidence that produced it:
+
+```
+CONDUCTOR  W-105  (also numbered W-106, W-200)   MEDIUM 68%
+  lands on: TB23-14  TB23-20  DO-07  K12
+  traced conductor: 11 segment(s), 502 pt, labelled W-105; 1 junction dot(s);
+  lands on TB23-14, TB23-20, DO-07, K12. NOTE: this conductor carries more than
+  one wire number (W-105, W-106, W-200) — confirm it is really one conductor.
+```
+
+Nothing enters the circuit model until a reviewer accepts it. Only HIGH-confidence items
+are pre-selected, and anything the tracer itself flagged as ambiguous is never
+pre-selected. Accepted nodes are laid out at their position on the drawing, so the
+interactive circuit reads like the page it came from. The original file is always
+preserved and viewable alongside it.
+
+A **scanned** drawing is raster: no text, no geometry, nothing to trace. With OCR
+installed the tags can still be read, but connectivity cannot be recovered from a scan
+at all, and the importer reports that rather than proposing something.
+
+### Trying it
+
+`tools/make_sample_schematic.py` generates a vector ladder diagram of the same breaker
+close circuit the demo project builds by hand — including a conductor that crosses two
+rungs, joined to one by a junction dot and merely crossing the other:
+
+```bash
+python tools/make_sample_schematic.py /tmp/E-4412.pdf
+```
+
+Upload it under Schematics. It should trace five conductors, keep the close command and
+the close coil on separate nets, and flag the conductors carrying more than one wire
+number. `tests/test_schematic_import.py` asserts exactly that.
 
 ---
 
@@ -284,11 +341,16 @@ backend/
       fault_tree.py        Live-status fault tree
       correlation.py       Cross-source event timeline
       measurement_safety.py  Input rating / isolation validation
-      schematic_import.py  Text-based extraction pipeline
+      pdf_geometry.py      Vector PDF reader: positioned text, stroked segments,
+                           device outlines, junction dots
+      net_builder.py       Conductor tracing, junction rules, label binding
+      schematic_import.py  Import pipeline over the above, with a text-only fallback
       ai.py                AI layer with response validation
       reports.py           JSON / CSV / HTML / PDF
       demo.py              Demo panel seeding and fault injection
     api/routes/            REST + WebSocket
+  tools/
+    make_sample_schematic.py   Generates a vector test drawing
   tests/
 frontend/
   src/
@@ -310,8 +372,14 @@ Worth stating plainly rather than discovering in a plant:
   device model, channel safety validation and measurement recording are real; a driver
   that reads a specific physical DAQ over Modbus is not written. Manual measurement
   entry works today.
-* **Schematic symbol and line recognition are not implemented**, so the circuit model
-  comes from text plus review, not from the geometry of the drawing.
+* **Symbols are located but not classified.** A device outline is found and positioned,
+  but what kind of device it is comes from its reference designator, so a panel using
+  its own naming scheme needs the component proposals corrected by hand at review.
+* **Off-page cross-references are not followed.** Each sheet is traced on its own; a
+  conductor continuing on sheet 13 is not joined to its continuation automatically.
+* **Curves are reduced to their endpoints.** Wires in a schematic are straight, so this
+  is safe for conductors, but a line-hop arc drawn over a crossing wire may split a
+  conductor into two nets. Those show up as separate nets at review.
 * **PDF report rendering needs ReportLab.** Without it the API says so and returns
   print-ready HTML rather than a broken file.
 * **Clock skew between sources is reported, not corrected.** Sub-second ordering between
