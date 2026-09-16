@@ -307,6 +307,62 @@ procedure. Walk it through Diagnostics → Troubleshooting → Reports.
 
 ---
 
+## Deploying it
+
+**This is not a static site.** It needs a running Python process, a database, WebSockets
+and disk for uploaded drawings. Static hosting — GitHub Pages, S3, Netlify's free tier —
+can serve the frontend, but the frontend on its own is a login screen that can never
+authenticate.
+
+### Where it should sit on the network
+
+The backend opens TCP connections to controllers on the plant network. That makes its
+placement a security decision before it is a hosting decision:
+
+* Run it **on the plant network**, or on a host with a route to it. A cloud deployment
+  needs a VPN or a tunnel back to the panel; do not forward Modbus in from the internet.
+* Put the UI behind whatever the site already uses for remote access. Modbus TCP has no
+  authentication of its own — anything that can reach port 502 can read the controller,
+  and on many devices write to it. PowerTrace AI never writes, but it should not be the
+  reason that port becomes reachable.
+* One backend process per site. The polling workers and the live value cache are
+  per-process state, so a second worker polls the same controllers again and answers with
+  different numbers depending on which one you hit. Scale with a proxy in front of one
+  process, not with more workers.
+
+### Docker Compose
+
+```bash
+cd powertrace-ai
+export POWERTRACE_SECRET_KEY=$(python -c 'import secrets;print(secrets.token_urlsafe(48))')
+export POWERTRACE_ADMIN_PASSWORD='something you actually chose'
+docker compose up -d --build
+```
+
+Frontend on `http://localhost:8080`, API docs at `/api/docs`. The stack is Postgres,
+the backend, and nginx serving the built frontend while proxying `/api` and `/ws` to it —
+one origin, so no CORS, one certificate, and a WebSocket that inherits the page's TLS.
+
+The backend **refuses to start** outside development with the default secret key or with
+no administrator password set. That check runs before the database is touched, so a
+refused start leaves nothing behind.
+
+Two volumes matter: `pgdata` and `schematics`. Losing the second loses the original
+drawings the circuit model was reviewed against.
+
+### Split hosting
+
+If the frontend has to live on a static host and the backend elsewhere, build with
+`VITE_API_BASE=https://api.example.com` and set `POWERTRACE_CORS_ORIGINS` on the backend
+to name the frontend's origin. It works, but prefer the single-origin shape — splitting
+adds CORS, a second certificate and a cross-origin WebSocket, which is three more things
+to be wrong at 03:00.
+
+### Running it without containers
+
+`backend/run.sh` for development. For anything else, the container is the supported path;
+the Dockerfile shows the exact command and the non-root user it runs as.
+
 ## Tests
 
 ```bash
@@ -352,9 +408,11 @@ backend/
   tools/
     make_sample_schematic.py   Generates a vector test drawing
   tests/
+docker-compose.yml       Postgres + backend + nginx, one command
 frontend/
+  Dockerfile, nginx.conf   Build and serve, proxying /api and /ws to the backend
   src/
-    lib/                   api, types, formatting, hooks
+    lib/                   api, config (API origin), types, formatting, hooks
     components/            ui primitives, layout, circuit canvas, fault tree
     pages/                 14 screens
 ```

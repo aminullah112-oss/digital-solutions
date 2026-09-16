@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import { Download, LineChart as LineChartIcon } from 'lucide-react'
 import { getToken } from '@/lib/api'
+import { apiUrl } from '@/lib/config'
 import { useApi, usePolling, useSelectedProject } from '@/lib/hooks'
 import type { Controller } from '@/lib/types'
 import { Empty, Panel, Spinner } from '@/components/ui'
@@ -96,7 +97,7 @@ export function Trends() {
           className="btn ml-auto"
           onClick={async () => {
             const token = getToken()
-            const response = await fetch(exportUrl, {
+            const response = await fetch(apiUrl(exportUrl), {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
             })
             const blob = await response.blob()

@@ -1,6 +1,8 @@
 // Thin API client. Errors surface the server's message rather than a generic
 // "request failed" — during troubleshooting, the reason matters.
 
+import { apiUrl } from './config'
+
 const TOKEN_KEY = 'powertrace.token'
 
 export function getToken(): string | null {
@@ -26,7 +28,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(path, { ...init, headers })
+  const response = await fetch(apiUrl(path), { ...init, headers })
   if (response.status === 401) {
     setToken(null)
     window.dispatchEvent(new CustomEvent('powertrace:unauthorized'))
@@ -63,7 +65,7 @@ export const api = {
     request<T>(path, { method: 'POST', body: form }),
   raw: (path: string) => {
     const token = getToken()
-    return fetch(path, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    return fetch(apiUrl(path), { headers: token ? { Authorization: `Bearer ${token}` } : {} })
   },
 }
 

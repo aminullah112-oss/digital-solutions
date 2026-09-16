@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
+import { wsUrl } from './config'
 import type { ValueEnvelope } from './types'
 
 /** Fetch with loading/error state and manual refresh. */
@@ -58,8 +59,7 @@ export function useLiveValues(controllerId: number | null) {
 
     const connect = () => {
       if (closed) return
-      const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
-      const socket = new WebSocket(`${protocol}://${location.host}/ws/controllers/${controllerId}`)
+      const socket = new WebSocket(wsUrl(`/ws/controllers/${controllerId}`))
       socketRef.current = socket
 
       socket.onopen = () => setConnected(true)

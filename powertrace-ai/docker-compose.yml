@@ -1,0 +1,64 @@
+# PowerTrace AI — full stack.
+#
+#   cp backend/.env.example .env     # then set POWERTRACE_SECRET_KEY
+#   docker compose up -d --build
+#
+# Frontend on http://localhost:8080, API docs at http://localhost:8080/api/docs.
+#
+# This is a single-site deployment: one backend process per panel network,
+# because the polling workers and live value cache are per-process state.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: powertrace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-powertrace}
+      POSTGRES_DB: powertrace
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U powertrace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POWERTRACE_ENVIRONMENT: production
+      POWERTRACE_DATABASE_URL: >-
+        postgresql+psycopg://powertrace:${POSTGRES_PASSWORD:-powertrace}@db:5432/powertrace
+      # Refuses to start outside development if this is left at the default.
+      POWERTRACE_SECRET_KEY: ${POWERTRACE_SECRET_KEY:?set POWERTRACE_SECRET_KEY}
+      POWERTRACE_ADMIN_EMAIL: ${POWERTRACE_ADMIN_EMAIL:-admin@example.com}
+      POWERTRACE_ADMIN_PASSWORD: ${POWERTRACE_ADMIN_PASSWORD:?set POWERTRACE_ADMIN_PASSWORD}
+      # Turn this off on a real installation. On, every screen carries the
+      # DEMO MODE banner and simulated controllers are pollable.
+      POWERTRACE_DEMO_MODE: ${POWERTRACE_DEMO_MODE:-false}
+      # No adapter implements a write. The flag exists so the policy is
+      # visible in Settings, not because turning it on enables anything.
+      POWERTRACE_ALLOW_CONTROL_WRITES: "false"
+    volumes:
+      - schematics:/app/storage
+    restart: unless-stopped
+    # The backend reaches out to controllers on the plant network. It does not
+    # need to be reachable from outside; nginx is the only ingress.
+    expose:
+      - "8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "${POWERTRACE_PORT:-8080}:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  schematics:

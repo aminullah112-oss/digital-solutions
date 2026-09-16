@@ -67,6 +67,30 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
+class InsecureConfiguration(RuntimeError):
+    """Raised when a production start would leave a known door open."""
+
+
+def check_production_config(settings: "Settings", environ: dict[str, str]) -> None:
+    """Refuse to start a non-development installation with default credentials.
+
+    Called before anything touches the database. Checking after seeding meant a
+    correctly-refused start still wrote a default-password administrator row —
+    the check creating the very hole it exists to close.
+    """
+    if settings.environment == "development":
+        return
+    if settings.secret_key.startswith("dev-only"):
+        raise InsecureConfiguration(
+            "POWERTRACE_SECRET_KEY must be set outside development."
+        )
+    if not environ.get("POWERTRACE_ADMIN_PASSWORD"):
+        raise InsecureConfiguration(
+            "POWERTRACE_ADMIN_PASSWORD must be set outside development; refusing to "
+            "create an administrator with a default password."
+        )
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

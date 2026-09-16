@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -18,7 +19,7 @@ from .api import ws as ws_module
 from .api.routes import (
     alarms, auth, circuits, controllers, diagnostics, measurements, misc, projects, schematics,
 )
-from .config import settings
+from .config import check_production_config, settings
 from .db import SessionLocal, init_db
 from .domain import MV_SAFETY_NOTICE
 from .security import ensure_seed_admin
@@ -51,17 +52,16 @@ SIMULATED or UNKNOWN, and is set where the value is produced.
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Checked before anything touches the database.
+    check_production_config(settings, dict(os.environ))
+
     init_db()
     db = SessionLocal()
     try:
         created = ensure_seed_admin(db)
         if created:
-            log.warning("Created initial admin %s — change this password.", created.email)
-        if settings.environment != "development" and \
-                settings.secret_key.startswith("dev-only"):
-            raise RuntimeError(
-                "POWERTRACE_SECRET_KEY must be set outside development."
-            )
+            log.warning("Created initial administrator %s. Change this password now.",
+                        created.email)
     finally:
         db.close()
 

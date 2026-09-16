@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Download, FileText } from 'lucide-react'
 import { getToken } from '@/lib/api'
+import { apiUrl } from '@/lib/config'
 import { useApi, useSelectedProject } from '@/lib/hooks'
 import { formatDateTime } from '@/lib/format'
 import { Empty, Panel, SafetyNotice, Spinner } from '@/components/ui'
@@ -83,7 +84,7 @@ function DownloadButton({ id, format }: { id: number; format: 'json' | 'csv' | '
   const [error, setError] = useState<string | null>(null)
   const download = async () => {
     const token = getToken()
-    const response = await fetch(`/api/reports/${id}?format=${format}`, {
+    const response = await fetch(apiUrl(`/api/reports/${id}?format=${format}`), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
     if (!response.ok) {
@@ -120,7 +121,7 @@ function ReportPreview({ id, onClose }: { id: number; onClose: () => void }) {
 
   useEffect(() => {
     const token = getToken()
-    fetch(`/api/reports/${id}?format=html`, {
+    fetch(apiUrl(`/api/reports/${id}?format=html`), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     }).then((r) => r.text()).then(setHtml)
   }, [id])

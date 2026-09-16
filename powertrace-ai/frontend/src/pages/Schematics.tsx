@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Binary, CheckCircle2, FileUp, Upload } from 'lucide-react'
 import { api, getToken } from '@/lib/api'
+import { apiUrl } from '@/lib/config'
 import { useApi, useSelectedProject } from '@/lib/hooks'
 import { formatDateTime } from '@/lib/format'
 import { Empty, ErrorNote, Panel, SafetyNotice, Spinner } from '@/components/ui'
@@ -420,7 +421,7 @@ function OriginalViewer({ schematic, onClose }: {
   useEffect(() => {
     const token = getToken()
     let objectUrl: string | null = null
-    fetch(`/api/schematics/${schematic.id}/original`, {
+    fetch(apiUrl(`/api/schematics/${schematic.id}/original`), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => r.blob())

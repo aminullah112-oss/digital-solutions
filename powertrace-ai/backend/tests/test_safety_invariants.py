@@ -135,3 +135,42 @@ def test_simulated_values_stay_tagged_simulated():
     normalized = normalize(readings, simulated=True)
     assert normalized["voltage_L1_L2"]["quality"] == "SIMULATED"
     assert normalized["voltage_L1_L2"]["source"] == "SIMULATED"
+
+
+def test_production_refuses_a_default_secret_key():
+    """A refused start must happen before anything touches the database.
+
+    Seeding first meant a production start that was correctly refused still
+    wrote a default-password administrator row — the check creating the very
+    hole it exists to close.
+    """
+    from app.config import InsecureConfiguration, Settings, check_production_config
+
+    settings = Settings(environment="production")
+    with pytest.raises(InsecureConfiguration, match="POWERTRACE_SECRET_KEY"):
+        check_production_config(settings, {"POWERTRACE_ADMIN_PASSWORD": "set"})
+
+
+def test_production_refuses_a_default_admin_password():
+    from app.config import InsecureConfiguration, Settings, check_production_config
+
+    settings = Settings(environment="production", secret_key="a-real-secret-key")
+    with pytest.raises(InsecureConfiguration, match="POWERTRACE_ADMIN_PASSWORD"):
+        check_production_config(settings, {})
+
+
+def test_development_is_left_alone():
+    """The guard must not make a laptop install refuse to run."""
+    from app.config import Settings, check_production_config
+
+    check_production_config(Settings(environment="development"), {})
+
+
+def test_the_guard_runs_before_the_database_is_created():
+    """Ordering is the whole point, so assert it rather than trusting it."""
+    import inspect
+
+    from app import main
+
+    source = inspect.getsource(main.lifespan)
+    assert source.index("check_production_config") < source.index("init_db()")
