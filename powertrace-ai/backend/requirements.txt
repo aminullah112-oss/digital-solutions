@@ -1,0 +1,25 @@
+# Core
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+pydantic-settings>=2.2
+SQLAlchemy>=2.0
+python-multipart>=0.0.9
+
+# PostgreSQL driver (not needed if running on SQLite)
+psycopg[binary]>=3.1
+
+# Industrial protocols
+pymodbus>=3.6
+
+# Optional, feature-gated at runtime. The application starts and reports the
+# capability as unavailable rather than failing if these are absent.
+# pypdf>=4.0            # schematic text extraction
+# pytesseract>=0.3.10   # OCR of scanned drawings (also needs Tesseract)
+# Pillow>=10.0          # image handling for OCR
+# reportlab>=4.0        # PDF report rendering
+# httpx>=0.26           # AI provider calls
+
+# Development
+pytest>=8.0
+httpx>=0.26
