@@ -262,3 +262,29 @@ def test_viewer_role_cannot_configure_controllers(client, auth, demo_project):
         "protocol": {"protocol": "MODBUS_TCP", "host": "192.0.2.5"},
     })
     assert response.status_code == 403
+
+
+def test_shipped_example_register_map_imports(client, auth):
+    """The example CSV in app/register_maps must actually import.
+
+    A template that does not round-trip through the real endpoint is worse
+    than no template: it sends someone debugging their file instead of their
+    panel.
+    """
+    from pathlib import Path
+
+    created = client.post("/api/register-maps", headers=auth, json={
+        "name": "Example import test", "controller_type": "TEST",
+    }).json()
+    csv_body = Path("app/register_maps/EXAMPLE.csv").read_text()
+    assert csv_body.lstrip().startswith("#"), "example must carry its placeholder warning"
+
+    response = client.post(
+        f"/api/register-maps/{created['id']}/import",
+        headers=auth,
+        files={"file": ("EXAMPLE.csv", csv_body, "text/csv")},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["register_count"] == 12
+    # An import never inherits verification.
+    assert response.json()["verified"] is False

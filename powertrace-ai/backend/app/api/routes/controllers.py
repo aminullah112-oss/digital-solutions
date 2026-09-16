@@ -264,7 +264,14 @@ async def import_registers(map_id: int, file: UploadFile, db: Session = Depends(
         parsed = json.loads(raw)
         rows = parsed["registers"] if isinstance(parsed, dict) else parsed
     else:
-        rows = list(csv.DictReader(io.StringIO(raw)))
+        # Register maps are hand-maintained files; people annotate them with
+        # which manual page an address block came from. Comment lines and blank
+        # lines are skipped so those notes survive round-tripping.
+        body = "\n".join(
+            line for line in raw.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        )
+        rows = list(csv.DictReader(io.StringIO(body)))
 
     errors: list[str] = []
     parsed_rows: list[RegisterIn] = []
