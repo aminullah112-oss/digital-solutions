@@ -25,7 +25,17 @@ if settings.database_url.startswith("sqlite"):
     def _sqlite_pragmas(dbapi_conn, _record):  # pragma: no cover - driver glue
         cur = dbapi_conn.cursor()
         cur.execute("PRAGMA foreign_keys=ON")
+        # WAL lets the UI read while a polling worker writes. Without it, every
+        # event or alarm write blocks every dashboard query.
         cur.execute("PRAGMA journal_mode=WAL")
+        # SQLite allows one writer at a time. Each controller's polling worker
+        # writes on its own thread, so on a busy panel they contend. Waiting
+        # five seconds for the lock is right for this workload: the alternative
+        # is an immediate "database is locked" that drops an event.
+        cur.execute("PRAGMA busy_timeout=5000")
+        # Durability that survives a power cut without an fsync per write,
+        # which matters on the SD card in a Raspberry Pi.
+        cur.execute("PRAGMA synchronous=NORMAL")
         cur.close()
 
 

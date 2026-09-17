@@ -1,0 +1,41 @@
+# PowerTrace AI on your own machine — laptop, mini PC or Raspberry Pi.
+#
+#   export POWERTRACE_SECRET_KEY=$(python3 -c 'import secrets;print(secrets.token_urlsafe(48))')
+#   export POWERTRACE_ADMIN_PASSWORD='something you chose'
+#   docker compose -f docker-compose.local.yml up -d --build
+#
+# Then http://localhost:8080, or http://<this-machine-ip>:8080 from anything
+# else on the same network.
+#
+# No Postgres. One panel's data fits SQLite comfortably — the trend buffers
+# that would actually stress a database live in memory, and what reaches disk
+# is configuration, measurements, alarms and diagnostic sessions. Add the
+# Postgres stack (docker-compose.yml) when several sites share one server or
+# when you want someone else running backups.
+
+services:
+  backend:
+    build: ./backend
+    environment:
+      POWERTRACE_ENVIRONMENT: production
+      POWERTRACE_DATABASE_URL: sqlite:////app/storage/powertrace.db
+      POWERTRACE_SECRET_KEY: ${POWERTRACE_SECRET_KEY:?set POWERTRACE_SECRET_KEY}
+      POWERTRACE_ADMIN_EMAIL: ${POWERTRACE_ADMIN_EMAIL:-admin@example.com}
+      POWERTRACE_ADMIN_PASSWORD: ${POWERTRACE_ADMIN_PASSWORD:?set POWERTRACE_ADMIN_PASSWORD}
+      POWERTRACE_DEMO_MODE: ${POWERTRACE_DEMO_MODE:-true}
+      POWERTRACE_ALLOW_CONTROL_WRITES: "false"
+    volumes:
+      # The database and the uploaded drawings both live here. Back this one
+      # directory up and you have backed up the installation.
+      - ./data:/app/storage
+    restart: unless-stopped
+    expose:
+      - "8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "${POWERTRACE_PORT:-8080}:80"
+    restart: unless-stopped

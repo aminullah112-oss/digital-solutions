@@ -330,7 +330,25 @@ placement a security decision before it is a hosting decision:
   different numbers depending on which one you hit. Scale with a proxy in front of one
   process, not with more workers.
 
-### Docker Compose
+### On your own machine (laptop, mini PC, Raspberry Pi)
+
+This is the right shape for anything touching real controllers, and it needs no
+database server — SQLite is the default for exactly this reason:
+
+```bash
+export POWERTRACE_SECRET_KEY=$(python3 -c 'import secrets;print(secrets.token_urlsafe(48))')
+export POWERTRACE_ADMIN_PASSWORD='something you actually chose'
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+Then `http://localhost:8080`, or `http://<machine-ip>:8080` from a tablet on the same
+network. Everything persists in `./data` — the database and the uploaded drawings.
+
+To share a link without opening a port, use a Cloudflare Tunnel. Read
+[`docs/self-hosting.md`](docs/self-hosting.md) first — it covers what to expose, what
+not to, and why a phone makes a poor server but a good client.
+
+### Docker Compose with Postgres
 
 ```bash
 cd powertrace-ai
