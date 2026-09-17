@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Diagnostic Lab</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Hello, %1$s</string>
+    <string name="home_greeting_fallback">there</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_bookings">Bookings</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_profile">Profile</string>
+    <string name="book_a_test">Book a Test</string>
+    <string name="quick_actions">Quick actions</string>
+    <string name="action_my_bookings">My Bookings</string>
+    <string name="action_my_reports">My Reports</string>
+    <string name="action_my_family">My Family</string>
+    <string name="action_previous_records">Previous Records</string>
+    <string name="action_help_support">Help &amp; Support</string>
+    <string name="active_booking_label">Active booking</string>
+
+    <!-- Auth -->
+    <string name="app_tagline">Book lab tests. Get your sample collected at home.</string>
+    <string name="enter_mobile_number">Enter your mobile number</string>
+    <string name="mobile_number_hint">10-digit mobile number</string>
+    <string name="send_otp">Send OTP</string>
+    <string name="verify_number">Verify your number</string>
+    <string name="otp_sent_to">We\'ve sent a code to %1$s</string>
+    <string name="otp_code_hint">4-digit code</string>
+    <string name="verify_and_continue">Verify &amp; Continue</string>
+    <string name="resend_code">Resend code</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="language_label">Language</string>
+    <string name="sign_out">Sign out</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="continue_action">Continue</string>
+</resources>

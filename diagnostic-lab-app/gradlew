@@ -1,0 +1,9 @@
+#!/bin/sh
+# Standard Gradle wrapper launcher.
+# NOTE: gradle/wrapper/gradle-wrapper.jar is intentionally not committed here — this
+# sandbox has no network access to download it. Before first use, run `gradle wrapper`
+# once with any local Gradle 8.x install (or just open the project in Android Studio,
+# which regenerates the wrapper automatically).
+set -e
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec java -jar "$DIR/gradle/wrapper/gradle-wrapper.jar" "$@"

@@ -1,0 +1,1 @@
+-keep class com.digitalsolutions.diagnosticlab.data.local.entities.** { *; }

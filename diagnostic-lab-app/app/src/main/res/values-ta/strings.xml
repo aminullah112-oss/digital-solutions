@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">டயக்னாஸ்டிக் லேப்</string>
+
+    <!-- Home -->
+    <string name="home_greeting">வணக்கம், %1$s</string>
+    <string name="home_greeting_fallback">நண்பரே</string>
+    <string name="nav_home">முகப்பு</string>
+    <string name="nav_bookings">முன்பதிவுகள்</string>
+    <string name="nav_reports">அறிக்கைகள்</string>
+    <string name="nav_profile">சுயவிவரம்</string>
+    <string name="book_a_test">பரிசோதனை பதிவு செய்யவும்</string>
+    <string name="quick_actions">விரைவு செயல்கள்</string>
+    <string name="action_my_bookings">எனது முன்பதிவுகள்</string>
+    <string name="action_my_reports">எனது அறிக்கைகள்</string>
+    <string name="action_my_family">எனது குடும்பம்</string>
+    <string name="action_previous_records">முந்தைய பதிவுகள்</string>
+    <string name="action_help_support">உதவி மற்றும் ஆதரவு</string>
+    <string name="active_booking_label">செயலில் உள்ள முன்பதிவு</string>
+
+    <!-- Auth -->
+    <string name="app_tagline">பரிசோதனைகளை பதிவு செய்யுங்கள். வீட்டிலேயே மாதிரி சேகரிப்பு.</string>
+    <string name="enter_mobile_number">உங்கள் மொபைல் எண்ணை உள்ளிடவும்</string>
+    <string name="mobile_number_hint">10-இலக்க மொபைல் எண்</string>
+    <string name="send_otp">OTP அனுப்பவும்</string>
+    <string name="verify_number">உங்கள் எண்ணை சரிபார்க்கவும்</string>
+    <string name="otp_sent_to">%1$s க்கு குறியீடு அனுப்பப்பட்டது</string>
+    <string name="otp_code_hint">4-இலக்க குறியீடு</string>
+    <string name="verify_and_continue">சரிபார்த்து தொடரவும்</string>
+    <string name="resend_code">மீண்டும் அனுப்பவும்</string>
+
+    <!-- Settings -->
+    <string name="settings_title">அமைப்புகள்</string>
+    <string name="language_label">மொழி</string>
+    <string name="sign_out">வெளியேறு</string>
+
+    <!-- Common -->
+    <string name="back">பின்</string>
+    <string name="cancel">ரத்து செய்</string>
+    <string name="save">சேமி</string>
+    <string name="continue_action">தொடரவும்</string>
+</resources>

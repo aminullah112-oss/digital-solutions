@@ -16,3 +16,11 @@ sheetmetal-pipeline/output/
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# diagnostic-lab-app: Android/Gradle build output and local machine config
+diagnostic-lab-app/**/build/
+diagnostic-lab-app/.gradle/
+diagnostic-lab-app/local.properties
+diagnostic-lab-app/.idea/
+diagnostic-lab-app/**/*.iml
+diagnostic-lab-app/captures/
