@@ -46,7 +46,7 @@
 <header class="site-header" id="top">
   <div class="wrap header-inner">
     <a href="#top" class="brand">
-      <span class="brand-mark"><svg width="26" height="26"><use href="#i-building"/></svg></span>
+      <span class="brand-mark"><img src="assets/img/logo.jpg" alt="Abirami Sree Hardware &amp; Kaveen's Construction logo" width="40" height="40"></span>
       <span class="brand-text">
         <strong>Abirami Sree Hardware</strong>
         <em>&amp; Kaveen&rsquo;s Construction</em>
@@ -57,6 +57,7 @@
       <a href="#about">About</a>
       <a href="#materials">Materials</a>
       <a href="#services">Services</a>
+      <a href="#gallery">Gallery</a>
       <a href="#vasthu">Vasthu</a>
       <a href="#payment">Payment</a>
       <a href="#contact">Contact</a>
@@ -96,28 +97,8 @@
         </div>
       </div>
 
-      <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 360 320" class="hero-svg">
-          <rect x="40" y="120" width="130" height="170" rx="4" fill="var(--card)" stroke="var(--dark)" stroke-width="3"/>
-          <rect x="60" y="150" width="26" height="26" fill="var(--accent-soft)"/>
-          <rect x="104" y="150" width="26" height="26" fill="var(--accent-soft)"/>
-          <rect x="60" y="196" width="26" height="26" fill="var(--accent-soft)"/>
-          <rect x="104" y="196" width="26" height="26" fill="var(--accent-soft)"/>
-          <rect x="82" y="242" width="46" height="48" fill="var(--dark)"/>
-          <rect x="170" y="70" width="150" height="220" rx="4" fill="var(--dark)"/>
-          <rect x="190" y="100" width="24" height="24" fill="var(--accent)"/>
-          <rect x="228" y="100" width="24" height="24" fill="var(--accent)"/>
-          <rect x="266" y="100" width="24" height="24" fill="var(--accent)"/>
-          <rect x="190" y="140" width="24" height="24" fill="var(--accent)"/>
-          <rect x="228" y="140" width="24" height="24" fill="var(--accent)"/>
-          <rect x="266" y="140" width="24" height="24" fill="var(--accent)"/>
-          <rect x="190" y="180" width="24" height="24" fill="var(--accent)"/>
-          <rect x="228" y="180" width="24" height="24" fill="var(--accent)"/>
-          <rect x="266" y="180" width="24" height="24" fill="var(--accent)"/>
-          <rect x="222" y="234" width="36" height="56" fill="var(--bg)"/>
-          <line x1="10" y1="290" x2="350" y2="290" stroke="var(--dark)" stroke-width="4"/>
-          <circle cx="300" cy="50" r="26" fill="var(--accent-soft)"/>
-        </svg>
+      <div class="hero-art">
+        <img class="hero-photo" src="assets/img/residential.jpg" alt="Residential building project by Abirami Sree Hardware &amp; Kaveen's Construction" width="863" height="541">
       </div>
     </div>
   </section>
@@ -174,15 +155,18 @@
     <div class="wrap">
       <h2 class="section-title"><span>A&ndash;Z Building Materials</span></h2>
       <p class="section-sub">Everything you need for the job, sourced and supplied from one yard.</p>
-      <div class="chip-grid">
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Sand</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Blue Metal</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Cement</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Bricks</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Steel</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Fly Ash</div>
-        <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> AAC Blocks</div>
-        <div class="chip chip-accent"><svg width="22" height="22"><use href="#i-check"/></svg> A&ndash;Z on request</div>
+      <div class="materials-grid">
+        <img class="materials-photo" src="assets/img/materials.jpg" alt="Steel rods, sand, cement bags, blue metal and bricks stocked by Abirami Sree Hardware" width="863" height="534" loading="lazy">
+        <div class="chip-grid">
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Sand</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Blue Metal</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Cement</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Bricks</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Steel</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> Fly Ash</div>
+          <div class="chip"><svg width="22" height="22"><use href="#i-box"/></svg> AAC Blocks</div>
+          <div class="chip chip-accent"><svg width="22" height="22"><use href="#i-check"/></svg> A&ndash;Z on request</div>
+        </div>
       </div>
     </div>
   </section>
@@ -194,26 +178,49 @@
       <p class="section-sub">Construction, design and documentation &mdash; end to end.</p>
       <div class="card-grid" id="serviceGrid">
         <!-- populated identically in markup for no-JS resilience -->
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-home"/></svg></div><h3>Residential Projects</h3><p>Full-scope house construction, from groundwork to handover.</p><a class="s-link" href="#" data-service="Residential Projects">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-hammer"/></svg></div><h3>Construction Work</h3><p>All types of construction work handled by an experienced crew.</p><a class="s-link" href="#" data-service="Construction Work">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-ruler"/></svg></div><h3>2D &amp; 3D Building Plans</h3><p>Accurate floor plans and 3D building plans before you break ground.</p><a class="s-link" href="#" data-service="2D & 3D Building Plans">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-building"/></svg></div><h3>3D Elevation Design</h3><p>See your building's facade before it's built.</p><a class="s-link" href="#" data-service="3D Elevation Design">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-sofa"/></svg></div><h3>Interior Design</h3><p>3D interior design for living spaces, kitchens and more.</p><a class="s-link" href="#" data-service="Interior Design">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-layers"/></svg></div><h3>Structural Drawings</h3><p>Structural, electrical and plumbing drawings prepared in-house.</p><a class="s-link" href="#" data-service="Structural Drawings">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-bolt"/></svg></div><h3>Electrical Work</h3><p>Wiring and electrical fit-out for new builds and renovations.</p><a class="s-link" href="#" data-service="Electrical Work">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-droplet"/></svg></div><h3>Plumbing</h3><p>Complete plumbing installation and repair work.</p><a class="s-link" href="#" data-service="Plumbing">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-paint"/></svg></div><h3>Painting</h3><p>Interior and exterior painting, done neatly and on schedule.</p><a class="s-link" href="#" data-service="Painting">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-refresh"/></svg></div><h3>Renovation</h3><p>Home and commercial-space renovation from start to finish.</p><a class="s-link" href="#" data-service="Renovation">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-calc"/></svg></div><h3>Detailed Estimation</h3><p>A clear, itemised cost estimate before work begins.</p><a class="s-link" href="#" data-service="Detailed Estimation">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-stamp"/></svg></div><h3>Plan Approval</h3><p>Assistance getting your building plan approved.</p><a class="s-link" href="#" data-service="Plan Approval">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-compass"/></svg></div><h3>Vasthu Consultation</h3><p>Vasthu-compliant layouts for new and existing plans.</p><a class="s-link" href="#" data-service="Vasthu Consultation">Enquire &rarr;</a></article>
-        <article class="s-card"><div class="s-icon"><svg width="26" height="26"><use href="#i-users"/></svg></div><h3>Site Supervising</h3><p>On-site supervision so your project stays on track.</p><a class="s-link" href="#" data-service="Site Supervising">Enquire &rarr;</a></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/residential.jpg" alt="Residential project" width="863" height="541" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-home"/></svg></div><h3>Residential Projects</h3><p>Full-scope house construction, from groundwork to handover.</p><a class="s-link" href="#" data-service="Residential Projects">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/construction.jpg" alt="Construction site with crew" width="863" height="571" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-hammer"/></svg></div><h3>Construction Work</h3><p>All types of construction work handled by an experienced crew.</p><a class="s-link" href="#" data-service="Construction Work">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/3d-plan.jpg" alt="3D isometric floor plan render" width="863" height="626" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-ruler"/></svg></div><h3>2D &amp; 3D Building Plans</h3><p>Accurate floor plans and 3D building plans before you break ground.</p><a class="s-link" href="#" data-service="2D & 3D Building Plans">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/elevation.jpg" alt="3D building elevation render" width="863" height="857" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-building"/></svg></div><h3>3D Elevation Design</h3><p>See your building's facade before it's built.</p><a class="s-link" href="#" data-service="3D Elevation Design">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/interior.jpg" alt="Living room interior design render" width="863" height="684" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-sofa"/></svg></div><h3>Interior Design</h3><p>3D interior design for living spaces, kitchens and more.</p><a class="s-link" href="#" data-service="Interior Design">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/plan-approval.jpg" alt="Structural building blueprint" width="862" height="573" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-layers"/></svg></div><h3>Structural Drawings</h3><p>Structural, electrical and plumbing drawings prepared in-house.</p><a class="s-link" href="#" data-service="Structural Drawings">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/electrical.jpg" alt="Electrician working on a panel" width="863" height="568" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-bolt"/></svg></div><h3>Electrical Work</h3><p>Wiring and electrical fit-out for new builds and renovations.</p><a class="s-link" href="#" data-service="Electrical Work">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/plumbing.jpg" alt="Plumber fitting bathroom sinks" width="862" height="642" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-droplet"/></svg></div><h3>Plumbing</h3><p>Complete plumbing installation and repair work.</p><a class="s-link" href="#" data-service="Plumbing">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/painting.jpg" alt="Room painting before and after" width="862" height="503" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-paint"/></svg></div><h3>Painting</h3><p>Interior and exterior painting, done neatly and on schedule.</p><a class="s-link" href="#" data-service="Painting">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/renovation.jpg" alt="Room renovation before and after" width="863" height="572" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-refresh"/></svg></div><h3>Renovation</h3><p>Home and commercial-space renovation from start to finish.</p><a class="s-link" href="#" data-service="Renovation">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/estimate.jpg" alt="Preparing a construction cost estimate" width="863" height="572" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-calc"/></svg></div><h3>Detailed Estimation</h3><p>A clear, itemised cost estimate before work begins.</p><a class="s-link" href="#" data-service="Detailed Estimation">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/plan-approval.jpg" alt="Approved stamp on a building blueprint" width="862" height="573" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-stamp"/></svg></div><h3>Plan Approval</h3><p>Assistance getting your building plan approved.</p><a class="s-link" href="#" data-service="Plan Approval">Enquire &rarr;</a></div></article>
+        <article class="s-card"><div class="s-body s-body-noimg"><div class="s-icon"><svg width="22" height="22"><use href="#i-compass"/></svg></div><h3>Vasthu Consultation</h3><p>Vasthu-compliant layouts for new and existing plans &mdash; see our <a href="#vasthu">quick guide below</a>.</p><a class="s-link" href="#" data-service="Vasthu Consultation">Enquire &rarr;</a></div></article>
+        <article class="s-card"><img class="s-photo" src="assets/img/supervising.jpg" alt="Site engineers supervising construction" width="863" height="574" loading="lazy"><div class="s-body"><div class="s-icon"><svg width="22" height="22"><use href="#i-users"/></svg></div><h3>Site Supervising</h3><p>On-site supervision so your project stays on track.</p><a class="s-link" href="#" data-service="Site Supervising">Enquire &rarr;</a></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="section section-alt" id="gallery">
+    <div class="wrap">
+      <h2 class="section-title"><span>Gallery</span></h2>
+      <p class="section-sub">A look at recent work and renders.</p>
+      <div class="gallery-grid">
+        <a href="assets/img/residential.jpg" target="_blank" rel="noopener"><img src="assets/img/residential.jpg" alt="Residential project" loading="lazy"></a>
+        <a href="assets/img/elevation.jpg" target="_blank" rel="noopener"><img src="assets/img/elevation.jpg" alt="3D elevation render" loading="lazy"></a>
+        <a href="assets/img/interior.jpg" target="_blank" rel="noopener"><img src="assets/img/interior.jpg" alt="Interior design render" loading="lazy"></a>
+        <a href="assets/img/3d-plan.jpg" target="_blank" rel="noopener"><img src="assets/img/3d-plan.jpg" alt="3D floor plan" loading="lazy"></a>
+        <a href="assets/img/construction.jpg" target="_blank" rel="noopener"><img src="assets/img/construction.jpg" alt="Construction site" loading="lazy"></a>
+        <a href="assets/img/renovation.jpg" target="_blank" rel="noopener"><img src="assets/img/renovation.jpg" alt="Room renovation" loading="lazy"></a>
+        <a href="assets/img/painting.jpg" target="_blank" rel="noopener"><img src="assets/img/painting.jpg" alt="Room painting" loading="lazy"></a>
+        <a href="assets/img/electrical.jpg" target="_blank" rel="noopener"><img src="assets/img/electrical.jpg" alt="Electrical panel work" loading="lazy"></a>
+        <a href="assets/img/plumbing.jpg" target="_blank" rel="noopener"><img src="assets/img/plumbing.jpg" alt="Plumbing work" loading="lazy"></a>
+        <a href="assets/img/materials.jpg" target="_blank" rel="noopener"><img src="assets/img/materials.jpg" alt="Building materials" loading="lazy"></a>
+        <a href="assets/img/plan-approval.jpg" target="_blank" rel="noopener"><img src="assets/img/plan-approval.jpg" alt="Approved building blueprint" loading="lazy"></a>
+        <a href="assets/img/supervising.jpg" target="_blank" rel="noopener"><img src="assets/img/supervising.jpg" alt="Site supervision" loading="lazy"></a>
+        <a href="assets/img/estimate.jpg" target="_blank" rel="noopener"><img src="assets/img/estimate.jpg" alt="Construction cost estimation" loading="lazy"></a>
       </div>
     </div>
   </section>
 
   <!-- VASTHU -->
-  <section class="section section-alt" id="vasthu">
+  <section class="section" id="vasthu">
     <div class="wrap">
       <h2 class="section-title"><span>Vasthu Guide</span></h2>
       <p class="section-sub">A quick reference for planning rooms by direction.</p>
@@ -259,7 +266,7 @@
   </section>
 
   <!-- PROCESS -->
-  <section class="section" id="process">
+  <section class="section section-alt" id="process">
     <div class="wrap">
       <h2 class="section-title"><span>How We Work</span></h2>
       <ol class="process-strip">
@@ -273,7 +280,7 @@
   </section>
 
   <!-- PAYMENT -->
-  <section class="section section-alt" id="payment">
+  <section class="section" id="payment">
     <div class="wrap">
       <h2 class="section-title"><span>Payment Details</span></h2>
       <p class="section-sub">UPI or direct bank transfer &mdash; whichever is easier for you.</p>
@@ -300,7 +307,7 @@
   </section>
 
   <!-- CONTACT -->
-  <section class="section" id="contact">
+  <section class="section section-alt" id="contact">
     <div class="wrap">
       <h2 class="section-title"><span>Get In Touch</span></h2>
       <div class="contact-grid">
