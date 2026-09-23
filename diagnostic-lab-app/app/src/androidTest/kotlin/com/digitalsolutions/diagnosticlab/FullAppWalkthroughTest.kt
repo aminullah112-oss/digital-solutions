@@ -43,6 +43,15 @@ class FullAppWalkthroughTest {
 
     private fun screenshot(name: String) {
         shotIndex++
+        // A run's screenshots (pulled off a real CI run, inspected directly) showed
+        // uiAutomation.takeScreenshot() capturing a stale frame — one image landed mid
+        // navigation transition, another showed an OTP field already typed into rather than
+        // the fresh screen expected at that call site. The semantics tree (what waitUntil
+        // checks) updates before the compositor has actually presented the new frame, so the
+        // screenshot can lag behind by a partial transition or a few hundred milliseconds of
+        // real time. Force idle, then give the display a moment to settle before capturing.
+        composeTestRule.waitForIdle()
+        Thread.sleep(500)
         val bitmap: Bitmap? = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "screenshots")
         dir.mkdirs()

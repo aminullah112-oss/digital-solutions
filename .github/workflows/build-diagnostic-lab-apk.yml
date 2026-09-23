@@ -138,6 +138,12 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git checkout --orphan ci-screenshots-tmp
             git rm -rf . > /dev/null
+            # git rm only clears tracked files — the working tree still has every untracked
+            # build output (Gradle caches, generated sources) left over from the gradle/adb
+            # steps above, which `git add -A` would otherwise sweep in wholesale (confirmed:
+            # a prior run's ci-screenshots branch ended up with thousands of .gradle/build
+            # files alongside the actual screenshots). Clean those out first.
+            git clean -fdx > /dev/null
             cp -r /tmp/shots/* .
             git add -A
             git commit -m "CI screenshots for run ${{ github.run_id }}"
