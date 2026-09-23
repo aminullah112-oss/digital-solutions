@@ -90,19 +90,27 @@ jobs:
           # Each line of `script` runs as its own separate shell (not one continuous
           # session), so `cd` on one line does not carry over to the next — `gradle -p`
           # points at the project directory instead of relying on cwd.
-          # -Pandroid.injected.androidTest.leaveApksInstalled=true stops AGP from uninstalling
-          # the app after the test run — by default it does, which wipes the app's external
-          # files dir (where screenshots land) before the adb pull below ever runs. Confirmed
-          # via logcat on a prior CI run: "ActivityManager: Force stopping ... deletePackageX"
-          # / "PackageManager: ... pkg removed" fired seconds after every test completion,
-          # win or lose, well before this script's own adb pull step executed.
+          #
+          # Deliberately NOT using `gradle connectedDebugAndroidTest`: that task uninstalls
+          # both the app and test APKs the moment the instrumentation run finishes, win or
+          # lose — confirmed via logcat on prior CI runs ("ActivityManager: Force stopping
+          # ... deletePackageX" / "pkg removed" fire seconds after test completion). That wipes
+          # the app's external files dir, where screenshots land, before any later step can
+          # pull them — and the documented `-Pandroid.injected.androidTest.leaveApksInstalled`
+          # workaround for this did not actually stop it. Driving install + `am instrument`
+          # directly instead means nothing auto-uninstalls anything: the emulator (and its
+          # disk) is thrown away at the end of the job regardless, so there's no cleanup to do.
           script: |
-            gradle -p diagnostic-lab-app connectedDebugAndroidTest --stacktrace -Pandroid.injected.androidTest.leaveApksInstalled=true || true
+            gradle -p diagnostic-lab-app assembleDebug assembleDebugAndroidTest --stacktrace
+            adb install -r diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
+            adb install -r diagnostic-lab-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            adb shell am instrument -w -r com.digitalsolutions.diagnosticlab.test/androidx.test.runner.AndroidJUnitRunner > instrument_output.txt 2>&1 || true
+            cat instrument_output.txt
             mkdir -p screenshots-pulled
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
             adb logcat -d > logcat.txt || true
             echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
-            grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION" logcat.txt | tail -300 || true
+            grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN" logcat.txt | tail -300 || true
             echo "::endgroup::"
 
       - name: Upload screenshots
@@ -121,10 +129,10 @@ jobs:
           path: logcat.txt
           if-no-files-found: warn
 
-      - name: Upload instrumented test report
+      - name: Upload instrumentation output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: diagnostic-lab-ui-test-report
-          path: diagnostic-lab-app/app/build/reports/androidTests/connected/**
+          path: instrument_output.txt
           if-no-files-found: warn
