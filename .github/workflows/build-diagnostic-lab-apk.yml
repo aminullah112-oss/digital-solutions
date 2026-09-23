@@ -1,5 +1,8 @@
 name: Build Diagnostic Lab debug APK
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -119,6 +122,29 @@ jobs:
             echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
             grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN" logcat.txt | tail -300 || true
             echo "::endgroup::"
+
+      # Actions artifacts are served through short-lived signed Azure Blob Storage URLs,
+      # which the reviewer's own environment cannot reach (its egress proxy denies that host
+      # by policy). Pushing the screenshots to an ordinary git branch instead makes them
+      # readable through the same plain `git fetch`/`git show` path already used for this
+      # branch's own commits, no download step required.
+      - name: Publish screenshots to ci-screenshots branch
+        if: always()
+        run: |
+          if [ -d screenshots-pulled ] && [ -n "$(find screenshots-pulled -type f 2>/dev/null)" ]; then
+            mkdir -p /tmp/shots
+            cp -r screenshots-pulled/* /tmp/shots/
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout --orphan ci-screenshots-tmp
+            git rm -rf . > /dev/null
+            cp -r /tmp/shots/* .
+            git add -A
+            git commit -m "CI screenshots for run ${{ github.run_id }}"
+            git push origin HEAD:refs/heads/ci-screenshots --force
+          else
+            echo "No screenshots captured this run — nothing to publish."
+          fi
 
       - name: Upload screenshots
         if: always()
