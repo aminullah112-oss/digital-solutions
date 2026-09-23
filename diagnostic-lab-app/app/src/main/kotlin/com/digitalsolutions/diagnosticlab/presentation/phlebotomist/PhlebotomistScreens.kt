@@ -78,7 +78,7 @@ fun PhlebotomistHomeScreen(onOpenAssignment: (String) -> Unit) {
 class PhlebotomistAssignmentViewModel(
     private val bookingRepository: BookingRepository,
     private val sessionManager: SessionManager,
-    bookingId: String
+    private val bookingId: String
 ) : ViewModel() {
     val booking: StateFlow<Booking?> = bookingRepository.observeBooking(bookingId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

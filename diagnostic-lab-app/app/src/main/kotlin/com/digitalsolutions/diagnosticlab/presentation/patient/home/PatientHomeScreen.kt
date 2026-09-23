@@ -1,6 +1,7 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -151,6 +152,4 @@ private fun HomeActionGrid(
     }
 }
 
-private fun Modifier.clickableCard(onClick: () -> Unit): Modifier = this.then(
-    androidx.compose.foundation.clickable(onClick = onClick)
-)
+private fun Modifier.clickableCard(onClick: () -> Unit): Modifier = this.clickable(onClick = onClick)

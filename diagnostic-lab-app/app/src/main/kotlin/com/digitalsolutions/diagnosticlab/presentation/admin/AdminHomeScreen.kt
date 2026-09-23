@@ -35,6 +35,7 @@ class AdminHomeViewModel(private val adminRepository: AdminRepository) : ViewMod
     fun toggleLab(id: String, active: Boolean) = viewModelScope.launch { adminRepository.setLabActive(id, active) }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminHomeScreen() {
     val container = LocalAppContainer.current
