@@ -89,6 +89,17 @@ fun PatientHomeScreen(
                             "${statusLabel(booking.status)} · ${booking.scheduledDate} at ${booking.scheduledTimeSlot}",
                             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
                         )
+                        if (booking.addressLine.isNotBlank()) {
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.LocationOn, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(booking.addressLine, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                 }
                 Spacer(Modifier.height(16.dp))

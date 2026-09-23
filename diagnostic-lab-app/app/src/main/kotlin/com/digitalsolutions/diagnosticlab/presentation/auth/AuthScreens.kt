@@ -1,5 +1,6 @@
 package com.digitalsolutions.diagnosticlab.presentation.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -7,8 +8,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -33,9 +36,26 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Image(
+            painter = painterResource(R.drawable.logo_mark),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.size(120.dp).align(Alignment.CenterHorizontally)
+        )
+        Spacer(Modifier.height(20.dp))
+        Text(
+            stringResource(R.string.app_name),
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.app_tagline), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            stringResource(R.string.app_tagline),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(40.dp))
         Text(stringResource(R.string.enter_mobile_number), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(12.dp))

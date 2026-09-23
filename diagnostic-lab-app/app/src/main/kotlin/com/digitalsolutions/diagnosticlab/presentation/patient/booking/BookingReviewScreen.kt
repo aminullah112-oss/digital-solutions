@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.digitalsolutions.diagnosticlab.domain.model.PaymentMethod
+import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 
@@ -63,10 +64,16 @@ fun BookingReviewScreen(
                 Text("${state.scheduledDate} · ${state.scheduledTimeSlot}", style = MaterialTheme.typography.bodyLarge)
             }
             Spacer(Modifier.height(12.dp))
-            SectionCard("Collection address") {
-                Text(state.address?.displayLine ?: "-", style = MaterialTheme.typography.bodyLarge)
+            state.address?.let { address ->
+                AddressCard(
+                    title = "Collection address",
+                    label = address.label,
+                    addressLine = address.displayLine,
+                    latitude = address.latitude,
+                    longitude = address.longitude
+                )
+                Spacer(Modifier.height(12.dp))
             }
-            Spacer(Modifier.height(12.dp))
             SectionCard("Payment method") {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = state.paymentMethod == PaymentMethod.ONLINE, onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) })

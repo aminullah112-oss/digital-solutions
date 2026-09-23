@@ -18,6 +18,7 @@ import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.AssignmentStatus
 import com.digitalsolutions.diagnosticlab.domain.model.Booking
+import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
@@ -111,9 +112,16 @@ fun PhlebotomistAssignmentScreen(bookingId: String, onBack: () -> Unit) {
             Column(Modifier.padding(padding).padding(16.dp)) {
                 SectionCard("Patient") {
                     Text(b.patientName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(b.addressLine, style = MaterialTheme.typography.bodyMedium)
                     Text("${b.scheduledDate} · ${b.scheduledTimeSlot}", style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(Modifier.height(12.dp))
+                AddressCard(
+                    title = "Collection address",
+                    label = b.addressLabel,
+                    addressLine = b.addressLine,
+                    latitude = b.addressLatitude,
+                    longitude = b.addressLongitude
+                )
                 Spacer(Modifier.height(12.dp))
                 SectionCard("Tests to collect for") {
                     b.items.forEach { Text("• ${it.investigation.name} (${it.investigation.sampleType})", style = MaterialTheme.typography.bodyMedium) }

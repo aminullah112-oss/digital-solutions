@@ -24,6 +24,10 @@ import com.digitalsolutions.diagnosticlab.domain.model.BookingStatus
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
+import com.digitalsolutions.diagnosticlab.presentation.theme.AlertRed
+import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
+import com.digitalsolutions.diagnosticlab.presentation.theme.InfoBlue
+import com.digitalsolutions.diagnosticlab.presentation.theme.WarningAmber
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -38,10 +42,10 @@ class MyBookingsViewModel(bookingRepository: BookingRepository, sessionManager: 
 }
 
 fun statusColor(status: BookingStatus): Color = when (status) {
-    BookingStatus.REPORT_DELIVERED -> Color(0xFF1E8A5F)
-    BookingStatus.CANCELLED_BY_PATIENT, BookingStatus.CANCELLED_BY_LAB -> Color(0xFFB3261E)
-    BookingStatus.REJECTED_RECOLLECTION_NEEDED -> Color(0xFFB5670A)
-    else -> Color(0xFF0B5FA5)
+    BookingStatus.REPORT_DELIVERED -> HealthGreen
+    BookingStatus.CANCELLED_BY_PATIENT, BookingStatus.CANCELLED_BY_LAB -> AlertRed
+    BookingStatus.REJECTED_RECOLLECTION_NEEDED -> WarningAmber
+    else -> InfoBlue
 }
 
 fun statusLabel(status: BookingStatus): String = status.name.split('_').joinToString(" ") { it.lowercase().replaceFirstChar(Char::uppercase) }

@@ -22,6 +22,7 @@ import com.digitalsolutions.diagnosticlab.domain.model.Assignment
 import com.digitalsolutions.diagnosticlab.domain.model.Booking
 import com.digitalsolutions.diagnosticlab.domain.model.TrackingEvent
 import com.digitalsolutions.diagnosticlab.domain.util.BookingStatusMachine
+import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
@@ -99,10 +100,17 @@ fun BookingDetailScreen(bookingId: String, onBack: () -> Unit) {
                     booking.items.forEach { Text("• ${it.investigation.name}", style = MaterialTheme.typography.bodyMedium) }
                 }
                 Spacer(Modifier.height(12.dp))
-                SectionCard("Schedule & address") {
+                SectionCard("Schedule") {
                     Text("${booking.scheduledDate} · ${booking.scheduledTimeSlot}", style = MaterialTheme.typography.bodyMedium)
-                    Text(booking.addressLine, style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(Modifier.height(12.dp))
+                AddressCard(
+                    title = "Collection address",
+                    label = booking.addressLabel,
+                    addressLine = booking.addressLine,
+                    latitude = booking.addressLatitude,
+                    longitude = booking.addressLongitude
+                )
                 if (BookingStatusMachine.canCancel(booking.status)) {
                     Spacer(Modifier.height(20.dp))
                     BigSecondaryButton(text = "Cancel booking", onClick = { showCancelDialog = true })

@@ -2,6 +2,7 @@ package com.digitalsolutions.diagnosticlab.presentation.components
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,6 +11,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,10 +62,14 @@ fun BigSecondaryButton(
 
 @Composable
 fun SectionCard(title: String? = null, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
         Column(Modifier.padding(20.dp)) {
             if (title != null) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(12.dp))
             }
             content()
@@ -177,7 +184,7 @@ fun VoiceEnabledTextField(
             }
         )
         if (voiceError != null) {
-            Text(voiceError.orEmpty(), color = Color(0xFFB3261E), style = MaterialTheme.typography.labelMedium)
+            Text(voiceError.orEmpty(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelMedium)
         }
     }
 }
@@ -190,5 +197,66 @@ fun StatusChip(text: String, color: Color, modifier: Modifier = Modifier) {
             .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
         Text(text, color = color, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/**
+ * Shows the sample-collection address as a real visual element — a pin icon, the label and
+ * full address, and a "View on map" action — wherever a booking's address matters (review,
+ * confirmation, tracking, the home-screen active-booking banner). Requested directly by a
+ * customer: the address needs to be visible, not just implied, at every step of booking.
+ *
+ * There's no embedded map (no Maps API key provisioned for this project), so "View on map"
+ * hands off to whatever maps app is installed on the device via a plain geo: intent —
+ * zero extra dependencies, works everywhere, degrades silently if no maps app exists.
+ */
+@Composable
+fun AddressCard(
+    label: String,
+    addressLine: String,
+    modifier: Modifier = Modifier,
+    latitude: Double? = null,
+    longitude: Double? = null,
+    title: String? = null
+) {
+    val context = LocalContext.current
+    SectionCard(title = title, modifier = modifier) {
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(
+                Icons.Filled.LocationOn,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                if (label.isNotBlank()) {
+                    Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                }
+                Text(addressLine, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = {
+                val geoUri = if (latitude != null && longitude != null) {
+                    "geo:$latitude,$longitude?q=$latitude,$longitude(${Uri.encode(label.ifBlank { "Collection address" })})"
+                } else {
+                    "geo:0,0?q=${Uri.encode(addressLine)}"
+                }
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(geoUri)))
+                } catch (e: ActivityNotFoundException) {
+                    // No maps app installed — nothing sensible to fall back to, so this is a silent no-op.
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(MinTouchTargetDp.dp),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("View on map", style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
