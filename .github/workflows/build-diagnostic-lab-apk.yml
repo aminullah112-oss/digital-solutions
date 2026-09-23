@@ -95,6 +95,9 @@ jobs:
             mkdir -p screenshots-pulled
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
             adb logcat -d > logcat.txt || true
+            echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
+            grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION" logcat.txt | tail -300 || true
+            echo "::endgroup::"
 
       - name: Upload screenshots
         if: always()

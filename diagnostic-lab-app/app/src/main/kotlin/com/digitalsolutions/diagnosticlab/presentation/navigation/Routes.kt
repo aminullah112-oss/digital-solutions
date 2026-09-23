@@ -42,5 +42,10 @@ object Routes {
     // Admin
     const val ADMIN_HOME = "admin_home"
 
-    private fun encode(value: String) = java.net.URLEncoder.encode(value, "UTF-8")
+    // Uri.encode (not URLEncoder.encode) — URLEncoder is form-encoding, where a space becomes
+    // '+'; Navigation's own route-argument extraction only reverses %XX percent-escapes, not
+    // that form convention, so a '+' round-trips as a literal '+' instead of a space. Uri.encode
+    // percent-escapes the space itself (%20), which decodes back correctly on the other end —
+    // this matters here because mobile numbers ("+91 9000000001") carry a real space.
+    private fun encode(value: String) = android.net.Uri.encode(value)
 }
