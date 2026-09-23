@@ -9,6 +9,9 @@
 <meta property="og:description" content="Best Material & Best Construction — A to Z building materials and complete construction solutions in Thiruporur, Tamil Nadu.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230d3b2e'/%3E%3Cpath d='M22 78 L22 44 L50 24 L78 44 L78 78 Z' fill='none' stroke='%23e8b35a' stroke-width='6' stroke-linejoin='round'/%3E%3Crect x='42' y='58' width='16' height='20' fill='%23e8b35a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -77,10 +80,11 @@
 
   <!-- HERO -->
   <section class="hero">
+    <canvas id="heroScene" class="hero-scene" aria-hidden="true"></canvas>
     <div class="wrap hero-inner">
       <div class="hero-copy">
         <span class="badge"><svg width="14" height="14"><use href="#i-award"/></svg> Trusted since 1998</span>
-        <h1>Best Material &amp; Best Construction</h1>
+        <h1><span class="hero-emph">Best Material</span> &amp; Best Construction</h1>
         <p class="hero-lead">
           Your complete construction materials &amp; construction solutions partner in
           <strong>Thiruporur</strong>. From the foundation to finishing — A to Z building
@@ -98,7 +102,9 @@
       </div>
 
       <div class="hero-art">
-        <img class="hero-photo" src="assets/img/residential.jpg" alt="Residential building project by Abirami Sree Hardware &amp; Kaveen's Construction" width="863" height="541">
+        <div class="hero-photo-frame">
+          <img class="hero-photo" src="assets/img/residential.jpg" alt="Residential building project by Abirami Sree Hardware &amp; Kaveen's Construction" width="863" height="541">
+        </div>
       </div>
     </div>
   </section>
@@ -116,6 +122,7 @@
   <!-- ABOUT -->
   <section class="section" id="about">
     <div class="wrap">
+      <p class="eyebrow">Who We Are</p>
       <h2 class="section-title"><span>About Us</span></h2>
       <div class="about-grid">
         <div class="about-copy">
@@ -153,6 +160,7 @@
   <!-- MATERIALS -->
   <section class="section section-alt" id="materials">
     <div class="wrap">
+      <p class="eyebrow">What We Stock</p>
       <h2 class="section-title"><span>A&ndash;Z Building Materials</span></h2>
       <p class="section-sub">Everything you need for the job, sourced and supplied from one yard.</p>
       <div class="materials-grid">
@@ -174,6 +182,7 @@
   <!-- SERVICES -->
   <section class="section" id="services">
     <div class="wrap">
+      <p class="eyebrow">What We Do</p>
       <h2 class="section-title"><span>Our Services</span></h2>
       <p class="section-sub">Construction, design and documentation &mdash; end to end.</p>
       <div class="card-grid" id="serviceGrid">
@@ -199,6 +208,7 @@
   <!-- GALLERY -->
   <section class="section section-alt" id="gallery">
     <div class="wrap">
+      <p class="eyebrow">Our Work</p>
       <h2 class="section-title"><span>Gallery</span></h2>
       <p class="section-sub">A look at recent work and renders.</p>
       <div class="gallery-grid">
@@ -222,6 +232,7 @@
   <!-- VASTHU -->
   <section class="section" id="vasthu">
     <div class="wrap">
+      <p class="eyebrow">Free Reference</p>
       <h2 class="section-title"><span>Vasthu Guide</span></h2>
       <p class="section-sub">A quick reference for planning rooms by direction.</p>
       <div class="vasthu-wrap">
@@ -268,6 +279,7 @@
   <!-- PROCESS -->
   <section class="section section-alt" id="process">
     <div class="wrap">
+      <p class="eyebrow">The Process</p>
       <h2 class="section-title"><span>How We Work</span></h2>
       <ol class="process-strip">
         <li><span class="p-num">1</span><span class="p-label">Enquiry &amp; site visit</span></li>
@@ -282,6 +294,7 @@
   <!-- PAYMENT -->
   <section class="section" id="payment">
     <div class="wrap">
+      <p class="eyebrow">Easy Payments</p>
       <h2 class="section-title"><span>Payment Details</span></h2>
       <p class="section-sub">UPI or direct bank transfer &mdash; whichever is easier for you.</p>
       <div class="payment-grid">
@@ -309,6 +322,7 @@
   <!-- CONTACT -->
   <section class="section section-alt" id="contact">
     <div class="wrap">
+      <p class="eyebrow">Reach Us</p>
       <h2 class="section-title"><span>Get In Touch</span></h2>
       <div class="contact-grid">
         <a class="contact-card" href="tel:+917010231310">
@@ -349,5 +363,6 @@
 </a>
 
 <script src="js/script.js"></script>
+<script type="module" src="js/hero-scene.js"></script>
 </body>
 </html>
