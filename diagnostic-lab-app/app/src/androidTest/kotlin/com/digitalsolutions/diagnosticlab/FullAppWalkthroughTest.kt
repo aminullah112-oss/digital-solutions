@@ -11,11 +11,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
@@ -131,24 +129,19 @@ class FullAppWalkthroughTest {
             composeTestRule.onAllNodesWithText("Cash at collection").fetchSemanticsNodes().isNotEmpty()
         }
         screenshot("review_booking")
-        composeTestRule.onNodeWithText("Cash at collection").performClick()
+        // This screen stacks patient/lab/tests/schedule/address/payment cards inside a plain
+        // verticalScroll Column, so both the payment row and the CTA below it can sit below
+        // the viewport on a real device. A printToLog() dump on a prior CI run confirmed the
+        // "Cash at collection" click was landing off-screen and silently doing nothing (no
+        // exception, no state change) — performClick() alone targets a node's actual layout
+        // coordinates regardless of visibility, so every click on this screen needs
+        // performScrollTo() first.
+        composeTestRule.onNodeWithText("Cash at collection").performScrollTo().performClick()
         // Selecting cash flips the CTA's label from "Pay ₹… & Confirm" to "Confirm Booking" —
         // wait for that recomposition before searching for the new text, same as every other
-        // step here. This screen also stacks patient/lab/tests/schedule/address/payment cards
-        // inside a plain verticalScroll Column, so the button can sit below the viewport on a
-        // real device — performScrollTo() brings it into view before the click.
-        //
-        // TEMP DIAGNOSTIC: this exact wait has timed out on CI with no clear cause from static
-        // reading of BookingReviewScreen/BookingViewModel (the selectable-Row-with-RadioButton
-        // idiom looks correct). Dump the live semantics tree to logcat on failure so the next
-        // CI run's log shows the real post-click state instead of another guess.
-        try {
-            composeTestRule.waitUntil(15_000) {
-                composeTestRule.onAllNodesWithText("Confirm Booking").fetchSemanticsNodes().isNotEmpty()
-            }
-        } catch (e: Throwable) {
-            composeTestRule.onRoot().printToLog("DEBUG_REVIEW_SCREEN")
-            throw e
+        // step here.
+        composeTestRule.waitUntil(15_000) {
+            composeTestRule.onAllNodesWithText("Confirm Booking").fetchSemanticsNodes().isNotEmpty()
         }
         composeTestRule.onNodeWithText("Confirm Booking").performScrollTo().performClick()
 
