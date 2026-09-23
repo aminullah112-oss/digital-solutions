@@ -94,6 +94,7 @@ jobs:
             gradle -p diagnostic-lab-app connectedDebugAndroidTest --stacktrace || true
             mkdir -p screenshots-pulled
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
+            adb logcat -d > logcat.txt || true
 
       - name: Upload screenshots
         if: always()
@@ -101,6 +102,14 @@ jobs:
         with:
           name: diagnostic-lab-screenshots
           path: screenshots-pulled/**
+          if-no-files-found: warn
+
+      - name: Upload logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-lab-logcat
+          path: logcat.txt
           if-no-files-found: warn
 
       - name: Upload instrumented test report

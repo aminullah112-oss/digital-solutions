@@ -1,5 +1,6 @@
 package com.digitalsolutions.diagnosticlab.data.seed
 
+import androidx.room.withTransaction
 import com.digitalsolutions.diagnosticlab.data.local.AppDatabase
 import com.digitalsolutions.diagnosticlab.data.local.entities.*
 import com.digitalsolutions.diagnosticlab.domain.model.*
@@ -22,13 +23,19 @@ class DemoDataSeeder(private val db: AppDatabase) {
     suspend fun seedIfEmpty() {
         val existing = db.patientDao().latestId()
         if (existing != null) return
-        seedLaboratories()
-        seedInvestigations()
-        seedLaboratoryInvestigations()
-        seedPhlebotomists()
-        seedLabAndAdminLogins()
-        val patients = seedPatientsAndFamilies()
-        seedBookings(patients)
+        // One transaction instead of ~300 individually auto-committed statements — this is
+        // the difference between the app's very first launch rendering almost instantly and
+        // it stalling for many seconds (or, on a slow CI emulator, long enough to blow past
+        // a caller's own startup timeout) before the login screen can even draw.
+        db.withTransaction {
+            seedLaboratories()
+            seedInvestigations()
+            seedLaboratoryInvestigations()
+            seedPhlebotomists()
+            seedLabAndAdminLogins()
+            val patients = seedPatientsAndFamilies()
+            seedBookings(patients)
+        }
     }
 
     /** Demo mobile numbers for the non-patient roles, so the login screen has something to try. */

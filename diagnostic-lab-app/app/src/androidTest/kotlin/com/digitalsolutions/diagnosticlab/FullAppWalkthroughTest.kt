@@ -52,7 +52,10 @@ class FullAppWalkthroughTest {
     }
 
     private fun login(mobileDigits: String) {
-        composeTestRule.waitUntil(15_000) {
+        // Generous on this specific wait: on a cold app launch this is waiting on Compose's
+        // first frame *and* Application.onCreate()'s one-time demo-data seed, which can take
+        // longer on a freshly booted CI emulator than any of the steady-state waits below.
+        composeTestRule.waitUntil(45_000) {
             composeTestRule.onAllNodesWithTag("login_mobile_field").fetchSemanticsNodes().isNotEmpty()
         }
         screenshot("login")
