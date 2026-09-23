@@ -87,11 +87,13 @@ jobs:
           disable-animations: true
           disk-size: 6000M
           heap-size: 600M
+          # Each line of `script` runs as its own separate shell (not one continuous
+          # session), so `cd` on one line does not carry over to the next — `gradle -p`
+          # points at the project directory instead of relying on cwd.
           script: |
-            cd diagnostic-lab-app
-            gradle connectedDebugAndroidTest --stacktrace || true
-            mkdir -p ../screenshots-pulled
-            adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots ../screenshots-pulled || true
+            gradle -p diagnostic-lab-app connectedDebugAndroidTest --stacktrace || true
+            mkdir -p screenshots-pulled
+            adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
 
       - name: Upload screenshots
         if: always()
