@@ -16,7 +16,9 @@ import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.AppLanguage
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +45,9 @@ fun SettingsScreen(onSignedOut: () -> Unit, onBack: () -> Unit) {
                             onClick = {
                                 scope.launch {
                                     container.sessionManager.setLanguage(lang.tag)
-                                    (context as? ComponentActivity)?.recreate()
+                                    withContext(Dispatchers.Main.immediate) {
+                                        (context as? ComponentActivity)?.recreate()
+                                    }
                                 }
                             }
                         )
@@ -55,7 +59,7 @@ fun SettingsScreen(onSignedOut: () -> Unit, onBack: () -> Unit) {
             BigSecondaryButton(text = stringResource(R.string.sign_out)) {
                 scope.launch {
                     container.sessionManager.signOut()
-                    onSignedOut()
+                    withContext(Dispatchers.Main.immediate) { onSignedOut() }
                 }
             }
         }

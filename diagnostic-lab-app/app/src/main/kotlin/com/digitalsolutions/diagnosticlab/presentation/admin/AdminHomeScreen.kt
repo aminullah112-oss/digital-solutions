@@ -22,10 +22,12 @@ import com.digitalsolutions.diagnosticlab.domain.model.DashboardStats
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AdminHomeViewModel(private val adminRepository: AdminRepository) : ViewModel() {
     val stats: StateFlow<DashboardStats?> = adminRepository.observeDashboard()
@@ -51,7 +53,7 @@ fun AdminHomeScreen(onSignedOut: () -> Unit) {
             TopAppBar(
                 title = { Text("Admin Dashboard") },
                 actions = {
-                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); onSignedOut() } }) {
+                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); withContext(Dispatchers.Main.immediate) { onSignedOut() } } }) {
                         Icon(Icons.Filled.Logout, contentDescription = "Sign out")
                     }
                 }

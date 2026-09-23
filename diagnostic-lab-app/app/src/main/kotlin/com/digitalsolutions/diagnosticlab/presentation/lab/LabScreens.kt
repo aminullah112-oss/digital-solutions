@@ -32,6 +32,7 @@ import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusColor
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusLabel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val LAB_RELEVANT_STATUSES = setOf(
     BookingStatus.PHLEBOTOMIST_ASSIGNED, BookingStatus.PHLEBOTOMIST_ON_THE_WAY, BookingStatus.ARRIVED,
@@ -69,7 +71,7 @@ fun LabHomeScreen(onOpenOrder: (String) -> Unit, onSignedOut: () -> Unit) {
             TopAppBar(
                 title = { Text("Incoming Orders") },
                 actions = {
-                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); onSignedOut() } }) {
+                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); withContext(Dispatchers.Main.immediate) { onSignedOut() } } }) {
                         Icon(Icons.Filled.Logout, contentDescription = "Sign out")
                     }
                 }
