@@ -107,6 +107,13 @@ jobs:
             adb shell am instrument -w -r com.digitalsolutions.diagnosticlab.test/androidx.test.runner.AndroidJUnitRunner > instrument_output.txt 2>&1 || true
             cat instrument_output.txt
             mkdir -p screenshots-pulled
+            # The test run itself now succeeds end to end ("OK (1 test)") and the screenshots
+            # directory genuinely exists, but a plain `adb pull` as the unprivileged shell user
+            # hits scoped-storage permission checks reading another app's external-files dir
+            # ("Permission denied", confirmed on a prior CI run) — these system images are
+            # debuggable, so `adb root` re-execs adbd as root and clears that.
+            adb root
+            adb wait-for-device
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
             adb logcat -d > logcat.txt || true
             echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
