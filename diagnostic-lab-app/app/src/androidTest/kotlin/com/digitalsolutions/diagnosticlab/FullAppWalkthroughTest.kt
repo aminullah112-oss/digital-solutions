@@ -130,10 +130,14 @@ class FullAppWalkthroughTest {
         }
         screenshot("review_booking")
         composeTestRule.onNodeWithText("Cash at collection").performClick()
-        // This screen stacks patient/lab/tests/schedule/address/payment cards inside a plain
-        // verticalScroll Column, so "Confirm Booking" can sit below the viewport on a real
-        // device — performClick() alone targets its actual (possibly off-screen) coordinates,
-        // which Espresso then can't inject a touch into. Scroll it into view first.
+        // Selecting cash flips the CTA's label from "Pay ₹… & Confirm" to "Confirm Booking" —
+        // wait for that recomposition before searching for the new text, same as every other
+        // step here. This screen also stacks patient/lab/tests/schedule/address/payment cards
+        // inside a plain verticalScroll Column, so the button can sit below the viewport on a
+        // real device — performScrollTo() brings it into view before the click.
+        composeTestRule.waitUntil(15_000) {
+            composeTestRule.onAllNodesWithText("Confirm Booking").fetchSemanticsNodes().isNotEmpty()
+        }
         composeTestRule.onNodeWithText("Confirm Booking").performScrollTo().performClick()
 
         composeTestRule.waitUntil(15_000) {
