@@ -11,9 +11,11 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
@@ -135,8 +137,18 @@ class FullAppWalkthroughTest {
         // step here. This screen also stacks patient/lab/tests/schedule/address/payment cards
         // inside a plain verticalScroll Column, so the button can sit below the viewport on a
         // real device — performScrollTo() brings it into view before the click.
-        composeTestRule.waitUntil(15_000) {
-            composeTestRule.onAllNodesWithText("Confirm Booking").fetchSemanticsNodes().isNotEmpty()
+        //
+        // TEMP DIAGNOSTIC: this exact wait has timed out on CI with no clear cause from static
+        // reading of BookingReviewScreen/BookingViewModel (the selectable-Row-with-RadioButton
+        // idiom looks correct). Dump the live semantics tree to logcat on failure so the next
+        // CI run's log shows the real post-click state instead of another guess.
+        try {
+            composeTestRule.waitUntil(15_000) {
+                composeTestRule.onAllNodesWithText("Confirm Booking").fetchSemanticsNodes().isNotEmpty()
+            }
+        } catch (e: Throwable) {
+            composeTestRule.onRoot().printToLog("DEBUG_REVIEW_SCREEN")
+            throw e
         }
         composeTestRule.onNodeWithText("Confirm Booking").performScrollTo().performClick()
 

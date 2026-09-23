@@ -90,8 +90,14 @@ jobs:
           # Each line of `script` runs as its own separate shell (not one continuous
           # session), so `cd` on one line does not carry over to the next — `gradle -p`
           # points at the project directory instead of relying on cwd.
+          # -Pandroid.injected.androidTest.leaveApksInstalled=true stops AGP from uninstalling
+          # the app after the test run — by default it does, which wipes the app's external
+          # files dir (where screenshots land) before the adb pull below ever runs. Confirmed
+          # via logcat on a prior CI run: "ActivityManager: Force stopping ... deletePackageX"
+          # / "PackageManager: ... pkg removed" fired seconds after every test completion,
+          # win or lose, well before this script's own adb pull step executed.
           script: |
-            gradle -p diagnostic-lab-app connectedDebugAndroidTest --stacktrace || true
+            gradle -p diagnostic-lab-app connectedDebugAndroidTest --stacktrace -Pandroid.injected.androidTest.leaveApksInstalled=true || true
             mkdir -p screenshots-pulled
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
             adb logcat -d > logcat.txt || true
