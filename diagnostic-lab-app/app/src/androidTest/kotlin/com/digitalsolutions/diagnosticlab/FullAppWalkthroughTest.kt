@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -129,7 +130,11 @@ class FullAppWalkthroughTest {
         }
         screenshot("review_booking")
         composeTestRule.onNodeWithText("Cash at collection").performClick()
-        composeTestRule.onNodeWithText("Confirm Booking").performClick()
+        // This screen stacks patient/lab/tests/schedule/address/payment cards inside a plain
+        // verticalScroll Column, so "Confirm Booking" can sit below the viewport on a real
+        // device — performClick() alone targets its actual (possibly off-screen) coordinates,
+        // which Espresso then can't inject a touch into. Scroll it into view first.
+        composeTestRule.onNodeWithText("Confirm Booking").performScrollTo().performClick()
 
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Booking confirmed!").fetchSemanticsNodes().isNotEmpty()
