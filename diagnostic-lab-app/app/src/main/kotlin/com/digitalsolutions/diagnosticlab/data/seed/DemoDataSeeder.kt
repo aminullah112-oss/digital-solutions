@@ -36,11 +36,11 @@ class DemoDataSeeder(private val db: AppDatabase) {
         labIds.forEachIndexed { index, labId ->
             val userId = "USR-LAB-${index + 1}"
             db.userDao().upsert(
-                UserEntity(userId, "+91 98500 2000${index + 1}", null, UserRole.LABORATORY, labId, AppLanguage.ENGLISH.tag, true, now)
+                UserEntity(userId, "+91 985002000${index + 1}", null, UserRole.LABORATORY, labId, AppLanguage.ENGLISH.tag, true, now)
             )
         }
         db.userDao().upsert(
-            UserEntity("USR-ADMIN-1", "+91 90001 00000", "admin@diagnosticlab.demo", UserRole.ADMIN, null, AppLanguage.ENGLISH.tag, true, now)
+            UserEntity("USR-ADMIN-1", "+91 9000100000", "admin@diagnosticlab.demo", UserRole.ADMIN, null, AppLanguage.ENGLISH.tag, true, now)
         )
     }
 
@@ -115,11 +115,11 @@ class DemoDataSeeder(private val db: AppDatabase) {
     }
 
     private val phlebotomistNames = listOf(
-        "Ramesh Kumar" to "+91 98400 10001",
-        "Priya Selvam" to "+91 98400 10002",
-        "Suresh Iyer" to "+91 98400 10003",
-        "Lakshmi Raman" to "+91 98400 10004",
-        "Arun Prakash" to "+91 98400 10005"
+        "Ramesh Kumar" to "+91 9840010001",
+        "Priya Selvam" to "+91 9840010002",
+        "Suresh Iyer" to "+91 9840010003",
+        "Lakshmi Raman" to "+91 9840010004",
+        "Arun Prakash" to "+91 9840010005"
     )
 
     private suspend fun seedPhlebotomists() {
@@ -140,22 +140,22 @@ class DemoDataSeeder(private val db: AppDatabase) {
     // 10 primary account holders (the "patients" in the spec's demo-data count) plus 5 of
     // them also have one family member booked under their account, covering "book for others".
     private val demoPeople = listOf(
-        DemoPerson("Meenakshi Krishnan", 68, "Female", "+91 90000 00001", Relation.MYSELF, 0),
-        DemoPerson("Rajendran Pillai", 72, "Male", "+91 90000 00002", Relation.MYSELF, 1),
-        DemoPerson("Kamala Devi", 65, "Female", "+91 90000 00003", Relation.MYSELF, 2),
-        DemoPerson("Suresh Iyer", 55, "Male", "+91 90000 00004", Relation.MYSELF, 3),
-        DemoPerson("Latha Narayanan", 60, "Female", "+91 90000 00005", Relation.MYSELF, 4),
-        DemoPerson("Ganesan Murthy", 70, "Male", "+91 90000 00006", Relation.MYSELF, 5),
-        DemoPerson("Vasanthi Rao", 63, "Female", "+91 90000 00007", Relation.MYSELF, 6),
-        DemoPerson("Mohammed Yusuf", 58, "Male", "+91 90000 00008", Relation.MYSELF, 7),
-        DemoPerson("Padma Subramaniam", 75, "Female", "+91 90000 00009", Relation.MYSELF, 8),
-        DemoPerson("Anand Krishnamurthy", 52, "Male", "+91 90000 00010", Relation.MYSELF, 9),
+        DemoPerson("Meenakshi Krishnan", 68, "Female", "+91 9000000001", Relation.MYSELF, 0),
+        DemoPerson("Rajendran Pillai", 72, "Male", "+91 9000000002", Relation.MYSELF, 1),
+        DemoPerson("Kamala Devi", 65, "Female", "+91 9000000003", Relation.MYSELF, 2),
+        DemoPerson("Suresh Iyer", 55, "Male", "+91 9000000004", Relation.MYSELF, 3),
+        DemoPerson("Latha Narayanan", 60, "Female", "+91 9000000005", Relation.MYSELF, 4),
+        DemoPerson("Ganesan Murthy", 70, "Male", "+91 9000000006", Relation.MYSELF, 5),
+        DemoPerson("Vasanthi Rao", 63, "Female", "+91 9000000007", Relation.MYSELF, 6),
+        DemoPerson("Mohammed Yusuf", 58, "Male", "+91 9000000008", Relation.MYSELF, 7),
+        DemoPerson("Padma Subramaniam", 75, "Female", "+91 9000000009", Relation.MYSELF, 8),
+        DemoPerson("Anand Krishnamurthy", 52, "Male", "+91 9000000010", Relation.MYSELF, 9),
         // Family members booked by the first five account holders
-        DemoPerson("Divya Krishnan", 41, "Female", "+91 90000 00001", Relation.DAUGHTER, 0),
-        DemoPerson("Geetha Pillai", 68, "Female", "+91 90000 00002", Relation.SPOUSE, 1),
-        DemoPerson("Karthik Devi", 38, "Male", "+91 90000 00003", Relation.SON, 2),
-        DemoPerson("Sundar Iyer", 82, "Male", "+91 90000 00004", Relation.FATHER, 3),
-        DemoPerson("Revathi Narayanan", 34, "Female", "+91 90000 00005", Relation.DAUGHTER, 4)
+        DemoPerson("Divya Krishnan", 41, "Female", "+91 9000000001", Relation.DAUGHTER, 0),
+        DemoPerson("Geetha Pillai", 68, "Female", "+91 9000000002", Relation.SPOUSE, 1),
+        DemoPerson("Karthik Devi", 38, "Male", "+91 9000000003", Relation.SON, 2),
+        DemoPerson("Sundar Iyer", 82, "Male", "+91 9000000004", Relation.FATHER, 3),
+        DemoPerson("Revathi Narayanan", 34, "Female", "+91 9000000005", Relation.DAUGHTER, 4)
     )
 
     private suspend fun seedPatientsAndFamilies(): List<PatientEntity> {

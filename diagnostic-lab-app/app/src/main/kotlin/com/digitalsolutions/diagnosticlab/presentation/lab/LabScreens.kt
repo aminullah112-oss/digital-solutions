@@ -5,6 +5,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,13 +57,25 @@ class LabHomeViewModel(bookingRepository: BookingRepository, sessionManager: Ses
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LabHomeScreen(onOpenOrder: (String) -> Unit) {
+fun LabHomeScreen(onOpenOrder: (String) -> Unit, onSignedOut: () -> Unit) {
     val container = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
     val viewModel: LabHomeViewModel = viewModel(factory = viewModelFactory { initializer { LabHomeViewModel(container.bookingRepository, container.sessionManager) } })
     val orders by viewModel.orders.collectAsState()
     val relevant = orders?.filter { it.status in LAB_RELEVANT_STATUSES || it.status == BookingStatus.REPORT_DELIVERED }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Incoming Orders") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Incoming Orders") },
+                actions = {
+                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); onSignedOut() } }) {
+                        Icon(Icons.Filled.Logout, contentDescription = "Sign out")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         when {
             orders == null -> LoadingState(Modifier.padding(padding))
             relevant.isNullOrEmpty() -> EmptyState("No orders yet.", Modifier.padding(padding))

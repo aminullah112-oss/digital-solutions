@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,7 +107,11 @@ fun PatientHomeScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            BigPrimaryButton(text = stringResource(R.string.book_a_test), onClick = onBookTest)
+            BigPrimaryButton(
+                text = stringResource(R.string.book_a_test),
+                onClick = onBookTest,
+                modifier = Modifier.testTag("patient_home_book_button")
+            )
             Spacer(Modifier.height(20.dp))
 
             Text(stringResource(R.string.quick_actions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

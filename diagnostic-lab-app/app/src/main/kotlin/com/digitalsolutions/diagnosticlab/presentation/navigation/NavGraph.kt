@@ -200,7 +200,10 @@ fun DiagnosticLabNavGraph() {
 
         // ---------- Phlebotomist ----------
         composable(Routes.PHLEBOTOMIST_HOME) {
-            PhlebotomistHomeScreen(onOpenAssignment = { navController.navigate(Routes.phlebotomistAssignment(it)) })
+            PhlebotomistHomeScreen(
+                onOpenAssignment = { navController.navigate(Routes.phlebotomistAssignment(it)) },
+                onSignedOut = { navController.navigate(Routes.LOGIN) { popUpTo(0) } }
+            )
         }
         composable(
             Routes.PHLEBOTOMIST_ASSIGNMENT,
@@ -212,7 +215,10 @@ fun DiagnosticLabNavGraph() {
 
         // ---------- Laboratory ----------
         composable(Routes.LAB_HOME) {
-            LabHomeScreen(onOpenOrder = { navController.navigate(Routes.labOrder(it)) })
+            LabHomeScreen(
+                onOpenOrder = { navController.navigate(Routes.labOrder(it)) },
+                onSignedOut = { navController.navigate(Routes.LOGIN) { popUpTo(0) } }
+            )
         }
         composable(
             Routes.LAB_ORDER,
@@ -223,6 +229,8 @@ fun DiagnosticLabNavGraph() {
         }
 
         // ---------- Admin ----------
-        composable(Routes.ADMIN_HOME) { AdminHomeScreen() }
+        composable(Routes.ADMIN_HOME) {
+            AdminHomeScreen(onSignedOut = { navController.navigate(Routes.LOGIN) { popUpTo(0) } })
+        }
     }
 }

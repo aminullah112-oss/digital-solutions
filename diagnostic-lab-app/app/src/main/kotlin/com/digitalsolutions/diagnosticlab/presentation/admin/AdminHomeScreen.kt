@@ -3,6 +3,8 @@ package com.digitalsolutions.diagnosticlab.presentation.admin
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,13 +39,25 @@ class AdminHomeViewModel(private val adminRepository: AdminRepository) : ViewMod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminHomeScreen() {
+fun AdminHomeScreen(onSignedOut: () -> Unit) {
     val container = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
     val viewModel: AdminHomeViewModel = viewModel(factory = viewModelFactory { initializer { AdminHomeViewModel(container.adminRepository) } })
     val stats by viewModel.stats.collectAsState()
     val labs by viewModel.laboratories.collectAsState()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Admin Dashboard") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Admin Dashboard") },
+                actions = {
+                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); onSignedOut() } }) {
+                        Icon(Icons.Filled.Logout, contentDescription = "Sign out")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         val s = stats
         if (s == null) {
             LoadingState(Modifier.padding(padding))

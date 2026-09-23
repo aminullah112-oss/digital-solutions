@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,7 +69,7 @@ fun FamilyScreen(onBack: () -> Unit) {
 
 @Composable
 private fun FamilyMemberRow(person: Patient) {
-    SectionCard {
+    SectionCard(modifier = Modifier.testTag("family_member_row")) {
         Text(person.fullName.ifBlank { "(name not set)" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Text(
             "${person.relation.name.lowercase().replaceFirstChar(Char::uppercase)} · ${person.age?.let { "$it yrs" } ?: "age not set"} · ${person.sex}",
@@ -150,7 +151,7 @@ fun BookingPatientSelectScreen(onPatientSelected: (Patient) -> Unit, onBack: () 
     ) { padding ->
         LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(family) { person ->
-                Card(onClick = { onPatientSelected(person) }, modifier = Modifier.fillMaxWidth()) {
+                Card(onClick = { onPatientSelected(person) }, modifier = Modifier.fillMaxWidth().testTag("patient_row")) {
                     Column(Modifier.padding(16.dp)) {
                         Text(person.fullName.ifBlank { "Myself" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(person.relation.name.lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.bodyMedium)

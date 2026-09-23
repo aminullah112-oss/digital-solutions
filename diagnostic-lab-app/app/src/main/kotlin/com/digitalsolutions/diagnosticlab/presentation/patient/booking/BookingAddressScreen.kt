@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -29,6 +30,7 @@ import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Address
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -41,10 +43,13 @@ class AddressBookViewModel(
     private val patientRepository: PatientRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
-    val addresses: StateFlow<List<Address>> = sessionManager.session
+    // null means "haven't heard from the Room Flow yet" — distinct from a genuinely empty
+    // list, so the screen can tell "still loading" apart from "no saved addresses" instead
+    // of guessing from a placeholder empty list and picking the wrong initial screen.
+    val addresses: StateFlow<List<Address>?> = sessionManager.session
         .filterNotNull()
         .flatMapLatest { patientRepository.observeAddresses(it.userId) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun saveAddress(
         label: String, line1: String, city: String, state: String, pincode: String,
@@ -55,7 +60,7 @@ class AddressBookViewModel(
             val saved = patientRepository.saveAddress(
                 ownerUserId = ownerUserId, existingId = null, label = label, line1 = line1, line2 = null,
                 city = city, state = state, pincode = pincode, latitude = latitude, longitude = longitude,
-                makeDefault = addresses.value.isEmpty()
+                makeDefault = addresses.value.isNullOrEmpty()
             )
             onSaved(saved)
         }
@@ -74,7 +79,11 @@ fun BookingAddressScreen(
         factory = viewModelFactory { initializer { AddressBookViewModel(container.patientRepository, container.sessionManager) } }
     )
     val addresses by viewModel.addresses.collectAsState()
-    var showAddForm by remember { mutableStateOf(addresses.isEmpty()) }
+    // null (still loading) is handled separately from an override the user makes explicitly
+    // by tapping "+ Add a new address" or cancelling out of the form — once addresses
+    // resolves, the derived default (form only when there's truly nothing saved) takes over
+    // unless the user has already made an explicit choice this screen visit.
+    var userOverride by remember { mutableStateOf<Boolean?>(null) }
 
     Scaffold(
         topBar = {
@@ -84,30 +93,39 @@ fun BookingAddressScreen(
             )
         }
     ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
-            if (!showAddForm) {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
-                    items(addresses) { address ->
-                        Card(onClick = { bookingViewModel.setAddress(address); onContinue() }, modifier = Modifier.fillMaxWidth()) {
-                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.LocationOn, contentDescription = null)
-                                Spacer(Modifier.width(12.dp))
-                                Column {
-                                    Text(address.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text(address.displayLine, style = MaterialTheme.typography.bodyMedium)
+        val resolvedAddresses = addresses
+        if (resolvedAddresses == null) {
+            LoadingState(Modifier.padding(padding))
+        } else {
+            val showAddForm = userOverride ?: resolvedAddresses.isEmpty()
+            Column(Modifier.padding(padding).padding(16.dp)) {
+                if (!showAddForm) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+                        items(resolvedAddresses) { address ->
+                            Card(
+                                onClick = { bookingViewModel.setAddress(address); onContinue() },
+                                modifier = Modifier.fillMaxWidth().testTag("address_row")
+                            ) {
+                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.LocationOn, contentDescription = null)
+                                    Spacer(Modifier.width(12.dp))
+                                    Column {
+                                        Text(address.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                        Text(address.displayLine, style = MaterialTheme.typography.bodyMedium)
+                                    }
                                 }
                             }
                         }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    TextButton(onClick = { userOverride = true }) { Text("+ Add a new address") }
+                } else {
+                    AddAddressForm(
+                        onSaved = { address -> bookingViewModel.setAddress(address); onContinue() },
+                        viewModel = viewModel,
+                        onCancel = { if (resolvedAddresses.isNotEmpty()) userOverride = false }
+                    )
                 }
-                Spacer(Modifier.height(12.dp))
-                TextButton(onClick = { showAddForm = true }) { Text("+ Add a new address") }
-            } else {
-                AddAddressForm(
-                    onSaved = { address -> bookingViewModel.setAddress(address); onContinue() },
-                    viewModel = viewModel,
-                    onCancel = { if (addresses.isNotEmpty()) showAddForm = false }
-                )
             }
         }
     }

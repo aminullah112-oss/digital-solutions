@@ -42,3 +42,69 @@ jobs:
           name: diagnostic-lab-debug-apk
           path: diagnostic-lab-app/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.7"
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache AVD
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api30-google_apis-x86_64
+
+      # Boots a real emulator, runs the full Compose UI walkthrough test against it
+      # (FullAppWalkthroughTest), and pulls whatever screenshots it managed to capture —
+      # continue-on-error + `|| true` inside the script so a test failure partway through
+      # still leaves earlier screenshots on disk to upload instead of losing everything.
+      - name: Run UI walkthrough and capture screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          disk-size: 6000M
+          heap-size: 600M
+          script: |
+            cd diagnostic-lab-app
+            gradle connectedDebugAndroidTest --stacktrace || true
+            mkdir -p ../screenshots-pulled
+            adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots ../screenshots-pulled || true
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-lab-screenshots
+          path: screenshots-pulled/**
+          if-no-files-found: warn
+
+      - name: Upload instrumented test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-lab-ui-test-report
+          path: diagnostic-lab-app/app/build/reports/androidTests/connected/**
+          if-no-files-found: warn

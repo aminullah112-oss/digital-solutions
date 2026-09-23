@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -72,7 +73,7 @@ fun MyBookingsScreen(onOpenBooking: (String) -> Unit, onBack: () -> Unit) {
             bookings!!.isEmpty() -> EmptyState("You haven't booked any tests yet.", Modifier.padding(padding))
             else -> LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(bookings!!, key = { it.id }) { booking ->
-                    Card(onClick = { onOpenBooking(booking.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Card(onClick = { onOpenBooking(booking.id) }, modifier = Modifier.fillMaxWidth().testTag("booking_row")) {
                         Column(Modifier.padding(16.dp)) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(booking.laboratoryName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

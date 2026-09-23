@@ -2,6 +2,7 @@ package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -75,12 +76,30 @@ fun BookingReviewScreen(
                 Spacer(Modifier.height(12.dp))
             }
             SectionCard("Payment method") {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = state.paymentMethod == PaymentMethod.ONLINE, onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) })
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = state.paymentMethod == PaymentMethod.ONLINE,
+                            onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) }
+                        )
+                        .padding(vertical = 8.dp)
+                ) {
+                    RadioButton(selected = state.paymentMethod == PaymentMethod.ONLINE, onClick = null)
                     Text("Pay online now", style = MaterialTheme.typography.bodyLarge)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(selected = state.paymentMethod == PaymentMethod.CASH, onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.CASH) })
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = state.paymentMethod == PaymentMethod.CASH,
+                            onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.CASH) }
+                        )
+                        .padding(vertical = 8.dp)
+                ) {
+                    RadioButton(selected = state.paymentMethod == PaymentMethod.CASH, onClick = null)
                     Text("Cash at collection", style = MaterialTheme.typography.bodyLarge)
                 }
             }

@@ -3,6 +3,8 @@ package com.digitalsolutions.diagnosticlab.presentation.phlebotomist
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -46,14 +48,26 @@ class PhlebotomistHomeViewModel(bookingRepository: BookingRepository, sessionMan
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PhlebotomistHomeScreen(onOpenAssignment: (String) -> Unit) {
+fun PhlebotomistHomeScreen(onOpenAssignment: (String) -> Unit, onSignedOut: () -> Unit) {
     val container = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
     val viewModel: PhlebotomistHomeViewModel = viewModel(
         factory = viewModelFactory { initializer { PhlebotomistHomeViewModel(container.bookingRepository, container.sessionManager) } }
     )
     val assignments by viewModel.assignments.collectAsState()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Today's Collections") }) }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Today's Collections") },
+                actions = {
+                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); onSignedOut() } }) {
+                        Icon(Icons.Filled.Logout, contentDescription = "Sign out")
+                    }
+                }
+            )
+        }
+    ) { padding ->
         when {
             assignments == null -> LoadingState(Modifier.padding(padding))
             assignments!!.isEmpty() -> EmptyState("No collections assigned right now.", Modifier.padding(padding))

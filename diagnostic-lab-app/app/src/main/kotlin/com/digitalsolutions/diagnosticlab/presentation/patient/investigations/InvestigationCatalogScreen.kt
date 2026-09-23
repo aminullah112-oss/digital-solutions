@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.digitalsolutions.diagnosticlab.domain.model.PricedInvestigation
@@ -75,7 +76,7 @@ fun InvestigationCatalogScreen(
 
 @Composable
 private fun InvestigationRow(priced: PricedInvestigation, selected: Boolean, onToggle: () -> Unit) {
-    Card(onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
+    Card(onClick = onToggle, modifier = Modifier.fillMaxWidth().testTag("investigation_row")) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = selected, onCheckedChange = { onToggle() })
             Spacer(Modifier.width(8.dp))

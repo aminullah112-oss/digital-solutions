@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,7 +65,7 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
             onValueChange = { if (it.length <= 10) mobile = it.filter(Char::isDigit) },
             placeholder = { Text(stringResource(R.string.mobile_number_hint)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("login_mobile_field"),
             textStyle = MaterialTheme.typography.titleMedium
         )
         Spacer(Modifier.height(24.dp))
@@ -100,7 +101,8 @@ fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> U
             Text(
                 "Demo OTP: $it  (no SMS gateway configured — see README)",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("demo_otp_text")
             )
         }
         Spacer(Modifier.height(24.dp))
@@ -109,7 +111,7 @@ fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> U
             onValueChange = { if (it.length <= 4) code = it.filter(Char::isDigit) },
             placeholder = { Text(stringResource(R.string.otp_code_hint)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("otp_field"),
             textStyle = MaterialTheme.typography.titleMedium
         )
         if (state.error != null) {
