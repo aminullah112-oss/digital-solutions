@@ -49,7 +49,7 @@ class ProfileHeaderViewModel(patientRepository: PatientRepository, sessionManage
         .filterNotNull()
         .flatMapLatest { session ->
             patientRepository.observeFamily(session.userId).map { family ->
-                Header(family.firstOrNull { it.isPrimary }?.fullName?.ifBlank { null } ?: "Patient", session.mobile)
+                Header(family.firstOrNull { it.isPrimary }?.fullName?.ifBlank { null } ?: "Patient", session.mobileNumber)
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
