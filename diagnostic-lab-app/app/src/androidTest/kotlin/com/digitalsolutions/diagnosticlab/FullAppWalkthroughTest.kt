@@ -61,10 +61,25 @@ class FullAppWalkthroughTest {
         }
     }
 
+    private var welcomeScreenshotTaken = false
+
     private fun login(mobileDigits: String) {
-        // Generous on this specific wait: on a cold app launch this is waiting on Compose's
-        // first frame *and* Application.onCreate()'s one-time demo-data seed, which can take
-        // longer on a freshly booted CI emulator than any of the steady-state waits below.
+        // Every sign-out now lands back on the pre-login Welcome screen (not Login directly),
+        // so every call to login() — not just the very first, cold-start one — has to clear
+        // "Get Started" before the mobile field can exist. Generous timeout: on the first call
+        // this is also racing Compose's first frame *and* Application.onCreate()'s one-time
+        // demo-data seed, which can take longer on a freshly booted CI emulator than any of the
+        // steady-state waits below; on later role-switch calls the condition is already true
+        // and this returns immediately.
+        composeTestRule.waitUntil(45_000) {
+            composeTestRule.onAllNodesWithText("Get Started").fetchSemanticsNodes().isNotEmpty()
+        }
+        if (!welcomeScreenshotTaken) {
+            screenshot("welcome")
+            welcomeScreenshotTaken = true
+        }
+        composeTestRule.onNodeWithText("Get Started").performClick()
+
         composeTestRule.waitUntil(45_000) {
             composeTestRule.onAllNodesWithTag("login_mobile_field").fetchSemanticsNodes().isNotEmpty()
         }
@@ -89,16 +104,6 @@ class FullAppWalkthroughTest {
 
     @Test
     fun fullAppWalkthrough() {
-        // ---------- Welcome (new pre-login screen) ----------
-        // Generous timeout here for the same reason login()'s first wait is: this is the very
-        // first screen shown on a cold app launch, racing Application.onCreate()'s one-time
-        // demo-data seed.
-        composeTestRule.waitUntil(45_000) {
-            composeTestRule.onAllNodesWithText("Get Started").fetchSemanticsNodes().isNotEmpty()
-        }
-        screenshot("welcome")
-        composeTestRule.onNodeWithText("Get Started").performClick()
-
         // ---------- Patient: the full primary journey ----------
         login("9000000001")
 
