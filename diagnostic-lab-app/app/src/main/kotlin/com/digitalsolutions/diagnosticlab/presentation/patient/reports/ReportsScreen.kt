@@ -23,7 +23,13 @@ import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Report
 import com.digitalsolutions.diagnosticlab.domain.model.ReportStatus
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
+import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipMintContainer
+import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
+import com.digitalsolutions.diagnosticlab.presentation.theme.WarningAmber
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -66,19 +72,22 @@ fun ReportsScreen(onBack: () -> Unit) {
 
 @Composable
 private fun ReportRow(report: Report) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
-            Spacer(Modifier.width(12.dp))
+    val ready = report.status == ReportStatus.READY || report.status == ReportStatus.DELIVERED
+    SectionCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconChip(
+                icon = Icons.Filled.Description,
+                containerColor = if (ready) ChipMintContainer else MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = if (ready) HealthGreen else WarningAmber
+            )
+            Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(report.investigationNames.joinToString(", "), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(report.laboratoryName, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    if (report.status == ReportStatus.DELIVERED) "Ready to view" else "Being finalized",
-                    style = MaterialTheme.typography.labelMedium
-                )
+                Text(report.laboratoryName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (report.status == ReportStatus.READY || report.status == ReportStatus.DELIVERED) {
+            Spacer(Modifier.width(8.dp))
+            StatusChip(if (ready) "READY" else "PENDING", if (ready) HealthGreen else WarningAmber)
+            if (ready) {
                 TextButton(onClick = { /* Opening the actual PDF needs a real file provider — see README "Reports". */ }) {
                     Text("View")
                 }

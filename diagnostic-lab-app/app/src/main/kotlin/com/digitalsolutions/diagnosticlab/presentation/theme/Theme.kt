@@ -1,9 +1,12 @@
 package com.digitalsolutions.diagnosticlab.presentation.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 // Light tints paired with the brand/status colors so containers (selected chips, the bottom
 // nav indicator, error banners) read as "this app's palette" instead of Material's default
@@ -39,11 +42,23 @@ private val LightColors = lightColorScheme(
     outline = OutlineLight
 )
 
+// Softer, rounder corners throughout — adopted from the LabConnect design reference
+// (client asked to keep the maroon brand colors, but the card/button roundness and
+// spacious feel from that design are worth carrying over everywhere Material reads shapes).
+private val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(22.dp),
+    extraLarge = RoundedCornerShape(28.dp)
+)
+
 @Composable
 fun DiagnosticLabTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColors,
         typography = ElderlyFriendlyTypography,
+        shapes = AppShapes,
         content = content
     )
 }

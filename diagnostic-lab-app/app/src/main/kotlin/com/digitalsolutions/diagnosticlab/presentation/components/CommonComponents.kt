@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Mic
@@ -37,7 +38,7 @@ fun BigPrimaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(MinTouchTargetDp.dp + 8.dp),
-        shape = RoundedCornerShape(14.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Text(text, style = MaterialTheme.typography.titleMedium)
     }
@@ -54,7 +55,7 @@ fun BigSecondaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(MinTouchTargetDp.dp),
-        shape = RoundedCornerShape(14.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
     }
@@ -64,7 +65,7 @@ fun BigSecondaryButton(
 fun SectionCard(title: String? = null, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(Modifier.padding(20.dp)) {
@@ -116,22 +117,54 @@ fun StatusTimeline(steps: List<String>, currentIndex: Int, modifier: Modifier = 
         steps.forEachIndexed { index, label ->
             val done = index < currentIndex
             val current = index == currentIndex
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
-                val dotColor = when {
-                    done -> MaterialTheme.colorScheme.secondary
-                    current -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.outline
+            val isLast = index == steps.lastIndex
+            Row(verticalAlignment = Alignment.Top) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (current) {
+                            Box(
+                                Modifier.size(32.dp)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), androidx.compose.foundation.shape.CircleShape)
+                            )
+                        }
+                        Box(
+                            Modifier.size(if (current) 20.dp else 24.dp)
+                                .background(
+                                    when {
+                                        done -> MaterialTheme.colorScheme.primary
+                                        current -> MaterialTheme.colorScheme.primary
+                                        else -> MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                    androidx.compose.foundation.shape.CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (done) {
+                                Icon(
+                                    Icons.Filled.Check, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp)
+                                )
+                            } else if (current) {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.onPrimary, androidx.compose.foundation.shape.CircleShape))
+                            }
+                        }
+                    }
+                    if (!isLast) {
+                        Box(
+                            Modifier.width(2.dp).height(34.dp)
+                                .background(if (done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                        )
+                    }
                 }
-                Box(
-                    Modifier.size(18.dp).background(dotColor, shape = androidx.compose.foundation.shape.CircleShape)
-                )
-                Spacer(Modifier.width(16.dp))
-                Text(
-                    label,
-                    style = if (current) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-                    fontWeight = if (current) FontWeight.Bold else FontWeight.Normal,
-                    color = if (done || current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.padding(bottom = if (isLast) 0.dp else 18.dp)) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (current) FontWeight.Bold else FontWeight.SemiBold,
+                        color = if (done || current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -252,11 +285,85 @@ fun AddressCard(
                 }
             },
             modifier = Modifier.fillMaxWidth().height(MinTouchTargetDp.dp),
-            shape = RoundedCornerShape(14.dp)
+            shape = MaterialTheme.shapes.medium
         ) {
             Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text("View on map", style = MaterialTheme.typography.labelLarge)
         }
+    }
+}
+
+/** A small rounded-square colored icon container — the "icon chip" used for quick actions,
+ * catalog rows, and list leading icons throughout the app. */
+@Composable
+fun IconChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 44.dp,
+    iconSize: androidx.compose.ui.unit.Dp = 20.dp
+) {
+    Box(
+        modifier
+            .size(size)
+            .background(containerColor, RoundedCornerShape(size / 3)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(iconSize))
+    }
+}
+
+/** A white, elevated, rounded-square icon button — used for the home-screen notification
+ * bell and similar "floating" icon actions instead of a plain flat IconButton. */
+@Composable
+fun RoundedIconButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(
+        modifier
+            .size(MinTouchTargetDp.dp - 12.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
+/** A circular avatar showing initials on a solid brand-colored background, for profile /
+ * chat-style headers where there's no real photo to show. */
+@Composable
+fun InitialsAvatar(initials: String, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 44.dp) {
+    Box(
+        modifier
+            .size(size)
+            .background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            initials.take(2).uppercase(),
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/** A pill-shaped filter chip (category filters, etc.) — Material3's own FilterChip works fine
+ * functionally but reads visually "componenty"; this matches the softer pill look used
+ * everywhere else in this redesign. */
+@Composable
+fun PillFilterChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    Box(
+        modifier
+            .height(38.dp)
+            .background(containerColor, RoundedCornerShape(100))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text, color = contentColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
     }
 }

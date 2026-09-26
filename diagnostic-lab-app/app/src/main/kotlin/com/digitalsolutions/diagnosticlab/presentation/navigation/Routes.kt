@@ -1,6 +1,7 @@
 package com.digitalsolutions.diagnosticlab.presentation.navigation
 
 object Routes {
+    const val WELCOME = "welcome"
     const val LOGIN = "login"
     const val OTP = "otp/{mobile}"
     fun otp(mobile: String) = "otp/${encode(mobile)}"

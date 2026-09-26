@@ -21,11 +21,49 @@ import com.digitalsolutions.diagnosticlab.R
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
 
 @Composable
 fun rememberAuthViewModel(): AuthViewModel {
     val container = LocalAppContainer.current
     return viewModel(factory = viewModelFactory { initializer { AuthViewModel(container.authRepository) } })
+}
+
+/** First screen a signed-out user sees — introduces the app before asking for a mobile
+ * number. Both buttons lead to the same login flow: this app has no separate sign-up form,
+ * a new account is created transparently on first OTP verification. */
+@Composable
+fun WelcomeScreen(onContinue: () -> Unit) {
+    Column(Modifier.fillMaxSize().padding(28.dp)) {
+        Column(
+            Modifier.weight(1f).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.logo_mark),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier.size(140.dp)
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                stringResource(R.string.app_tagline),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        BigPrimaryButton(text = stringResource(R.string.get_started), onClick = onContinue)
+        Spacer(Modifier.height(12.dp))
+        BigSecondaryButton(text = stringResource(R.string.already_have_account), onClick = onContinue)
+    }
 }
 
 @Composable
@@ -40,24 +78,9 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
         Image(
             painter = painterResource(R.drawable.logo_mark),
             contentDescription = stringResource(R.string.app_name),
-            modifier = Modifier.size(120.dp).align(Alignment.CenterHorizontally)
+            modifier = Modifier.size(88.dp).align(Alignment.CenterHorizontally)
         )
-        Spacer(Modifier.height(20.dp))
-        Text(
-            stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(R.string.app_tagline),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(32.dp))
         Text(stringResource(R.string.enter_mobile_number), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(

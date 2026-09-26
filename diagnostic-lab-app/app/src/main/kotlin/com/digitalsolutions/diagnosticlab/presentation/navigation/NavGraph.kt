@@ -15,6 +15,7 @@ import com.digitalsolutions.diagnosticlab.presentation.admin.AdminHomeScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.LoginScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.OtpScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.ProfileSetupScreen
+import com.digitalsolutions.diagnosticlab.presentation.auth.WelcomeScreen
 import com.digitalsolutions.diagnosticlab.presentation.lab.LabHomeScreen
 import com.digitalsolutions.diagnosticlab.presentation.lab.LabOrderDetailScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingAddressScreen
@@ -48,7 +49,7 @@ fun DiagnosticLabNavGraph() {
     val session by container.sessionManager.session.collectAsState(initial = null)
 
     val startDestination = when (session?.role) {
-        null -> Routes.LOGIN
+        null -> Routes.WELCOME
         UserRole.PATIENT -> Routes.PATIENT_HOME
         UserRole.PHLEBOTOMIST -> Routes.PHLEBOTOMIST_HOME
         UserRole.LABORATORY -> Routes.LAB_HOME
@@ -64,6 +65,9 @@ fun DiagnosticLabNavGraph() {
     )
 
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Routes.WELCOME) {
+            WelcomeScreen(onContinue = { navController.navigate(Routes.LOGIN) })
+        }
         composable(Routes.LOGIN) {
             LoginScreen(onOtpRequested = { mobile -> navController.navigate(Routes.otp(mobile)) })
         }
@@ -194,7 +198,9 @@ fun DiagnosticLabNavGraph() {
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onSignedOut = { navController.navigate(Routes.LOGIN) { popUpTo(0) } },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onReports = { navController.navigate(Routes.REPORTS) },
+                onMedicalHistory = { navController.navigate(Routes.MEDICAL_HISTORY) }
             )
         }
 

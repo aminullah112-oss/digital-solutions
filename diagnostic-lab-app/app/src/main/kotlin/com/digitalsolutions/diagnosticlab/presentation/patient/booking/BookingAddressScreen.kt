@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,7 +31,10 @@ import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Address
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
+import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -102,16 +106,16 @@ fun BookingAddressScreen(
                 if (!showAddForm) {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
                         items(resolvedAddresses) { address ->
-                            Card(
-                                onClick = { bookingViewModel.setAddress(address); onContinue() },
-                                modifier = Modifier.fillMaxWidth().testTag("address_row")
+                            SectionCard(
+                                modifier = Modifier.testTag("address_row")
+                                    .clickable(onClick = { bookingViewModel.setAddress(address); onContinue() })
                             ) {
-                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.LocationOn, contentDescription = null)
-                                    Spacer(Modifier.width(12.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconChip(icon = Icons.Filled.LocationOn, containerColor = ChipRoseContainer, contentColor = MaterialTheme.colorScheme.primary)
+                                    Spacer(Modifier.width(14.dp))
                                     Column {
                                         Text(address.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                        Text(address.displayLine, style = MaterialTheme.typography.bodyMedium)
+                                        Text(address.displayLine, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }

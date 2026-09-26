@@ -20,6 +20,8 @@
 
     <!-- Auth -->
     <string name="app_tagline">Book lab tests. Get your sample collected at home.</string>
+    <string name="get_started">Get Started</string>
+    <string name="already_have_account">I already have an account</string>
     <string name="enter_mobile_number">Enter your mobile number</string>
     <string name="mobile_number_hint">10-digit mobile number</string>
     <string name="send_otp">Send OTP</string>

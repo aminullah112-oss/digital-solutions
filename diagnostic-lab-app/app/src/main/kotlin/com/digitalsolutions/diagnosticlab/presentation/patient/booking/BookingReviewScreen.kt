@@ -1,8 +1,12 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -76,31 +80,17 @@ fun BookingReviewScreen(
                 Spacer(Modifier.height(12.dp))
             }
             SectionCard("Payment method") {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = state.paymentMethod == PaymentMethod.ONLINE,
-                            onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) }
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    RadioButton(selected = state.paymentMethod == PaymentMethod.ONLINE, onClick = null)
-                    Text("Pay online now", style = MaterialTheme.typography.bodyLarge)
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = state.paymentMethod == PaymentMethod.CASH,
-                            onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.CASH) }
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    RadioButton(selected = state.paymentMethod == PaymentMethod.CASH, onClick = null)
-                    Text("Cash at collection", style = MaterialTheme.typography.bodyLarge)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    PaymentOptionRow(
+                        label = "Pay online now",
+                        selected = state.paymentMethod == PaymentMethod.ONLINE,
+                        onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) }
+                    )
+                    PaymentOptionRow(
+                        label = "Cash at collection",
+                        selected = state.paymentMethod == PaymentMethod.CASH,
+                        onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.CASH) }
+                    )
                 }
             }
             if (state.error != null) {
@@ -115,5 +105,28 @@ fun BookingReviewScreen(
             )
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+@Composable
+private fun PaymentOptionRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(14.dp)
+            )
+            .border(
+                BorderStroke(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)),
+                RoundedCornerShape(14.dp)
+            )
+            .selectable(selected = selected, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.width(4.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }

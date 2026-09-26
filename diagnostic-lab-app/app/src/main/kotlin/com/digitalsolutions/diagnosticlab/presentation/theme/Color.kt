@@ -21,3 +21,12 @@ val BackgroundLight = BrandCream
 val TextPrimaryLight = Color(0xFF16202A)
 val TextSecondaryLight = Color(0xFF44515C)
 val OutlineLight = Color(0xFFD8D2C0)
+
+// Soft tinted containers for the icon-chip pattern (quick-action tiles, list-row leading
+// icons). Each tint pairs with one of the existing semantic accents above rather than
+// introducing new hues, so a "Book a test" chip and a status badge that happens to share
+// a color read as the same design system, not a coincidence.
+val ChipRoseContainer = Color(0xFFF6DCDA)
+val ChipMintContainer = Color(0xFFD9EEE1)
+val ChipAmberContainer = Color(0xFFFBEEC6)
+val ChipBlueContainer = Color(0xFFDCE7F3)

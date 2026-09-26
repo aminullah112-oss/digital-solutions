@@ -1,12 +1,16 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -34,34 +38,34 @@ fun BookingDateTimeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pick a date & time") },
+                title = { Text("Schedule Your Test") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, null) } }
             )
         }
     ) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
-            Text("Select date", style = MaterialTheme.typography.titleMedium)
+            Text("Select a date", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 itemsIndexed(nextDays) { index, date ->
-                    val label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                    FilterChip(
+                    DateChip(
+                        dayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                        dayNumber = date.format(DateTimeFormatter.ofPattern("d")),
                         selected = date == selectedDate,
                         onClick = { selectedDate = date },
-                        label = { Text("$label ${date.format(DateTimeFormatter.ofPattern("d MMM"))}") },
                         modifier = Modifier.testTag("date_chip_$index")
                     )
                 }
             }
             Spacer(Modifier.height(24.dp))
-            Text("Select time slot", style = MaterialTheme.typography.titleMedium)
+            Text("Select a time", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(12.dp))
             FlowRowSimple {
                 timeSlots.forEachIndexed { index, slot ->
-                    FilterChip(
+                    TimeChip(
+                        text = slot.substringBefore("-"),
                         selected = slot == selectedSlot,
                         onClick = { selectedSlot = slot },
-                        label = { Text(slot) },
                         modifier = Modifier.testTag("time_chip_$index")
                     )
                 }
@@ -76,6 +80,39 @@ fun BookingDateTimeScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun DateChip(dayLabel: String, dayNumber: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    Column(
+        modifier
+            .width(58.dp).height(70.dp)
+            .background(containerColor, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(dayLabel, style = MaterialTheme.typography.labelMedium, color = contentColor)
+        Text(dayNumber, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = contentColor)
+    }
+}
+
+@Composable
+private fun TimeChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    Box(
+        modifier
+            .height(46.dp)
+            .background(containerColor, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = contentColor)
     }
 }
 

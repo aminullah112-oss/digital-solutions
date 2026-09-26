@@ -1,12 +1,15 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.bookings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -23,8 +26,11 @@ import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Booking
 import com.digitalsolutions.diagnosticlab.domain.model.BookingStatus
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
+import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
 import com.digitalsolutions.diagnosticlab.presentation.theme.AlertRed
 import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
 import com.digitalsolutions.diagnosticlab.presentation.theme.InfoBlue
@@ -73,15 +79,19 @@ fun MyBookingsScreen(onOpenBooking: (String) -> Unit, onBack: () -> Unit) {
             bookings!!.isEmpty() -> EmptyState("You haven't booked any tests yet.", Modifier.padding(padding))
             else -> LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(bookings!!, key = { it.id }) { booking ->
-                    Card(onClick = { onOpenBooking(booking.id) }, modifier = Modifier.fillMaxWidth().testTag("booking_row")) {
-                        Column(Modifier.padding(16.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(booking.laboratoryName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                StatusChip(statusLabel(booking.status), statusColor(booking.status))
+                    SectionCard(modifier = Modifier.testTag("booking_row").clickable(onClick = { onOpenBooking(booking.id) })) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            IconChip(icon = Icons.Filled.Science, containerColor = ChipRoseContainer, contentColor = MaterialTheme.colorScheme.primary, size = 48.dp)
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text(booking.laboratoryName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                                    StatusChip(statusLabel(booking.status), statusColor(booking.status))
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text("For ${booking.patientName} · ${booking.items.size} test(s)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${booking.scheduledDate} · ${booking.scheduledTimeSlot}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            Text("For ${booking.patientName} · ${booking.items.size} test(s)", style = MaterialTheme.typography.bodyMedium)
-                            Text("${booking.scheduledDate} · ${booking.scheduledTimeSlot}", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }

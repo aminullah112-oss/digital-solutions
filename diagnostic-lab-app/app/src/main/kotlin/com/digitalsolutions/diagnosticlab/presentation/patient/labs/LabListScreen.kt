@@ -3,8 +3,10 @@ package com.digitalsolutions.diagnosticlab.presentation.patient.labs
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,7 +24,11 @@ import com.digitalsolutions.diagnosticlab.data.repository.CatalogRepository
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
+import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipMintContainer
+import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -59,23 +65,27 @@ fun LabListScreen(onLabSelected: (Laboratory) -> Unit, onBack: () -> Unit) {
 
 @Composable
 private fun LabRow(lab: Laboratory, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag("lab_row")) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(lab.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(lab.rating.toString(), style = MaterialTheme.typography.bodyMedium)
+    SectionCard(modifier = Modifier.testTag("lab_row").clickable(onClick = onClick)) {
+        Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
+            IconChip(icon = Icons.Filled.LocalHospital, containerColor = ChipMintContainer, contentColor = HealthGreen, size = 48.dp)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text(lab.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Star, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(lab.rating.toString(), style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
-            }
-            Spacer(Modifier.height(4.dp))
-            Text("${lab.address}, ${lab.city}", style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(4.dp))
-            Text("Open ${lab.openTime}–${lab.closeTime} · Reports in ~${lab.estimatedReportHours}h", style = MaterialTheme.typography.labelMedium)
-            if (lab.homeCollectionAvailable) {
                 Spacer(Modifier.height(4.dp))
-                Text("Home collection available", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.SemiBold)
+                Text("${lab.address}, ${lab.city}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(2.dp))
+                Text("Open ${lab.openTime}–${lab.closeTime} · Reports in ~${lab.estimatedReportHours}h", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (lab.homeCollectionAvailable) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("Home collection available", style = MaterialTheme.typography.labelMedium, color = HealthGreen, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }

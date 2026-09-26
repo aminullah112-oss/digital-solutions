@@ -95,15 +95,13 @@ fun HelpSupportScreen(onRaiseComplaint: () -> Unit, onBack: () -> Unit) {
             if (complaints.isNotEmpty()) {
                 item { Text("Your complaints", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
                 items(complaints, key = { it.id }) { complaint ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(16.dp)) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(complaint.category.name.lowercase().replace('_', ' ').replaceFirstChar(Char::uppercase), fontWeight = FontWeight.Bold)
-                                StatusChip(complaint.status.name, MaterialTheme.colorScheme.primary)
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Text(complaint.description, style = MaterialTheme.typography.bodyMedium)
+                    SectionCard {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(complaint.category.name.lowercase().replace('_', ' ').replaceFirstChar(Char::uppercase), fontWeight = FontWeight.Bold)
+                            StatusChip(complaint.status.name, MaterialTheme.colorScheme.primary)
                         }
+                        Spacer(Modifier.height(4.dp))
+                        Text(complaint.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }

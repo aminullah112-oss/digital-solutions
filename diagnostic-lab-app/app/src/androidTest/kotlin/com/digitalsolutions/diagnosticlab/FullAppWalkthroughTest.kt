@@ -89,6 +89,16 @@ class FullAppWalkthroughTest {
 
     @Test
     fun fullAppWalkthrough() {
+        // ---------- Welcome (new pre-login screen) ----------
+        // Generous timeout here for the same reason login()'s first wait is: this is the very
+        // first screen shown on a cold app launch, racing Application.onCreate()'s one-time
+        // demo-data seed.
+        composeTestRule.waitUntil(45_000) {
+            composeTestRule.onAllNodesWithText("Get Started").fetchSemanticsNodes().isNotEmpty()
+        }
+        screenshot("welcome")
+        composeTestRule.onNodeWithText("Get Started").performClick()
+
         // ---------- Patient: the full primary journey ----------
         login("9000000001")
 
@@ -193,7 +203,10 @@ class FullAppWalkthroughTest {
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithTag("patient_home_book_button").fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithText("My Family").performClick()
+        // The redesigned quick-action grid (icon chips + bigger cards) is noticeably taller
+        // than before, so tiles further down the grid can now sit below the fold — same
+        // off-screen-click issue as elsewhere, same fix.
+        composeTestRule.onNodeWithText("My Family").performScrollTo().performClick()
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithTag("family_member_row").fetchSemanticsNodes().isNotEmpty()
         }
@@ -203,7 +216,7 @@ class FullAppWalkthroughTest {
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithTag("patient_home_book_button").fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onNodeWithText("Help & Support").performClick()
+        composeTestRule.onNodeWithText("Help & Support").performScrollTo().performClick()
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Raise a complaint").fetchSemanticsNodes().isNotEmpty()
         }
@@ -228,7 +241,10 @@ class FullAppWalkthroughTest {
             composeTestRule.onAllNodesWithText("Sign out").fetchSemanticsNodes().isNotEmpty()
         }
         screenshot("settings")
-        composeTestRule.onNodeWithText("Sign out").performClick()
+        // Settings/Profile now has a real header (avatar, Health Records card) above the
+        // Sign out button, so it can run below the fold on a real device — same off-screen
+        // click problem as the review screen's Confirm Booking button, same fix.
+        composeTestRule.onNodeWithText("Sign out").performScrollTo().performClick()
 
         // ---------- Phlebotomist ----------
         login("9840010001")

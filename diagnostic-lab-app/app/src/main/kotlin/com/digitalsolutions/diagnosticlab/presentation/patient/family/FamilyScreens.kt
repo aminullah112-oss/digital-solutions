@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +22,9 @@ import com.digitalsolutions.diagnosticlab.domain.model.Patient
 import com.digitalsolutions.diagnosticlab.domain.model.Relation
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
 
 @Composable
 fun rememberFamilyViewModel(): FamilyViewModel {
@@ -70,11 +73,18 @@ fun FamilyScreen(onBack: () -> Unit) {
 @Composable
 private fun FamilyMemberRow(person: Patient) {
     SectionCard(modifier = Modifier.testTag("family_member_row")) {
-        Text(person.fullName.ifBlank { "(name not set)" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text(
-            "${person.relation.name.lowercase().replaceFirstChar(Char::uppercase)} · ${person.age?.let { "$it yrs" } ?: "age not set"} · ${person.sex}",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconChip(icon = Icons.Filled.Person, containerColor = ChipRoseContainer, contentColor = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text(person.fullName.ifBlank { "(name not set)" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    "${person.relation.name.lowercase().replaceFirstChar(Char::uppercase)} · ${person.age?.let { "$it yrs" } ?: "age not set"} · ${person.sex}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -151,10 +161,14 @@ fun BookingPatientSelectScreen(onPatientSelected: (Patient) -> Unit, onBack: () 
     ) { padding ->
         LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(family) { person ->
-                Card(onClick = { onPatientSelected(person) }, modifier = Modifier.fillMaxWidth().testTag("patient_row")) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(person.fullName.ifBlank { "Myself" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(person.relation.name.lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.bodyMedium)
+                SectionCard(modifier = Modifier.testTag("patient_row").clickable { onPatientSelected(person) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconChip(icon = Icons.Filled.Person, containerColor = ChipRoseContainer, contentColor = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(14.dp))
+                        Column {
+                            Text(person.fullName.ifBlank { "Myself" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(person.relation.name.lowercase().replaceFirstChar(Char::uppercase), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }
