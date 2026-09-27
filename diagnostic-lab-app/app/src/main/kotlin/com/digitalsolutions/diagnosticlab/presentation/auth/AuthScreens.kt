@@ -24,11 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.digitalsolutions.diagnosticlab.R
-import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
@@ -38,12 +34,6 @@ import com.digitalsolutions.diagnosticlab.presentation.theme.ChipMintContainer
 import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
 import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
 import com.digitalsolutions.diagnosticlab.presentation.theme.InfoBlue
-
-@Composable
-fun rememberAuthViewModel(): AuthViewModel {
-    val container = LocalAppContainer.current
-    return viewModel(factory = viewModelFactory { initializer { AuthViewModel(container.authRepository) } })
-}
 
 /** First screen a signed-out user sees — introduces the app before asking for a mobile
  * number. Both buttons lead to the same login flow: this app has no separate sign-up form,
@@ -106,10 +96,9 @@ private fun WelcomePerkRow(icon: androidx.compose.ui.graphics.vector.ImageVector
 }
 
 @Composable
-fun LoginScreen(onOtpRequested: (String) -> Unit) {
+fun LoginScreen(viewModel: AuthViewModel, onOtpRequested: (String) -> Unit) {
     var mobile by remember { mutableStateOf("") }
     val activity = LocalContext.current as Activity
-    val viewModel = rememberAuthViewModel()
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
@@ -146,10 +135,9 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
 }
 
 @Composable
-fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> Unit) {
+fun OtpScreen(viewModel: AuthViewModel, mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> Unit) {
     var code by remember { mutableStateOf("") }
     val activity = LocalContext.current as Activity
-    val viewModel = rememberAuthViewModel()
     val state by viewModel.state.collectAsState()
 
     // The code was already requested by LoginScreen's "Send OTP" click — this screen just

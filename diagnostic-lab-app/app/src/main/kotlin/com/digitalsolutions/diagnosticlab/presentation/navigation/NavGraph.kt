@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.digitalsolutions.diagnosticlab.presentation.admin.AdminHomeScreen
+import com.digitalsolutions.diagnosticlab.presentation.auth.AuthViewModel
 import com.digitalsolutions.diagnosticlab.presentation.auth.LoginScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.OtpScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.ProfileSetupScreen
@@ -64,19 +65,28 @@ fun DiagnosticLabNavGraph() {
         }
     )
 
+    // Shared across Login and Otp, the same way bookingViewModel is shared across the booking
+    // flow: Compose Navigation scopes viewModel() to each destination's own NavBackStackEntry
+    // by default, so if each screen fetched its own AuthViewModel instance, verifyOtpAndSignIn
+    // on the Otp screen would never see the verificationId LoginScreen's "Send OTP" captured —
+    // it always hit "Request a code first." (confirmed via a CI UI-tree dump).
+    val authViewModel: AuthViewModel = viewModel(
+        factory = viewModelFactory { initializer { AuthViewModel(container.authRepository) } }
+    )
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.WELCOME) {
             WelcomeScreen(onContinue = { navController.navigate(Routes.LOGIN) })
         }
         composable(Routes.LOGIN) {
-            LoginScreen(onOtpRequested = { mobile -> navController.navigate(Routes.otp(mobile)) })
+            LoginScreen(viewModel = authViewModel, onOtpRequested = { mobile -> navController.navigate(Routes.otp(mobile)) })
         }
         composable(
             Routes.OTP,
             arguments = listOf(navArgument("mobile") { type = NavType.StringType })
         ) { backStackEntry ->
             val mobile = backStackEntry.arguments?.getString("mobile").orEmpty()
-            OtpScreen(mobile = mobile) { role, isNewAccount ->
+            OtpScreen(viewModel = authViewModel, mobile = mobile) { role, isNewAccount ->
                 val destination = when {
                     role == UserRole.PATIENT && isNewAccount -> Routes.PROFILE_SETUP
                     role == UserRole.PATIENT -> Routes.PATIENT_HOME
