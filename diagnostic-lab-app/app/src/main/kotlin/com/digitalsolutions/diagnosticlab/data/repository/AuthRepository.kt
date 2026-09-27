@@ -1,6 +1,7 @@
 package com.digitalsolutions.diagnosticlab.data.repository
 
 import android.app.Activity
+import android.util.Log
 import com.digitalsolutions.diagnosticlab.domain.model.Relation
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.google.firebase.FirebaseException
@@ -53,11 +54,13 @@ class AuthRepository(
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
+                Log.e("AuthDebug", "onVerificationFailed for $mobileNumber", e)
                 trySend(OtpRequestOutcome.Failed(e.message ?: "Verification failed"))
                 close()
             }
 
             override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+                Log.d("AuthDebug", "onCodeSent for $mobileNumber, verificationId=$verificationId")
                 trySend(OtpRequestOutcome.CodeSent(verificationId))
             }
         }
@@ -71,22 +74,29 @@ class AuthRepository(
         awaitClose { }
     }
 
-    suspend fun verifyOtpAndSignIn(verificationId: String, code: String): OtpOutcome =
-        signInWithCredential(PhoneAuthProvider.getCredential(verificationId, code))
+    suspend fun verifyOtpAndSignIn(verificationId: String, code: String): OtpOutcome {
+        Log.d("AuthDebug", "verifyOtpAndSignIn: verificationId=$verificationId, code=$code")
+        return signInWithCredential(PhoneAuthProvider.getCredential(verificationId, code))
+    }
 
     suspend fun signInWithCredential(credential: PhoneAuthCredential): OtpOutcome {
         return try {
+            Log.d("AuthDebug", "signInWithCredential: calling auth.signInWithCredential")
             val user = auth.signInWithCredential(credential).await().user
-                ?: return OtpOutcome.Failed("Sign-in failed")
+                ?: return OtpOutcome.Failed("Sign-in failed").also { Log.d("AuthDebug", "signInWithCredential: user null") }
+            Log.d("AuthDebug", "signInWithCredential: signed in uid=${user.uid}, calling finishSignIn")
             finishSignIn(user.uid, user.phoneNumber.orEmpty())
         } catch (e: Exception) {
+            Log.e("AuthDebug", "signInWithCredential: threw", e)
             OtpOutcome.Failed(e.message ?: "Incorrect code")
         }
     }
 
     private suspend fun finishSignIn(uid: String, mobileNumber: String): OtpOutcome {
+        Log.d("AuthDebug", "finishSignIn: start uid=$uid")
         val userDocRef = firestore.collection("users").document(uid)
         val snapshot = userDocRef.get().await()
+        Log.d("AuthDebug", "finishSignIn: users/$uid exists=${snapshot.exists()}")
         if (snapshot.exists()) {
             val role = runCatching { UserRole.valueOf(snapshot.getString("role") ?: "PATIENT") }.getOrDefault(UserRole.PATIENT)
             val linkedEntityId = snapshot.getString("linkedEntityId")
@@ -96,6 +106,7 @@ class AuthRepository(
         }
 
         userDocRef.set(mapOf("role" to UserRole.PATIENT.name, "mobileNumber" to mobileNumber)).await()
+        Log.d("AuthDebug", "finishSignIn: users/$uid created, writing patients doc")
         val patientRef = firestore.collection("patients").document()
         patientRef.set(
             mapOf(
@@ -113,6 +124,7 @@ class AuthRepository(
         ).await()
         sessionManager.signIn(uid, UserRole.PATIENT, mobileNumber, null)
         sessionManager.setActivePatient(patientRef.id)
+        Log.d("AuthDebug", "finishSignIn: done for uid=$uid, returning SignedIn(isNewAccount=true)")
         return OtpOutcome.SignedIn(isNewAccount = true, newUserId = uid, role = UserRole.PATIENT)
     }
 

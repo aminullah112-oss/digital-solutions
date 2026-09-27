@@ -1,6 +1,7 @@
 package com.digitalsolutions.diagnosticlab.presentation.auth
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.digitalsolutions.diagnosticlab.data.repository.AuthRepository
@@ -28,6 +29,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private var requestOtpJob: Job? = null
 
     fun sendOtp(activity: Activity, mobileNumber: String) {
+        Log.d("AuthDebug", "sendOtp: $mobileNumber, this instance=$this")
         requestOtpJob?.cancel()
         _state.value = _state.value.copy(loading = true, error = null, codeSent = false)
         requestOtpJob = viewModelScope.launch {
@@ -35,6 +37,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 when (outcome) {
                     is AuthRepository.OtpRequestOutcome.CodeSent -> {
                         verificationId = outcome.verificationId
+                        Log.d("AuthDebug", "sendOtp: captured verificationId=$verificationId, this instance=$this")
                         _state.value = _state.value.copy(loading = false, codeSent = true)
                     }
                     is AuthRepository.OtpRequestOutcome.AutoVerified -> {
@@ -50,12 +53,16 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     fun verifyOtp(code: String) {
         val id = verificationId ?: run {
+            Log.d("AuthDebug", "verifyOtp: no verificationId captured, this instance=$this")
             _state.value = _state.value.copy(error = "Request a code first.")
             return
         }
+        Log.d("AuthDebug", "verifyOtp: launching with verificationId=$id, this instance=$this")
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
-            applyOutcome(authRepository.verifyOtpAndSignIn(id, code))
+            val outcome = authRepository.verifyOtpAndSignIn(id, code)
+            Log.d("AuthDebug", "verifyOtp: got outcome=$outcome")
+            applyOutcome(outcome)
         }
     }
 
@@ -66,6 +73,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             is AuthRepository.OtpOutcome.Failed ->
                 _state.value.copy(loading = false, error = outcome.message)
         }
+        Log.d("AuthDebug", "applyOutcome: new state=${_state.value}")
     }
 
     fun resetError() {
