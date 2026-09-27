@@ -106,10 +106,28 @@ class FullAppWalkthroughTest {
         composeTestRule.onNodeWithContentDescription("Sign out").performClick()
     }
 
+    /**
+     * A brand-new phone number's very first sign-in always self-provisions as PATIENT and
+     * routes through this one-time screen (see AuthRepository.finishSignIn) — including the
+     * phlebotomist/lab/admin test numbers below, whose real role this test cannot itself grant
+     * (that's a deliberate console-only step, so those three logins still won't reach their
+     * role home on a completely fresh Firestore project). An account that's already
+     * provisioned skips straight past this screen, so it's safe to call after every login().
+     */
+    private fun completeProfileSetupIfShown() {
+        composeTestRule.waitForIdle()
+        if (composeTestRule.onAllNodesWithText("Tell us about you").fetchSemanticsNodes().isEmpty()) return
+        screenshot("profile_setup")
+        composeTestRule.onNodeWithText("Full name").performTextInput("Test Patient")
+        composeTestRule.onNodeWithText("Age").performTextInput("30")
+        composeTestRule.onNodeWithText("Continue").performClick()
+    }
+
     @Test
     fun fullAppWalkthrough() {
         // ---------- Patient: the full primary journey ----------
         login("9000000001")
+        completeProfileSetupIfShown()
 
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithTag("patient_home_book_button").fetchSemanticsNodes().isNotEmpty()
@@ -257,6 +275,7 @@ class FullAppWalkthroughTest {
 
         // ---------- Phlebotomist ----------
         login("9840010001")
+        completeProfileSetupIfShown()
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Today's Collections").fetchSemanticsNodes().isNotEmpty()
         }
@@ -265,6 +284,7 @@ class FullAppWalkthroughTest {
 
         // ---------- Laboratory ----------
         login("9850020001")
+        completeProfileSetupIfShown()
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Incoming Orders").fetchSemanticsNodes().isNotEmpty()
         }
@@ -273,6 +293,7 @@ class FullAppWalkthroughTest {
 
         // ---------- Admin ----------
         login("9000100000")
+        completeProfileSetupIfShown()
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Admin Dashboard").fetchSemanticsNodes().isNotEmpty()
         }
