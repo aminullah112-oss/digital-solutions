@@ -39,6 +39,10 @@ class FullAppWalkthroughTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    /** Must match the fixed code registered for each test mobile number under Firebase
+     * Console > Authentication > Sign-in method > Phone > "Phone numbers for testing". */
+    private val TEST_OTP_CODE = "123456"
+
     private var shotIndex = 0
 
     private fun screenshot(name: String) {
