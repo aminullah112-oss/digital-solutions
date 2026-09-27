@@ -162,6 +162,30 @@ jobs:
             echo "No screenshots captured this run — nothing to publish."
           fi
 
+      # Same problem and same fix as the screenshots step below: the "build" job's APK is only
+      # reachable via a signed Azure Blob Storage artifact URL, which the reviewer's egress
+      # proxy blocks by policy — but this job already builds a fresh debug APK as its first
+      # step above (to install on the emulator), so publish that copy via git instead.
+      - name: Publish debug APK to ci-apk branch
+        if: always()
+        run: |
+          apk=diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
+          if [ -f "$apk" ]; then
+            mkdir -p /tmp/apk
+            cp "$apk" /tmp/apk/diagnostic-lab-debug.apk
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout --orphan ci-apk-tmp
+            git rm -rf . > /dev/null
+            git clean -fdx > /dev/null
+            cp /tmp/apk/diagnostic-lab-debug.apk .
+            git add -A
+            git commit -m "CI debug APK for run ${{ github.run_id }}"
+            git push origin HEAD:refs/heads/ci-apk --force
+          else
+            echo "No debug APK found — build step must have failed earlier."
+          fi
+
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
