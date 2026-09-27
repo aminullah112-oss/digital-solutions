@@ -40,6 +40,7 @@ import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -53,9 +54,20 @@ class AddressBookViewModel(
     // null means "haven't heard from the Room Flow yet" — distinct from a genuinely empty
     // list, so the screen can tell "still loading" apart from "no saved addresses" instead
     // of guessing from a placeholder empty list and picking the wrong initial screen.
+    //
+    // observeAddresses' addSnapshotListener calls close(error) on any Firestore error — that
+    // includes rejected-write notifications Firestore delivers to every listener watching an
+    // affected path, not just the write's own caller. Uncaught, that crashed the whole app
+    // (confirmed via CI: an uncaught FirebaseFirestoreException PERMISSION_DENIED brought the
+    // process down here even on runs where this screen never attempted a write itself). Treat
+    // a listener error as "no addresses to show" instead of letting it propagate and crash.
     val addresses: StateFlow<List<Address>?> = sessionManager.session
         .filterNotNull()
         .flatMapLatest { patientRepository.observeAddresses(it.userId) }
+        .catch { e ->
+            Log.e("AddressDebug", "observeAddresses failed", e)
+            emit(emptyList())
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     var error by mutableStateOf<String?>(null)

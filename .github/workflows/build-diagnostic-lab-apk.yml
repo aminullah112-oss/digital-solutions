@@ -105,8 +105,18 @@ jobs:
           # disk) is thrown away at the end of the job regardless, so there's no cleanup to do.
           script: |
             gradle -p diagnostic-lab-app assembleDebug assembleDebugAndroidTest --stacktrace
-            adb install -r diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
-            adb install -r diagnostic-lab-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+            # Uninstall first rather than `install -r`: the AVD's disk (and so the app's private
+            # data, including Firestore's local persistent write-queue cache) is cached across
+            # workflow runs via actions/cache. A write queued during an earlier debugging
+            # iteration — before firestore.rules was finalized — got stuck there permanently:
+            # every fresh run since has crashed with the exact same uncaught
+            # FirebaseFirestoreException PERMISSION_DENIED the moment Firestore reconnects and
+            # retries that stale queued write, regardless of anything this run's test does.
+            # A real uninstall wipes that cache and gives each run a genuinely clean slate.
+            adb uninstall com.digitalsolutions.diagnosticlab || true
+            adb uninstall com.digitalsolutions.diagnosticlab.test || true
+            adb install diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
+            adb install diagnostic-lab-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
             adb shell am instrument -w -r com.digitalsolutions.diagnosticlab.test/androidx.test.runner.AndroidJUnitRunner > instrument_output.txt 2>&1 || true
             cat instrument_output.txt
             mkdir -p screenshots-pulled
