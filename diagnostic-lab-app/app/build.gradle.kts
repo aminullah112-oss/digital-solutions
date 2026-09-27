@@ -27,6 +27,24 @@ android {
         buildConfigField("boolean", "IS_CI", (project.findProperty("ci") == "true").toString())
     }
 
+    // Firebase Phone Auth's Play Integrity/reCAPTCHA verification needs the app's signing
+    // certificate fingerprint registered in Firebase Console — but the Android Gradle Plugin's
+    // default debug signing config uses whatever debug.keystore already exists on the machine,
+    // generating a brand-new one if it doesn't. On GitHub Actions that's a fresh, different
+    // keystore on every single run (the runner is thrown away each time), so a fingerprint
+    // registered today goes stale on the next build. A committed, stable debug keystore fixes
+    // this: register its fingerprint once, and every future CI and local debug build shares it.
+    // Safe to commit — unlike a release keystore, a debug keystore can never sign a build
+    // distributable via Play Store, so there's nothing sensitive in it.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
