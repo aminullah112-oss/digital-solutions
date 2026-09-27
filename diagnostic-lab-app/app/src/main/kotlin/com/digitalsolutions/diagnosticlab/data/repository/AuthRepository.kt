@@ -21,6 +21,12 @@ import java.util.concurrent.TimeUnit
  * "no separate signup form" design) — staff accounts (phlebotomist/lab/admin) are created by
  * editing the users/{uid} doc's role field in the Firebase console after that person's first
  * sign-in, since only a human should be able to grant those roles (see firestore.rules).
+ *
+ * Requires Firebase Console > Authentication > Settings > SMS Region Policy to explicitly
+ * allow the country codes any real or test phone number will use (e.g. India/+91) — it
+ * defaults to blocking every region, and that block applies even to numbers registered under
+ * "Phone numbers for testing", surfacing as FirebaseAuth error 17006 ("SMS unable to be sent
+ * until this region enabled by the app developer") with no other visible symptom.
  */
 class AuthRepository(
     private val auth: FirebaseAuth,
