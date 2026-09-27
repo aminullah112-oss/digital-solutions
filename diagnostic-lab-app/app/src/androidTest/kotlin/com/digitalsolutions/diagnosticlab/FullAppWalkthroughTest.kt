@@ -67,10 +67,9 @@ class FullAppWalkthroughTest {
         // Every sign-out now lands back on the pre-login Welcome screen (not Login directly),
         // so every call to login() — not just the very first, cold-start one — has to clear
         // "Get Started" before the mobile field can exist. Generous timeout: on the first call
-        // this is also racing Compose's first frame *and* Application.onCreate()'s one-time
-        // demo-data seed, which can take longer on a freshly booted CI emulator than any of the
-        // steady-state waits below; on later role-switch calls the condition is already true
-        // and this returns immediately.
+        // this is also racing Compose's first frame on a freshly booted CI emulator, which can
+        // take longer than any of the steady-state waits below; on later role-switch calls the
+        // condition is already true and this returns immediately.
         composeTestRule.waitUntil(45_000) {
             composeTestRule.onAllNodesWithText("Get Started").fetchSemanticsNodes().isNotEmpty()
         }
