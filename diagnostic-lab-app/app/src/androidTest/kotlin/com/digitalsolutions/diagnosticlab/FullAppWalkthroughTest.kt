@@ -202,11 +202,26 @@ class FullAppWalkthroughTest {
         screenshot("choose_datetime")
         composeTestRule.onNodeWithText("Continue").performClick()
 
+        // A brand-new patient account (real Firestore, no seeded demo data) has zero saved
+        // addresses, so BookingAddressScreen correctly defaults to the add-address form
+        // instead of a pickable list (see its own showAddForm logic) — this test used to run
+        // against Room's pre-seeded demo address and never exercised this path. Handle both:
+        // a returning patient with saved addresses sees address_row items to pick from, a new
+        // one sees the form fields directly.
         composeTestRule.waitUntil(15_000) {
-            composeTestRule.onAllNodesWithTag("address_row").fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithTag("address_row").fetchSemanticsNodes().isNotEmpty() ||
+                composeTestRule.onAllNodesWithText("House / Street").fetchSemanticsNodes().isNotEmpty()
         }
-        screenshot("choose_address")
-        composeTestRule.onAllNodesWithTag("address_row")[0].performClick()
+        if (composeTestRule.onAllNodesWithTag("address_row").fetchSemanticsNodes().isNotEmpty()) {
+            screenshot("choose_address")
+            composeTestRule.onAllNodesWithTag("address_row")[0].performClick()
+        } else {
+            screenshot("add_address")
+            composeTestRule.onNodeWithText("House / Street").performTextInput("221B Test Street")
+            composeTestRule.onNodeWithText("City").performTextInput("Mumbai")
+            composeTestRule.onNodeWithText("PIN code").performTextInput("400001")
+            composeTestRule.onNodeWithText("Save & continue").performClick()
+        }
 
         composeTestRule.waitUntil(15_000) {
             composeTestRule.onAllNodesWithText("Cash at collection").fetchSemanticsNodes().isNotEmpty()
