@@ -31,7 +31,15 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     fun sendOtp(activity: Activity, mobileNumber: String) {
         Log.d("AuthDebug", "sendOtp: $mobileNumber, this instance=$this")
         requestOtpJob?.cancel()
-        _state.value = _state.value.copy(loading = true, error = null, codeSent = false)
+        // This ViewModel is a single instance hoisted at the NavGraph level (needed so the
+        // OTP screen's enabled-state survives Compose Navigation's per-destination recreation —
+        // see the class kdoc history), which means its state otherwise survives a sign-out.
+        // A stale non-null signedInRole from a PREVIOUS session made OtpScreen's
+        // LaunchedEffect(state.signedInRole) fire immediately on the next login attempt,
+        // navigating away before the OTP screen ever rendered — signing out and back in as a
+        // different number silently reused the old session's role. A fresh OTP request starts
+        // a genuinely new auth attempt, so it gets a genuinely fresh state.
+        _state.value = UiState(loading = true)
         requestOtpJob = viewModelScope.launch {
             authRepository.requestOtp(activity, mobileNumber).collect { outcome ->
                 when (outcome) {
