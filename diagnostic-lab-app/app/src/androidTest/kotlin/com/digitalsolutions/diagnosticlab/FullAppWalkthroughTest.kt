@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -101,7 +102,12 @@ class FullAppWalkthroughTest {
         }
         screenshot("otp")
         composeTestRule.onNodeWithTag("otp_field").performTextInput(TEST_OTP_CODE)
-        composeTestRule.onNodeWithText("Verify & Continue").performClick()
+        composeTestRule.waitForIdle()
+        // AuthDebug logging showed verifyOtp() is never entered after this click, with no
+        // exception anywhere in the test — asserting enabled here turns that mystery into an
+        // immediate, specific failure instead of a vague 20s timeout two steps later, if the
+        // button was actually disabled (stale recomposition, code not yet length 6, etc).
+        composeTestRule.onNodeWithText("Verify & Continue").assertIsEnabled().performClick()
     }
 
     private fun signOutFromRoleHome() {
