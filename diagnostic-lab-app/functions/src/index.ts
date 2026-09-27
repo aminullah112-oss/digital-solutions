@@ -1,11 +1,178 @@
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { onRequest } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import * as crypto from "crypto";
+import * as https from "https";
 
 initializeApp();
 const db = getFirestore();
+
+const razorpayKeyId = defineSecret("RAZORPAY_KEY_ID");
+const razorpayKeySecret = defineSecret("RAZORPAY_KEY_SECRET");
+
+/** Minimal HTTPS client for the Razorpay Orders API — avoids depending on the Razorpay Node
+ * SDK (or global fetch, whose typings vary by @types/node version) for what is otherwise a
+ * single POST request. */
+function razorpayRequest(path: string, keyId: string, keySecret: string, body: object): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const req = https.request(
+      {
+        hostname: "api.razorpay.com",
+        path,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Basic ${auth}`,
+          "Content-Length": Buffer.byteLength(payload),
+        },
+      },
+      (res) => {
+        let raw = "";
+        res.on("data", (chunk) => (raw += chunk));
+        res.on("end", () => {
+          const status = res.statusCode ?? 0;
+          let parsed: any;
+          try {
+            parsed = raw ? JSON.parse(raw) : {};
+          } catch {
+            parsed = { raw };
+          }
+          if (status >= 200 && status < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(`Razorpay API ${path} failed (${status}): ${raw}`));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+/**
+ * Creates a Razorpay Order for a booking's total amount. Order creation has to happen
+ * server-side with the account's secret key — the client only ever sees the public Key ID and
+ * the resulting order_id, never the secret, and can't request an order for an amount of its
+ * own choosing (the amount always comes from the booking doc, not from client input).
+ */
+export const createRazorpayOrder = onCall(
+  { secrets: [razorpayKeyId, razorpayKeySecret] },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+    const bookingId = request.data?.bookingId;
+    if (typeof bookingId !== "string" || !bookingId) {
+      throw new HttpsError("invalid-argument", "bookingId is required.");
+    }
+
+    const bookingRef = db.collection("bookings").doc(bookingId);
+    const booking = await bookingRef.get();
+    if (!booking.exists) throw new HttpsError("not-found", "Booking not found.");
+    const data = booking.data()!;
+    if (data.patientAccountOwnerUserId !== uid) {
+      throw new HttpsError("permission-denied", "This booking doesn't belong to you.");
+    }
+    if (data.status !== "PENDING_PAYMENT") {
+      throw new HttpsError("failed-precondition", "This booking is no longer awaiting payment.");
+    }
+
+    const amountPaise = Math.round((data.totalAmount as number) * 100);
+    const keyId = razorpayKeyId.value();
+    const order = await razorpayRequest("/v1/orders", keyId, razorpayKeySecret.value(), {
+      amount: amountPaise,
+      currency: "INR",
+      receipt: bookingId,
+    });
+
+    await bookingRef.update({
+      payment: {
+        method: "ONLINE",
+        status: "PENDING",
+        razorpayOrderId: order.id,
+        timestampMillis: Date.now(),
+      },
+    });
+
+    return { orderId: order.id as string, amountPaise, currency: "INR", keyId };
+  }
+);
+
+/**
+ * Verifies a completed Razorpay checkout server-side before trusting it. Razorpay signs
+ * order_id + payment_id with the account's secret key (HMAC-SHA256) — recomputing that
+ * signature here and comparing it is the only way to know a payment genuinely succeeded.
+ * Trusting the client's own "it worked" callback instead would let a modified app mark any
+ * booking paid without ever charging a card, so no Firestore write happens until this passes.
+ */
+export const verifyRazorpayPayment = onCall(
+  { secrets: [razorpayKeySecret] },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+    const { bookingId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = request.data ?? {};
+    if (
+      typeof bookingId !== "string" || typeof razorpayPaymentId !== "string" ||
+      typeof razorpayOrderId !== "string" || typeof razorpaySignature !== "string"
+    ) {
+      throw new HttpsError("invalid-argument", "Missing payment verification fields.");
+    }
+
+    const bookingRef = db.collection("bookings").doc(bookingId);
+    const booking = await bookingRef.get();
+    if (!booking.exists) throw new HttpsError("not-found", "Booking not found.");
+    const data = booking.data()!;
+    if (data.patientAccountOwnerUserId !== uid) {
+      throw new HttpsError("permission-denied", "This booking doesn't belong to you.");
+    }
+    // Binds the signature to THIS booking's own order, not just any order the same patient
+    // might have created — otherwise a valid signature from an unrelated payment could be
+    // replayed here to confirm a different booking for free.
+    if (data.payment?.razorpayOrderId !== razorpayOrderId) {
+      throw new HttpsError("failed-precondition", "This payment doesn't match this booking's order.");
+    }
+
+    const expectedSignature = crypto
+      .createHmac("sha256", razorpayKeySecret.value())
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
+    const expected = Buffer.from(expectedSignature);
+    const actual = Buffer.from(razorpaySignature);
+    const isValid = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+    if (!isValid) {
+      console.error("Razorpay signature mismatch for booking", bookingId);
+      throw new HttpsError("permission-denied", "Payment verification failed.");
+    }
+
+    const now = Date.now();
+    await bookingRef.update({
+      status: "CONFIRMED",
+      updatedAtMillis: now,
+      payment: {
+        method: "ONLINE",
+        status: "SUCCESSFUL",
+        razorpayOrderId,
+        razorpayPaymentId,
+        timestampMillis: now,
+      },
+    });
+    await bookingRef.collection("trackingEvents").add({
+      status: "CONFIRMED",
+      timestampMillis: now,
+      actorId: uid,
+      actorRole: "PATIENT",
+      notes: null,
+    });
+
+    return { success: true };
+  }
+);
 
 /**
  * Maps a Booking.status transition (see Enums.kt BookingStatus) to the notification shown

@@ -98,6 +98,13 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-functions-ktx")
 
+    // Razorpay's own checkout UI (card/UPI/wallet selection, OTP-based 2FA) — RBI mandates
+    // this be a real payment gateway UI, not a plain API call. Order creation and payment
+    // verification happen server-side (functions/src/index.ts createRazorpayOrder /
+    // verifyRazorpayPayment); this SDK only launches the checkout screen and reports back
+    // the payment ID/signature the client hands to that verification function.
+    implementation("com.razorpay:checkout:1.6.33")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 

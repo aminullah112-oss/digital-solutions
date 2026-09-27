@@ -5,6 +5,7 @@ import com.digitalsolutions.diagnosticlab.domain.util.AssignmentStatusMachine
 import com.digitalsolutions.diagnosticlab.domain.util.BookingStatusMachine
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -28,7 +29,8 @@ import java.time.Year
 class BookingRepository(
     private val firestore: FirebaseFirestore,
     private val notificationRepository: NotificationRepository,
-    private val paymentGateway: PaymentGateway
+    private val paymentGateway: PaymentGateway,
+    private val functions: FirebaseFunctions
 ) {
 
     private fun bookingsRef() = firestore.collection("bookings")
@@ -100,27 +102,55 @@ class BookingRepository(
         return bookingId
     }
 
-    suspend fun pay(bookingId: String, method: PaymentMethod): PaymentGatewayResult {
+    /** Cash-at-collection only. Real online payments go through [createRazorpayOrder] and
+     * [verifyRazorpayPayment] instead — that path's booking write happens server-side inside
+     * verifyRazorpayPayment (functions/src/index.ts), after it checks Razorpay's signature, not
+     * here, since firestore.rules now refuses to let the client mark a booking's payment
+     * SUCCESSFUL itself. */
+    suspend fun payCash(bookingId: String): PaymentGatewayResult {
         val booking = bookingsRef().document(bookingId).get().await()
         val totalAmount = booking.getDouble("totalAmount") ?: return PaymentGatewayResult.Failure("Booking not found")
-        val result = paymentGateway.charge(totalAmount, method)
-        val status = when {
-            method == PaymentMethod.CASH -> PaymentStatus.CASH_SELECTED
-            result is PaymentGatewayResult.Success -> PaymentStatus.SUCCESSFUL
-            else -> PaymentStatus.FAILED
-        }
+        val result = paymentGateway.charge(totalAmount, PaymentMethod.CASH)
         bookingsRef().document(bookingId).update(
             "payment", mapOf(
-                "method" to method.name,
-                "status" to status.name,
+                "method" to PaymentMethod.CASH.name,
+                "status" to PaymentStatus.CASH_SELECTED.name,
                 "transactionId" to (result as? PaymentGatewayResult.Success)?.transactionId,
                 "timestampMillis" to System.currentTimeMillis()
             )
         ).await()
-        if (status == PaymentStatus.SUCCESSFUL || status == PaymentStatus.CASH_SELECTED) {
-            transitionBooking(bookingId, booking.toStatus(), BookingStatus.CONFIRMED, booking.getString("bookedByUserId").orEmpty(), "PATIENT")
-        }
+        transitionBooking(bookingId, booking.toStatus(), BookingStatus.CONFIRMED, booking.getString("bookedByUserId").orEmpty(), "PATIENT")
         return result
+    }
+
+    // ---------- Online payment (Razorpay) ----------
+    //
+    // Split into two server round-trips deliberately: creating the order needs the account's
+    // secret key (never on the client), and trusting the checkout SDK's own "it worked"
+    // callback without re-verifying Razorpay's signature server-side would let a modified app
+    // mark any booking paid without ever charging a card. See functions/src/index.ts for both.
+
+    suspend fun createRazorpayOrder(bookingId: String): RazorpayOrder {
+        val result = functions.getHttpsCallable("createRazorpayOrder").call(mapOf("bookingId" to bookingId)).await()
+        @Suppress("UNCHECKED_CAST")
+        val data = result.data as Map<String, Any>
+        return RazorpayOrder(
+            orderId = data["orderId"] as String,
+            amountPaise = (data["amountPaise"] as Number).toInt(),
+            currency = data["currency"] as String,
+            keyId = data["keyId"] as String
+        )
+    }
+
+    suspend fun verifyRazorpayPayment(bookingId: String, paymentId: String, orderId: String, signature: String) {
+        functions.getHttpsCallable("verifyRazorpayPayment").call(
+            mapOf(
+                "bookingId" to bookingId,
+                "razorpayPaymentId" to paymentId,
+                "razorpayOrderId" to orderId,
+                "razorpaySignature" to signature
+            )
+        ).await()
     }
 
     // ---------- Allocation & phlebotomist workflow ----------
@@ -398,6 +428,8 @@ class BookingRepository(
         ).await()
     }
 }
+
+data class RazorpayOrder(val orderId: String, val amountPaise: Int, val currency: String, val keyId: String)
 
 private fun DocumentSnapshot.toStatus(): BookingStatus =
     runCatching { BookingStatus.valueOf(getString("status") ?: "") }.getOrDefault(BookingStatus.PENDING_PAYMENT)

@@ -6,6 +6,7 @@ import com.digitalsolutions.diagnosticlab.data.repository.*
 import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 
 /**
  * Hand-rolled dependency container. The app is intentionally kept off Hilt/Dagger: with no
@@ -39,6 +40,12 @@ class AppContainer(context: Context) {
         }
     }
     private val firestore = FirebaseFirestore.getInstance()
+    // No region argument on either side: createRazorpayOrder/verifyRazorpayPayment (functions/
+    // src/index.ts) don't set an explicit region either, so both default to us-central1 and
+    // match automatically. The Firestore-triggered functions default to a different region
+    // (matching the Firestore database's own location) — that's a 2nd-gen quirk specific to
+    // Firestore triggers and doesn't apply to plain callables like these.
+    private val functions = FirebaseFunctions.getInstance()
 
     val notificationRepository = NotificationRepository(firestore, systemNotifier)
 
@@ -48,7 +55,7 @@ class AppContainer(context: Context) {
 
     val catalogRepository = CatalogRepository(firestore)
 
-    val bookingRepository = BookingRepository(firestore, notificationRepository, paymentGateway)
+    val bookingRepository = BookingRepository(firestore, notificationRepository, paymentGateway, functions)
 
     val reportRepository = ReportRepository(firestore)
 

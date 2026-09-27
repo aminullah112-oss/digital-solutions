@@ -1,5 +1,6 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.digitalsolutions.diagnosticlab.domain.model.PaymentMethod
@@ -29,6 +31,7 @@ fun BookingReviewScreen(
     onBack: () -> Unit
 ) {
     val state by bookingViewModel.state.collectAsState()
+    val activity = LocalContext.current as Activity
 
     LaunchedEffect(state.createdBookingId) {
         state.createdBookingId?.let { onConfirmed(it) }
@@ -101,7 +104,7 @@ fun BookingReviewScreen(
             BigPrimaryButton(
                 text = if (state.paymentMethod == PaymentMethod.ONLINE) "Pay ₹${"%.0f".format(state.totalAmount)} & Confirm" else "Confirm Booking",
                 enabled = !state.submitting,
-                onClick = { bookingViewModel.submitAndPay() }
+                onClick = { bookingViewModel.submitAndPay(activity) }
             )
             Spacer(Modifier.height(24.dp))
         }

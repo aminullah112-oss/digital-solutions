@@ -18,6 +18,19 @@ service cloud.firestore {
       return isSignedIn() && myRole() == 'LABORATORY';
     }
 
+    // A real online payment is only ever confirmed by the verifyRazorpayPayment Cloud
+    // Function, after it recomputes and checks Razorpay's signature server-side — the Admin
+    // SDK it uses bypasses these rules entirely, so this only constrains the ordinary client
+    // SDK. Without it, a modified app could just write payment.status: SUCCESSFUL itself and
+    // mark any booking paid without ever charging a card. Only trips on a NEW transition into
+    // SUCCESSFUL, so it never blocks an unrelated later update (e.g. cancelling an
+    // already-paid booking) once the Cloud Function has legitimately set it.
+    function clientClaimsNewOnlinePaymentSuccess() {
+      return ('payment' in request.resource.data) &&
+        request.resource.data.payment.status == 'SUCCESSFUL' &&
+        (!('payment' in resource.data) || resource.data.payment.status != 'SUCCESSFUL');
+    }
+
     // Each signed-in user's own account doc. role/linkedEntityId are server- or
     // console-managed only — a client can never grant itself a staff role.
     match /users/{uid} {
@@ -76,7 +89,7 @@ service cloud.firestore {
       );
       allow create: if isSignedIn() && request.resource.data.patientAccountOwnerUserId == request.auth.uid;
       allow update: if isSignedIn() && (
-        resource.data.patientAccountOwnerUserId == request.auth.uid ||
+        (resource.data.patientAccountOwnerUserId == request.auth.uid && !clientClaimsNewOnlinePaymentSuccess()) ||
         resource.data.assignedPhlebotomistUid == request.auth.uid ||
         isLab() || isAdmin()
       );
