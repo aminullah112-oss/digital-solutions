@@ -1,6 +1,7 @@
 package com.digitalsolutions.diagnosticlab.di
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import com.digitalsolutions.diagnosticlab.data.repository.*
 import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
 import com.google.firebase.auth.FirebaseAuth
@@ -23,7 +24,20 @@ class AppContainer(context: Context) {
     val sessionManager = SessionManager(appContext)
     private val systemNotifier = SystemNotifier(appContext)
     private val paymentGateway: PaymentGateway = MockPaymentGateway()
-    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val firebaseAuth = FirebaseAuth.getInstance().apply {
+        // Registering a number under Firebase Console > Phone > "testing" only picks which
+        // OTP code the backend accepts later — it does NOT stop the SDK launching
+        // RecaptchaActivity/Play Integrity first. On a bare CI/dev emulator with no Play
+        // Store that detour hands focus away long enough for AndroidX Test's ActivityScenario
+        // to lose track of MainActivity and tear it down (surfaced as "No compose hierarchies
+        // found" a few seconds into the walkthrough test). Skipping app verification is safe
+        // here because it's gated to debuggable builds only: release builds (not debuggable)
+        // always go through the real check, and even with it disabled a genuine phone number
+        // still receives a real SMS — only the device-attestation step is skipped.
+        if ((appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            firebaseAuthSettings.setAppVerificationDisabledForTesting(true)
+        }
+    }
     private val firestore = FirebaseFirestore.getInstance()
 
     val notificationRepository = NotificationRepository(firestore, systemNotifier)
