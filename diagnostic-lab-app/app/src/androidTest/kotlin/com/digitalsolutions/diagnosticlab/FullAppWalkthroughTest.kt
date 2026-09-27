@@ -223,8 +223,16 @@ class FullAppWalkthroughTest {
             composeTestRule.onNodeWithText("Save & continue").performClick()
         }
 
-        composeTestRule.waitUntil(15_000) {
-            composeTestRule.onAllNodesWithText("Cash at collection").fetchSemanticsNodes().isNotEmpty()
+        try {
+            composeTestRule.waitUntil(15_000) {
+                composeTestRule.onAllNodesWithText("Cash at collection").fetchSemanticsNodes().isNotEmpty()
+            }
+        } catch (t: Throwable) {
+            // First run to reach this point at all — dump the screen to see whether the
+            // address save/navigation never happened (still on the address form) or the
+            // review screen rendered without this text for some other reason.
+            composeTestRule.onRoot().printToLog("UI_DUMP_pre_review")
+            throw t
         }
         screenshot("review_booking")
         // This screen stacks patient/lab/tests/schedule/address/payment cards inside a plain
