@@ -1,8 +1,14 @@
 package com.digitalsolutions.diagnosticlab.presentation.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +19,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -22,6 +30,12 @@ import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.IconChip
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipBlueContainer
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipMintContainer
+import com.digitalsolutions.diagnosticlab.presentation.theme.ChipRoseContainer
+import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
+import com.digitalsolutions.diagnosticlab.presentation.theme.InfoBlue
 
 @Composable
 fun rememberAuthViewModel(): AuthViewModel {
@@ -34,17 +48,25 @@ fun rememberAuthViewModel(): AuthViewModel {
  * a new account is created transparently on first OTP verification. */
 @Composable
 fun WelcomeScreen(onContinue: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(28.dp)) {
+    val background = Brush.verticalGradient(
+        listOf(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f), MaterialTheme.colorScheme.background)
+    )
+    Column(Modifier.fillMaxSize().background(background).padding(28.dp)) {
         Column(
             Modifier.weight(1f).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.logo_mark),
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.size(140.dp)
-            )
+            Box(
+                Modifier.size(168.dp).background(Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_mark),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier.size(120.dp)
+                )
+            }
             Spacer(Modifier.height(24.dp))
             Text(
                 stringResource(R.string.app_name),
@@ -59,10 +81,25 @@ fun WelcomeScreen(onContinue: () -> Unit) {
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.height(36.dp))
+            WelcomePerkRow(Icons.Filled.Home, ChipRoseContainer, MaterialTheme.colorScheme.primary, stringResource(R.string.welcome_perk_home_collection))
+            Spacer(Modifier.height(16.dp))
+            WelcomePerkRow(Icons.Filled.VerifiedUser, ChipMintContainer, HealthGreen, stringResource(R.string.welcome_perk_certified_labs))
+            Spacer(Modifier.height(16.dp))
+            WelcomePerkRow(Icons.Filled.Description, ChipBlueContainer, InfoBlue, stringResource(R.string.welcome_perk_fast_reports))
         }
         BigPrimaryButton(text = stringResource(R.string.get_started), onClick = onContinue)
         Spacer(Modifier.height(12.dp))
         BigSecondaryButton(text = stringResource(R.string.already_have_account), onClick = onContinue)
+    }
+}
+
+@Composable
+private fun WelcomePerkRow(icon: androidx.compose.ui.graphics.vector.ImageVector, chipColor: Color, iconColor: Color, label: String) {
+    Row(Modifier.fillMaxWidth(0.85f), verticalAlignment = Alignment.CenterVertically) {
+        IconChip(icon = icon, containerColor = chipColor, contentColor = iconColor, size = 36.dp, iconSize = 18.dp)
+        Spacer(Modifier.width(14.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
     }
 }
 

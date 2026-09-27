@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Diagnostic Lab</string>
+    <string name="app_name">Lab Connect</string>
 
     <!-- Home -->
     <string name="home_greeting">Hello, %1$s</string>
@@ -20,6 +20,9 @@
 
     <!-- Auth -->
     <string name="app_tagline">Book lab tests. Get your sample collected at home.</string>
+    <string name="welcome_perk_home_collection">Free home sample collection</string>
+    <string name="welcome_perk_certified_labs">Reports from certified labs</string>
+    <string name="welcome_perk_fast_reports">Reports delivered in the app</string>
     <string name="get_started">Get Started</string>
     <string name="already_have_account">I already have an account</string>
     <string name="enter_mobile_number">Enter your mobile number</string>

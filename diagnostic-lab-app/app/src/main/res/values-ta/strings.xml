@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">டயக்னாஸ்டிக் லேப்</string>
+    <string name="app_name">Lab Connect</string>
 
     <!-- Home -->
     <string name="home_greeting">வணக்கம், %1$s</string>
@@ -20,6 +20,11 @@
 
     <!-- Auth -->
     <string name="app_tagline">பரிசோதனைகளை பதிவு செய்யுங்கள். வீட்டிலேயே மாதிரி சேகரிப்பு.</string>
+    <string name="welcome_perk_home_collection">இலவச வீட்டு மாதிரி சேகரிப்பு</string>
+    <string name="welcome_perk_certified_labs">சான்றளிக்கப்பட்ட ஆய்வகங்களின் அறிக்கைகள்</string>
+    <string name="welcome_perk_fast_reports">ஆப்பில் அறிக்கைகள் வழங்கப்படும்</string>
+    <string name="get_started">தொடங்குங்கள்</string>
+    <string name="already_have_account">எனக்கு ஏற்கனவே கணக்கு உள்ளது</string>
     <string name="enter_mobile_number">உங்கள் மொபைல் எண்ணை உள்ளிடவும்</string>
     <string name="mobile_number_hint">10-இலக்க மொபைல் எண்</string>
     <string name="send_otp">OTP அனுப்பவும்</string>

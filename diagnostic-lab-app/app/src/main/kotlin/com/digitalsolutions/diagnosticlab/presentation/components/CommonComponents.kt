@@ -66,7 +66,12 @@ fun SectionCard(title: String? = null, modifier: Modifier = Modifier, content: @
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        // Pinned to a literal white rather than the theme's default (tonal-elevation-tinted)
+        // container color: on the cream background, that default blends the card into the page
+        // almost invisibly. A flat white card with real elevation is what actually reads as
+        // "a card" against BrandCream.
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(Modifier.padding(20.dp)) {
             if (title != null) {
