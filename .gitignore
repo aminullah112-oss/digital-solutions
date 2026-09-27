@@ -24,3 +24,7 @@ diagnostic-lab-app/local.properties
 diagnostic-lab-app/.idea/
 diagnostic-lab-app/**/*.iml
 diagnostic-lab-app/captures/
+
+# diagnostic-lab-app: Firebase Cloud Functions — Node deps and TypeScript build output
+diagnostic-lab-app/functions/node_modules/
+diagnostic-lab-app/functions/lib/
