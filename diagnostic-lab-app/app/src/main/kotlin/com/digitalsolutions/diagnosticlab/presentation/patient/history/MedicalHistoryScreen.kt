@@ -23,6 +23,7 @@ import com.digitalsolutions.diagnosticlab.presentation.components.EmptyState
 import com.digitalsolutions.diagnosticlab.presentation.components.VoiceEnabledTextField
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -34,9 +35,9 @@ class MedicalHistoryViewModel(
     private val medicalRecordRepository: MedicalRecordRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
-    val records: StateFlow<List<MedicalRecord>> = sessionManager.activePatientId
-        .filterNotNull()
-        .flatMapLatest { medicalRecordRepository.observeForPatient(it) }
+    val records: StateFlow<List<MedicalRecord>> = sessionManager.session.filterNotNull()
+        .combine(sessionManager.activePatientId.filterNotNull()) { session, patientId -> session.userId to patientId }
+        .flatMapLatest { (ownerUserId, patientId) -> medicalRecordRepository.observeForPatient(ownerUserId, patientId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addNote(title: String, notes: String) {

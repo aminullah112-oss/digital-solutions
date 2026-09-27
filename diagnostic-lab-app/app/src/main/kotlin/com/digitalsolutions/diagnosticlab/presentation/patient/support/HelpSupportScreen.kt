@@ -32,6 +32,7 @@ import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
 import com.digitalsolutions.diagnosticlab.presentation.components.VoiceEnabledTextField
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -42,9 +43,9 @@ class ComplaintViewModel(
     private val complaintRepository: ComplaintRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
-    val complaints: StateFlow<List<Complaint>> = sessionManager.activePatientId
-        .filterNotNull()
-        .flatMapLatest { complaintRepository.observeForPatient(it) }
+    val complaints: StateFlow<List<Complaint>> = sessionManager.session.filterNotNull()
+        .combine(sessionManager.activePatientId.filterNotNull()) { session, patientId -> session.userId to patientId }
+        .flatMapLatest { (ownerUserId, patientId) -> complaintRepository.observeForPatient(ownerUserId, patientId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun submit(category: ComplaintCategory, description: String, onDone: () -> Unit) {

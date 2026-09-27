@@ -8,22 +8,27 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-/** Access control note: every query here is scoped by patientId — a patient can only ever
- * observe their own reports because the ViewModel always supplies the signed-in patient's id,
- * never an arbitrary one from user input. Firestore security rules additionally check
- * patientAccountOwnerUserId on read. */
 class ReportRepository(private val firestore: FirebaseFirestore) {
 
     private fun collection() = firestore.collection("reports")
 
-    fun observeForPatient(patientId: String): Flow<List<Report>> = callbackFlow {
-        val registration = collection().whereEqualTo("patientId", patientId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
+    /**
+     * Firestore validates a list/listen query against security rules using the query's own
+     * filter fields, not the data it happens to return — a query filtered on `patientId` can
+     * never satisfy a rule written in terms of `patientAccountOwnerUserId` (a different field),
+     * so it's rejected outright with PERMISSION_DENIED regardless of whether every actual match
+     * would pass. Query on the field the rule checks instead, then narrow to the specific
+     * family member client-side.
+     */
+    fun observeForPatient(ownerUserId: String, patientId: String): Flow<List<Report>> = callbackFlow {
+        val registration = collection().whereEqualTo("patientAccountOwnerUserId", ownerUserId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toReport() }.filter { it.patientId == patientId })
             }
-            trySend(snapshot?.documents.orEmpty().mapNotNull { it.toReport() })
-        }
         awaitClose { registration.remove() }
     }
 

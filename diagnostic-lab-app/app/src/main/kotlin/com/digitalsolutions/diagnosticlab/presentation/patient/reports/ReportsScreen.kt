@@ -32,14 +32,15 @@ import com.digitalsolutions.diagnosticlab.presentation.theme.HealthGreen
 import com.digitalsolutions.diagnosticlab.presentation.theme.WarningAmber
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 
 class ReportsViewModel(reportRepository: ReportRepository, sessionManager: SessionManager) : ViewModel() {
-    val reports: StateFlow<List<Report>?> = sessionManager.activePatientId
-        .filterNotNull()
-        .flatMapLatest { reportRepository.observeForPatient(it) }
+    val reports: StateFlow<List<Report>?> = sessionManager.session.filterNotNull()
+        .combine(sessionManager.activePatientId.filterNotNull()) { session, patientId -> session.userId to patientId }
+        .flatMapLatest { (ownerUserId, patientId) -> reportRepository.observeForPatient(ownerUserId, patientId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }
 

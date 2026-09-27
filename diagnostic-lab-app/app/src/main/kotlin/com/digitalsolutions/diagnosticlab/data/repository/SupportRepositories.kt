@@ -17,14 +17,25 @@ class MedicalRecordRepository(private val firestore: FirebaseFirestore) {
 
     private fun collection() = firestore.collection("medicalRecords")
 
-    fun observeForPatient(patientId: String): Flow<List<MedicalRecord>> = callbackFlow {
-        val registration = collection().whereEqualTo("patientId", patientId)
+    /**
+     * Firestore validates a list/listen query against security rules using the query's own
+     * filter fields, not the data it happens to return — filtering on `patientId` can never
+     * satisfy a rule written in terms of `accountOwnerUserId` (a different field), so it's
+     * rejected outright regardless of whether every actual match would pass. Query on the field
+     * the rule checks instead, then narrow to the specific family member client-side.
+     */
+    fun observeForPatient(ownerUserId: String, patientId: String): Flow<List<MedicalRecord>> = callbackFlow {
+        val registration = collection().whereEqualTo("accountOwnerUserId", ownerUserId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
                 }
-                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toMedicalRecord() })
+                trySend(
+                    snapshot?.documents.orEmpty()
+                        .filter { it.getString("patientId") == patientId }
+                        .mapNotNull { it.toMedicalRecord() }
+                )
             }
         awaitClose { registration.remove() }
     }
@@ -64,14 +75,21 @@ class ComplaintRepository(
 ) {
     private fun collection() = firestore.collection("complaints")
 
-    fun observeForPatient(patientId: String): Flow<List<Complaint>> = callbackFlow {
-        val registration = collection().whereEqualTo("patientId", patientId)
+    /**
+     * Firestore validates a list/listen query against security rules using the query's own
+     * filter fields, not the data it happens to return — filtering on `patientId` can never
+     * satisfy a rule written in terms of `patientAccountOwnerUserId` (a different field), so
+     * it's rejected outright regardless of whether every actual match would pass. Query on the
+     * field the rule checks instead, then narrow to the specific family member client-side.
+     */
+    fun observeForPatient(ownerUserId: String, patientId: String): Flow<List<Complaint>> = callbackFlow {
+        val registration = collection().whereEqualTo("patientAccountOwnerUserId", ownerUserId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
                 }
-                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toComplaint() })
+                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toComplaint() }.filter { it.patientId == patientId })
             }
         awaitClose { registration.remove() }
     }
