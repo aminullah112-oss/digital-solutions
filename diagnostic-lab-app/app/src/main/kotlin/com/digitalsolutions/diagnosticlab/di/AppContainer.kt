@@ -38,18 +38,7 @@ class AppContainer(context: Context) {
             firebaseAuthSettings.setAppVerificationDisabledForTesting(true)
         }
     }
-    private val firestore = FirebaseFirestore.getInstance().also {
-        // A CI walkthrough run keeps crashing with an uncaught FirebaseFirestoreException
-        // PERMISSION_DENIED whose stack trace never names the actual collection/path involved
-        // (it's Firestore's own SyncEngine relaying a rejected-write notification, several
-        // layers removed from whichever repository call issued it) — every repository method
-        // that could plausibly be responsible has been checked and ruled out by direct
-        // logging with no luck. Firestore's own verbose logging prints every request's exact
-        // path, which the CI job's logcat grep already captures (it matches "Firestore").
-        if ((appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
-            FirebaseFirestore.setLoggingEnabled(true)
-        }
-    }
+    private val firestore = FirebaseFirestore.getInstance()
 
     val notificationRepository = NotificationRepository(firestore, systemNotifier)
 
