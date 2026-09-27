@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "860861482984",
+    "project_id": "labconnect-bfd41",
+    "storage_bucket": "labconnect-bfd41.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860861482984:android:54c20e06b2c6a4eeadc65d",
+        "android_client_info": {
+          "package_name": "com.digitalsolutions.diagnosticlab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAanHuvWE7EQf8znqBMqcedRAW3h2LIo7A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860861482984:android:38a097812d3e2effadc65d",
+        "android_client_info": {
+          "package_name": "com.labconnect.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAanHuvWE7EQf8znqBMqcedRAW3h2LIo7A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
