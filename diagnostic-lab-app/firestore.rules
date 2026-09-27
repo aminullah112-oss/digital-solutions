@@ -81,6 +81,25 @@ service cloud.firestore {
         isLab() || isAdmin()
       );
       allow delete: if false;
+
+      // Append-only status-change log. Rules don't cascade from the parent match block to
+      // a subcollection — this was missing entirely, so every trackingEvents write (patient
+      // confirming a booking, phlebotomist/lab progressing it) fell through to the implicit
+      // deny-all and crashed the app with an uncaught PERMISSION_DENIED. Same actor set as
+      // the parent booking's own update rule; create-only since events are never edited.
+      match /trackingEvents/{eventId} {
+        allow read: if isSignedIn() && (
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.patientAccountOwnerUserId == request.auth.uid ||
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.assignedPhlebotomistUid == request.auth.uid ||
+          isLab() || isAdmin()
+        );
+        allow create: if isSignedIn() && (
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.patientAccountOwnerUserId == request.auth.uid ||
+          get(/databases/$(database)/documents/bookings/$(bookingId)).data.assignedPhlebotomistUid == request.auth.uid ||
+          isLab() || isAdmin()
+        );
+        allow update, delete: if false;
+      }
     }
 
     // Medical history notes, scoped to the account that owns the family member they're about
