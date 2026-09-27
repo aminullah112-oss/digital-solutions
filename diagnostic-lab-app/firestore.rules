@@ -33,11 +33,13 @@ service cloud.firestore {
         allow read, write: if isSignedIn() && request.auth.uid == uid;
       }
       match /notifications/{notifId} {
-        allow read, update: if isSignedIn() && request.auth.uid == uid;
-        allow create, delete: if false; // Cloud Functions only
-      }
-      match /medicalRecords/{recordId} {
-        allow read, write: if isSignedIn() && request.auth.uid == uid;
+        // Most notifications are written server-side by the onBookingStatusChange Cloud
+        // Function reacting to a booking's status field. The client can also create its own —
+        // covers the couple of cases that aren't themselves a booking-status transition
+        // (assignment acceptance, sample rejection, complaint updates). A user creating a
+        // notification in their own inbox is harmless: worst case is self-spam, never a leak.
+        allow read, update, create: if isSignedIn() && request.auth.uid == uid;
+        allow delete: if false;
       }
     }
 
@@ -81,8 +83,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /samples/{sampleId} {
-      allow read, write: if isLab() || isAdmin() || isPhlebotomist();
+    // Medical history notes, scoped to the account that owns the family member they're about
+    // (not necessarily the same uid as the family member's own patients/ doc).
+    match /medicalRecords/{recordId} {
+      allow read: if isSignedIn() && (resource.data.accountOwnerUserId == request.auth.uid || isAdmin());
+      allow write: if isSignedIn() && (request.resource.data.accountOwnerUserId == request.auth.uid || isAdmin());
+    }
+
+    // Booking-ID sequence counters (BOOK-2026, etc.) — no sensitive data, just an incrementing
+    // number a Firestore transaction updates atomically when a patient creates a booking.
+    match /counters/{id} {
+      allow read, write: if isSignedIn();
     }
 
     match /reports/{reportId} {

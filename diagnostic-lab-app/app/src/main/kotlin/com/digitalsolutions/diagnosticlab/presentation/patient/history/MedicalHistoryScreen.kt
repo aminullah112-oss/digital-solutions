@@ -42,7 +42,8 @@ class MedicalHistoryViewModel(
     fun addNote(title: String, notes: String) {
         viewModelScope.launch {
             val patientId = sessionManager.activePatientId.first() ?: return@launch
-            medicalRecordRepository.addRecord(patientId, "NOTE", title, null, LocalDate.now(), notes)
+            val ownerUserId = sessionManager.session.first()?.userId ?: return@launch
+            medicalRecordRepository.addRecord(patientId, ownerUserId, "NOTE", title, null, LocalDate.now(), notes)
         }
     }
 }

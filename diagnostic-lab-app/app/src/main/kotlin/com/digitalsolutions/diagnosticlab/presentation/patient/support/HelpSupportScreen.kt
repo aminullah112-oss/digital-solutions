@@ -51,7 +51,7 @@ class ComplaintViewModel(
         viewModelScope.launch {
             val patientId = sessionManager.activePatientId.first() ?: return@launch
             val userId = sessionManager.session.first()?.userId ?: return@launch
-            complaintRepository.submit(patientId, null, category, description, null, userId)
+            complaintRepository.submit(patientId, userId, null, category, description, null, userId)
             onDone()
         }
     }

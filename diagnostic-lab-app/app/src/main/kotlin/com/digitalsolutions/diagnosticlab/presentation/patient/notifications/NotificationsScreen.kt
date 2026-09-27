@@ -41,6 +41,7 @@ import com.digitalsolutions.diagnosticlab.presentation.theme.WarningAmber
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -48,7 +49,7 @@ import java.util.concurrent.TimeUnit
 
 class NotificationsViewModel(
     private val notificationRepository: NotificationRepository,
-    sessionManager: SessionManager
+    private val sessionManager: SessionManager
 ) : ViewModel() {
     val notifications: StateFlow<List<AppNotification>> = sessionManager.session
         .filterNotNull()
@@ -56,7 +57,10 @@ class NotificationsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun markRead(id: String) {
-        viewModelScope.launch { notificationRepository.markRead(id) }
+        viewModelScope.launch {
+            val userId = sessionManager.session.first()?.userId ?: return@launch
+            notificationRepository.markRead(userId, id)
+        }
     }
 }
 
