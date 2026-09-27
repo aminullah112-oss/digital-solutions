@@ -1,5 +1,6 @@
 package com.digitalsolutions.diagnosticlab.presentation.auth
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -106,6 +108,7 @@ private fun WelcomePerkRow(icon: androidx.compose.ui.graphics.vector.ImageVector
 @Composable
 fun LoginScreen(onOtpRequested: (String) -> Unit) {
     var mobile by remember { mutableStateOf("") }
+    val activity = LocalContext.current as Activity
     val viewModel = rememberAuthViewModel()
 
     Column(
@@ -133,8 +136,10 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
             text = stringResource(R.string.send_otp),
             enabled = mobile.length == 10,
             onClick = {
-                viewModel.sendOtp("+91 $mobile")
-                onOtpRequested("+91 $mobile")
+                // E.164 format required by Firebase Phone Auth — no space after the country code.
+                val e164 = "+91$mobile"
+                viewModel.sendOtp(activity, e164)
+                onOtpRequested(e164)
             }
         )
     }
@@ -143,10 +148,13 @@ fun LoginScreen(onOtpRequested: (String) -> Unit) {
 @Composable
 fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> Unit) {
     var code by remember { mutableStateOf("") }
+    val activity = LocalContext.current as Activity
     val viewModel = rememberAuthViewModel()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(mobile) { viewModel.sendOtp(mobile) }
+    // The code was already requested by LoginScreen's "Send OTP" click — this screen just
+    // displays the entry field and lets the user retry via "Resend code" if needed. Sending
+    // again here on entry would fire a second real SMS for the same number.
 
     LaunchedEffect(state.signedInRole) {
         state.signedInRole?.let { onVerified(it, state.isNewAccount) }
@@ -156,19 +164,10 @@ fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> U
         Text(stringResource(R.string.verify_number), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.otp_sent_to, mobile), style = MaterialTheme.typography.bodyLarge)
-        state.demoOtp?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Demo OTP: $it  (no SMS gateway configured — see README)",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("demo_otp_text")
-            )
-        }
         Spacer(Modifier.height(24.dp))
         OutlinedTextField(
             value = code,
-            onValueChange = { if (it.length <= 4) code = it.filter(Char::isDigit) },
+            onValueChange = { if (it.length <= 6) code = it.filter(Char::isDigit) },
             placeholder = { Text(stringResource(R.string.otp_code_hint)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier.fillMaxWidth().testTag("otp_field"),
@@ -181,11 +180,11 @@ fun OtpScreen(mobile: String, onVerified: (UserRole, isNewAccount: Boolean) -> U
         Spacer(Modifier.height(24.dp))
         BigPrimaryButton(
             text = stringResource(R.string.verify_and_continue),
-            enabled = code.length == 4 && !state.loading,
-            onClick = { viewModel.verifyOtp(mobile, code) }
+            enabled = code.length == 6 && !state.loading,
+            onClick = { viewModel.verifyOtp(code) }
         )
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = { viewModel.sendOtp(mobile) }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+        TextButton(onClick = { viewModel.sendOtp(activity, mobile) }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Text(stringResource(R.string.resend_code))
         }
     }

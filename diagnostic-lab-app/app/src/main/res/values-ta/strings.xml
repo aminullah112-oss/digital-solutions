@@ -30,7 +30,7 @@
     <string name="send_otp">OTP அனுப்பவும்</string>
     <string name="verify_number">உங்கள் எண்ணை சரிபார்க்கவும்</string>
     <string name="otp_sent_to">%1$s க்கு குறியீடு அனுப்பப்பட்டது</string>
-    <string name="otp_code_hint">4-இலக்க குறியீடு</string>
+    <string name="otp_code_hint">6-இலக்க குறியீடு</string>
     <string name="verify_and_continue">சரிபார்த்து தொடரவும்</string>
     <string name="resend_code">மீண்டும் அனுப்பவும்</string>
 

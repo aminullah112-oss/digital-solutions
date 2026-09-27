@@ -4,8 +4,9 @@ import android.content.Context
 import com.digitalsolutions.diagnosticlab.data.local.AppDatabase
 import com.digitalsolutions.diagnosticlab.data.repository.*
 import com.digitalsolutions.diagnosticlab.data.seed.DemoDataSeeder
-import com.digitalsolutions.diagnosticlab.domain.util.OtpService
 import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 /**
  * Hand-rolled dependency container. The app is intentionally kept off Hilt/Dagger: with no
@@ -19,18 +20,17 @@ class AppContainer(context: Context) {
     val database: AppDatabase = AppDatabase.getInstance(appContext)
     val sessionManager = SessionManager(appContext)
     private val systemNotifier = SystemNotifier(appContext)
-    private val otpService = OtpService()
     private val paymentGateway: PaymentGateway = MockPaymentGateway()
+    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
 
     val notificationRepository = NotificationRepository(database.notificationDao(), systemNotifier)
 
-    val authRepository = AuthRepository(database.userDao(), database.patientDao(), otpService, sessionManager)
+    val authRepository = AuthRepository(firebaseAuth, firestore, sessionManager)
 
-    val patientRepository = PatientRepository(database.patientDao(), database.addressDao())
+    val patientRepository = PatientRepository(firestore)
 
-    val catalogRepository = CatalogRepository(
-        database.laboratoryDao(), database.investigationDao(), database.laboratoryInvestigationDao()
-    )
+    val catalogRepository = CatalogRepository(firestore)
 
     val bookingRepository = BookingRepository(
         bookingDao = database.bookingDao(),

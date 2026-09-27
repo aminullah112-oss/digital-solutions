@@ -30,7 +30,7 @@
     <string name="send_otp">Send OTP</string>
     <string name="verify_number">Verify your number</string>
     <string name="otp_sent_to">We\'ve sent a code to %1$s</string>
-    <string name="otp_code_hint">4-digit code</string>
+    <string name="otp_code_hint">6-digit code</string>
     <string name="verify_and_continue">Verify &amp; Continue</string>
     <string name="resend_code">Resend code</string>
 

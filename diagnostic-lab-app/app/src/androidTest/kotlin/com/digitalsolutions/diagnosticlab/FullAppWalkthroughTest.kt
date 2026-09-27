@@ -87,14 +87,15 @@ class FullAppWalkthroughTest {
         composeTestRule.onNodeWithTag("login_mobile_field").performTextInput(mobileDigits)
         composeTestRule.onNodeWithText("Send OTP").performClick()
 
-        composeTestRule.waitUntil(15_000) {
-            composeTestRule.onAllNodesWithTag("demo_otp_text").fetchSemanticsNodes().isNotEmpty()
+        // Real Firebase Phone Auth now — no code is ever shown on-screen. Each of the four
+        // mobile numbers this test uses must be registered in Firebase Console under
+        // Authentication > Sign-in method > Phone > "Phone numbers for testing" with this
+        // exact fixed code, which bypasses real SMS entirely.
+        composeTestRule.waitUntil(30_000) {
+            composeTestRule.onAllNodesWithTag("otp_field").fetchSemanticsNodes().isNotEmpty()
         }
         screenshot("otp")
-        val otpNode = composeTestRule.onNodeWithTag("demo_otp_text").fetchSemanticsNode()
-        val otpText = otpNode.config.getOrNull(SemanticsProperties.Text)?.joinToString("") { it.text }.orEmpty()
-        val code = Regex("(\\d{4})").find(otpText)?.value ?: error("Could not read demo OTP from: $otpText")
-        composeTestRule.onNodeWithTag("otp_field").performTextInput(code)
+        composeTestRule.onNodeWithTag("otp_field").performTextInput(TEST_OTP_CODE)
         composeTestRule.onNodeWithText("Verify & Continue").performClick()
     }
 

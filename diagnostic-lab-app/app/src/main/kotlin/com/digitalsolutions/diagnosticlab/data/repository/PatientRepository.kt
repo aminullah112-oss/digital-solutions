@@ -1,26 +1,36 @@
 package com.digitalsolutions.diagnosticlab.data.repository
 
-import com.digitalsolutions.diagnosticlab.data.local.dao.AddressDao
-import com.digitalsolutions.diagnosticlab.data.local.dao.PatientDao
-import com.digitalsolutions.diagnosticlab.data.local.entities.AddressEntity
-import com.digitalsolutions.diagnosticlab.data.local.entities.PatientEntity
 import com.digitalsolutions.diagnosticlab.domain.model.Address
 import com.digitalsolutions.diagnosticlab.domain.model.Patient
 import com.digitalsolutions.diagnosticlab.domain.model.Relation
-import com.digitalsolutions.diagnosticlab.domain.util.IdGenerator
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 
-class PatientRepository(
-    private val patientDao: PatientDao,
-    private val addressDao: AddressDao
-) {
+class PatientRepository(private val firestore: FirebaseFirestore) {
 
-    fun observeFamily(ownerUserId: String): Flow<List<Patient>> =
-        patientDao.observeByOwner(ownerUserId).map { list -> list.map { it.toDomain() } }
+    private fun addressesOf(ownerUserId: String) =
+        firestore.collection("users").document(ownerUserId).collection("addresses")
 
-    suspend fun getPatient(patientId: String): Patient? = patientDao.findById(patientId)?.toDomain()
+    fun observeFamily(ownerUserId: String): Flow<List<Patient>> = callbackFlow {
+        val registration = firestore.collection("patients")
+            .whereEqualTo("accountOwnerUserId", ownerUserId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toPatient() })
+            }
+        awaitClose { registration.remove() }
+    }
+
+    suspend fun getPatient(patientId: String): Patient? =
+        firestore.collection("patients").document(patientId).get().await().toPatient()
 
     suspend fun updateProfile(
         patientId: String,
@@ -30,16 +40,15 @@ class PatientRepository(
         email: String?,
         emergencyContact: String?
     ) {
-        val existing = patientDao.findById(patientId) ?: return
-        patientDao.update(
-            existing.copy(
-                fullName = fullName,
-                dateOfBirthEpochDay = dateOfBirth?.toEpochDay(),
-                sex = sex,
-                email = email,
-                emergencyContact = emergencyContact
+        firestore.collection("patients").document(patientId).update(
+            mapOf(
+                "fullName" to fullName,
+                "dateOfBirth" to dateOfBirth?.toString(),
+                "sex" to sex,
+                "email" to email,
+                "emergencyContact" to emergencyContact
             )
-        )
+        ).await()
     }
 
     suspend fun addFamilyMember(
@@ -50,26 +59,33 @@ class PatientRepository(
         relation: Relation,
         mobileNumber: String
     ): Patient {
-        val latest = patientDao.latestId()
-        val seedSeq = latest?.let { IdGenerator.sequenceOf(it) } ?: 0
-        val id = IdGenerator.next("PAT", seedFrom = seedSeq)
-        val entity = PatientEntity(
-            id = id,
-            accountOwnerUserId = ownerUserId,
-            relation = relation,
-            isPrimary = false,
-            fullName = fullName,
-            dateOfBirthEpochDay = dateOfBirth?.toEpochDay(),
-            sex = sex,
-            mobileNumber = mobileNumber,
-            createdAt = System.currentTimeMillis()
+        val ref = firestore.collection("patients").document()
+        val data = mapOf(
+            "id" to ref.id,
+            "accountOwnerUserId" to ownerUserId,
+            "relation" to relation.name,
+            "isPrimary" to false,
+            "fullName" to fullName,
+            "dateOfBirth" to dateOfBirth?.toString(),
+            "sex" to sex,
+            "mobileNumber" to mobileNumber,
+            "email" to null,
+            "createdAtMillis" to System.currentTimeMillis()
         )
-        patientDao.upsert(entity)
-        return entity.toDomain()
+        ref.set(data).await()
+        return Patient(ref.id, ownerUserId, relation, false, fullName, dateOfBirth, sex, mobileNumber, null)
     }
 
-    fun observeAddresses(ownerUserId: String): Flow<List<Address>> =
-        addressDao.observeByOwner(ownerUserId).map { list -> list.map { it.toDomain() } }
+    fun observeAddresses(ownerUserId: String): Flow<List<Address>> = callbackFlow {
+        val registration = addressesOf(ownerUserId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            trySend(snapshot?.documents.orEmpty().mapNotNull { it.toAddress() })
+        }
+        awaitClose { registration.remove() }
+    }
 
     suspend fun saveAddress(
         ownerUserId: String,
@@ -84,40 +100,64 @@ class PatientRepository(
         longitude: Double?,
         makeDefault: Boolean
     ): Address {
-        if (makeDefault) addressDao.clearDefault(ownerUserId)
-        val id = existingId ?: "ADDR-${System.currentTimeMillis()}"
-        val entity = AddressEntity(
-            id = id,
-            ownerUserId = ownerUserId,
-            label = label,
-            line1 = line1,
-            line2 = line2,
-            city = city,
-            state = state,
-            pincode = pincode,
-            latitude = latitude,
-            longitude = longitude,
-            isDefault = makeDefault,
-            createdAt = System.currentTimeMillis()
-        )
-        addressDao.upsert(entity)
-        return entity.toDomain()
+        val collection = addressesOf(ownerUserId)
+        val ref = existingId?.let { collection.document(it) } ?: collection.document()
+
+        if (makeDefault) {
+            val existingDefaults = collection.whereEqualTo("isDefault", true).get().await()
+            val batch = firestore.batch()
+            existingDefaults.documents.forEach { batch.update(it.reference, "isDefault", false) }
+            batch.set(
+                ref,
+                mapOf(
+                    "id" to ref.id, "label" to label, "line1" to line1, "line2" to line2,
+                    "city" to city, "state" to state, "pincode" to pincode,
+                    "latitude" to latitude, "longitude" to longitude, "isDefault" to true,
+                    "createdAtMillis" to System.currentTimeMillis()
+                )
+            )
+            batch.commit().await()
+        } else {
+            ref.set(
+                mapOf(
+                    "id" to ref.id, "label" to label, "line1" to line1, "line2" to line2,
+                    "city" to city, "state" to state, "pincode" to pincode,
+                    "latitude" to latitude, "longitude" to longitude, "isDefault" to false,
+                    "createdAtMillis" to System.currentTimeMillis()
+                )
+            ).await()
+        }
+        return Address(ref.id, label, line1, line2, city, state, pincode, latitude, longitude, makeDefault)
     }
 }
 
-private fun PatientEntity.toDomain() = Patient(
-    id = id,
-    accountOwnerUserId = accountOwnerUserId,
-    relation = relation,
-    isPrimary = isPrimary,
-    fullName = fullName,
-    dateOfBirth = dateOfBirthEpochDay?.let { LocalDate.ofEpochDay(it) },
-    sex = sex,
-    mobileNumber = mobileNumber,
-    email = email
-)
+private fun DocumentSnapshot.toPatient(): Patient? {
+    if (!exists()) return null
+    return Patient(
+        id = id,
+        accountOwnerUserId = getString("accountOwnerUserId") ?: return null,
+        relation = runCatching { Relation.valueOf(getString("relation") ?: "OTHER") }.getOrDefault(Relation.OTHER),
+        isPrimary = getBoolean("isPrimary") ?: false,
+        fullName = getString("fullName").orEmpty(),
+        dateOfBirth = getString("dateOfBirth")?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+        sex = getString("sex").orEmpty(),
+        mobileNumber = getString("mobileNumber").orEmpty(),
+        email = getString("email")
+    )
+}
 
-private fun AddressEntity.toDomain() = Address(
-    id = id, label = label, line1 = line1, line2 = line2, city = city, state = state,
-    pincode = pincode, latitude = latitude, longitude = longitude, isDefault = isDefault
-)
+private fun DocumentSnapshot.toAddress(): Address? {
+    if (!exists()) return null
+    return Address(
+        id = id,
+        label = getString("label").orEmpty(),
+        line1 = getString("line1").orEmpty(),
+        line2 = getString("line2"),
+        city = getString("city").orEmpty(),
+        state = getString("state").orEmpty(),
+        pincode = getString("pincode").orEmpty(),
+        latitude = getDouble("latitude"),
+        longitude = getDouble("longitude"),
+        isDefault = getBoolean("isDefault") ?: false
+    )
+}

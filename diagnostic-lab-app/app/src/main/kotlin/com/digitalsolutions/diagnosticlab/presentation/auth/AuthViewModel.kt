@@ -1,9 +1,11 @@
 package com.digitalsolutions.diagnosticlab.presentation.auth
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.digitalsolutions.diagnosticlab.data.repository.AuthRepository
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,8 +14,7 @@ import kotlinx.coroutines.launch
 class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     data class UiState(
-        val demoOtp: String? = null,
-        val attemptsLeft: Int = 3,
+        val codeSent: Boolean = false,
         val error: String? = null,
         val isNewAccount: Boolean = false,
         val signedInRole: UserRole? = null,
@@ -23,25 +24,47 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
-    fun sendOtp(mobileNumber: String) {
-        val otp = authRepository.requestOtp(mobileNumber)
-        _state.value = UiState(demoOtp = otp)
-    }
+    private var verificationId: String? = null
+    private var requestOtpJob: Job? = null
 
-    fun verifyOtp(mobileNumber: String, code: String) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(loading = true, error = null)
-            when (val outcome = authRepository.verifyOtpAndSignIn(mobileNumber, code)) {
-                is AuthRepository.OtpOutcome.SignedIn -> {
-                    _state.value = _state.value.copy(loading = false, isNewAccount = outcome.isNewAccount, signedInRole = outcome.role)
-                }
-                is AuthRepository.OtpOutcome.Incorrect -> {
-                    _state.value = _state.value.copy(loading = false, error = "Incorrect code. ${outcome.attemptsLeft} attempts left.", attemptsLeft = outcome.attemptsLeft)
-                }
-                AuthRepository.OtpOutcome.Expired -> {
-                    _state.value = _state.value.copy(loading = false, error = "This code expired. Please request a new one.")
+    fun sendOtp(activity: Activity, mobileNumber: String) {
+        requestOtpJob?.cancel()
+        _state.value = _state.value.copy(loading = true, error = null, codeSent = false)
+        requestOtpJob = viewModelScope.launch {
+            authRepository.requestOtp(activity, mobileNumber).collect { outcome ->
+                when (outcome) {
+                    is AuthRepository.OtpRequestOutcome.CodeSent -> {
+                        verificationId = outcome.verificationId
+                        _state.value = _state.value.copy(loading = false, codeSent = true)
+                    }
+                    is AuthRepository.OtpRequestOutcome.AutoVerified -> {
+                        applyOutcome(authRepository.signInWithCredential(outcome.credential))
+                    }
+                    is AuthRepository.OtpRequestOutcome.Failed -> {
+                        _state.value = _state.value.copy(loading = false, error = outcome.message)
+                    }
                 }
             }
+        }
+    }
+
+    fun verifyOtp(code: String) {
+        val id = verificationId ?: run {
+            _state.value = _state.value.copy(error = "Request a code first.")
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(loading = true, error = null)
+            applyOutcome(authRepository.verifyOtpAndSignIn(id, code))
+        }
+    }
+
+    private fun applyOutcome(outcome: AuthRepository.OtpOutcome) {
+        _state.value = when (outcome) {
+            is AuthRepository.OtpOutcome.SignedIn ->
+                _state.value.copy(loading = false, isNewAccount = outcome.isNewAccount, signedInRole = outcome.role)
+            is AuthRepository.OtpOutcome.Failed ->
+                _state.value.copy(loading = false, error = outcome.message)
         }
     }
 
