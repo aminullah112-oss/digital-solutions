@@ -133,6 +133,19 @@ jobs:
             grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN|Firebase|Firestore|FirebaseAuth|System\.err|okhttp|grpc|Volley|NetworkSecurityConfig|UI_DUMP|AuthDebug|AddressDebug|PERMISSION_DENIED" logcat.txt | tail -900 || true
             echo "::endgroup::"
 
+      # Copy both payloads to /tmp BEFORE either publish step's `git clean -fdx` runs — that
+      # clean wipes every untracked file in the working tree, including build outputs like the
+      # APK and screenshots-pulled/, so anything not already copied out is gone by the time a
+      # later step looks for it. (First version of this got bitten by exactly that: the APK
+      # publish step ran after the screenshots step's clean had already deleted it.)
+      - name: Stage APK and screenshots for publishing
+        if: always()
+        run: |
+          mkdir -p /tmp/shots /tmp/apk
+          if [ -d screenshots-pulled ]; then cp -r screenshots-pulled/* /tmp/shots/ 2>/dev/null || true; fi
+          apk=diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
+          if [ -f "$apk" ]; then cp "$apk" /tmp/apk/diagnostic-lab-debug.apk; fi
+
       # Actions artifacts are served through short-lived signed Azure Blob Storage URLs,
       # which the reviewer's own environment cannot reach (its egress proxy denies that host
       # by policy). Pushing the screenshots to an ordinary git branch instead makes them
@@ -141,9 +154,7 @@ jobs:
       - name: Publish screenshots to ci-screenshots branch
         if: always()
         run: |
-          if [ -d screenshots-pulled ] && [ -n "$(find screenshots-pulled -type f 2>/dev/null)" ]; then
-            mkdir -p /tmp/shots
-            cp -r screenshots-pulled/* /tmp/shots/
+          if [ -n "$(find /tmp/shots -type f 2>/dev/null)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git checkout --orphan ci-screenshots-tmp
@@ -162,17 +173,14 @@ jobs:
             echo "No screenshots captured this run — nothing to publish."
           fi
 
-      # Same problem and same fix as the screenshots step below: the "build" job's APK is only
+      # Same problem and same fix as the screenshots step above: the "build" job's APK is only
       # reachable via a signed Azure Blob Storage artifact URL, which the reviewer's egress
       # proxy blocks by policy — but this job already builds a fresh debug APK as its first
       # step above (to install on the emulator), so publish that copy via git instead.
       - name: Publish debug APK to ci-apk branch
         if: always()
         run: |
-          apk=diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
-          if [ -f "$apk" ]; then
-            mkdir -p /tmp/apk
-            cp "$apk" /tmp/apk/diagnostic-lab-debug.apk
+          if [ -f /tmp/apk/diagnostic-lab-debug.apk ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git checkout --orphan ci-apk-tmp
