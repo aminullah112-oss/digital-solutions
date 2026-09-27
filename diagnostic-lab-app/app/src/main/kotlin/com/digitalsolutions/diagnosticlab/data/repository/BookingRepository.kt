@@ -119,36 +119,20 @@ class BookingRepository(
         ).await()
         if (status == PaymentStatus.SUCCESSFUL || status == PaymentStatus.CASH_SELECTED) {
             transitionBooking(bookingId, booking.toStatus(), BookingStatus.CONFIRMED, booking.getString("bookedByUserId").orEmpty(), "PATIENT")
-            assignPhlebotomist(bookingId)
         }
         return result
     }
 
     // ---------- Allocation & phlebotomist workflow ----------
-
-    /** MVP allocator: picks any user with the PHLEBOTOMIST role. A real deployment would consider service area and load. */
-    suspend fun assignPhlebotomist(bookingId: String) {
-        val bookingRef = bookingsRef().document(bookingId)
-        val booking = bookingRef.get().await()
-        val phlebotomistDoc = firestore.collection("users").whereEqualTo("role", UserRole.PHLEBOTOMIST.name)
-            .limit(1).get().await().documents.firstOrNull() ?: return
-
-        bookingRef.update(
-            mapOf(
-                "assignedPhlebotomistUid" to phlebotomistDoc.id,
-                "assignment" to mapOf(
-                    "phlebotomistUid" to phlebotomistDoc.id,
-                    "name" to (phlebotomistDoc.getString("name") ?: "Lab Assistant"),
-                    "mobileNumber" to phlebotomistDoc.getString("mobileNumber").orEmpty(),
-                    "professionalId" to phlebotomistDoc.getString("professionalId").orEmpty(),
-                    "rating" to (phlebotomistDoc.getDouble("rating") ?: 0.0),
-                    "status" to AssignmentStatus.ASSIGNED.name,
-                    "assignedAtMillis" to System.currentTimeMillis()
-                )
-            )
-        ).await()
-        transitionBooking(bookingId, booking.toStatus(), BookingStatus.PHLEBOTOMIST_ASSIGNED, phlebotomistDoc.id, "PHLEBOTOMIST")
-    }
+    //
+    // Auto-picking a phlebotomist means querying every PHLEBOTOMIST-role user account —
+    // including their phone number — which firestore.rules correctly refuses to any signed-in
+    // client, patient or otherwise (confirmed via a real PERMISSION_DENIED crash in CI: no
+    // client should be able to list the whole phlebotomist roster). This used to run here as an
+    // "MVP allocator" client-side query; it now runs in
+    // functions/assignPhlebotomistOnBookingWrite via the Admin SDK, triggered off the same
+    // status/assignment writes this class already makes (CONFIRMED, REJECTED_RECOLLECTION_NEEDED,
+    // assignment.status turning REJECTED), so nothing here needs to call it directly.
 
     suspend fun respondToAssignment(bookingId: String, accept: Boolean) {
         val bookingRef = bookingsRef().document(bookingId)
@@ -165,8 +149,6 @@ class BookingRepository(
                 ownerUid, NotificationType.PHLEBOTOMIST_ACCEPTED,
                 "Lab assistant confirmed", "Your sample collection is confirmed for ${booking.getString("scheduledTimeSlot")}.", bookingId
             )
-        } else {
-            assignPhlebotomist(bookingId)
         }
     }
 
@@ -238,7 +220,6 @@ class BookingRepository(
                 "Recollection needed", "The lab could not accept your sample (${reason.name.lowercase().replace('_', ' ')}). We will arrange a new collection.", bookingId
             )
         }
-        assignPhlebotomist(bookingId)
     }
 
     suspend fun startProcessing(bookingId: String, labUserId: String) {

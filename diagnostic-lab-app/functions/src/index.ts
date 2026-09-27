@@ -55,6 +55,62 @@ export const onBookingStatusChange = onDocumentWritten("bookings/{bookingId}", a
 });
 
 /**
+ * Auto-picks a phlebotomist for a booking that needs one. This used to run client-side
+ * (any signed-in account querying `users where role==PHLEBOTOMIST` to pick one) — but that
+ * requires every phlebotomist's user doc, including their phone number, to be listable by any
+ * patient, which firestore.rules correctly refuses (confirmed via a real PERMISSION_DENIED
+ * crash in CI). Runs here instead via the Admin SDK, which bypasses security rules entirely
+ * and never exposes the phlebotomist roster to any client.
+ *
+ * Reacts to the same two cases the old client-side call covered: a booking transitioning into
+ * CONFIRMED or REJECTED_RECOLLECTION_NEEDED (needs a first/new phlebotomist), or an existing
+ * assignment's status flipping to REJECTED (the assigned phlebotomist declined, needs a
+ * replacement). Each of those writes assignedPhlebotomistUid/assignment.status away from the
+ * triggering value, so this never re-fires on its own write.
+ */
+export const assignPhlebotomistOnBookingWrite = onDocumentWritten("bookings/{bookingId}", async (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (!after) return; // booking deleted
+
+  const statusJustEnteredNeedsAssignment =
+    before?.status !== after.status &&
+    (after.status === "CONFIRMED" || after.status === "REJECTED_RECOLLECTION_NEEDED");
+  const assignmentJustRejected =
+    after.assignment?.status === "REJECTED" && before?.assignment?.status !== "REJECTED";
+  if (!statusJustEnteredNeedsAssignment && !assignmentJustRejected) return;
+
+  const phlebotomistSnap = await db.collection("users").where("role", "==", "PHLEBOTOMIST").limit(1).get();
+  const phlebotomistDoc = phlebotomistSnap.docs[0];
+  if (!phlebotomistDoc) return; // no phlebotomist on the roster yet
+  const phlebotomist = phlebotomistDoc.data();
+
+  const bookingId = event.params.bookingId;
+  const now = Date.now();
+  await db.collection("bookings").doc(bookingId).update({
+    status: "PHLEBOTOMIST_ASSIGNED",
+    updatedAtMillis: now,
+    assignedPhlebotomistUid: phlebotomistDoc.id,
+    assignment: {
+      phlebotomistUid: phlebotomistDoc.id,
+      name: phlebotomist.name ?? "Lab Assistant",
+      mobileNumber: phlebotomist.mobileNumber ?? "",
+      professionalId: phlebotomist.professionalId ?? "",
+      rating: phlebotomist.rating ?? 0,
+      status: "ASSIGNED",
+      assignedAtMillis: now,
+    },
+  });
+  await db.collection("bookings").doc(bookingId).collection("trackingEvents").add({
+    status: "PHLEBOTOMIST_ASSIGNED",
+    timestampMillis: now,
+    actorId: phlebotomistDoc.id,
+    actorRole: "PHLEBOTOMIST",
+    notes: null,
+  });
+});
+
+/**
  * Recomputes the admin dashboard's precomputed stats doc on every booking write. A full
  * collection scan per write is the simplest correct implementation and is fine at this
  * business's current scale (handfuls of bookings/day) — if that changes, switch to
