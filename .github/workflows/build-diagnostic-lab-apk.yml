@@ -36,6 +36,10 @@ jobs:
         with:
           gradle-version: "8.7"
 
+      # Deliberately NOT built with -Pci=true (unlike the screenshots job's own build below) —
+      # this is the APK a person actually installs on a real device to test the app, and
+      # BuildConfig.IS_CI there would disable Play Integrity/reCAPTCHA verification, breaking
+      # real-number OTP sign-in on a real phone (confirmed as a real bug: see AppContainer.kt).
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace
 
@@ -45,6 +49,34 @@ jobs:
           name: diagnostic-lab-debug-apk
           path: diagnostic-lab-app/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      # Actions artifacts are served through short-lived signed Azure Blob Storage URLs, which
+      # the reviewer's own environment cannot reach (its egress proxy denies that host by
+      # policy) — push this same APK to an ordinary git branch too, readable through a plain
+      # `git fetch`/`git show`, no download step required.
+      - name: Publish debug APK to ci-apk branch
+        if: always()
+        # This job's default working-directory is diagnostic-lab-app (set above, for the
+        # gradle steps) — override back to the actual repo root here, since git checkout
+        # --orphan/rm/clean need to operate on the whole repo, not just that subdirectory.
+        working-directory: ${{ github.workspace }}
+        run: |
+          apk=diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
+          if [ -f "$apk" ]; then
+            mkdir -p /tmp/apk
+            cp "$apk" /tmp/apk/diagnostic-lab-debug.apk
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout --orphan ci-apk-tmp
+            git rm -rf . > /dev/null
+            git clean -fdx > /dev/null
+            cp /tmp/apk/diagnostic-lab-debug.apk .
+            git add -A
+            git commit -m "CI debug APK for run ${{ github.run_id }}"
+            git push origin HEAD:refs/heads/ci-apk --force
+          else
+            echo "No debug APK found — build step must have failed earlier."
+          fi
 
   screenshots:
     runs-on: ubuntu-latest
@@ -104,7 +136,14 @@ jobs:
           # directly instead means nothing auto-uninstalls anything: the emulator (and its
           # disk) is thrown away at the end of the job regardless, so there's no cleanup to do.
           script: |
-            gradle -p diagnostic-lab-app assembleDebug assembleDebugAndroidTest --stacktrace
+            # -Pci=true flips BuildConfig.IS_CI, which disables Firebase's Play Integrity/
+            # reCAPTCHA verification (see AppContainer.kt) — this bare emulator has no Play
+            # Store to render that challenge in, and without this it steals focus from
+            # ActivityScenario and crashes the walkthrough with "No compose hierarchies found".
+            # This build is only ever installed on this throwaway emulator, never handed to a
+            # real device, so disabling real verification here is safe — the "build" job's own
+            # APK (what a person actually installs) is deliberately NOT built this way.
+            gradle -p diagnostic-lab-app assembleDebug assembleDebugAndroidTest -Pci=true --stacktrace
             # Uninstall first rather than `install -r`: the AVD's disk (and so the app's private
             # data, including Firestore's local persistent write-queue cache) is cached across
             # workflow runs via actions/cache. A write queued during an earlier debugging
@@ -133,18 +172,14 @@ jobs:
             grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN|Firebase|Firestore|FirebaseAuth|System\.err|okhttp|grpc|Volley|NetworkSecurityConfig|UI_DUMP|AuthDebug|AddressDebug|PERMISSION_DENIED" logcat.txt | tail -900 || true
             echo "::endgroup::"
 
-      # Copy both payloads to /tmp BEFORE either publish step's `git clean -fdx` runs — that
-      # clean wipes every untracked file in the working tree, including build outputs like the
-      # APK and screenshots-pulled/, so anything not already copied out is gone by the time a
-      # later step looks for it. (First version of this got bitten by exactly that: the APK
-      # publish step ran after the screenshots step's clean had already deleted it.)
-      - name: Stage APK and screenshots for publishing
+      # Copy out to /tmp BEFORE the publish step's `git clean -fdx` runs — that clean wipes
+      # every untracked file in the working tree, including screenshots-pulled/, so anything
+      # not already copied out is gone by the time the publish step looks for it.
+      - name: Stage screenshots for publishing
         if: always()
         run: |
-          mkdir -p /tmp/shots /tmp/apk
+          mkdir -p /tmp/shots
           if [ -d screenshots-pulled ]; then cp -r screenshots-pulled/* /tmp/shots/ 2>/dev/null || true; fi
-          apk=diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
-          if [ -f "$apk" ]; then cp "$apk" /tmp/apk/diagnostic-lab-debug.apk; fi
 
       # Actions artifacts are served through short-lived signed Azure Blob Storage URLs,
       # which the reviewer's own environment cannot reach (its egress proxy denies that host
@@ -173,26 +208,11 @@ jobs:
             echo "No screenshots captured this run — nothing to publish."
           fi
 
-      # Same problem and same fix as the screenshots step above: the "build" job's APK is only
-      # reachable via a signed Azure Blob Storage artifact URL, which the reviewer's egress
-      # proxy blocks by policy — but this job already builds a fresh debug APK as its first
-      # step above (to install on the emulator), so publish that copy via git instead.
-      - name: Publish debug APK to ci-apk branch
-        if: always()
-        run: |
-          if [ -f /tmp/apk/diagnostic-lab-debug.apk ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git checkout --orphan ci-apk-tmp
-            git rm -rf . > /dev/null
-            git clean -fdx > /dev/null
-            cp /tmp/apk/diagnostic-lab-debug.apk .
-            git add -A
-            git commit -m "CI debug APK for run ${{ github.run_id }}"
-            git push origin HEAD:refs/heads/ci-apk --force
-          else
-            echo "No debug APK found — build step must have failed earlier."
-          fi
+      # The debug APK this job builds is deliberately not published anywhere — it's built with
+      # -Pci=true (see the script step above), which disables real Play Integrity/reCAPTCHA
+      # verification. That's fine for this throwaway emulator but would break real-number OTP
+      # sign-in if handed to a real device. The "build" job's own APK (without that flag) is
+      # what gets published to ci-apk for actual testing.
 
       - name: Upload screenshots
         if: always()

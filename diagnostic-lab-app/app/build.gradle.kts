@@ -17,6 +17,14 @@ android {
         versionName = "0.1.0-mvp"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Set only by the CI workflow (-Pci=true), never by a developer's own build — a
+        // device-fingerprint heuristic for "is this an emulator" turned out to be too fragile
+        // (GitHub's own google_apis emulator image didn't match any of its checks, silently
+        // re-enabling Play Integrity there and bringing back the RecaptchaActivity-steals-focus
+        // bug the check exists to avoid). This flag is deterministic instead: it's true exactly
+        // when the CI workflow itself set it, nothing to guess.
+        buildConfigField("boolean", "IS_CI", (project.findProperty("ci") == "true").toString())
     }
 
     buildTypes {
@@ -37,6 +45,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
