@@ -103,10 +103,12 @@ class FullAppWalkthroughTest {
         screenshot("otp")
         composeTestRule.onNodeWithTag("otp_field").performTextInput(TEST_OTP_CODE)
         composeTestRule.waitForIdle()
-        // AuthDebug logging showed verifyOtp() is never entered after this click, with no
-        // exception anywhere in the test — asserting enabled here turns that mystery into an
-        // immediate, specific failure instead of a vague 20s timeout two steps later, if the
-        // button was actually disabled (stale recomposition, code not yet length 6, etc).
+        // Confirmed via assertIsEnabled(): the button is genuinely [Disabled] right after typing
+        // the code (enabled = code.length == 6 && !state.loading) — dump otp_field's own node
+        // here too, unconditionally, to see which half of that condition is false: whether the
+        // typed code never actually reached length 6, or state.loading is still true for some
+        // reason after onCodeSent already set it false.
+        composeTestRule.onRoot().printToLog("UI_DUMP_pre_verify_click")
         composeTestRule.onNodeWithText("Verify & Continue").assertIsEnabled().performClick()
     }
 
