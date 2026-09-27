@@ -113,9 +113,18 @@ class FullAppWalkthroughTest {
      * (that's a deliberate console-only step, so those three logins still won't reach their
      * role home on a completely fresh Firestore project). An account that's already
      * provisioned skips straight past this screen, so it's safe to call after every login().
+     *
+     * Sign-in itself (verifyOtpAndSignIn's Firestore round-trip) takes real, variable time
+     * after "Verify & Continue" is tapped — checking for "Tell us about you" right away (the
+     * first version of this helper) fired before either screen had rendered and always
+     * concluded "not shown". Wait for the otp_field to actually disappear first: that's the
+     * one signal common to every destination (new-account ProfileSetup or straight to a role
+     * home), so it's a valid wait regardless of which one this sign-in lands on.
      */
     private fun completeProfileSetupIfShown() {
-        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(20_000) {
+            composeTestRule.onAllNodesWithTag("otp_field").fetchSemanticsNodes().isEmpty()
+        }
         if (composeTestRule.onAllNodesWithText("Tell us about you").fetchSemanticsNodes().isEmpty()) return
         screenshot("profile_setup")
         composeTestRule.onNodeWithText("Full name").performTextInput("Test Patient")
