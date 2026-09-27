@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
@@ -145,6 +147,7 @@ private fun AddAddressForm(viewModel: AddressBookViewModel, onSaved: (Address) -
     var pincode by remember { mutableStateOf("") }
     var capturedLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var locationMessage by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
@@ -155,7 +158,12 @@ private fun AddAddressForm(viewModel: AddressBookViewModel, onSaved: (Address) -
         }
     }
 
-    Column {
+    // The 5 fields plus location/save/cancel buttons can exceed a smaller phone's viewport;
+    // this Column previously had no scroll modifier, so "Save & continue" (and everything
+    // below the PIN code field) could render clipped to zero height and be unreachable — a
+    // real bug for actual users, confirmed via a CI semantics dump showing those nodes'
+    // bounds collapsed to t == b.
+    Column(Modifier.fillMaxHeight().verticalScroll(scrollState)) {
         Text("Where should we collect the sample?", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(label, { label = it }, label = { Text("Label (Home, Office...)") }, modifier = Modifier.fillMaxWidth())

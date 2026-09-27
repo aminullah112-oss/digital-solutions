@@ -220,7 +220,10 @@ class FullAppWalkthroughTest {
             composeTestRule.onNodeWithText("House / Street").performTextInput("221B Test Street")
             composeTestRule.onNodeWithText("City").performTextInput("Mumbai")
             composeTestRule.onNodeWithText("PIN code").performTextInput("400001")
-            composeTestRule.onNodeWithText("Save & continue").performClick()
+            // Same off-screen-CTA issue as the review screen below: a CI semantics dump showed
+            // this button's bounds collapsed to zero height (now fixed at the source by making
+            // AddAddressForm's Column scrollable) — scroll to it defensively regardless.
+            composeTestRule.onNodeWithText("Save & continue").performScrollTo().performClick()
         }
 
         try {
