@@ -4,10 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -116,7 +113,8 @@ class FullAppWalkthroughTest {
         // run whose UI dump showed EditableText already '123456' but the button still
         // [Disabled].
         composeTestRule.waitUntil(30_000) {
-            composeTestRule.onAllNodes(hasText("Verify & Continue") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+            val node = composeTestRule.onAllNodesWithText("Verify & Continue").fetchSemanticsNodes().firstOrNull()
+            node != null && node.config.getOrNull(SemanticsProperties.Disabled) == null
         }
         composeTestRule.onNodeWithText("Verify & Continue").performClick()
     }
