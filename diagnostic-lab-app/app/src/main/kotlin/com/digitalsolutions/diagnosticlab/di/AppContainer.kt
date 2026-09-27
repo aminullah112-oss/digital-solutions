@@ -2,6 +2,7 @@ package com.digitalsolutions.diagnosticlab.di
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.os.Build
 import com.digitalsolutions.diagnosticlab.data.repository.*
 import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
 import com.google.firebase.auth.FirebaseAuth
@@ -31,11 +32,18 @@ class AppContainer(context: Context) {
         // RecaptchaActivity/Play Integrity first. On a bare CI/dev emulator with no Play
         // Store that detour hands focus away long enough for AndroidX Test's ActivityScenario
         // to lose track of MainActivity and tear it down (surfaced as "No compose hierarchies
-        // found" a few seconds into the walkthrough test). Skipping app verification is safe
-        // here because it's gated to debuggable builds only: release builds (not debuggable)
-        // always go through the real check, and even with it disabled a genuine phone number
-        // still receives a real SMS — only the device-attestation step is skipped.
-        if ((appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+        // found" a few seconds into the walkthrough test).
+        //
+        // This used to be gated on debuggable alone, on the assumption that disabling
+        // verification only skips device attestation and a real number still gets a real SMS.
+        // That's wrong: confirmed on a real device running this same debug build, a genuine
+        // (non-test) number failed with "missing a valid app identifier" — disabling
+        // verification removes Play Integrity entirely, and a real device with no matching
+        // disabled-testing exemption has nothing left to authenticate the request with. Gate
+        // on "looks like an emulator" instead, so a debug build on a real phone still gets
+        // real Play Integrity attestation (and so real OTPs), while CI's bare emulator keeps
+        // the bypass it actually needs.
+        if ((appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 && isLikelyEmulator()) {
             firebaseAuthSettings.setAppVerificationDisabledForTesting(true)
         }
     }
@@ -65,3 +73,17 @@ class AppContainer(context: Context) {
 
     val adminRepository = AdminRepository(firestore)
 }
+
+/** Standard, widely-used heuristic for "is this an Android emulator" — there's no official
+ * API for it. Matches CI's google_apis (non-Play Store) system image and common local
+ * emulators/Genymotion; a real phone, including Google's own Pixel hardware, matches none of
+ * these fields. */
+private fun isLikelyEmulator(): Boolean =
+    Build.FINGERPRINT.startsWith("generic") ||
+        Build.FINGERPRINT.startsWith("unknown") ||
+        Build.MODEL.contains("google_sdk") ||
+        Build.MODEL.contains("Emulator") ||
+        Build.MODEL.contains("Android SDK built for x86") ||
+        Build.MANUFACTURER.contains("Genymotion") ||
+        (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
+        Build.PRODUCT == "google_sdk"
