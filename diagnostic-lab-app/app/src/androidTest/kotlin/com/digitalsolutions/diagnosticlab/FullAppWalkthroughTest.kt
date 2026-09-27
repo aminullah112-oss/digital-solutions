@@ -4,8 +4,10 @@ import android.graphics.Bitmap
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.espresso.Espresso
 import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -102,14 +104,21 @@ class FullAppWalkthroughTest {
         }
         screenshot("otp")
         composeTestRule.onNodeWithTag("otp_field").performTextInput(TEST_OTP_CODE)
-        composeTestRule.waitForIdle()
-        // Confirmed via assertIsEnabled(): the button is genuinely [Disabled] right after typing
-        // the code (enabled = code.length == 6 && !state.loading) — dump otp_field's own node
-        // here too, unconditionally, to see which half of that condition is false: whether the
-        // typed code never actually reached length 6, or state.loading is still true for some
-        // reason after onCodeSent already set it false.
-        composeTestRule.onRoot().printToLog("UI_DUMP_pre_verify_click")
-        composeTestRule.onNodeWithText("Verify & Continue").assertIsEnabled().performClick()
+        // OtpScreen renders as soon as "Send OTP" is tapped — that navigation is synchronous
+        // and unconditional, well before Firebase's async onCodeSent callback necessarily
+        // arrives to capture a verificationId and flip AuthViewModel's loading flag back to
+        // false. "Verify & Continue" stays disabled (enabled = code.length == 6 && !loading)
+        // until that happens, so typing the code fast enough to win that race left the button
+        // still disabled — clicking it then silently did nothing (Compose keeps the OnClick
+        // semantics action even while disabled, so performClick() didn't throw either, which
+        // is what made this look like a hang with zero visible symptom). Wait for the button
+        // to actually be enabled before clicking it — confirmed as the real cause via a CI
+        // run whose UI dump showed EditableText already '123456' but the button still
+        // [Disabled].
+        composeTestRule.waitUntil(30_000) {
+            composeTestRule.onAllNodes(hasText("Verify & Continue") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Verify & Continue").performClick()
     }
 
     private fun signOutFromRoleHome() {
