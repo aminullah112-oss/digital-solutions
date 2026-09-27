@@ -11,9 +11,11 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
@@ -122,8 +124,19 @@ class FullAppWalkthroughTest {
      * home), so it's a valid wait regardless of which one this sign-in lands on.
      */
     private fun completeProfileSetupIfShown() {
-        composeTestRule.waitUntil(20_000) {
-            composeTestRule.onAllNodesWithTag("otp_field").fetchSemanticsNodes().isEmpty()
+        try {
+            composeTestRule.waitUntil(20_000) {
+                composeTestRule.onAllNodesWithTag("otp_field").fetchSemanticsNodes().isEmpty()
+            }
+        } catch (t: Throwable) {
+            // Two prior CI runs hung here for the full timeout with zero FirebaseAuth log
+            // activity either way (no onCodeSent, no onVerificationFailed) — dumping the
+            // actual visible UI tree at the moment of failure (to logcat, tag "UI_DUMP",
+            // picked up by the CI job's diagnosticlab grep) is the only way left to see
+            // whether the OTP screen shows a stuck spinner, a sign-in error banner, or
+            // something else, since guessing from Firebase's silence hasn't worked.
+            composeTestRule.onRoot().printToLog("UI_DUMP")
+            throw t
         }
         if (composeTestRule.onAllNodesWithText("Tell us about you").fetchSemanticsNodes().isEmpty()) return
         screenshot("profile_setup")
