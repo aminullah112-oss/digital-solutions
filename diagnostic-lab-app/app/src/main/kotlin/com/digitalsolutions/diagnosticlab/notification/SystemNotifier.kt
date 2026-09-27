@@ -12,11 +12,11 @@ import com.digitalsolutions.diagnosticlab.R
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Thin wrapper over Android's NotificationManager. This is the "push notification" channel
- * called out in the spec (section 21) — there is no FCM/SMS/WhatsApp backend behind it yet,
- * everything fires locally from inside the app because there is no server to push from.
- * Swapping in FCM later means calling this same [show] from a push-received handler instead
- * of from the repository layer directly.
+ * Thin wrapper over Android's NotificationManager. Two callers: [NotificationRepository.notify]
+ * fires this directly for the couple of cases that write a notification without going through
+ * a real push (see its own kdoc), and [FcmService] calls it for an incoming push that arrived
+ * while the app was already in the foreground — Android only auto-displays a push's
+ * notification payload when the app is backgrounded or not running.
  */
 class SystemNotifier(private val context: Context) {
 

@@ -1,10 +1,12 @@
 package com.digitalsolutions.diagnosticlab.data.repository
 
+import android.util.Log
 import com.digitalsolutions.diagnosticlab.domain.model.AppNotification
 import com.digitalsolutions.diagnosticlab.domain.model.NotificationType
 import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -42,6 +44,34 @@ class NotificationRepository(
 
     suspend fun markRead(userId: String, id: String) {
         notificationsOf(userId).document(id).update("read", true).await()
+    }
+
+    /**
+     * Writes onto users/{uid}.fcmToken, which onBookingStatusChange (functions/src/index.ts)
+     * already reads to actually deliver a push — that send was silently a no-op the whole time
+     * since nothing ever wrote this field.
+     */
+    suspend fun updateFcmToken(userId: String, token: String) {
+        try {
+            firestore.collection("users").document(userId).update("fcmToken", token).await()
+        } catch (e: Exception) {
+            Log.e("NotificationRepository", "updateFcmToken failed for $userId", e)
+        }
+    }
+
+    /**
+     * Safe to call on every app start with a signed-in session, not just once at sign-up:
+     * writing the same token again is a no-op, and it's the only reliable way to recover a
+     * token this install already had before the user signed in — FirebaseMessagingService's
+     * onNewToken alone only fires again later, on actual rotation, not on every app start.
+     */
+    suspend fun registerCurrentFcmToken(userId: String) {
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            updateFcmToken(userId, token)
+        } catch (e: Exception) {
+            Log.e("NotificationRepository", "registerCurrentFcmToken failed for $userId", e)
+        }
     }
 
     suspend fun notify(userId: String, type: NotificationType, title: String, body: String, relatedEntityId: String? = null) {
