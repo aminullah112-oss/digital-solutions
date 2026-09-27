@@ -120,7 +120,7 @@ jobs:
             adb pull /sdcard/Android/data/com.digitalsolutions.diagnosticlab/files/screenshots screenshots-pulled || true
             adb logcat -d > logcat.txt || true
             echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
-            grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN|Firebase|Firestore|FirebaseAuth|System\.err|okhttp|grpc|Volley|NetworkSecurityConfig|UI_DUMP|AuthDebug" logcat.txt | tail -900 || true
+            grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN|Firebase|Firestore|FirebaseAuth|System\.err|okhttp|grpc|Volley|NetworkSecurityConfig|UI_DUMP|AuthDebug|AddressDebug|PERMISSION_DENIED" logcat.txt | tail -900 || true
             echo "::endgroup::"
 
       # Actions artifacts are served through short-lived signed Azure Blob Storage URLs,

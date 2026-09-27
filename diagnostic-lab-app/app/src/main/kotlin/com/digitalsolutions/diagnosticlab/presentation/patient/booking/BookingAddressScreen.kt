@@ -3,6 +3,7 @@ package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -57,18 +58,31 @@ class AddressBookViewModel(
         .flatMapLatest { patientRepository.observeAddresses(it.userId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    var error by mutableStateOf<String?>(null)
+        private set
+
     fun saveAddress(
         label: String, line1: String, city: String, state: String, pincode: String,
         latitude: Double?, longitude: Double?, onSaved: (Address) -> Unit
     ) {
         viewModelScope.launch {
             val ownerUserId = sessionManager.session.first()?.userId ?: return@launch
-            val saved = patientRepository.saveAddress(
-                ownerUserId = ownerUserId, existingId = null, label = label, line1 = line1, line2 = null,
-                city = city, state = state, pincode = pincode, latitude = latitude, longitude = longitude,
-                makeDefault = addresses.value.isNullOrEmpty()
-            )
-            onSaved(saved)
+            // A Firestore write can genuinely fail (rules rejection, network) — this used to
+            // be uncaught, which crashed the whole app process rather than showing an error
+            // (confirmed via a real CI crash: FirebaseFirestoreException PERMISSION_DENIED).
+            try {
+                error = null
+                Log.d("AddressDebug", "saveAddress: ownerUserId=$ownerUserId")
+                val saved = patientRepository.saveAddress(
+                    ownerUserId = ownerUserId, existingId = null, label = label, line1 = line1, line2 = null,
+                    city = city, state = state, pincode = pincode, latitude = latitude, longitude = longitude,
+                    makeDefault = addresses.value.isNullOrEmpty()
+                )
+                onSaved(saved)
+            } catch (e: Exception) {
+                Log.e("AddressDebug", "saveAddress failed for ownerUserId=$ownerUserId", e)
+                error = e.message ?: "Couldn't save this address. Please try again."
+            }
         }
     }
 }
@@ -190,6 +204,10 @@ private fun AddAddressForm(viewModel: AddressBookViewModel, onSaved: (Address) -
             Text("Use my current location")
         }
         locationMessage?.let { Text(it, style = MaterialTheme.typography.labelMedium) }
+        viewModel.error?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+        }
         Spacer(Modifier.height(16.dp))
         BigPrimaryButton(
             text = "Save & continue",
