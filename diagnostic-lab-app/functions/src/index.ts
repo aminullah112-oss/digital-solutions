@@ -335,6 +335,12 @@ const LABS = [
   { id: "LAB-3", name: "MedCore Diagnostics", city: "Coimbatore", address: "8 RS Puram, Coimbatore", phone: "+91 422 200 1003", openTime: "07:00", closeTime: "19:00", estimatedReportHours: 24, rating: 4.3 },
   { id: "LAB-4", name: "Wellness Point Labs", city: "Madurai", address: "22 KK Nagar, Madurai", phone: "+91 452 200 1004", openTime: "07:30", closeTime: "20:30", estimatedReportHours: 48, rating: 4.1 },
   { id: "LAB-5", name: "Precision Diagnostics", city: "Chennai", address: "3 Velachery Main Rd, Chennai", phone: "+91 44 2000 1005", openTime: "00:00", closeTime: "23:59", estimatedReportHours: 6, rating: 4.8 },
+  // Real onboarded customer (feverlabs.in) — a fever/infectious-disease-focused lab, not a
+  // fictional demo entry like LAB-1..5 above. openTime/closeTime reflect their Mon-Sat hours;
+  // their shorter Sunday hours (7:00-14:00) aren't representable since this schema has no
+  // per-day-of-week field. rating is a placeholder (their site shows only individual 5-star
+  // testimonials, no aggregate) — replace with their real Google Business rating once known.
+  { id: "LAB-6", name: "Dr. Sheela Fever Labs & Diagnostics", city: "Chennai", address: "143, 144, LIC Jeevan Pallava, 142, Thiruvottiyur High Rd, New Washermenpet, Tondiarpet, Chennai, Tamil Nadu 600081", phone: "+91 99627 03342", openTime: "07:00", closeTime: "20:00", estimatedReportHours: 8, rating: 4.8 },
 ];
 
 const INVESTIGATIONS = [
@@ -358,6 +364,8 @@ const INVESTIGATIONS = [
   { id: "INV-018", name: "Urine Culture & Sensitivity", category: "Microbiology", sampleType: "Urine", prep: "Mid-stream morning sample", turnaroundHours: 48, basePrice: 950.0 },
   { id: "INV-019", name: "Testosterone (Total)", category: "Hormone", sampleType: "Blood", prep: "Morning sample preferred", turnaroundHours: 24, basePrice: 1000.0 },
   { id: "INV-020", name: "COVID-19 RT-PCR", category: "Infectious Disease", sampleType: "Nasal/Throat Swab", prep: "No fasting required", turnaroundHours: 24, basePrice: 800.0 },
+  { id: "INV-021", name: "Creatinine", category: "Organ Function", sampleType: "Blood", prep: "No fasting required", turnaroundHours: 6, basePrice: 250.0 },
+  { id: "INV-022", name: "Electrolytes (Na, K, Cl)", category: "Organ Function", sampleType: "Blood", prep: "No fasting required", turnaroundHours: 8, basePrice: 450.0 },
 ];
 
 /**
