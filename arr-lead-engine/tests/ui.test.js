@@ -95,13 +95,33 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   await page.route('**/nominatim.openstreetmap.org/**', r => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify([{ lat: '12.93', lon: '79.23', display_name: 'Melvisharam, Ranipet, Tamil Nadu, India' }]) }));
   await page.route('**/overpass**', r => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ elements: [] }) }));
   await page.evaluate(() => go('discover'));
-  await page.click('button:has-text("Search") >> nth=0'); await page.waitForSelector('#pl_res .tip');
+  await page.click('details summary'); await page.click('button[onclick="A.osmSearch()"]'); await page.waitForSelector('#pl_res .tip');
   const empty = await page.locator('#pl_res').innerText();
   ok(/0 businesses found/.test(empty) && /very little mapped/.test(empty) && /Melvisharam, Ranipet/.test(empty), 'empty OSM result is explained with the resolved place');
   await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '9000000001'); await page.press('#qa_phone', 'Enter');
   ok(await page.evaluate(() => L().some(l => l.name === 'Quick Leathers' && l.source === 'Manual (Maps)')) && await page.inputValue('#qa_name') === '', 'quick add saves on Enter and clears for the next');
   await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '90000 00001'); await page.press('#qa_phone', 'Enter');
   ok(await page.evaluate(() => L().filter(l => l.name === 'Quick Leathers').length) === 1, 'quick add rejects duplicates');
+
+  // Google key UX: mapped error messages, Test key button, OSM collapsed but present, Quick add kept
+  const gk = await page.evaluate(async () => {
+    const f = window.fetch, res = {};
+    const err = (status, message, st) => { window.fetch = async () => new Response(JSON.stringify({ error: { message, status: st } }), { status }); return placesDirect('x', 5).then(() => 'no error', e => e.message); };
+    S.placesKey = 'K';
+    res.ref = await err(403, 'Requests from referer <empty> are blocked.', 'PERMISSION_DENIED');
+    res.dis = await err(403, 'Places API (New) has not been used in project 1 before or it is disabled.', 'PERMISSION_DENIED');
+    res.bill = await err(403, 'This API method requires billing to be enabled.', 'PERMISSION_DENIED');
+    res.bad = await err(400, 'API key not valid. Please pass a valid API key.', 'INVALID_ARGUMENT');
+    window.fetch = async () => new Response(JSON.stringify({ places: [{ id: 'z', displayName: { text: 'Z' } }] }), { status: 200 });
+    go('settings'); document.querySelector('#s_pk').value = 'K2'; await A.testKey(); res.toast = $('#toast').textContent;
+    window.fetch = f; S.placesKey = ''; go('discover');
+    res.details = !!document.querySelector('details summary') && !!document.querySelector('#qa_name') && !!document.querySelector('#pl_type_s');
+    res.order = [...document.querySelectorAll('.card h2, details summary')].map(e => e.innerText.slice(0, 12));
+    return res;
+  });
+  ok(/allowed websites|isn't on the list/.test(gk.ref) && /Places API \(New\)/.test(gk.dis) && /billing/i.test(gk.bill) && /not valid/.test(gk.bad), 'Google errors mapped to plain-English fixes');
+  ok(/Key works/.test(gk.toast), 'Test key button reports success');
+  ok(gk.details, 'Quick add + Google search present, OSM inside collapsed details');
 
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
