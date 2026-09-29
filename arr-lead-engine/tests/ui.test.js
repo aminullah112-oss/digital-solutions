@@ -41,6 +41,15 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(leads.length === 4, 'imported 4 unique leads, got ' + leads.length);
   ok(leads.find(l => l.n === 'Dyecode Craft').s > leads.find(l => l.n === 'Hotel Landline').s, 'no-website mobile lead outranks landline restaurant with site');
 
+  // Places form: real selects with options, "Other" reveals text box, search sends chosen values
+  await page.evaluate(() => go('discover'));
+  ok(await page.locator('#pl_type_s option').count() > 10 && await page.locator('#pl_area_s option').count() >= 6, 'type/area dropdowns populated');
+  ok(await page.locator('#pl_area_s').inputValue() === 'Melvisharam', 'area defaults to first configured area');
+  await page.selectOption('#pl_type_s', '__other'); ok(await page.locator('#pl_type').isVisible(), '"Other" shows a text box');
+  await page.fill('#pl_type', 'tannery');
+  const sent = await page.evaluate(async () => { let body; S.backend = 'http://x'; const f = window.fetch; window.fetch = async (u, o) => { body = JSON.parse(o.body); return new Response(JSON.stringify({ leads: [] }), { status: 200 }); }; await A.search(); window.fetch = f; S.backend = ''; return body; });
+  ok(sent.type === 'tannery' && sent.area === 'Melvisharam', 'search uses dropdown/other values');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
