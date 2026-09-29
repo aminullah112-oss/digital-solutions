@@ -621,8 +621,8 @@ function viewDiscover() {
   const cfg = S.backend ? '' : `<div class="tip warn"><span>Google Places search needs the backend. Set its URL in Settings (see README). Paste / CSV import works without it.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`;
   return head('Discover', 'Get businesses in. Duplicates are detected by phone, Place ID and name+area.') + cfg +
     `<div class="card"><h2>Google Places search</h2><div class="form">
-     <div><label>Business type</label><input id="pl_type" list="pl_types" placeholder="e.g. leather manufacturer"><datalist id="pl_types">${['leather manufacturer', 'shoe factory', 'footwear', 'garments', 'sheet metal fabrication', 'hardware shop', 'restaurant', 'clinic', 'dental clinic', 'school', 'coaching centre', 'jewellery', 'furniture shop', 'packers and movers', 'travel agency'].map(x => `<option>${x}</option>`).join('')}</datalist></div>
-     <div><label>Area</label><input id="pl_area" list="pl_areas" value="${esc(S.areas[0] || '')}"><datalist id="pl_areas">${S.areas.map(x => `<option>${esc(x)}</option>`).join('')}</datalist></div>
+     <div><label>Business type</label>${pickField('pl_type', PLACE_TYPES, '', 'Select a type…')}</div>
+     <div><label>Area</label>${pickField('pl_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
      <div><label>How many (max 60)</label><select id="pl_max"><option>20</option><option>40</option><option>60</option></select></div>
      <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.search()">Search</button></div></div>
      <p class="muted">Each search is a billed Google Places request. Existing leads are flagged so you don't re-import them.</p><div id="pl_res"></div></div>
@@ -727,6 +727,13 @@ async function auditLead(l) {
 /* ---------------------------------------------------------------- actions */
 const dl = (name, type, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
 const val = id => ($('#' + id) || {}).value || '';
+const PLACE_TYPES = ['leather manufacturer', 'shoe factory', 'footwear', 'garments', 'sheet metal fabrication', 'hardware shop', 'restaurant', 'clinic', 'dental clinic', 'school', 'coaching centre', 'jewellery', 'furniture shop', 'packers and movers', 'travel agency'];
+/* Real <select> (works on phones, unlike <datalist>) with an "Other…" escape hatch. */
+function pickField(id, options, def, placeholder) {
+  return `<select id="${id}_s" onchange="pickToggle('${id}')"><option value="">${esc(placeholder)}</option>${options.map(o => `<option ${o === def ? 'selected' : ''}>${esc(o)}</option>`).join('')}<option value="__other">Other (type it)…</option></select><input id="${id}" style="display:none;margin-top:6px" placeholder="Type here">`;
+}
+function pickToggle(id) { const o = $('#' + id + '_s').value === '__other', i = $('#' + id); i.style.display = o ? 'block' : 'none'; if (o) i.focus(); }
+const pickVal = id => { const v = val(id + '_s'); return (v === '__other' ? val(id) : v).trim(); };
 const field = (id, label, v = '', extra = '') => `<div><label>${label}</label><input id="${id}" value="${esc(v)}" ${extra}></div>`;
 const A = {
   confirm: confirmPending,
@@ -884,7 +891,7 @@ const A = {
   async audit(id) { const l = byId(id); try { toast('Auditing…'); await auditLead(l); A.open(id); render(); } catch (e) { toast(e.message); } },
   /* discovery */
   async search() {
-    const type = val('pl_type').trim(), area = val('pl_area').trim(); if (!type) return toast('Enter a business type');
+    const type = pickVal('pl_type'), area = pickVal('pl_area'); if (!type) return toast('Choose a business type'); if (!area) return toast('Choose an area');
     $('#pl_res').innerHTML = '<div class="empty">Searching…</div>';
     try {
       const j = await api('/api/discover', { type, area, maxResults: +val('pl_max') });
