@@ -624,18 +624,18 @@ function viewDiscover() {
      <div><label>Industry</label><input id="qa_ind" list="qa_inds" value="Leather goods manufacturer"><datalist id="qa_inds">${PLACE_TYPES.map(x => `<option>${esc(x)}</option>`).join('')}</datalist></div><div><label>Area</label><input id="qa_area" value="${esc(S.areas[0] || '')}"></div>
      <div class="full"><label>Website (only if they have one)</label><input id="qa_web" autocomplete="off" onkeydown="if(event.key==='Enter')A.quick()"></div></div>
      <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.quick()">Add &amp; next</button><span class="muted" id="qa_count"></span></div></div>` +
-    `<div class="card"><h2>Free map search (OpenStreetMap) <span class="pill">no key, no card</span></h2><div class="form">
-     <div><label>Business category</label>${pickField('osm_cat', Object.keys(OSM_CATS), Object.keys(OSM_CATS)[0], 'Select a category…')}</div>
-     <div><label>Area</label>${pickField('osm_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
-     <div><label>Radius around the area centre</label><select id="osm_rad"><option value="5">5 km</option><option value="10" selected>10 km</option><option value="20">20 km</option></select></div>
-     <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.osmSearch()">Search</button></div></div>
-     <p class="muted">Community-mapped data. Coverage of small Indian towns varies and phone numbers are often missing, so the results show how many have a phone. If the numbers are poor, use Google search or a pasted list.</p></div>
-    <div class="card"><h2>Google Places search</h2>${(S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Needs a Google API key (Settings → Google Places) or the backend.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`}<div class="form">
+    `<div class="card"><h2>Google Places search</h2>${(S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Needs a Google API key (Settings → Google Places) or the backend.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`}<div class="form">
      <div><label>Business type</label>${pickField('pl_type', PLACE_TYPES, '', 'Select a type…')}</div>
      <div><label>Area</label>${pickField('pl_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
      <div><label>How many (max 60)</label><select id="pl_max"><option>20</option><option>40</option><option>60</option></select></div>
      <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.search()">Search</button></div></div>
      <p class="muted">Each search is a billed Google Places request (1,000 phone-and-website searches a month are free). Existing leads are flagged so you don't re-import them.</p></div>
+        <details class="card"><summary style="cursor:pointer;font-weight:700">Free map search (OpenStreetMap) <span class="pill">sparse in small towns</span></summary><div style="height:10px"></div><div class="form">
+     <div><label>Business category</label>${pickField('osm_cat', Object.keys(OSM_CATS), Object.keys(OSM_CATS)[0], 'Select a category…')}</div>
+     <div><label>Area</label>${pickField('osm_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
+     <div><label>Radius around the area centre</label><select id="osm_rad"><option value="5">5 km</option><option value="10" selected>10 km</option><option value="20">20 km</option></select></div>
+     <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.osmSearch()">Search</button></div></div>
+     <p class="muted">Community-mapped data. Coverage of small Indian towns varies and phone numbers are often missing, so the results show how many have a phone. If the numbers are poor, use Google search or a pasted list.</p></details>
     <div class="card" id="pl_card" style="display:none"><h2>Results</h2><div id="pl_res"></div></div>
     <div class="card"><h2>Paste or upload a list</h2><p class="muted">Columns are matched by header (name, phone, industry, area, website, rating, reviews, email, notes). No header row? Use <code>name, phone, industry, area</code>. Your website-form Google Sheet exports work as-is.</p>
      <textarea id="im_text" rows="6" placeholder="Name, Phone, Industry, Area"></textarea>
@@ -666,7 +666,17 @@ function viewSettings() {
      ${S.packages.map((p, i) => `<div class="form" style="grid-template-columns:1fr 120px 2fr auto;margin-bottom:6px"><input class="p_name" value="${esc(p.name)}"><input class="p_price" type="number" value="${p.price}"><input class="p_desc" value="${esc(p.desc)}"><button class="btn small danger" onclick="A.pkgDel(${i})">✕</button></div>`).join('')}
      <button class="btn small" onclick="A.pkgAdd()">+ Add package</button></div>
     <div class="card"><h2>Industry rules (scoring weight + pitch angle)</h2><p class="muted">JSON list: label, match (regex on industry + name), weight, angle. First match wins.</p><textarea id="s_rules" rows="8" style="font-family:monospace;font-size:12px">${esc(JSON.stringify(S.rules, null, 1))}</textarea></div>
-    <div class="card"><h2>Google Places (business search)</h2><p class="muted">Paste a Google Cloud API key with <b>Places API (New)</b> enabled. Because it's used from the browser, restrict it in Google Cloud: <i>Application restriction → Websites → https://aminullah112-oss.github.io/*</i> and <i>API restriction → Places API (New)</i>. Set a budget alert too; every search is billed. The key is stored on this device only and excluded from backups.</p><div class="form"><div class="full"><label>Google Places API key</label><input id="s_pk" type="password" value="${esc(S.placesKey)}" placeholder="AIza…"></div></div></div>
+    <div class="card"><h2>Google Places (business search)</h2>
+     <ol class="muted" style="margin:0 0 10px;padding-left:20px;line-height:1.7">
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/projectcreate">Create a Google Cloud project</a> (any name).</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/billing">Link a billing account</a>. Google requires a card, but the first 1,000 searches a month that include phone and website are free.</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/library/places.googleapis.com">Enable “Places API (New)”</a>.</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/credentials">Create an API key</a>. Under <b>Application restrictions → Websites</b> add <code>https://aminullah112-oss.github.io/*</code>. Under <b>API restrictions</b> pick only Places API (New).</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/billing/budgets">Create a budget alert</a> (e.g. ₹500) so a mistake can't run up a bill.</li>
+      <li>Paste the key below, Save settings, then tap Test key.</li></ol>
+     <div class="form"><div class="full"><label>Google Places API key</label><input id="s_pk" type="password" value="${esc(S.placesKey)}" placeholder="AIza…" autocomplete="off"></div></div>
+     <div class="actions" style="margin-top:8px"><button class="btn" onclick="A.testKey()">Test key (uses 1 search)</button></div>
+     <p class="muted">The key is stored on this device only and is left out of backups. It is visible to anyone using this browser, which is why the website and API restrictions matter. Paste it on each device you use.</p></div>
     <div class="card"><h2>Backend helper (website audit; optional Places proxy)</h2><div class="form"><div><label>Backend URL</label><input id="s_be" value="${esc(S.backend)}" placeholder="http://localhost:8787"></div><div><label>API token (ARR_API_TOKEN)</label><input id="s_tok" type="password" value="${esc(S.token)}"></div></div><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.health()">Test connection</button></div></div>
     <div class="card"><h2>Cloud sync (Supabase)</h2><p class="muted">Optional. Run <code>supabase/schema.sql</code>, create your user, then sign in. The publishable key is safe in the browser only because row-level security limits every row to you. Never paste a service-role key here.</p>
      <div class="form"><div><label>Project URL</label><input id="c_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"></div><div><label>Publishable / anon key</label><input id="c_key" value="${esc(c.key)}"></div><div><label>Email</label><input id="c_email" value="${esc(c.email)}"></div><div><label>Password ${c.session ? '(signed in)' : ''}</label><input id="c_pw" type="password" autocomplete="current-password"></div></div>
@@ -782,12 +792,22 @@ async function osmSearch(cat, area, km) {
 /* Places search straight from the browser. The key is visible to anyone who can open devtools on this
    device, so it MUST be restricted in Google Cloud (HTTP referrer = this site, API = Places API (New) only). */
 const PLACES_FIELDS = 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken';
+function placesError(status, j) {
+  const m = ((j.error && j.error.message) || '').toLowerCase(), st = ((j.error && j.error.status) || '');
+  if (/referer|referrer/.test(m)) return `Google blocked this address. Your key is limited to specific websites and this page isn't on the list. Open the CRM from https://aminullah112-oss.github.io/digital-solutions/arr-lead-engine/ (not a file or preview link), or add this address to the key's allowed websites.`;
+  if (/has not been used|is disabled|not enabled|service_disabled/.test(m) || st === 'SERVICE_DISABLED') return 'Turn on "Places API (New)" for this Google Cloud project (Settings has the link), wait a minute, and retry.';
+  if (/billing/.test(m)) return 'Google needs a billing account linked to this project. The monthly free allowance still applies. Link one in Google Cloud → Billing.';
+  if (/api key not valid|invalid api key|api_key_invalid/.test(m) || status === 400 && /key/.test(m)) return 'Google says the key is not valid. Re-copy it with no spaces.';
+  if (/api target blocked|api_key_service_blocked|are blocked/.test(m)) return 'The key is restricted to other APIs. Under API restrictions, allow "Places API (New)".';
+  if (status === 429 || /quota|rate/.test(m)) return 'Google quota reached for now. Try later or check quotas in Google Cloud.';
+  return 'Google Places error ' + status + (m ? ': ' + m.slice(0, 160) : '');
+}
 async function placesDirect(query, wanted) {
   const seen = new Set(), out = []; let token = '';
   while (out.length < wanted) {
     const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': S.placesKey, 'X-Goog-FieldMask': PLACES_FIELDS }, body: JSON.stringify({ textQuery: query, pageSize: 20, ...(token ? { pageToken: token } : {}) }) });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((j.error && j.error.message) || 'Google Places error ' + r.status);
+    if (!r.ok) throw new Error(placesError(r.status, j));
     for (const p of j.places || []) {
       if (seen.has(p.id) || /^CLOSED/.test(p.businessStatus || '')) continue;
       seen.add(p.id);
@@ -1059,6 +1079,12 @@ const A = {
   },
   pkgAdd() { if (!A.saveSettings(true)) return; S.packages.push({ id: 'p' + Date.now().toString(36), name: 'New package', price: 0, desc: '' }); save(); render(); },
   pkgDel(i) { if (!A.saveSettings(true)) return; if (S.packages.length < 2) return toast('Keep at least one package'); S.packages.splice(i, 1); save(); render(); },
+  async testKey() {
+    if (!A.saveSettings(true)) return;
+    if (!S.placesKey) return toast('Paste your key first');
+    try { const r = await placesDirect('restaurant in Chennai', 1); toast(r.length ? 'Key works ✓ Google returned results' : 'Key accepted, but no results came back'); }
+    catch (e) { toast(e.message); }
+  },
   async health() { if (!A.saveSettings(true)) return; try { const r = await fetch(S.backend + '/health'); const j = await r.json(); toast(`Backend online · Places ${j.placesConfigured ? 'configured' : 'NOT configured'}${j.authRequired ? ' · token required' : ''}`); } catch (e) { toast('Backend unreachable'); } },
   async cloudLogin() {
     if (!A.saveSettings(true)) return; const c = S.cloud;
