@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ARR Lead Engine</title>
+<style>
+:root{--bg:#07111f;--panel:#0c1b2c;--panel2:#102238;--line:#203852;--text:#eef6ff;--muted:#91a6bf;--a:#5eead4;--b:#60a5fa;--warn:#fbbf24;--bad:#fb7185;--ok:#34d399}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#07111f;color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:flex;min-height:100vh}
+.side{width:220px;background:#071523;border-right:1px solid var(--line);padding:16px 10px;position:sticky;top:0;height:100vh;flex:none}
+.brand{font-size:19px;font-weight:800;padding:6px 10px 18px}.brand small{display:block;color:var(--a);font-size:10px;letter-spacing:1.5px;margin-top:3px}
+.nav button{display:flex;gap:9px;width:100%;background:none;border:0;color:var(--muted);text-align:left;padding:10px 12px;border-radius:9px;margin:2px 0;cursor:pointer}
+.nav button.active,.nav button:hover{background:#10273e;color:#fff}
+.nav .badge{margin-left:auto;background:var(--bad);color:#000;border-radius:9px;padding:0 7px;font-size:11px;font-weight:700}
+.main{flex:1;min-width:0;max-width:1200px;margin:0 auto;padding:22px 22px 90px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+h1{margin:0;font-size:24px}h2{font-size:17px;margin:0 0 10px}h3{margin:0 0 10px;font-size:15px}
+.sub,.muted{color:var(--muted)}.sub{margin-top:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g6{grid-template-columns:repeat(6,1fr)}
+.kpi{padding:12px}.kpi .n{font-size:24px;font-weight:800;margin:2px 0}
+.btn{background:#12304a;border:1px solid #27506f;border-radius:9px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#17405f}.btn.primary{background:var(--a);color:#032;border-color:var(--a);font-weight:700}
+.btn.good{background:#0f5b43;border-color:#1c8a66}.btn.danger{background:#5a1d2b;border-color:#8a2d40}.btn.small{padding:5px 9px;font-size:12px}.btn.wa{background:#128c4a;border-color:#1ab863;font-weight:700}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,textarea{background:#08192a;border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+textarea{resize:vertical;min-height:70px}label{display:block;color:var(--muted);font-size:12px;margin:0 0 4px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.toolbar>*{width:auto;flex:1 1 140px}.toolbar input{flex:2 1 220px}
+.pill{display:inline-block;background:#12304a;border:1px solid #27506f;border-radius:999px;padding:1px 9px;font-size:12px}
+.sc{display:inline-block;min-width:34px;text-align:center;border-radius:7px;padding:1px 6px;font-weight:800;font-size:12px}
+.sc.hi{background:#0f5b43;color:#a7f3d0}.sc.mid{background:#5b4a0f;color:#fde68a}.sc.lo{background:#3a2430;color:#fda4af}
+.bad{color:var(--bad)}.ok{color:var(--ok)}.warn{color:var(--warn)}
+.group{margin:0 0 20px}.group>h2{display:flex;align-items:center;gap:8px}.group>h2 .cnt{background:#12304a;border-radius:999px;font-size:12px;padding:1px 9px;color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.row.pending{border-color:var(--warn)}.rmain{min-width:0;flex:1;cursor:pointer}.rmain b{overflow-wrap:anywhere}.racts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bar{height:9px;background:#0a1e31;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--b),var(--a))}
+.brow{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;margin:7px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:600;font-size:12px;white-space:nowrap}
+.kanban{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:10px;overflow-x:auto;padding-bottom:10px}
+.col{background:#0a1a2b;border:1px solid var(--line);border-radius:12px;padding:10px;min-height:120px}.col .mini{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:8px;cursor:pointer}
+.tip{border-left:3px solid var(--b);background:#0a1e31;padding:8px 12px;border-radius:0 9px 9px 0;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.tip.warn{border-color:var(--warn)}.tip.bad{border-color:var(--bad)}.tip.good{border-color:var(--ok)}
+.banner{position:sticky;top:0;z-index:20;background:#3a2f0c;border:1px solid var(--warn);border-radius:12px;padding:8px 12px;margin-bottom:14px;max-height:190px;overflow:auto}
+.banner .row{background:transparent;border:0;padding:4px 0;margin:0}
+.modal{position:fixed;inset:0;background:rgba(2,8,16,.75);display:none;align-items:flex-start;justify-content:center;padding:4vh 10px;overflow:auto;z-index:50}.modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;width:100%;max-width:900px}
+.tl{max-height:340px;overflow:auto}.ev{border-left:2px solid var(--line);padding:2px 0 8px 10px;margin-left:4px}.ev .t{color:var(--muted);font-size:12px}
+.toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);background:#12304a;border:1px solid #27506f;padding:10px 16px;border-radius:10px;display:none;z-index:99;max-width:90vw}.toast.show{display:block}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips .btn{padding:6px 10px}.chips .btn.sel{background:var(--a);color:#032;border-color:var(--a)}
+.prog{height:12px;background:#0a1e31;border-radius:12px;overflow:hidden}.prog i{display:block;height:100%;background:var(--ok)}
+pre.msg{white-space:pre-wrap;background:#08192a;border:1px solid var(--line);border-radius:9px;padding:10px;margin:0;font:inherit}
+.empty{color:var(--muted);padding:14px;text-align:center}
+.mobilenav{display:none}
+@media(max-width:820px){
+ .side{display:none}
+ .mobilenav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#071523;border-top:1px solid var(--line);z-index:30;padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+ .mobilenav button{flex:1;background:none;border:0;color:var(--muted);padding:7px 2px;font-size:11px;position:relative}
+ .mobilenav button.active{color:var(--a)}.mobilenav button span{display:block;font-size:17px}
+ .mobilenav .badge{position:absolute;top:1px;right:14%;background:var(--bad);color:#000;border-radius:9px;padding:0 5px;font-size:10px;font-weight:700}
+ .main{padding:14px 12px 96px}.g2,.g3,.g4,.form{grid-template-columns:1fr}.g6{grid-template-columns:repeat(2,1fr)}.full{grid-column:auto}
+ .row{flex-direction:column;align-items:stretch}.racts{justify-content:flex-start}.racts .btn{flex:1}
+ .brow{grid-template-columns:100px 1fr 70px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="side"><div class="brand">ARR Lead Engine<small>V11 · SALES OS</small></div><div class="nav" id="nav"></div></aside>
+ <main class="main"><div id="banner"></div><div id="view"></div></main>
+</div>
+<nav class="mobilenav" id="mnav"></nav>
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   ARR Lead Engine V11
+   Data lives in localStorage (one key). Optional: Supabase sync, backend
+   helper (Places discovery, website audit).  No build step, no framework.
+   ===================================================================== */
+const KEY = 'arr_lead_engine_v11';
+const LEGACY_KEYS = ['arr_lead_engine_v8'];
+const STAGES = ['New', 'Qualified', 'Contacted', 'Replied', 'Meeting', 'Proposal', 'Won', 'Nurture', 'Lost', 'Not Interested'];
+const RANK = { New: 0, Qualified: 1, Contacted: 2, Replied: 3, Meeting: 4, Proposal: 5, Won: 6 };
+const OPEN = ['New', 'Qualified', 'Contacted', 'Replied', 'Meeting', 'Proposal', 'Nurture'];
+const PROB = { New: .02, Qualified: .04, Contacted: .06, Replied: .2, Meeting: .4, Proposal: .55, Nurture: .03, Won: 1 };
+const CADENCE_STAGES = ['New', 'Qualified', 'Contacted', 'Nurture'];      // stages driven by the automatic cadence
+const LOST_REASONS = ['Price too high', 'No budget', 'Already has a vendor', 'Not interested', 'No response after full cadence', 'Wrong number / closed', 'Other'];
+const REPLY_CLASSES = {
+  interested: 'Interested', meeting: 'Wants meeting / call', price: 'Asked price',
+  later: 'Later / not now', no: 'Not interested', wrong: 'Wrong number'
+};
+
+const DEFAULT_SETTINGS = {
+  me: 'Amin', brand: 'ARR Digital Solutions', portfolio: '', dailyNew: 20, nurtureDays: 60, defaultValue: 25000,
+  backend: '', token: '',
+  areas: ['Melvisharam', 'Ambur', 'Vaniyambadi', 'Ranipet', 'Vellore', 'Chennai'],
+  cadence: [
+    { wait: 0, ch: 'whatsapp', tpl: 'intro' },
+    { wait: 2, ch: 'whatsapp', tpl: 'fu1' },
+    { wait: 3, ch: 'call', tpl: 'call' },
+    { wait: 4, ch: 'whatsapp', tpl: 'proof' },
+    { wait: 5, ch: 'whatsapp', tpl: 'breakup' }
+  ],
+  templates: [
+    { id: 'intro', name: 'Intro (English)', body: "Hello {name} team, this is {me} from {brand}. I found {name} on Google Maps. {hook}\n\nWe build {angle} for local businesses like yours. May I send you a free 1-minute sample made for {name}?\n\n(Reply STOP if you'd rather not hear from me.)" },
+    { id: 'intro_ta', name: 'Intro (Tamil) — have a native speaker check', body: "வணக்கம் {name} குழுவினருக்கு, நான் {me}, {brand}-ல் இருந்து. Google Maps-ல் {name}-ஐ பார்த்தேன். {name}-க்காக {angle} உருவாக்கித் தர முடியும். இலவசமாக ஒரு சிறிய sample அனுப்பலாமா?\n\n(வேண்டாம் என்றால் STOP என்று பதிலளிக்கவும்.)" },
+    { id: 'fu1', name: 'Follow-up 1 (idea + ask)', body: "Hello {name} team, {me} from {brand} again. I sketched an idea for {name}: {angle}.\n\nShall I send the sample here on WhatsApp? Just reply YES." },
+    { id: 'call', name: 'Call script', body: "CALL SCRIPT\n1. Greet, say who you are and that you found them on Google Maps.\n2. Ask: \"Who looks after enquiries / your online presence?\"\n3. Hook: {hook}\n4. Ask permission to WhatsApp a free sample.\n5. Log the outcome here straight after the call." },
+    { id: 'proof', name: 'Proof / portfolio', body: "Hello {name} team, {me} from {brand}. Here are sites we've built for local businesses: {portfolio}\n\nWe can do the same for {name}. Want me to prepare a free mock-up with your name and products?" },
+    { id: 'breakup', name: 'Last message (soft close)', body: "Hello {name} team, I'll stop messaging now so I don't crowd your inbox. If a website or more online enquiries ever become a priority, just reply here and I'll pick it up.\n\nWishing {name} a great season. — {me}, {brand}" },
+    { id: 'reengage', name: 'Re-engage (after nurture)', body: "Hello {name} team, {me} from {brand} — it's been a while. {hook}\n\nIs a website / more online enquiries worth a quick chat now? (Reply STOP to opt out.)" },
+    { id: 'price', name: 'Reply: pricing', body: "Thanks for getting back, {name} team! Our packages:\n{packages}\n\nFinal price depends on pages and content, and I'm happy to fit your budget. Can we do a quick 10-minute call today or tomorrow?" },
+    { id: 'meeting', name: 'Reply: book a call/visit', body: "Great! What time suits you for a 10-minute call or a visit this week? I'll bring a sample made for {name}." },
+    { id: 'chase', name: 'Proposal chase', body: "Hello {name} team, just checking whether you had a chance to look at the proposal. Happy to adjust scope or budget. Shall we finalise this week?" }
+  ],
+  packages: [
+    { id: 'starter', name: 'Starter', price: 15000, desc: 'One-page website, WhatsApp enquiry button, Google Maps, mobile-friendly' },
+    { id: 'business', name: 'Business', price: 30000, desc: 'Up to 5 pages, product/service catalogue, enquiry form, basic SEO' },
+    { id: 'growth', name: 'Growth', price: 50000, desc: 'Business + Google Business Profile setup + WhatsApp catalogue + 3 months support' }
+  ],
+  rules: [
+    { label: 'Manufacturer / exporter', match: 'leather|shoe|footwear|manufactur|factory|export|garment|textile|sheet ?metal|fabricat|engineering|industr', weight: 15, angle: 'a product-catalogue website that buyers and agents can browse and enquire from, with a WhatsApp enquiry button' },
+    { label: 'Clinic / health', match: 'clinic|hospital|dental|doctor|pharma|diagnostic|lab\\b|scan', weight: 12, angle: 'an appointment page with WhatsApp booking and directions' },
+    { label: 'Food / hospitality', match: 'restaurant|hotel|biryani|cafe|bakery|sweet|catering|mess\\b', weight: 10, angle: 'a menu and order-enquiry page linked to WhatsApp' },
+    { label: 'Education', match: 'school|college|academy|coaching|institute|tuition|training', weight: 10, angle: 'an admissions-enquiry website with fee details and WhatsApp contact' },
+    { label: 'Retail / trade', match: 'shop|store|mart|jewel|fashion|furniture|hardware|electronics|trader|supplier', weight: 8, angle: 'a product showcase site with WhatsApp ordering' }
+  ],
+  cloud: { url: '', key: '', email: '', session: null }
+};
+const FALLBACK_RULE = { label: 'Other', weight: 3, angle: 'a simple, mobile-friendly website with WhatsApp enquiry and Google Maps directions' };
+
+/* ------------------------------------------------------------ helpers */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => ymd(new Date());
+const addDays = (n, from = new Date()) => { const d = new Date(from); d.setDate(d.getDate() + n); return ymd(d); };
+const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 864e5);
+const nowIso = () => new Date().toISOString();
+const uid = () => 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+const fixUrl = u => { u = String(u || '').trim(); return u && !/^https?:\/\//i.test(u) ? 'https://' + u : u; };
+function dueLabel(d) {
+  if (!d) return 'no date';
+  const n = daysBetween(today(), d);
+  return n < 0 ? `${-n}d overdue` : n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n}d`;
+}
+function ago(iso) {
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  return m < 60 ? `${Math.max(m, 0)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+}
+let toastTimer;
+function toast(s) { const t = $('#toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* Phones: store as +<country><number>. Bare 10-digit numbers are assumed Indian. */
+function normPhone(p) {
+  let d = String(p || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('00')) d = d.slice(2);
+  else if (d.length === 11 && d[0] === '0') d = '91' + d.slice(1);
+  else if (d.length === 10) d = '91' + d;
+  return '+' + d;
+}
+const isMobile = p => !/^\+91/.test(p) || /^\+91[6-9]\d{9}$/.test(p);   // Indian landlines can't use WhatsApp
+const waOK = l => !!l.phone && !l.phoneBad && !l.dnc && isMobile(l.phone);
+const dialOK = l => !!l.phone && !l.phoneBad && !l.dnc;
+
+/* ------------------------------------------------------------- storage */
+let S = structuredClone(DEFAULT_SETTINGS);
+let db = [];
+let M = { lastBackup: '', lastPull: '', lastPush: '', created: nowIso() };
+
+let quiet = false;
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify({ v: 11, leads: db, settings: S, meta: M })); }
+  catch (e) { toast('Could not save — browser storage is full or blocked. Export a backup now.'); }
+}
+function save() { persist(); if (!quiet) scheduleSync(); }
+function commit(l) { l.updated = nowIso(); save(); }
+const L = () => db.filter(l => !l.deleted);
+const byId = id => db.find(l => l.id === id && !l.deleted);
+
+function newLead(o = {}) {
+  const t = nowIso();
+  const l = {
+    id: /^[\w-]+$/.test(o.id || '') ? o.id : uid(), name: '', industry: '', area: '', address: '', phone: '', email: '', website: '',
+    placeId: '', mapsUrl: '', source: 'Manual', rating: 0, reviews: 0, status: 'New', peak: 0, created: t, updated: t,
+    value: 0, proposalValue: 0, nextAction: 'Send first message', nextDate: today(), step: 0, cycles: 0, callTries: 0,
+    dnc: false, phoneBad: false, notes: '', lostReason: '', lastTpl: '', audit: null, pending: null, activities: [], ...o
+  };
+  l.id = /^[\w-]+$/.test(l.id) ? l.id : uid();
+  l.phone = normPhone(l.phone);
+  l.website = fixUrl(l.website);
+  l.rating = Number(l.rating) || 0; l.reviews = Number(l.reviews) || 0;
+  if (!l.value) l.value = ruleFor(l).value || S.defaultValue;
+  if (!Array.isArray(l.activities)) l.activities = [];
+  return l;
+}
+function load() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { /* corrupted: fall through */ }
+  if (raw && raw.v === 11) {
+    S = mergeSettings(raw.settings); db = raw.leads || []; M = { ...M, ...(raw.meta || {}) };
+    return;
+  }
+  for (const k of LEGACY_KEYS) {
+    try {
+      const old = JSON.parse(localStorage.getItem(k) || 'null');
+      if (Array.isArray(old) && old.length) { db = migrateLegacy(old); M.migrated = k; save(); return; }
+    } catch (e) { /* ignore */ }
+  }
+}
+function mergeSettings(s) {
+  const out = { ...structuredClone(DEFAULT_SETTINGS), ...(s || {}) };
+  out.cloud = { ...DEFAULT_SETTINGS.cloud, ...((s || {}).cloud || {}) };
+  return out;
+}
+
+/* V8/V9/V10 -> V11 */
+function migrateLegacy(arr) {
+  const stageMap = {
+    'Discovered': 'New', 'Researching': 'New', 'Qualified': 'Qualified', 'Ready to Contact': 'Qualified', 'Contacted': 'Contacted',
+    'Follow-up 1': 'Contacted', 'Follow-up 2': 'Contacted', 'Responded': 'Replied', 'Interested': 'Replied', 'Meeting': 'Meeting',
+    'Proposal Sent': 'Proposal', 'Negotiation': 'Proposal', 'Won': 'Won', 'Lost': 'Lost', 'Not Interested': 'Not Interested'
+  };
+  const actMap = { 'Outreach Sent': 'Message Sent', 'Follow-up Sent': 'Message Sent', 'Response Received': 'Reply' };
+  return arr.filter(o => o && o.name).map(o => {
+    const acts = (o.activities || []).filter(a => a.type !== 'WhatsApp Opened').map(a => ({
+      type: actMap[a.type] || a.type, at: a.at || nowIso(), note: a.note || '', channel: a.channel || '', ...(actMap[a.type] === 'Reply' ? { cls: 'interested' } : {})
+    }));
+    const sent = acts.filter(a => a.type === 'Message Sent').length;
+    const status = stageMap[o.status] || 'New';
+    const l = newLead({
+      id: o.id, name: o.name, industry: o.industry || '', area: o.area || '', phone: o.phone || '', website: o.website || '', placeId: o.placeId || '',
+      source: o.source || 'Imported (legacy)', rating: o.rating, reviews: o.reviews, status, created: o.created || nowIso(),
+      value: Number(o.value) || 0, proposalValue: Number(o.proposalValue) || 0, lostReason: o.lostReason || '', notes: o.response || '',
+      activities: acts, step: Math.min(sent, S.cadence.length - 1), lastTpl: sent ? 'intro' : '',
+      nextAction: o.nextAction || 'Follow up', nextDate: o.nextActionDate ? ymd(new Date(o.nextActionDate)) : (OPEN.includes(status) ? today() : ''),
+      dnc: status === 'Not Interested'
+    });
+    l.peak = Math.max(RANK[status] ?? 0, acts.some(a => a.type === 'Reply') ? 3 : 0, sent ? 2 : 0);
+    return l;
+  });
+}
+
+/* -------------------------------------------------- scoring & messages */
+function ruleFor(l) {
+  const hay = `${l.industry} ${l.name}`.toLowerCase();
+  for (const r of S.rules) { try { if (new RegExp(r.match, 'i').test(hay)) return r; } catch (e) { /* bad regex in settings */ } }
+  return FALLBACK_RULE;
+}
+function auditGaps(l) {
+  const a = l.audit; if (!a || !a.ok) return [];
+  const g = [];
+  if (!a.https) g.push({ k: 'https', hook: "your website isn't secure (no https), so browsers warn visitors" });
+  if (!a.hasViewport) g.push({ k: 'mobile', hook: "your website isn't mobile-friendly, and most of your customers browse on phones" });
+  if (!a.hasWhatsapp) g.push({ k: 'wa', hook: "your website has no WhatsApp enquiry button, so visitors have no quick way to contact you" });
+  if (!a.hasForm && !a.hasPhone) g.push({ k: 'contact', hook: "I couldn't find a clear enquiry form or tap-to-call number on your website" });
+  if (a.copyrightYear && a.copyrightYear < new Date().getFullYear() - 2) g.push({ k: 'old', hook: `your website looks outdated (last updated around ${a.copyrightYear})` });
+  return g;
+}
+function scoreLead(l) {
+  const parts = []; let s = 0;
+  const add = (n, why) => { s += n; parts.push([n, why]); };
+  if (!l.website) add(30, 'No website — clear gap to sell into');
+  else if (l.audit && l.audit.ok) { const g = auditGaps(l); add(Math.min(24, g.length * 8), g.length ? `${g.length} website gap(s) found` : 'Website audited, looks fine'); }
+  else add(8, 'Has a website (not audited yet)');
+  if (!l.phone || l.phoneBad) add(-25, 'No usable phone number');
+  else if (isMobile(l.phone)) add(20, 'Mobile number — reachable on WhatsApp');
+  else add(10, 'Landline — call only');
+  if (l.reviews >= 50) add(15, `${l.reviews} Google reviews — established business`);
+  else if (l.reviews >= 20) add(10, `${l.reviews} Google reviews`);
+  else if (l.reviews >= 5) add(5, `${l.reviews} Google reviews`);
+  if (l.rating >= 4.3) add(5, `${l.rating}★ reputation to showcase`);
+  const r = ruleFor(l); add(r.weight, `Industry fit: ${r.label}`);
+  return { score: Math.max(0, Math.min(100, s)), parts };
+}
+const score = l => scoreLead(l).score;
+const scoreCls = n => n >= 70 ? 'hi' : n >= 50 ? 'mid' : 'lo';
+const scorePill = l => { const n = score(l); return `<span class="sc ${scoreCls(n)}" title="Fit score">${n}</span>`; };
+
+function hookFor(l) {
+  if (!l.website) {
+    return l.reviews >= 10 && l.rating
+      ? `You have ${l.reviews} Google reviews at ${l.rating}★, but I couldn't find a website, so people searching online can't see your work or enquire.`
+      : "I couldn't find a website for you, so people searching online can't see your work or enquire.";
+  }
+  const g = auditGaps(l);
+  return g.length ? `I noticed ${g[0].hook}.` : 'I had a few quick ideas to bring you more enquiries online.';
+}
+function packageLines() { return S.packages.map(p => `• ${p.name} — ${money(p.price)}: ${p.desc}`).join('\n'); }
+function renderTpl(id, l) {
+  const t = S.templates.find(x => x.id === id); if (!t) return '';
+  const v = { name: l.name, me: S.me, brand: S.brand, area: l.area, industry: l.industry, hook: hookFor(l), angle: ruleFor(l).angle, portfolio: S.portfolio, packages: packageLines() };
+  return t.body.split('\n').map(line => {
+    let drop = false;
+    const out = line.replace(/\{(\w+)\}/g, (m, k) => { if (!(k in v)) return m; if (!v[k]) drop = true; return v[k]; });
+    return drop ? null : out;
+  }).filter(x => x !== null).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/* ------------------------------------------------------------ lead ops */
+function act(l, type, extra = {}) { l.activities.push({ type, at: nowIso(), ...extra }); }
+function setStage(l, to, why = '') {
+  if (l.status === to) return;
+  act(l, 'Stage', { from: l.status, to, note: why });
+  l.status = to;
+  if ((RANK[to] ?? -1) > (l.peak ?? 0)) l.peak = RANK[to];
+}
+function nextTouch(l) {
+  if (l.status === 'Nurture' && l.step === 0) return { ch: 'whatsapp', tpl: 'reengage' };
+  return S.cadence[Math.min(l.step, S.cadence.length - 1)];
+}
+function advanceCadence(l) {
+  l.step++; l.callTries = 0;
+  if (l.step >= S.cadence.length) {
+    l.cycles = (l.cycles || 0) + 1; l.step = 0;
+    setStage(l, 'Nurture', 'Full cadence completed without a reply');
+    l.nextAction = 'Re-engage'; l.nextDate = addDays(S.nurtureDays);
+  } else {
+    const nx = S.cadence[l.step];
+    l.nextAction = nx.ch === 'call' ? 'Call' : 'Send follow-up on WhatsApp'; l.nextDate = addDays(nx.wait);
+  }
+}
+/* A message the user CONFIRMS they sent. Opening WhatsApp alone never counts. */
+function recordSent(l, p) {
+  act(l, 'Message Sent', { channel: p.channel || 'WhatsApp', tpl: p.tpl, step: l.step, text: (p.text || '').slice(0, 600) });
+  l.lastTpl = p.tpl; l.lastContacted = nowIso();
+  if (CADENCE_STAGES.includes(l.status) && p.cadence !== false) {
+    if (l.status !== 'Contacted') setStage(l, 'Contacted');
+    advanceCadence(l);
+  } else if (l.status === 'Proposal') { l.nextAction = 'Chase proposal'; l.nextDate = addDays(3); }
+  else { l.nextAction = 'Follow up'; l.nextDate = addDays(2); }
+}
+function applyReply(l, cls, { text = '', channel = 'WhatsApp', date = '' } = {}) {
+  if (cls === 'wrong') { l.phoneBad = true; act(l, 'Wrong Number', { channel }); l.nextAction = 'Find correct number'; l.nextDate = today(); return; }
+  act(l, 'Reply', { cls, text: text.slice(0, 600), channel, step: l.step, tpl: l.lastTpl });
+  l.callTries = 0;
+  if (cls === 'interested') { setStage(l, 'Replied'); l.nextAction = 'Send sample / propose a call'; l.nextDate = date || today(); }
+  else if (cls === 'meeting') { setStage(l, 'Meeting'); l.nextAction = 'Meeting / call'; l.nextDate = date || today(); }
+  else if (cls === 'price') { setStage(l, 'Replied'); l.nextAction = 'Send pricing / proposal'; l.nextDate = date || today(); }
+  else if (cls === 'later') { setStage(l, 'Nurture'); l.step = 0; l.nextAction = 'Follow up'; l.nextDate = date || addDays(14); }
+  else if (cls === 'no') { closeLost(l, 'Not Interested', 'Not interested', true); }
+}
+function closeLost(l, stage, reason, dnc) {
+  setStage(l, stage, reason); l.lostReason = reason; l.dnc = !!dnc; l.nextAction = ''; l.nextDate = '';
+  act(l, stage === 'Lost' ? 'Lost' : 'Not Interested', { note: reason });
+}
+function closeWon(l, value, note) {
+  setStage(l, 'Won'); l.proposalValue = Number(value) || l.proposalValue || l.value;
+  act(l, 'Won', { note: note || '', value: l.proposalValue });
+  l.wonAt = nowIso(); l.nextAction = 'Ask for referral + Google review'; l.nextDate = addDays(14);
+}
+
+/* --------------------------------------------------------- WhatsApp flow */
+function openWA(l, tpl, text, extra = {}) {
+  if (!waOK(l)) { toast(isMobile(l.phone || '') ? 'No usable phone number' : 'Landline — use Call instead'); return; }
+  const msg = text ?? renderTpl(tpl, l);
+  l.pending = { tpl, text: msg, at: nowIso(), ...extra };
+  commit(l);
+  window.open('https://wa.me/' + l.phone.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  render();
+}
+function confirmPending(id, yes) {
+  const l = byId(id); if (!l || !l.pending) return;
+  const p = l.pending; l.pending = null;
+  if (yes) {
+    if (p.kind === 'proposal') {
+      act(l, 'Message Sent', { channel: 'WhatsApp', tpl: 'proposal', step: l.step, text: p.text.slice(0, 600) });
+      act(l, 'Proposal Sent', { value: p.value, note: p.note || '' });
+      setStage(l, 'Proposal'); l.proposalValue = p.value; l.lastContacted = nowIso();
+      l.nextAction = 'Chase proposal'; l.nextDate = addDays(2);
+    } else recordSent(l, { tpl: p.tpl, text: p.text, cadence: p.cadence });
+    toast('Logged as sent ✓');
+  } else toast('Not logged');
+  commit(l); render();
+}
+
+/* ------------------------------------------------------------- queue */
+const sentToday = () => L().reduce((n, l) => n + l.activities.filter(a => a.type === 'Message Sent' && a.at.slice(0, 10) === ymd(new Date()) && a.step === 0).length, 0);
+const touchesToday = () => L().reduce((n, l) => n + l.activities.filter(a => (a.type === 'Message Sent' || a.type === 'Call') && ymd(new Date(a.at)) === today()).length, 0);
+function buildQueue() {
+  const t = today(), live = L().filter(l => !l.dnc && OPEN.includes(l.status) || (l.status === 'Won' && l.nextDate));
+  const due = l => l.nextDate && l.nextDate <= t;
+  const byDueThenScore = (a, b) => (a.nextDate || '').localeCompare(b.nextDate || '') || score(b) - score(a);
+  const reply = live.filter(l => l.status === 'Replied' && due(l)).sort(byDueThenScore);
+  const deals = live.filter(l => ['Meeting', 'Proposal'].includes(l.status) && due(l)).sort(byDueThenScore);
+  const follow = live.filter(l => ['Contacted', 'Nurture'].includes(l.status) && due(l)).sort(byDueThenScore);
+  const customers = live.filter(l => l.status === 'Won' && due(l));
+  const fresh = live.filter(l => ['New', 'Qualified'].includes(l.status) && (dialOK(l)) && (!l.nextDate || l.nextDate <= t))
+    .sort((a, b) => score(b) - score(a));
+  return { reply, deals, follow, customers, fresh };
+}
+const noNextStep = () => L().filter(l => OPEN.includes(l.status) && !l.nextDate && !l.dnc && ['Replied', 'Meeting', 'Proposal', 'Contacted', 'Nurture'].includes(l.status));
+
+function insights() {
+  const out = [], q = buildQueue(), all = L();
+  const pend = all.filter(l => l.pending).length;
+  if (pend) out.push({ lv: 'warn', t: `${pend} WhatsApp chat(s) opened but not confirmed. Confirm or dismiss so the follow-up clock is right.` });
+  if (q.reply.length) {
+    const old = q.reply.filter(l => daysBetween(l.nextDate, today()) >= 1).length;
+    out.push({ lv: 'bad', t: `${q.reply.length} interested lead(s) are waiting for YOUR reply${old ? `, ${old} for more than a day` : ''}. Replies convert best within the hour — do these first.` });
+  }
+  const ns = noNextStep().length;
+  if (ns) out.push({ lv: 'warn', t: `${ns} open lead(s) have no next step, so they will never show up in your queue.`, go: 'leads', filter: 'nonext' });
+  const nophone = all.filter(l => OPEN.includes(l.status) && (!l.phone || l.phoneBad)).length;
+  if (nophone) out.push({ lv: '', t: `${nophone} open lead(s) have no usable phone number — find one (Google Maps page, website, JustDial) or drop them.`, go: 'leads', filter: 'nophone' });
+  const best = templateStats().filter(x => x.sent >= 10 && x.id !== 'proposal').sort((a, b) => b.rate - a.rate);
+  if (best.length >= 2 && best[0].rate > best[best.length - 1].rate) out.push({ lv: 'good', t: `Best-performing message so far: “${best[0].name}” (${best[0].rate}% reply rate over ${best[0].sent} sends) vs ${best[best.length - 1].rate}% for “${best[best.length - 1].name}”.` });
+  if (!S.portfolio) out.push({ lv: '', t: 'Add your portfolio link in Settings. The “Proof” follow-up message is silently skipped without it, and proof is what turns replies into meetings.', go: 'settings' });
+  const days = M.lastBackup ? daysBetween(M.lastBackup.slice(0, 10), today()) : 999;
+  if (all.length && days > 7 && !cloudOn()) out.push({ lv: 'warn', t: `Your data lives only in this browser and ${M.lastBackup ? 'was last backed up ' + days + ' days ago' : 'has never been backed up'}. Clearing site data would erase it.`, go: 'settings' });
+  return out;
+}
+
+/* ------------------------------------------------------------- analytics */
+function templateStats() {
+  const m = {};
+  for (const l of L()) for (const a of l.activities) {
+    if (a.type === 'Message Sent' && a.tpl) (m[a.tpl] ||= { sent: 0, replies: 0, positive: 0 }).sent++;
+    if (a.type === 'Reply' && a.tpl) { const s = (m[a.tpl] ||= { sent: 0, replies: 0, positive: 0 }); s.replies++; if (['interested', 'meeting', 'price'].includes(a.cls)) s.positive++; }
+  }
+  return Object.entries(m).map(([id, s]) => ({ id, name: (S.templates.find(t => t.id === id) || { name: id }).name, ...s, rate: pct(s.replies, s.sent) })).sort((a, b) => b.sent - a.sent);
+}
+function groupStats(keyFn) {
+  const m = {};
+  for (const l of L()) {
+    const k = keyFn(l) || 'Unknown', g = (m[k] ||= { k, leads: 0, contacted: 0, replied: 0, won: 0, rev: 0 });
+    g.leads++; if ((l.peak ?? 0) >= 2) g.contacted++; if ((l.peak ?? 0) >= 3) g.replied++;
+    if (l.status === 'Won') { g.won++; g.rev += Number(l.proposalValue || l.value || 0); }
+  }
+  return Object.values(m).sort((a, b) => b.leads - a.leads);
+}
+function funnel() {
+  const ls = L(), reached = r => ls.filter(l => (l.peak ?? 0) >= r).length;
+  return [['Leads', ls.length], ['Contacted', reached(2)], ['Replied', reached(3)], ['Meeting', reached(4)], ['Proposal', reached(5)], ['Won', reached(6)]];
+}
+
+/* ---------------------------------------------------------------- UI core */
+let page = 'today', sel = new Set(), leadFilter = {};
+const PAGES = [['today', '☀', 'Today'], ['pipeline', '▥', 'Pipeline'], ['leads', '▣', 'Leads'], ['discover', '⌖', 'Discover'], ['analytics', '◒', 'Insights'], ['settings', '⚙', 'Settings']];
+function go(p, f) { page = p; leadFilter = f || {}; sel.clear(); render(); scrollTo(0, 0); }
+function closeModal() { $('#modal').classList.remove('show'); }
+function modal(html) { $('#mbox').innerHTML = html; $('#modal').classList.add('show'); }
+function head(t, s, a = '') { return `<div class="top"><div><h1>${t}</h1><div class="sub">${s}</div></div><div class="actions">${a}</div></div>`; }
+function kpi(l, n, e = '') { return `<div class="card kpi"><div class="muted">${l}</div><div class="n">${n}</div><div class="muted">${e}</div></div>`; }
+function bar(label, n, max, right) { return `<div class="brow"><span>${esc(label)}</span><div class="bar"><i style="width:${max ? Math.min(100, n / max * 100) : 0}%"></i></div><b>${right ?? n}</b></div>`; }
+
+function render() {
+  const q = buildQueue(), badge = q.reply.length + q.deals.length + q.follow.length;
+  const nav = PAGES.map(([id, ic, t]) => `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')">${ic} ${t}${id === 'today' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('');
+  $('#nav').innerHTML = nav;
+  $('#mnav').innerHTML = PAGES.map(([id, ic, t]) => `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')"><span>${ic}</span>${t}${id === 'today' && badge ? `<i class="badge">${badge}</i>` : ''}</button>`).join('');
+  const pend = L().filter(l => l.pending);
+  $('#banner').innerHTML = pend.length ? `<div class="banner"><b>Did you actually send these?</b> Opening WhatsApp isn't the same as sending.${pend.map(l => `<div class="row"><div>${esc(l.name)} <span class="muted">· opened ${ago(l.pending.at)}</span></div><div class="racts"><button class="btn small good" onclick="A.confirm('${l.id}',1)">✓ Sent</button><button class="btn small" onclick="A.confirm('${l.id}',0)">✗ Not sent</button></div></div>`).join('')}</div>` : '';
+  $('#view').innerHTML = { today: viewToday, pipeline: viewPipeline, leads: viewLeads, discover: viewDiscover, analytics: viewAnalytics, settings: viewSettings }[page]();
+  if (page === 'leads') filterLeads();
+}
+
+/* ---------- Today */
+function qrow(l, label) {
+  const nt = nextTouch(l), cad = CADENCE_STAGES.includes(l.status);
+  const late = l.nextDate && l.nextDate < today();
+  let btns;
+  if (l.pending) btns = `<button class="btn good" onclick="A.confirm('${l.id}',1)">✓ Sent</button><button class="btn" onclick="A.confirm('${l.id}',0)">✗ Not sent</button>`;
+  else if (cad && nt.ch === 'call') btns = `<button class="btn primary" onclick="A.call('${l.id}')">📞 Call</button>${waOK(l) ? `<button class="btn wa" onclick="A.wa('${l.id}')">WhatsApp</button>` : ''}`;
+  else if (cad) btns = waOK(l) ? `<button class="btn wa" onclick="A.wa('${l.id}')">WhatsApp</button>${dialOK(l) ? `<button class="btn" onclick="A.call('${l.id}')">📞</button>` : ''}` : `<button class="btn primary" onclick="A.call('${l.id}')">📞 Call</button>`;
+  else btns = `<button class="btn wa" onclick="A.compose('${l.id}')">Message</button>${dialOK(l) ? `<button class="btn" onclick="A.call('${l.id}')">📞</button>` : ''}<button class="btn" onclick="A.next('${l.id}')">Next step</button>`;
+  if (!l.pending) btns += `<button class="btn" title="Log a reply" onclick="A.reply('${l.id}')">💬 Replied</button><button class="btn" title="Snooze 1 day" onclick="A.snooze('${l.id}',1)">⏭</button>`;
+  return `<div class="row ${l.pending ? 'pending' : ''}"><div class="rmain" onclick="A.open('${l.id}')"><b>${esc(l.name)}</b> ${scorePill(l)} <span class="pill">${esc(l.status)}</span>
+  <div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.reviews ? ` · ${l.rating}★ (${l.reviews})` : ''}${l.website ? '' : ' · no website'}${!waOK(l) && l.phone && !l.phoneBad ? ' · landline' : ''}</div>
+  <div>${esc(label || l.nextAction || '')} <span class="${late ? 'bad' : 'muted'}">· ${dueLabel(l.nextDate)}</span></div></div><div class="racts">${btns}</div></div>`;
+}
+function group(title, list, label, note = '', limit = 200) {
+  if (!list.length) return '';
+  return `<div class="group"><h2>${title} <span class="cnt">${list.length}</span></h2>${note ? `<div class="muted" style="margin:-6px 0 8px">${note}</div>` : ''}${list.slice(0, limit).map(l => qrow(l, typeof label === 'function' ? label(l) : label)).join('')}</div>`;
+}
+function viewToday() {
+  const q = buildQueue(), tgt = S.dailyNew, done = sentToday(), left = Math.max(0, tgt - done);
+  const tips = insights().map(i => `<div class="tip ${i.lv}"><span>${esc(i.t)}</span>${i.go ? `<button class="btn small" onclick="go('${i.go}',{f:'${i.filter || ''}'})">Open</button>` : ''}</div>`).join('');
+  if (!L().length) return head('Welcome', 'Three steps to your first outreach') + `<div class="card"><h2>1. Get leads in</h2><p class="muted">Pull local businesses from Google Places (needs the backend), paste a list, or import a CSV.</p><button class="btn primary" onclick="go('discover')">Go to Discover</button></div>
+   <div class="card"><h2>2. Make it yours</h2><p class="muted">Set your name, brand, portfolio link and package prices. Messages are generated from these.</p><button class="btn" onclick="go('settings')">Open Settings</button></div>
+   <div class="card"><h2>3. Work the queue daily</h2><p class="muted">This page tells you exactly who to message, call or reply to today, in priority order.</p></div>
+   <div class="card"><h2>Coming from V8 / V9 / V10?</h2><p class="muted">Discover → “Import old data” takes your old records across.</p></div>`;
+  return head('Today', `${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })} · ${touchesToday()} touches logged today`,
+    `<button class="btn primary" onclick="A.add()">+ Add business</button>`) + tips +
+    `<div class="card"><div class="actions" style="justify-content:space-between"><b>New first messages today: ${done} / ${tgt}</b><span class="muted">${left ? left + ' to go' : 'Target hit ✓'}</span></div><div class="prog" style="margin-top:8px"><i style="width:${Math.min(100, pct(done, tgt))}%"></i></div>
+    <div class="muted" style="margin-top:6px">Keep cold WhatsApp volume modest from one number (about 20–30 new chats/day). Bulk-style sending gets numbers reported and banned.</div></div>` +
+    group('💬 Reply to these first', q.reply, l => l.nextAction, 'They answered. Speed matters more than polish.') +
+    group('🤝 Deals to move', q.deals, l => l.nextAction) +
+    group('↻ Follow-ups due', q.follow, l => `${l.nextAction} (touch ${l.step + 1}/${S.cadence.length})`) +
+    group('🎯 New businesses to contact', q.fresh, l => `First message${l.reviews >= 20 ? ' · strong reviews' : ''}`, `Best fit first. Aim for ${left} more today.`, Math.max(left, 5)) +
+    group('⭐ Customers — ask for referrals', q.customers, l => l.nextAction) +
+    (!q.reply.length && !q.deals.length && !q.follow.length && !q.fresh.length ? '<div class="card empty">Queue clear. Import more businesses in Discover.</div>' : '');
+}
+
+/* ---------- Pipeline */
+function viewPipeline() {
+  const cols = ['New', 'Qualified', 'Contacted', 'Replied', 'Meeting', 'Proposal', 'Won'];
+  const ls = L(), open = ls.filter(l => OPEN.includes(l.status) && l.status !== 'Nurture');
+  const wv = open.reduce((a, l) => a + (Number(l.proposalValue || l.value) || 0) * PROB[l.status], 0);
+  return head('Pipeline', `Weighted open value ${money(wv)} · stage probabilities are rough guesses, tune them once you have 20+ deals`) +
+    `<div class="kanban">${cols.map(c => {
+      const items = ls.filter(l => l.status === c).sort((a, b) => score(b) - score(a));
+      const val = items.reduce((a, l) => a + Number(l.proposalValue || l.value || 0), 0);
+      return `<div class="col"><b>${c}</b> <span class="muted">· ${items.length}${val ? ' · ' + money(val) : ''}</span>${items.slice(0, 40).map(l => `<div class="mini" onclick="A.open('${l.id}')"><b>${esc(l.name)}</b> ${scorePill(l)}<div class="muted">${esc(l.nextAction || '—')} · ${dueLabel(l.nextDate)}</div></div>`).join('') || '<div class="muted" style="padding:10px 0">Empty</div>'}${items.length > 40 ? `<div class="muted">+${items.length - 40} more (see Leads)</div>` : ''}</div>`;
+    }).join('')}</div>`;
+}
+
+/* ---------- Leads */
+function viewLeads() {
+  const f = leadFilter || {}, industries = [...new Set(L().map(l => ruleFor(l).label))].sort(), sources = [...new Set(L().map(l => l.source))].sort();
+  return head('Leads', 'Every business, every outcome', `<button class="btn" onclick="A.exportCSV()">Export CSV</button><button class="btn primary" onclick="A.add()">+ Add</button>`) +
+    `<div class="toolbar"><input id="q" placeholder="Search name / phone / area / notes" oninput="filterLeads()">
+     <select id="fs" onchange="filterLeads()"><option value="">All stages</option>${STAGES.map(s => `<option ${f.stage === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+     <select id="fi" onchange="filterLeads()"><option value="">All industries</option>${industries.map(s => `<option>${esc(s)}</option>`).join('')}</select>
+     <select id="fsrc" onchange="filterLeads()"><option value="">All sources</option>${sources.map(s => `<option>${esc(s)}</option>`).join('')}</select>
+     <select id="ff" onchange="filterLeads()"><option value="">Any</option><option value="nowebsite" ${f.f === 'nowebsite' ? 'selected' : ''}>No website</option><option value="nophone" ${f.f === 'nophone' ? 'selected' : ''}>No usable phone</option><option value="nonext" ${f.f === 'nonext' ? 'selected' : ''}>No next step</option><option value="hot">Score 70+</option><option value="dnc">Do-not-contact</option></select></div>
+     <div class="actions" style="margin-bottom:10px" id="bulk"></div><div class="card"><div class="tw" id="leadres"></div></div>`;
+}
+function filterLeads() {
+  const q = ($('#q').value || '').toLowerCase(), s = $('#fs').value, ind = $('#fi').value, src = $('#fsrc').value, f = $('#ff').value;
+  const a = L().filter(l => (!q || [l.name, l.phone, l.area, l.industry, l.notes].join(' ').toLowerCase().includes(q)) && (!s || l.status === s) && (!ind || ruleFor(l).label === ind) && (!src || l.source === src) &&
+    (!f || (f === 'nowebsite' ? !l.website : f === 'nophone' ? (!l.phone || l.phoneBad) : f === 'nonext' ? noNextStep().includes(l) : f === 'hot' ? score(l) >= 70 : l.dnc))).sort((x, y) => score(y) - score(x));
+  const shown = a.slice(0, 300);
+  $('#leadres').innerHTML = `<table><thead><tr><th><input type="checkbox" onchange="A.selAll(this.checked)"></th><th>Business</th><th>Fit</th><th>Stage</th><th>Touches</th><th>Next</th><th>Value</th></tr></thead><tbody>${shown.map(l => {
+    const sent = l.activities.filter(x => x.type === 'Message Sent').length;
+    return `<tr><td><input type="checkbox" data-id="${l.id}" ${sel.has(l.id) ? 'checked' : ''} onchange="A.sel('${l.id}',this.checked)"></td><td><a href="#" style="color:var(--b);text-decoration:none" onclick="A.open('${l.id}');return false"><b>${esc(l.name)}</b></a><div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.dnc ? ' · <span class="bad">DNC</span>' : ''}</div></td><td>${scorePill(l)}</td><td><span class="pill">${esc(l.status)}</span></td><td>${sent}</td><td>${esc(l.nextAction || '—')}<div class="muted">${dueLabel(l.nextDate)}</div></td><td>${money(l.proposalValue || l.value)}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty">No matching leads.</td></tr>'}</tbody></table>${a.length > 300 ? `<div class="muted">Showing top 300 of ${a.length}. Narrow the filters.</div>` : ''}`;
+  $('#bulk').innerHTML = sel.size ? `<b>${sel.size} selected</b><button class="btn small" onclick="A.bulk('qualify')">Mark Qualified</button><button class="btn small" onclick="A.bulk('audit')">Audit websites</button><button class="btn small" onclick="A.bulk('dnc')">Do not contact</button><button class="btn small danger" onclick="A.bulk('delete')">Delete</button>` : `<span class="muted">${a.length} lead(s)</span>`;
+}
+
+/* ---------- Analytics */
+function viewAnalytics() {
+  const ls = L(), f = funnel(), won = ls.filter(l => l.status === 'Won'), lost = ls.filter(l => ['Lost', 'Not Interested'].includes(l.status));
+  const rev = won.reduce((a, l) => a + Number(l.proposalValue || l.value || 0), 0);
+  const open = ls.filter(l => OPEN.includes(l.status) && l.status !== 'Nurture');
+  const wv = open.reduce((a, l) => a + Number(l.proposalValue || l.value || 0) * PROB[l.status], 0);
+  const cycle = won.filter(l => l.wonAt).map(l => (new Date(l.wonAt) - new Date(l.created)) / 864e5);
+  const avg = cycle.length ? Math.round(cycle.reduce((a, b) => a + b, 0) / cycle.length) : null;
+  const tbl = (rows, k) => `<div class="tw"><table><thead><tr><th>${k}</th><th>Leads</th><th>Contacted</th><th>Replied</th><th>Reply %</th><th>Won</th><th>Revenue</th></tr></thead><tbody>${rows.map(g => `<tr><td>${esc(g.k)}</td><td>${g.leads}</td><td>${g.contacted}</td><td>${g.replied}</td><td>${pct(g.replied, g.contacted)}%</td><td>${g.won}</td><td>${money(g.rev)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No data yet</td></tr>'}</tbody></table></div>`;
+  const ts = templateStats();
+  const replySteps = {}; ls.forEach(l => l.activities.filter(a => a.type === 'Reply').forEach(a => { const k = a.step ? 'After touch ' + a.step : 'Inbound / no touch yet'; replySteps[k] = (replySteps[k] || 0) + 1; }));
+  const reasons = {}; lost.forEach(l => { const k = l.lostReason || 'Unspecified'; reasons[k] = (reasons[k] || 0) + 1; });
+  return head('Insights', 'Where leads stall, and which messages and segments actually work') +
+    `<div class="grid g6">${kpi('Leads', ls.length)}${kpi('Reply rate', pct(f[3][1], f[2][1]) + '%', `${f[3][1]} of ${f[2][1]} contacted`)}${kpi('Meetings', f[4][1])}${kpi('Won', won.length, avg !== null ? `avg ${avg}d to close` : '')}${kpi('Revenue', money(rev))}${kpi('Weighted pipeline', money(wv))}</div>
+    <div class="grid g2"><div class="card"><h3>Funnel (highest stage ever reached)</h3>${f.map((x, i) => bar(x[0], x[1], f[0][1], `${x[1]}${i ? ` · ${pct(x[1], f[i - 1][1])}%` : ''}`)).join('')}<p class="muted">Percent = share of the previous step. The biggest drop is where to spend effort.</p></div>
+    <div class="card"><h3>Which message gets replies</h3>${ts.length ? `<div class="tw"><table><thead><tr><th>Message</th><th>Sent</th><th>Replies</th><th>Rate</th><th>Positive</th></tr></thead><tbody>${ts.map(t => `<tr><td>${esc(t.name)}</td><td>${t.sent}</td><td>${t.replies}</td><td>${t.rate}%</td><td>${t.positive}</td></tr>`).join('')}</tbody></table></div><p class="muted">Under ~30 sends per message this is noise. Don't rewrite templates on 5 data points.</p>` : '<div class="empty">Log sent messages and replies to see this.</div>'}</div></div>
+    <div class="card"><h3>By industry</h3>${tbl(groupStats(l => ruleFor(l).label), 'Industry')}</div>
+    <div class="card"><h3>By source</h3>${tbl(groupStats(l => l.source), 'Source')}</div>
+    <div class="grid g2"><div class="card"><h3>Loss reasons</h3>${Object.entries(reasons).map(([k, n]) => bar(k, n, lost.length)).join('') || '<div class="empty">None yet.</div>'}</div>
+    <div class="card"><h3>Replies by touch number</h3>${Object.entries(replySteps).sort().map(([k, n]) => bar(k, n, Math.max(...Object.values(replySteps)))).join('') || '<div class="empty">None yet.</div>'}<p class="muted">If most replies come after touch 2+, your follow-ups are earning their keep. Don't skip them.</p></div></div>`;
+}
+
+/* ---------- Discover / import */
+let placesFound = [];
+const ALIAS = {
+  name: ['name', 'business', 'business name', 'company', 'title', 'shop'], phone: ['phone', 'mobile', 'contact number', 'whatsapp', 'phone number', 'international phone number', 'national phone number', 'mobile number', 'tel'],
+  industry: ['industry', 'category', 'type', 'segment'], area: ['area', 'city', 'location', 'locality', 'town'], address: ['address', 'formatted address'],
+  website: ['website', 'url', 'site', 'web', 'websiteuri'], rating: ['rating'], reviews: ['reviews', 'user ratings', 'review count', 'userratingcount', 'ratings'],
+  email: ['email', 'e-mail', 'mail'], notes: ['notes', 'message', 'interest', 'remarks', 'comments'], placeId: ['placeid', 'place id'], contact: ['contact', 'contact person']
+};
+function parseTable(text) {
+  text = text.replace(/^﻿/, '').trim(); if (!text) return [];
+  const delim = text.split('\n')[0].includes('\t') ? '\t' : ',';
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(x => x.trim())) rows.push(row); row = []; }
+    else cell += c;
+  }
+  row.push(cell); if (row.some(x => x.trim())) rows.push(row);
+  const heads = rows[0].map(h => h.trim().toLowerCase());
+  const hasCompany = heads.includes('company');
+  const canon = h => { if (hasCompany && h === 'name') return 'contact'; if (hasCompany && h === 'company') return 'name'; for (const k in ALIAS) if (ALIAS[k].includes(h)) return k; return null; };
+  const map = heads.map(canon);
+  const headed = map.includes('name') || map.includes('phone');
+  const cols = headed ? map : ['name', 'phone', 'industry', 'area'];
+  return rows.slice(headed ? 1 : 0).map(r => { const o = {}; r.forEach((v, i) => { if (cols[i] && v.trim() && !(cols[i] in o)) o[cols[i]] = v.trim(); }); return o; }).filter(o => o.name);
+}
+function dupKeys(l) {
+  const k = [], d = String(l.phone || '').replace(/\D/g, '');
+  if (d.length >= 10) k.push('t:' + d.slice(-10));
+  if (l.placeId) k.push('p:' + l.placeId);
+  k.push('n:' + String(l.name).toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + String(l.area || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  return k;
+}
+function prepareImport(rows, { source, inbound, area }) {
+  const seen = new Set(L().flatMap(dupKeys)), fresh = []; let dups = 0;
+  for (const r of rows) {
+    const base = { ...r, area: r.area || area || '', source: r.source || source || 'Import' };
+    if (r.contact) base.notes = `Contact: ${r.contact}${r.notes ? '\n' + r.notes : ''}`;
+    delete base.contact;
+    const l = newLead(base);
+    if (inbound) { l.status = 'Replied'; l.peak = 3; l.nextAction = 'Respond to enquiry now'; l.nextDate = today(); act(l, 'Inbound', { note: `Enquiry via ${l.source}${r.notes ? ': ' + r.notes.slice(0, 300) : ''}` }); }
+    else act(l, 'Added', { note: `Source: ${l.source}` });
+    const ks = dupKeys(l);
+    if (ks.some(k => seen.has(k))) { dups++; continue; }
+    ks.forEach(k => seen.add(k)); fresh.push(l);
+  }
+  return { fresh, dups };
+}
+function addLeads(list) { db.push(...list); save(); }
+
+function viewDiscover() {
+  const cfg = S.backend ? '' : `<div class="tip warn"><span>Google Places search needs the backend. Set its URL in Settings (see README). Paste / CSV import works without it.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`;
+  return head('Discover', 'Get businesses in. Duplicates are detected by phone, Place ID and name+area.') + cfg +
+    `<div class="card"><h2>Google Places search</h2><div class="form">
+     <div><label>Business type</label><input id="pl_type" list="pl_types" placeholder="e.g. leather manufacturer"><datalist id="pl_types">${['leather manufacturer', 'shoe factory', 'footwear', 'garments', 'sheet metal fabrication', 'hardware shop', 'restaurant', 'clinic', 'dental clinic', 'school', 'coaching centre', 'jewellery', 'furniture shop', 'packers and movers', 'travel agency'].map(x => `<option>${x}</option>`).join('')}</datalist></div>
+     <div><label>Area</label><input id="pl_area" list="pl_areas" value="${esc(S.areas[0] || '')}"><datalist id="pl_areas">${S.areas.map(x => `<option>${esc(x)}</option>`).join('')}</datalist></div>
+     <div><label>How many (max 60)</label><select id="pl_max"><option>20</option><option>40</option><option>60</option></select></div>
+     <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.search()">Search</button></div></div>
+     <p class="muted">Each search is a billed Google Places request. Existing leads are flagged so you don't re-import them.</p><div id="pl_res"></div></div>
+    <div class="card"><h2>Paste or upload a list</h2><p class="muted">Columns are matched by header (name, phone, industry, area, website, rating, reviews, email, notes). No header row? Use <code>name, phone, industry, area</code>. Your website-form Google Sheet exports work as-is.</p>
+     <textarea id="im_text" rows="6" placeholder="Name, Phone, Industry, Area"></textarea>
+     <div class="form" style="margin-top:8px"><div><label>Source label</label><input id="im_src" value="CSV import"></div><div><label>Default area</label><input id="im_area" value="${esc(S.areas[0] || '')}"></div>
+     <div><label>CSV file</label><input type="file" id="im_file" accept=".csv,.tsv,.txt" onchange="A.readFile(this)"></div>
+     <div style="display:flex;align-items:flex-end"><label style="display:flex;gap:8px;align-items:center;margin:0"><input type="checkbox" id="im_in" style="width:auto"> These are inbound enquiries (they contacted me)</label></div></div>
+     <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.previewImport()">Preview import</button></div></div>
+    <div class="card"><h2>Import old data (V8 / V9 / V10)</h2><p class="muted">In the old app's page open the browser console and run <code>copy(localStorage.arr_lead_engine_v8)</code>, then paste below. If the old app ran on this same address, your data was already migrated automatically.</p>
+     <textarea id="im_old" rows="3" placeholder="[{&quot;id&quot;:&quot;L…&quot;, …}]"></textarea><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.importLegacy()">Import old data</button></div></div>`;
+}
+
+/* ---------- Settings */
+function viewSettings() {
+  const tplOpts = sel => S.templates.map(t => `<option value="${esc(t.id)}" ${t.id === sel ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+  const c = S.cloud;
+  return head('Settings', 'Everything the messages and queue are built from', `<button class="btn primary" onclick="A.saveSettings()">Save settings</button>`) +
+    `<div class="card"><h2>You</h2><div class="form"><div><label>Your name (used in messages)</label><input id="s_me" value="${esc(S.me)}"></div><div><label>Business name</label><input id="s_brand" value="${esc(S.brand)}"></div>
+     <div class="full"><label>Portfolio link (used by the “Proof” message)</label><input id="s_port" value="${esc(S.portfolio)}" placeholder="https://…"></div>
+     <div><label>New first messages per day</label><input id="s_daily" type="number" min="1" max="100" value="${S.dailyNew}"></div><div><label>Days in Nurture before re-engaging</label><input id="s_nurt" type="number" min="7" value="${S.nurtureDays}"></div>
+     <div><label>Default deal value (₹)</label><input id="s_val" type="number" value="${S.defaultValue}"></div><div><label>Search areas (comma separated)</label><input id="s_areas" value="${esc(S.areas.join(', '))}"></div></div></div>
+    <div class="card"><h2>Follow-up cadence</h2><p class="muted">Each confirmed touch schedules the next one automatically. A reply stops the cadence. After the last step the lead rests in Nurture.</p>
+     ${S.cadence.map((c, i) => `<div class="form" style="grid-template-columns:70px 1fr 110px 2fr;margin-bottom:6px"><div><label>Step</label><input disabled value="${i + 1}"></div><div><label>Wait (days after previous)</label><input class="cd_w" type="number" min="0" value="${c.wait}" ${i === 0 ? 'disabled' : ''}></div><div><label>Channel</label><select class="cd_c"><option value="whatsapp" ${c.ch === 'whatsapp' ? 'selected' : ''}>WhatsApp</option><option value="call" ${c.ch === 'call' ? 'selected' : ''}>Call</option></select></div><div><label>Message / script</label><select class="cd_t">${tplOpts(c.tpl)}</select></div></div>`).join('')}
+     <div class="actions"><button class="btn small" onclick="A.cadAdd()">+ Add step</button>${S.cadence.length > 1 ? `<button class="btn small" onclick="A.cadDel()">Remove last step</button>` : ''}</div></div>
+    <div class="card"><h2>Message templates</h2><p class="muted">Variables: {name} {me} {brand} {area} {industry} {hook} {angle} {portfolio} {packages}. A line containing an empty variable is dropped automatically. Always keep an opt-out line in first-contact messages.</p>
+     ${S.templates.map((t, i) => `<div style="margin-bottom:12px"><div class="actions" style="justify-content:space-between"><input class="t_name" style="flex:1" value="${esc(t.name)}"><button class="btn small danger" onclick="A.tplDel(${i})">Delete</button></div><textarea class="t_body" rows="4" style="margin-top:6px">${esc(t.body)}</textarea></div>`).join('')}
+     <button class="btn small" onclick="A.tplAdd()">+ Add template</button></div>
+    <div class="card"><h2>Packages (used in proposals and the pricing reply)</h2><p class="muted">These prices are placeholders. Replace them with your real ones.</p>
+     ${S.packages.map((p, i) => `<div class="form" style="grid-template-columns:1fr 120px 2fr auto;margin-bottom:6px"><input class="p_name" value="${esc(p.name)}"><input class="p_price" type="number" value="${p.price}"><input class="p_desc" value="${esc(p.desc)}"><button class="btn small danger" onclick="A.pkgDel(${i})">✕</button></div>`).join('')}
+     <button class="btn small" onclick="A.pkgAdd()">+ Add package</button></div>
+    <div class="card"><h2>Industry rules (scoring weight + pitch angle)</h2><p class="muted">JSON list: label, match (regex on industry + name), weight, angle. First match wins.</p><textarea id="s_rules" rows="8" style="font-family:monospace;font-size:12px">${esc(JSON.stringify(S.rules, null, 1))}</textarea></div>
+    <div class="card"><h2>Backend helper (Places search, website audit)</h2><div class="form"><div><label>Backend URL</label><input id="s_be" value="${esc(S.backend)}" placeholder="http://localhost:8787"></div><div><label>API token (ARR_API_TOKEN)</label><input id="s_tok" type="password" value="${esc(S.token)}"></div></div><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.health()">Test connection</button></div></div>
+    <div class="card"><h2>Cloud sync (Supabase)</h2><p class="muted">Optional. Run <code>supabase/schema.sql</code>, create your user, then sign in. The publishable key is safe in the browser only because row-level security limits every row to you. Never paste a service-role key here.</p>
+     <div class="form"><div><label>Project URL</label><input id="c_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"></div><div><label>Publishable / anon key</label><input id="c_key" value="${esc(c.key)}"></div><div><label>Email</label><input id="c_email" value="${esc(c.email)}"></div><div><label>Password ${c.session ? '(signed in)' : ''}</label><input id="c_pw" type="password" autocomplete="current-password"></div></div>
+     <div class="actions" style="margin-top:8px"><button class="btn primary" onclick="A.cloudLogin()">Sign in</button><button class="btn" onclick="A.cloudSync()" ${c.session ? '' : 'disabled'}>Sync now</button><button class="btn" onclick="A.cloudLogout()" ${c.session ? '' : 'disabled'}>Sign out</button><span class="muted">${M.lastPush ? 'Last sync ' + ago(M.lastPush) : ''}</span></div></div>
+    <div class="card"><h2>Data</h2><div class="actions"><button class="btn primary" onclick="A.exportJSON()">Download backup (JSON)</button><label class="btn" style="margin:0">Restore backup<input type="file" accept=".json" style="display:none" onchange="A.importJSON(this)"></label><button class="btn" onclick="A.exportCSV()">Export leads CSV</button><button class="btn danger" onclick="A.wipe()">Delete all data</button></div><p class="muted">${db.filter(l => !l.deleted).length} leads · last backup ${M.lastBackup ? ago(M.lastBackup) : 'never'}</p></div>`;
+}
+
+/* ---------- Cloud sync (Supabase REST + GoTrue) */
+const cloudOn = () => !!(S.cloud.url && S.cloud.key && S.cloud.session);
+let syncTimer, syncing = false;
+function scheduleSync() { if (!cloudOn() || quiet) return; clearTimeout(syncTimer); syncTimer = setTimeout(() => A.cloudSync(true), 4000); }
+async function sbToken() {
+  const c = S.cloud, s = c.session;
+  if (Date.now() < s.exp) return s.access;
+  const r = await fetch(c.url + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: c.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: s.refresh }) });
+  const j = await r.json();
+  if (!r.ok) { c.session = null; persist(); throw new Error('Session expired — sign in again'); }
+  c.session = { access: j.access_token, refresh: j.refresh_token, exp: Date.now() + j.expires_in * 1000 - 60000 }; persist();
+  return c.session.access;
+}
+async function sb(path, opt = {}) {
+  const c = S.cloud, tok = await sbToken();
+  const r = await fetch(c.url + '/rest/v1/' + path, { ...opt, headers: { apikey: c.key, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', ...(opt.headers || {}) } });
+  if (!r.ok) throw new Error((await r.text()).slice(0, 200));
+  return r.status === 204 ? null : r.json();
+}
+function mergeLeads(remote) {
+  let n = 0;
+  for (const r of remote) {
+    if (!r || !r.id || !r.name) continue;
+    const i = db.findIndex(l => l.id === r.id);
+    if (i < 0) { db.push(newLead(r)); n++; }
+    else if ((r.updated || '') > (db[i].updated || '')) { db[i] = newLead(r); n++; }
+  }
+  return n;
+}
+async function cloudSync() {
+  if (syncing) return; syncing = true;
+  try {
+    const q = 'leads?select=id,data,updated_at&order=updated_at.asc&limit=1000' + (M.lastPull ? '&updated_at=gt.' + encodeURIComponent(M.lastPull) : '');
+    const rows = await sb(q);
+    quiet = true; const merged = mergeLeads(rows.map(x => x.data)); quiet = false;
+    if (rows.length) M.lastPull = rows[rows.length - 1].updated_at;
+    const out = db.filter(l => (l.updated || '') > (M.lastPush || ''));
+    for (let i = 0; i < out.length; i += 200) {
+      await sb('leads?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(out.slice(i, i + 200).map(l => ({ id: l.id, data: l, updated_at: l.updated }))) });
+    }
+    if (out.length) M.lastPush = out.reduce((m, l) => l.updated > m ? l.updated : m, M.lastPush || '');
+    else if (!M.lastPush) M.lastPush = nowIso();
+    persist();
+    return { pulled: merged, pushed: out.length };
+  } finally { syncing = false; quiet = false; }
+}
+
+/* ---------- Backend */
+async function api(path, body) {
+  if (!S.backend) throw new Error('Set the backend URL in Settings first');
+  const r = await fetch(S.backend.replace(/\/$/, '') + path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(S.token ? { 'X-ARR-Token': S.token } : {}) }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Backend error ' + r.status);
+  return j;
+}
+async function auditLead(l) {
+  const j = await api('/api/audit', { website: l.website });
+  l.audit = { ...j.audit, at: nowIso() };
+  act(l, 'Website Audit', { note: l.audit.ok ? (auditGaps(l).map(g => g.k).join(', ') || 'no gaps found') : 'Could not fetch: ' + l.audit.error });
+  commit(l);
+}
+
+/* ---------------------------------------------------------------- actions */
+const dl = (name, type, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+const val = id => ($('#' + id) || {}).value || '';
+const field = (id, label, v = '', extra = '') => `<div><label>${label}</label><input id="${id}" value="${esc(v)}" ${extra}></div>`;
+const A = {
+  confirm: confirmPending,
+  open(id) {
+    const l = byId(id); if (!l) return;
+    const sc = scoreLead(l), cad = CADENCE_STAGES.includes(l.status), nt = nextTouch(l), tplName = (S.templates.find(t => t.id === nt.tpl) || {}).name || '';
+    const sent = l.activities.filter(a => a.type === 'Message Sent').length, replies = l.activities.filter(a => a.type === 'Reply').length;
+    modal(`<div class="top"><div><h2 style="margin:0">${esc(l.name)}</h2><div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''} · ${esc(l.source)}${l.rating ? ` · ${l.rating}★ (${l.reviews})` : ''}</div></div><div><span class="sc ${scoreCls(sc.score)}" style="font-size:18px;padding:4px 10px">${sc.score}</span> <button class="btn small" onclick="closeModal()">✕</button></div></div>
+     <div class="grid g4" style="margin-bottom:12px"><div class="card kpi"><div class="muted">Stage</div><select onchange="A.stage('${id}',this.value)">${STAGES.map(s => `<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div class="card kpi"><div class="muted">Touches / replies</div><div class="n">${sent} / ${replies}</div></div>
+      <div class="card kpi"><div class="muted">Next step</div><b>${esc(l.nextAction || '—')}</b><div class="${l.nextDate && l.nextDate < today() ? 'bad' : 'muted'}">${dueLabel(l.nextDate)}</div></div>
+      <div class="card kpi"><div class="muted">Deal value</div><div class="n">${money(l.proposalValue || l.value)}</div></div></div>
+     ${l.dnc ? '<div class="tip bad"><span>Marked do-not-contact. No messages will be queued.</span></div>' : ''}${l.phoneBad ? '<div class="tip warn"><span>Phone number marked wrong. Fix the number below to re-enable contact.</span></div>' : ''}
+     <div class="actions" style="margin-bottom:12px">
+      ${cad && waOK(l) && nt.ch === 'whatsapp' ? `<button class="btn wa" onclick="A.wa('${id}')">WhatsApp: ${esc(tplName)}</button>` : ''}
+      ${waOK(l) ? `<button class="btn" onclick="A.compose('${id}')">Message…</button>` : ''}${dialOK(l) ? `<button class="btn" onclick="A.call('${id}')">📞 Call</button>` : ''}
+      <button class="btn" onclick="A.reply('${id}')">💬 Log reply</button><button class="btn" onclick="A.proposal('${id}')">📄 Proposal</button><button class="btn good" onclick="A.won('${id}')">🏆 Won</button><button class="btn" onclick="A.lost('${id}')">Lost</button><button class="btn" onclick="A.next('${id}')">Set next step</button>
+      ${cad ? `<button class="btn" onclick="A.skip('${id}')">Skip step</button>` : ''}${l.website ? `<button class="btn" onclick="A.audit('${id}')">Audit website</button>` : ''}</div>
+     <div class="grid g2"><div class="card"><h3>Details</h3><div class="form">${field('e_name', 'Business', l.name)}${field('e_ind', 'Industry', l.industry)}${field('e_area', 'Area', l.area)}${field('e_phone', 'Phone', l.phone)}${field('e_email', 'Email', l.email)}${field('e_web', 'Website', l.website)}${field('e_val', 'Estimated value (₹)', l.value, 'type="number"')}<div style="display:flex;align-items:flex-end;gap:8px">${safeUrl(l.mapsUrl) ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.mapsUrl)}">Maps</a>` : ''}${safeUrl(l.website) ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.website)}">Site</a>` : ''}</div>
+      <div class="full"><label>Notes</label><textarea id="e_notes" rows="3">${esc(l.notes)}</textarea></div></div><div class="actions" style="margin-top:8px"><button class="btn primary" onclick="A.saveLead('${id}')">Save</button><button class="btn danger" onclick="A.del('${id}')">Delete</button></div>
+      <h3 style="margin-top:14px">Why this score</h3>${sc.parts.map(p => `<div class="${p[0] < 0 ? 'bad' : ''}">${p[0] > 0 ? '+' : ''}${p[0]} · ${esc(p[1])}</div>`).join('')}
+      ${l.audit && l.audit.ok ? `<h3 style="margin-top:14px">Website audit</h3><div class="muted">${esc(l.audit.title || '')}</div>${auditGaps(l).map(g => `<div class="warn">✗ ${esc(g.hook)}</div>`).join('') || '<div class="ok">No major gaps found</div>'}` : ''}</div>
+      <div class="card"><h3>Timeline</h3><div class="tl">${l.activities.slice().reverse().map(a => `<div class="ev"><b>${esc(a.type)}${a.to ? ` → ${esc(a.to)}` : ''}${a.cls ? ` · ${esc(REPLY_CLASSES[a.cls] || a.cls)}` : ''}</b>${a.channel ? ` <span class="muted">${esc(a.channel)}</span>` : ''}<div>${esc(a.note || a.text || '')}</div><div class="t">${new Date(a.at).toLocaleString()}</div></div>`).join('')}</div></div></div>`);
+  },
+  add() {
+    modal(`<h2>Add business</h2><div class="form">${field('n_name', 'Business name')}${field('n_ind', 'Industry / type')}${field('n_phone', 'Phone / WhatsApp')}${field('n_area', 'Area', S.areas[0] || '')}${field('n_web', 'Website (leave empty if none)')}${field('n_email', 'Email')}</div>
+      <div class="actions" style="margin-top:12px"><button class="btn primary" onclick="A.saveNew()">Add</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  saveNew() {
+    const name = val('n_name').trim(); if (!name) return toast('Name is required');
+    const { fresh, dups } = prepareImport([{ name, industry: val('n_ind'), phone: val('n_phone'), area: val('n_area'), website: val('n_web'), email: val('n_email') }], { source: 'Manual' });
+    if (!fresh.length) return toast('Already in your list (same phone or name)');
+    addLeads(fresh); closeModal(); toast('Added'); render();
+  },
+  saveLead(id) {
+    const l = byId(id); if (!l) return;
+    l.name = val('e_name').trim() || l.name; l.industry = val('e_ind'); l.area = val('e_area'); l.email = val('e_email'); l.notes = val('e_notes');
+    const ph = normPhone(val('e_phone')); if (ph !== l.phone) { l.phone = ph; l.phoneBad = false; }
+    const w = fixUrl(val('e_web')); if (w !== l.website) { l.website = w; l.audit = null; }
+    l.value = Number(val('e_val')) || l.value; commit(l); toast('Saved'); A.open(id); render();
+  },
+  del(id) { const l = byId(id); if (l && confirm(`Delete ${l.name}? This can't be undone.`)) { l.deleted = true; commit(l); closeModal(); render(); } },
+  stage(id, to) {
+    const l = byId(id); if (!l || to === l.status) return;
+    if (to === 'Won') return A.won(id);
+    if (to === 'Lost' || to === 'Not Interested') return A.lost(id, to);
+    setStage(l, to, 'Changed manually');
+    if (OPEN.includes(to) && !l.nextDate) { l.nextAction = 'Follow up'; l.nextDate = addDays(1); }
+    if (to === 'Nurture') l.step = 0;
+    commit(l); toast('Stage updated'); A.open(id); render();
+  },
+  wa(id) { const l = byId(id); if (l) openWA(l, nextTouch(l).tpl, undefined, { cadence: true }); },
+  compose(id, tpl) {
+    const l = byId(id); if (!l) return;
+    const def = tpl || (CADENCE_STAGES.includes(l.status) ? nextTouch(l).tpl : l.status === 'Proposal' ? 'chase' : l.activities.some(a => a.cls === 'price') ? 'price' : 'meeting');
+    modal(`<h2>Message ${esc(l.name)}</h2><div class="form"><div class="full"><label>Template</label><select id="c_tpl" onchange="A.composeTpl('${id}')">${S.templates.map(t => `<option value="${esc(t.id)}" ${t.id === def ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select></div>
+      <div class="full"><label>Message (edit freely)</label><textarea id="c_txt" rows="9">${esc(renderTpl(def, l))}</textarea></div></div>
+      <div class="actions" style="margin-top:10px"><button class="btn wa" onclick="A.composeSend('${id}')">Open WhatsApp</button><button class="btn" onclick="A.copy()">Copy</button><button class="btn" onclick="A.open('${id}')">Back</button></div>
+      <p class="muted">${CADENCE_STAGES.includes(l.status) ? 'Confirming a send advances the follow-up cadence.' : 'Confirming a send schedules a follow-up in 2–3 days.'}</p>`);
+  },
+  composeTpl(id) { const l = byId(id); $('#c_txt').value = renderTpl($('#c_tpl').value, l); },
+  composeSend(id) { const l = byId(id); const t = $('#c_tpl').value, txt = $('#c_txt').value; closeModal(); openWA(l, t, txt, { cadence: t === nextTouch(l).tpl }); },
+  copy() { navigator.clipboard.writeText($('#c_txt').value).then(() => toast('Copied'), () => toast('Copy failed — select the text manually')); },
+  call(id) {
+    const l = byId(id); if (!l) return; const nt = nextTouch(l);
+    const script = CADENCE_STAGES.includes(l.status) && nt.ch === 'call' ? renderTpl(nt.tpl, l) : `Hook: ${hookFor(l)}`;
+    modal(`<h2>Call ${esc(l.name)}</h2><a class="btn primary" style="display:inline-block;font-size:16px;text-decoration:none" href="tel:${esc(l.phone)}">📞 Dial ${esc(l.phone)}</a>
+      <h3 style="margin-top:14px">Script</h3><pre class="msg">${esc(script)}</pre><h3 style="margin-top:14px">How did it go?</h3>
+      <div class="chips">${[['noanswer', 'No answer'], ['busy', 'Busy / call back'], ['interested', 'Spoke — interested'], ['meeting', 'Spoke — wants meeting'], ['price', 'Spoke — asked price'], ['later', 'Spoke — not now'], ['no', 'Not interested'], ['wrong', 'Wrong number']].map(([k, t]) => `<button class="btn" onclick="A.callDone('${id}','${k}')">${t}</button>`).join('')}</div>
+      <div class="actions" style="margin-top:12px"><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  callDone(id, k) {
+    const l = byId(id); if (!l) return; const nt = nextTouch(l), cad = CADENCE_STAGES.includes(l.status);
+    if (k === 'noanswer' || k === 'busy') {
+      act(l, 'Call', { channel: 'Call', note: k === 'busy' ? 'Busy / call back' : 'No answer' });
+      l.callTries = (l.callTries || 0) + 1;
+      if (cad && l.status !== 'Contacted' && l.status !== 'Nurture') setStage(l, 'Contacted');
+      if (cad && nt.ch === 'call') { if (l.callTries >= 2) advanceCadence(l); else { l.nextAction = 'Call again'; l.nextDate = addDays(1); } }
+      else if (!cad) { l.nextDate = addDays(1); }
+    } else {
+      act(l, 'Call', { channel: 'Call', note: 'Spoke: ' + (REPLY_CLASSES[k] || k) });
+      applyReply(l, k, { channel: 'Call', date: k === 'later' ? addDays(14) : '' });
+    }
+    commit(l); closeModal(); toast('Call logged'); render();
+  },
+  reply(id) {
+    const l = byId(id); if (!l) return;
+    modal(`<h2>They replied — ${esc(l.name)}</h2><label>What kind of reply?</label><div class="chips" id="rc">${Object.entries(REPLY_CLASSES).map(([k, t]) => `<button class="btn" data-k="${k}" onclick="A.pick('${k}')">${t}</button>`).join('')}</div>
+      <div class="form" style="margin-top:12px"><div class="full"><label>What did they say? (optional)</label><textarea id="r_txt" rows="3"></textarea></div><div><label>Follow up / meeting date</label><input id="r_date" type="date" value="${today()}"></div><div><label>Channel</label><select id="r_ch"><option>WhatsApp</option><option>Call</option><option>Email</option><option>In person</option></select></div></div>
+      <div class="actions" style="margin-top:12px"><button class="btn primary" onclick="A.saveReply('${id}')">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+    A.pick('interested');
+  },
+  pick(k) { window._rc = k; document.querySelectorAll('#rc .btn').forEach(b => b.classList.toggle('sel', b.dataset.k === k)); $('#r_date').value = k === 'later' ? addDays(14) : today(); },
+  saveReply(id) {
+    const l = byId(id); if (!l) return;
+    applyReply(l, window._rc, { text: val('r_txt'), channel: val('r_ch'), date: val('r_date') });
+    commit(l); closeModal(); toast('Reply logged'); render();
+  },
+  next(id) {
+    const l = byId(id); if (!l) return;
+    modal(`<h2>Next step — ${esc(l.name)}</h2><div class="form">${field('x_act', 'What happens next?', l.nextAction && !/^(Send first message)$/.test(l.nextAction) ? l.nextAction : 'Follow up')}<div><label>When</label><input id="x_date" type="date" value="${l.nextDate || addDays(2)}"></div></div>
+      <div class="chips" style="margin-top:10px">${[[1, 'Tomorrow'], [3, '+3 days'], [7, '+1 week'], [14, '+2 weeks'], [30, '+1 month']].map(([n, t]) => `<button class="btn small" onclick="$('#x_date').value='${addDays(n)}'">${t}</button>`).join('')}</div>
+      <div class="actions" style="margin-top:12px"><button class="btn primary" onclick="A.saveNext('${id}')">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  saveNext(id) { const l = byId(id); if (!val('x_date')) return toast('Pick a date'); l.nextAction = val('x_act') || 'Follow up'; l.nextDate = val('x_date'); act(l, 'Next Step', { note: `${l.nextAction} on ${l.nextDate}` }); commit(l); closeModal(); render(); },
+  snooze(id, n) { const l = byId(id); if (!l) return; l.nextDate = addDays(n); act(l, 'Snoozed', { note: `Until ${l.nextDate}` }); commit(l); render(); },
+  skip(id) { const l = byId(id); if (!l) return; act(l, 'Step Skipped', { note: `Touch ${l.step + 1} skipped` }); if (l.status !== 'Contacted' && l.status !== 'Nurture') setStage(l, 'Contacted'); advanceCadence(l); commit(l); toast('Step skipped'); A.open(id); render(); },
+  proposal(id) {
+    const l = byId(id); if (!l) return;
+    modal(`<h2>Proposal — ${esc(l.name)}</h2><div>${S.packages.map((p, i) => `<label style="display:flex;gap:8px;align-items:flex-start;color:var(--text);font-size:14px;margin:6px 0"><input type="checkbox" class="pk" data-i="${i}" style="width:auto;margin-top:3px" onchange="A.proposalCalc('${id}')"><span><b>${esc(p.name)}</b> ${money(p.price)}<div class="muted">${esc(p.desc)}</div></span></label>`).join('')}</div>
+      <div class="form"><div><label>Total price (₹)</label><input id="pr_total" type="number" oninput="A.proposalCalc('${id}',true)"></div><div class="full"><label>Message</label><textarea id="pr_txt" rows="9"></textarea></div></div>
+      <div class="actions" style="margin-top:10px"><button class="btn wa" onclick="A.proposalSend('${id}',true)">Open WhatsApp</button><button class="btn" onclick="A.proposalSend('${id}',false)">Mark as sent (sent another way)</button><button class="btn" onclick="A.copyProp()">Copy</button></div>`);
+    document.querySelector('.pk').checked = true; A.proposalCalc(id);
+  },
+  proposalCalc(id, keepTotal) {
+    const l = byId(id), picked = [...document.querySelectorAll('.pk')].filter(x => x.checked).map(x => S.packages[+x.dataset.i]);
+    const total = keepTotal ? Number($('#pr_total').value) : picked.reduce((a, p) => a + p.price, 0);
+    if (!keepTotal) $('#pr_total').value = total;
+    $('#pr_txt').value = `Hello ${l.name} team, as discussed, here is the proposal for ${l.name}:\n\n${picked.map(p => `• ${p.name} — ${money(p.price)}: ${p.desc}`).join('\n')}\n\nTotal: ${money(total)}\n\nReply YES to go ahead and I'll send the next steps. Happy to adjust the scope to your budget.\n— ${S.me}, ${S.brand}`;
+  },
+  copyProp() { navigator.clipboard.writeText($('#pr_txt').value).then(() => toast('Copied'), () => toast('Copy failed')); },
+  proposalSend(id, viaWA) {
+    const l = byId(id), value = Number($('#pr_total').value) || 0, text = $('#pr_txt').value; if (!value) return toast('Enter a total');
+    closeModal();
+    if (viaWA) return openWA(l, 'proposal', text, { kind: 'proposal', value });
+    l.pending = { kind: 'proposal', value, text, tpl: 'proposal', at: nowIso() }; confirmPending(id, 1);
+  },
+  won(id) {
+    const l = byId(id); if (!l) return;
+    modal(`<h2>🏆 Won — ${esc(l.name)}</h2><div class="form">${field('w_val', 'Final sale value (₹)', l.proposalValue || l.value, 'type="number"')}<div class="full"><label>Note (what they bought, payment terms)</label><textarea id="w_note" rows="3"></textarea></div></div><p class="muted">A referral + Google-review request is scheduled 14 days out. Existing customers are the cheapest leads you'll ever get.</p>
+      <div class="actions"><button class="btn good" onclick="A.saveWon('${id}')">Mark won</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  saveWon(id) { const l = byId(id); closeWon(l, val('w_val'), val('w_note')); commit(l); closeModal(); toast('Won! 🎉'); render(); },
+  lost(id, stage = 'Lost') {
+    const l = byId(id); if (!l) return;
+    modal(`<h2>${stage === 'Lost' ? 'Lost' : 'Not interested'} — ${esc(l.name)}</h2><div class="form"><div class="full"><label>Reason (feeds your Insights)</label><select id="l_reason">${LOST_REASONS.map(r => `<option>${r}</option>`).join('')}</select></div><div class="full"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="l_dnc" style="width:auto" ${stage === 'Not Interested' ? 'checked' : ''}> Never contact again</label></div></div>
+      <div class="actions" style="margin-top:10px"><button class="btn danger" onclick="A.saveLost('${id}','${stage}')">Confirm</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  saveLost(id, stage) { const l = byId(id); closeLost(l, stage, val('l_reason'), $('#l_dnc').checked); commit(l); closeModal(); render(); },
+  /* selection */
+  sel(id, on) { on ? sel.add(id) : sel.delete(id); filterLeads(); },
+  selAll(on) { document.querySelectorAll('#leadres input[data-id]').forEach(b => { on ? sel.add(b.dataset.id) : sel.delete(b.dataset.id); }); filterLeads(); },
+  async bulk(kind) {
+    const ls = [...sel].map(byId).filter(Boolean);
+    if (kind === 'delete') { if (!confirm(`Delete ${ls.length} lead(s)?`)) return; ls.forEach(l => { l.deleted = true; l.updated = nowIso(); }); }
+    if (kind === 'qualify') ls.forEach(l => { if (l.status === 'New') { setStage(l, 'Qualified'); l.updated = nowIso(); } });
+    if (kind === 'dnc') ls.forEach(l => { l.dnc = true; l.nextDate = ''; l.updated = nowIso(); });
+    if (kind === 'audit') {
+      const todo = ls.filter(l => l.website && !l.audit); let n = 0, fail = 0;
+      const worker = async () => { while (todo.length) { const l = todo.shift(); try { await auditLead(l); n++; } catch (e) { fail++; if (fail === 1) toast('Audit failed: ' + e.message); } } };
+      toast(`Auditing ${todo.length} website(s)…`); await Promise.all([worker(), worker(), worker()]); toast(`Audited ${n}${fail ? `, ${fail} failed` : ''}`);
+    }
+    save(); sel.clear(); render();
+  },
+  async audit(id) { const l = byId(id); try { toast('Auditing…'); await auditLead(l); A.open(id); render(); } catch (e) { toast(e.message); } },
+  /* discovery */
+  async search() {
+    const type = val('pl_type').trim(), area = val('pl_area').trim(); if (!type) return toast('Enter a business type');
+    $('#pl_res').innerHTML = '<div class="empty">Searching…</div>';
+    try {
+      const j = await api('/api/discover', { type, area, maxResults: +val('pl_max') });
+      const seen = new Set(L().flatMap(dupKeys));
+      placesFound = j.leads.map(p => ({ ...p, area: area.split(',')[0].trim(), address: p.area, dup: dupKeys(newLead({ ...p, area: area.split(',')[0].trim() })).some(k => seen.has(k)) }));
+      $('#pl_res').innerHTML = `<div class="tw"><table><thead><tr><th></th><th>Business</th><th>Phone</th><th>Website</th><th>Reviews</th></tr></thead><tbody>${placesFound.map((p, i) => `<tr class="${p.dup ? 'muted' : ''}"><td><input type="checkbox" class="pf" data-i="${i}" ${p.dup ? 'disabled' : 'checked'}></td><td><b>${esc(p.name)}</b><div class="muted">${esc(p.industry)}${p.dup ? ' · already in CRM' : ''}</div></td><td>${esc(p.phone || '—')}</td><td>${p.website ? '✓' : '<b class="ok">none</b>'}</td><td>${p.reviews ? `${p.rating}★ (${p.reviews})` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No results</td></tr>'}</tbody></table></div><div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button><span class="muted">Businesses without a website rank highest.</span></div>`;
+    } catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
+  },
+  addFound() {
+    const rows = [...document.querySelectorAll('.pf')].filter(x => x.checked).map(x => placesFound[+x.dataset.i]);
+    const { fresh, dups } = prepareImport(rows, { source: 'Google Places' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`); render();
+  },
+  readFile(inp) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#im_text').value = r.result; $('#im_src').value = f.name; }; r.readAsText(f); },
+  previewImport() {
+    const rows = parseTable(val('im_text')); if (!rows.length) return toast('Nothing to import — check the header row');
+    const opts = { source: val('im_src') || 'Import', area: val('im_area'), inbound: $('#im_in').checked };
+    const { fresh, dups } = prepareImport(rows, opts); window._imp = fresh;
+    modal(`<h2>Import preview</h2><div class="grid g3"><div class="card kpi"><div class="muted">New</div><div class="n ok">${fresh.length}</div></div><div class="card kpi"><div class="muted">Duplicates skipped</div><div class="n">${dups}</div></div><div class="card kpi"><div class="muted">No phone</div><div class="n ${fresh.some(l => !l.phone) ? 'warn' : ''}">${fresh.filter(l => !l.phone).length}</div></div></div>
+      <div class="tw"><table><thead><tr><th>Business</th><th>Phone</th><th>Industry</th><th>Fit</th></tr></thead><tbody>${fresh.slice(0, 25).map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.phone || '—')}</td><td>${esc(l.industry)}</td><td>${scorePill(l)}</td></tr>`).join('')}</tbody></table></div>${fresh.length > 25 ? `<div class="muted">…and ${fresh.length - 25} more</div>` : ''}
+      <div class="actions" style="margin-top:12px"><button class="btn primary" ${fresh.length ? '' : 'disabled'} onclick="A.commitImport()">Import ${fresh.length}</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+  },
+  commitImport() { addLeads(window._imp || []); toast(`Imported ${(window._imp || []).length}`); window._imp = null; closeModal(); go('today'); },
+  importLegacy() {
+    try {
+      const arr = JSON.parse(val('im_old')); if (!Array.isArray(arr)) throw new Error('Expected a JSON array');
+      const seen = new Set(L().flatMap(dupKeys)), fresh = migrateLegacy(arr).filter(l => !dupKeys(l).some(k => seen.has(k)));
+      addLeads(fresh); toast(`Imported ${fresh.length} lead(s)`); go('today');
+    } catch (e) { toast('Could not read that: ' + e.message); }
+  },
+  /* settings */
+  saveSettings(quietly) {
+    if (page !== 'settings') return true;
+    let rules;
+    try { rules = JSON.parse(val('s_rules')); if (!Array.isArray(rules)) throw 0; rules.forEach(r => new RegExp(r.match)); } catch (e) { toast('Industry rules must be valid JSON with valid regex'); return false; }
+    S.me = val('s_me').trim() || 'Amin'; S.brand = val('s_brand').trim(); S.portfolio = safeUrl(val('s_port').trim()) ? val('s_port').trim() : (val('s_port').trim() ? 'https://' + val('s_port').trim() : '');
+    S.dailyNew = Math.max(1, +val('s_daily') || 20); S.nurtureDays = Math.max(7, +val('s_nurt') || 60); S.defaultValue = +val('s_val') || 25000;
+    S.areas = val('s_areas').split(',').map(x => x.trim()).filter(Boolean);
+    S.rules = rules; S.backend = val('s_be').trim().replace(/\/$/, ''); S.token = val('s_tok').trim();
+    S.cloud.url = val('c_url').trim().replace(/\/$/, ''); S.cloud.key = val('c_key').trim(); S.cloud.email = val('c_email').trim();
+    const w = [...document.querySelectorAll('.cd_w')], c = [...document.querySelectorAll('.cd_c')], t = [...document.querySelectorAll('.cd_t')];
+    S.cadence = S.cadence.map((_, i) => ({ wait: i === 0 ? 0 : Math.max(0, +w[i].value || 0), ch: c[i].value, tpl: t[i].value }));
+    const tn = [...document.querySelectorAll('.t_name')], tb = [...document.querySelectorAll('.t_body')];
+    S.templates = S.templates.map((x, i) => ({ ...x, name: tn[i].value, body: tb[i].value }));
+    const pn = [...document.querySelectorAll('.p_name')], pp = [...document.querySelectorAll('.p_price')], pd = [...document.querySelectorAll('.p_desc')];
+    S.packages = S.packages.map((x, i) => ({ ...x, name: pn[i].value, price: +pp[i].value || 0, desc: pd[i].value }));
+    save(); if (!quietly) { toast('Settings saved'); render(); } return true;
+  },
+  cadAdd() { if (!A.saveSettings(true)) return; S.cadence.push({ wait: 3, ch: 'whatsapp', tpl: S.templates[0].id }); save(); render(); },
+  cadDel() { if (!A.saveSettings(true)) return; S.cadence.pop(); if (!S.cadence.length) S.cadence = structuredClone(DEFAULT_SETTINGS.cadence).slice(0, 1); L().forEach(l => { if (l.step >= S.cadence.length) l.step = 0; }); save(); render(); },
+  tplAdd() { if (!A.saveSettings(true)) return; S.templates.push({ id: 't' + Date.now().toString(36), name: 'New template', body: 'Hello {name} team, ' }); save(); render(); },
+  tplDel(i) {
+    if (!A.saveSettings(true)) return; const t = S.templates[i];
+    if (S.cadence.some(c => c.tpl === t.id) || ['price', 'meeting', 'chase', 'reengage'].includes(t.id)) return toast('That template is used by the cadence or by a built-in action');
+    S.templates.splice(i, 1); save(); render();
+  },
+  pkgAdd() { if (!A.saveSettings(true)) return; S.packages.push({ id: 'p' + Date.now().toString(36), name: 'New package', price: 0, desc: '' }); save(); render(); },
+  pkgDel(i) { if (!A.saveSettings(true)) return; if (S.packages.length < 2) return toast('Keep at least one package'); S.packages.splice(i, 1); save(); render(); },
+  async health() { if (!A.saveSettings(true)) return; try { const r = await fetch(S.backend + '/health'); const j = await r.json(); toast(`Backend online · Places ${j.placesConfigured ? 'configured' : 'NOT configured'}${j.authRequired ? ' · token required' : ''}`); } catch (e) { toast('Backend unreachable'); } },
+  async cloudLogin() {
+    if (!A.saveSettings(true)) return; const c = S.cloud;
+    try {
+      const r = await fetch(c.url + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: c.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: c.email, password: val('c_pw') }) });
+      const j = await r.json(); if (!r.ok) throw new Error(j.error_description || j.msg || 'Login failed');
+      c.session = { access: j.access_token, refresh: j.refresh_token, exp: Date.now() + j.expires_in * 1000 - 60000 }; M.lastPull = ''; M.lastPush = ''; persist();
+      const res = await cloudSync(); toast(`Signed in · pulled ${res.pulled}, pushed ${res.pushed}`); render();
+    } catch (e) { toast(e.message); }
+  },
+  async cloudSync(silent) { try { const r = await cloudSync(); if (!silent) toast(`Synced · pulled ${r.pulled}, pushed ${r.pushed}`); if (!silent || page !== 'settings') render(); } catch (e) { if (!silent) toast('Sync failed: ' + e.message); else console.warn('sync', e); } },
+  cloudLogout() { S.cloud.session = null; persist(); render(); },
+  /* data */
+  exportJSON() {
+    const s = structuredClone(S); s.cloud.session = null; s.token = '';
+    dl(`arr-lead-engine-backup-${today()}.json`, 'application/json', JSON.stringify({ v: 11, leads: db, settings: s }, null, 1)); M.lastBackup = nowIso(); persist(); toast('Backup downloaded'); render();
+  },
+  importJSON(inp) {
+    const f = inp.files[0]; if (!f) return; const r = new FileReader();
+    r.onload = () => {
+      try {
+        const j = JSON.parse(r.result); if (j.v !== 11 || !Array.isArray(j.leads)) throw new Error('Not a V11 backup');
+        const n = mergeLeads(j.leads);
+        if (j.settings && confirm('Also restore templates, packages and settings from the backup? (Backend token and cloud login are never restored.)')) { const keep = { token: S.token, cloud: S.cloud }; S = mergeSettings({ ...j.settings, ...keep }); }
+        save(); toast(`Restored ${n} lead(s)`); render();
+      } catch (e) { toast('Restore failed: ' + e.message); }
+    }; r.readAsText(f);
+  },
+  exportCSV() {
+    const cols = ['name', 'industry', 'area', 'phone', 'email', 'website', 'status', 'source', 'rating', 'reviews', 'value', 'proposalValue', 'nextAction', 'nextDate', 'lostReason', 'notes', 'created'];
+    const cell = v => { v = String(v ?? ''); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+    const rows = [['score', ...cols].join(','), ...L().map(l => [score(l), ...cols.map(c => l[c])].map(cell).join(','))];
+    dl(`arr-leads-${today()}.csv`, 'text/csv', '﻿' + rows.join('\n'));
+  },
+  wipe() { if (confirm('Delete ALL leads and settings from this browser? Cloud copies (if any) stay.') && confirm('Really delete everything?')) { localStorage.removeItem(KEY); location.reload(); } }
+};
+
+/* ------------------------------------------------------------------ boot */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('#modal').classList.contains('show') && page !== 'settings') render(); });
+load(); render();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
+if (cloudOn()) A.cloudSync(true);
+</script>
+</body>
+</html>
