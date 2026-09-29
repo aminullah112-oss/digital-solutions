@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Amin Digital Solutions — premium websites, digital systems, automation, AI workflows and conversion-focused digital experiences for ambitious businesses.">
+<title>Amin | Digital Solutions Consultant</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{--bg:#f4f1eb;--panel:#ffffff;--panel2:#ece8df;--text:#11130f;--muted:#62645f;--line:rgba(17,19,15,.12);--accent:#b8ff3d;--accent2:#11130f;--max:1200px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;line-height:1.6;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 5% 5%,rgba(184,255,61,.15),transparent 22%),radial-gradient(circle at 95% 25%,rgba(0,0,0,.04),transparent 30%);z-index:-1}
+a{color:inherit;text-decoration:none}.container{width:min(calc(100% - 40px),var(--max));margin:auto}
+.nav{position:fixed;top:0;left:0;right:0;z-index:20;padding:18px 0;background:rgba(244,241,235,.72);backdrop-filter:blur(18px);border-bottom:1px solid transparent;transition:.3s}
+.nav.scrolled{border-color:var(--line);background:rgba(244,241,235,.94)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}.logo{font:700 20px "Space Grotesk";letter-spacing:-.04em}.logo span{color:var(--accent)}
+.links{display:flex;gap:30px;color:#535650;font-size:14px}.links a:hover{color:#fff}
+.nav-cta,.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:12px 18px;font-weight:700;font-size:14px;transition:.25s;border:1px solid var(--line)}
+.nav-cta{background:var(--text);color:#f7f5ef}.nav-cta:hover{transform:translateY(-2px)}
+.menu{display:none;background:none;border:0;color:#fff;font-size:25px}
+.hero{min-height:100vh;padding:135px 0 70px;display:grid;grid-template-columns:1fr 1fr;gap:65px;align-items:center;position:relative}
+.eyebrow{display:inline-flex;gap:9px;align-items:center;color:#3e403b;font-size:13px;border:1px solid var(--line);background:rgba(255,255,255,.48);padding:8px 12px;border-radius:99px;margin-bottom:24px}.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 15px var(--accent)}
+h1{font:600 clamp(50px,7vw,86px)/.94 "Space Grotesk";letter-spacing:-.065em;max-width:760px}h1 em{font-style:normal;background:var(--accent);padding:0 .08em}
+.hero p{font-size:18px;color:var(--muted);max-width:610px;margin:28px 0}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn.primary{background:var(--accent);color:#091006;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 0 35px rgba(183,255,60,.2);transform:translateY(-2px)}.btn.secondary{background:rgba(255,255,255,.03)}.btn.secondary:hover{background:rgba(255,255,255,.07)}
+.hero-art{height:610px;position:relative;display:flex;align-items:center;justify-content:center}.orb{width:330px;height:330px;border-radius:50%;background:radial-gradient(circle at 32% 27%,#e9ffb9 0,#b7ff3c 14%,#3b5e13 40%,#111 70%);box-shadow:0 0 100px rgba(183,255,60,.14),inset -40px -40px 80px rgba(0,0,0,.7);animation:float 6s ease-in-out infinite}
+.ring{position:absolute;border:1px solid rgba(183,255,60,.24);border-radius:50%;transform:rotate(-18deg)}.r1{width:470px;height:180px}.r2{width:520px;height:220px;transform:rotate(28deg);border-color:rgba(101,217,255,.18)}.r3{width:300px;height:520px;transform:rotate(62deg);border-color:rgba(255,255,255,.08)}
+.orb-card{position:absolute;right:0;bottom:30px;background:rgba(13,17,24,.86);border:1px solid var(--line);backdrop-filter:blur(15px);padding:18px 20px;border-radius:18px;width:220px;box-shadow:0 20px 70px rgba(0,0,0,.35)}.orb-card b{font:700 27px "Space Grotesk";display:block}.orb-card span{font-size:12px;color:var(--muted)}
+
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}.track{display:inline-flex;gap:45px;padding:18px 0;animation:scroll 22s linear infinite;color:#697585;font:600 12px "Space Grotesk";text-transform:uppercase;letter-spacing:.16em}@keyframes scroll{to{transform:translateX(-50%)}}
+section{padding:110px 0}.section-head{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:50px}.kicker{color:var(--accent);font:700 12px "Space Grotesk";text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px}.section-head h2{font:600 clamp(36px,5vw,58px)/1.02 "Space Grotesk";letter-spacing:-.05em}.section-head p{max-width:430px;color:var(--muted)}
+.services{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.service{min-height:285px;padding:28px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));border-radius:22px;position:relative;overflow:hidden;transition:.3s}
+.service{padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.service-photo{height:175px;margin:0;overflow:hidden;position:relative;background:#ddd}
+.service-photo:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.22))}
+.service-photo img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .6s ease,filter .6s ease;filter:saturate(.78)}
+.service:hover .service-photo img{transform:scale(1.06);filter:saturate(1)}
+.service>.num,.service>h3,.service>p{margin-left:28px;margin-right:28px}
+.service>.num{margin-top:22px}
+.service h3{margin-top:42px;margin-bottom:10px}
+.service p{margin-bottom:28px}
+.service:after{top:198px;right:24px}
+@media(max-width:850px){.service-photo{height:180px}.service h3{margin-top:34px}}
+@media(max-width:520px){.service-photo{height:165px}.service>.num,.service>h3,.service>p{margin-left:24px;margin-right:24px}.service h3{margin-top:30px}.service p{margin-bottom:24px}.service:after{top:188px}}
+.service:hover{transform:translateY(-6px);border-color:rgba(183,255,60,.35)}.num{font:500 12px "Space Grotesk";color:#647083}.service h3{font:600 25px "Space Grotesk";margin:70px 0 10px;letter-spacing:-.035em}.service p{color:var(--muted);font-size:14px}.service:after{content:"↗";position:absolute;right:24px;top:23px;color:#667286;font-size:22px}
+.case-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}.case{border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--panel)}.case-visual{height:360px;background:radial-gradient(circle at 70% 25%,rgba(183,255,60,.3),transparent 28%),linear-gradient(135deg,#161d27,#080a0e);position:relative;padding:28px}.mini-ui{position:absolute;inset:70px 60px;background:#0b0f15;border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 30px 80px #0008;padding:18px}.mini-bar{height:8px;width:45%;background:#27303d;border-radius:4px;margin-bottom:25px}.mini-row{height:55px;border:1px solid #1c2530;border-radius:9px;margin:9px 0;background:linear-gradient(90deg,#151b24,#0d1118)}.case-copy{padding:25px}.case-copy h3{font:600 27px "Space Grotesk"}.case-copy p{color:var(--muted);font-size:14px;margin:8px 0 18px}.tags{display:flex;gap:7px;flex-wrap:wrap}.tag{font-size:11px;border:1px solid var(--line);padding:5px 9px;border-radius:99px;color:#aab4c3}
+.process{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.step{padding:25px;border-top:1px solid var(--line)}.step strong{font:600 13px "Space Grotesk";color:var(--accent)}.step h3{font:600 20px "Space Grotesk";margin:45px 0 8px}.step p{font-size:13px;color:var(--muted)}
+.offer{border:1px solid var(--line);background:linear-gradient(120deg,#10161f,#0a0d12);border-radius:28px;padding:55px;display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}.offer h2{font:600 clamp(38px,5vw,60px)/1 "Space Grotesk";letter-spacing:-.05em}.offer p{color:var(--muted);margin:20px 0}.checks{display:grid;gap:12px}.checks div{display:flex;gap:10px;align-items:center;color:#c6ceda;font-size:14px}.checks i{font-style:normal;color:var(--accent)}
+.contact{display:grid;grid-template-columns:.8fr 1.2fr;gap:80px}.contact h2{font:600 clamp(42px,5vw,68px)/1 "Space Grotesk";letter-spacing:-.06em}.contact p{color:var(--muted);margin:20px 0 25px}.contact-form{display:grid;gap:12px}.contact-form input,.contact-form textarea{width:100%;background:#0d1118;border:1px solid var(--line);border-radius:12px;padding:15px;color:#fff;font:inherit;outline:none}.contact-form input:focus,.contact-form textarea:focus{border-color:rgba(183,255,60,.5)}.contact-form textarea{min-height:145px;resize:vertical}
+footer{border-top:1px solid var(--line);padding:25px 0;color:#6f7a8b;font-size:12px}.foot{display:flex;justify-content:space-between;gap:20px}
+.reveal{opacity:0;transform:translateY(25px);transition:.7s ease}.reveal.visible{opacity:1;transform:none}
+
+.trust-strip{padding:35px 0;border-bottom:1px solid var(--line)}
+.trust-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.trust-inner>div{padding:5px 20px;border-left:1px solid var(--line)}
+.trust-label{display:block;color:#5e6a7c;font:700 9px "Space Grotesk";letter-spacing:.16em;margin-bottom:5px}
+.trust-inner strong{font:600 12px "Space Grotesk";letter-spacing:.04em;color:#c9d2dd}
+.featured{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:14px}
+.feature-card{min-height:420px;border:1px solid var(--line);border-radius:24px;padding:30px;position:relative;overflow:hidden;background:linear-gradient(145deg,#121923,#090c11)}
+.feature-card .visual{height:230px;border-radius:15px;border:1px solid rgba(255,255,255,.08);margin-bottom:25px;position:relative;overflow:hidden}
+.visual.lime{background:radial-gradient(circle at 72% 30%,rgba(183,255,60,.5),transparent 25%),linear-gradient(135deg,#111a0b,#090b0e)}
+.visual.blue{background:radial-gradient(circle at 25% 20%,rgba(101,217,255,.35),transparent 30%),linear-gradient(135deg,#0b1720,#090b0e)}
+.window{position:absolute;inset:35px 45px;background:#090d13;border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:13px;box-shadow:0 20px 50px #0008}
+.window .top{height:5px;width:35%;border-radius:4px;background:#2c3542;margin-bottom:15px}.window .line{height:30px;border:1px solid #1c2631;border-radius:6px;margin:7px 0}
+.feature-card h3{font:600 26px "Space Grotesk";letter-spacing:-.035em}.feature-card p{color:var(--muted);font-size:13px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.stat{padding:28px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.48)}.stat b{display:block;font:600 36px "Space Grotesk";letter-spacing:-.05em;color:var(--text)}.stat span{color:var(--muted);font-size:12px}
+.packages{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.package{border:1px solid var(--line);border-radius:22px;padding:28px;background:#0d1118}.package.featured-p{border-color:rgba(183,255,60,.45);box-shadow:0 0 60px rgba(183,255,60,.05)}.package .p-label{font:700 10px "Space Grotesk";color:#6e7a8d;letter-spacing:.13em}.package h3{font:600 25px "Space Grotesk";margin:25px 0 7px}.package p{color:var(--muted);font-size:13px;min-height:55px}.package ul{list-style:none;margin:22px 0;display:grid;gap:10px}.package li{font-size:13px;color:#b8c1ce}.package li:before{content:"✓";color:var(--accent);margin-right:8px}
+.cta-band{margin-top:14px;border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(100deg,rgba(183,255,60,.08),rgba(101,217,255,.04),rgba(255,255,255,.02))}.cta-band h3{font:600 24px "Space Grotesk"}.cta-band p{color:var(--muted);font-size:13px;margin-top:3px}
+
+.hero-photo{position:absolute;inset:0 0 0 20px;border-radius:30px;overflow:hidden;background:#ddd;transform:rotate(2deg);box-shadow:25px 35px 70px rgba(17,19,15,.18)}
+.hero-photo:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.32))}
+.hero-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.82)}
+.floating-note{position:absolute;left:-18px;top:75px;width:235px;background:#11130f;color:#fff;padding:20px;border-radius:16px;box-shadow:0 20px 45px rgba(0,0,0,.22);transform:rotate(-3deg)}
+.floating-note span{display:block;color:#b8ff3d;font:700 9px "Space Grotesk";letter-spacing:.14em;margin-bottom:28px}
+.floating-note b{font:600 24px/1.05 "Space Grotesk";letter-spacing:-.04em}
+.floating-stat{position:absolute;right:-15px;bottom:60px;background:#b8ff3d;color:#11130f;padding:18px 20px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.18);transform:rotate(3deg)}
+.floating-stat b{font:700 25px "Space Grotesk";display:block}.floating-stat span{font-size:11px}
+.trust-strip{padding:25px 0;border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.trust-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}.trust-inner>div{padding:5px 20px;border-left:1px solid var(--line)}
+.trust-label{display:block;color:#7c7e77;font:700 9px "Space Grotesk";letter-spacing:.16em;margin-bottom:5px}.trust-inner strong{font:600 12px "Space Grotesk";letter-spacing:.04em}
+.service{background:#fff;border-color:rgba(17,19,15,.1)}.service:hover{border-color:rgba(17,19,15,.28)}
+.case{background:#fff;border-color:rgba(17,19,15,.1)}
+.case-visual{background:#dcd8ce}
+.featured{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;margin-top:14px}.feature-card{min-height:440px;border:1px solid var(--line);border-radius:24px;padding:30px;position:relative;overflow:hidden;background:#fff}
+.feature-card:first-child{grid-row:span 2}.feature-card .visual{height:255px;border-radius:15px;overflow:hidden;margin-bottom:25px}.feature-card:first-child .visual{height:420px}
+.photo-fill{position:absolute;inset:0}.photo-fill img{width:100%;height:100%;object-fit:cover}.photo-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55))}
+.feature-card .visual .photo-label{position:absolute;z-index:2;left:18px;bottom:18px;color:#fff;font:600 12px "Space Grotesk";letter-spacing:.04em}
+.feature-card h3{font:600 26px "Space Grotesk";letter-spacing:-.035em}.feature-card p{color:var(--muted);font-size:13px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.stat{padding:28px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.55)}.stat b{display:block;font:600 36px "Space Grotesk";letter-spacing:-.05em}.stat span{color:var(--muted);font-size:12px}
+.package{background:#fff;border-color:var(--line)}.package.featured-p{background:#11130f;color:#fff;border-color:#11130f}.package.featured-p p,.package.featured-p li{color:#b6bbb1}
+.cta-band{background:#11130f;color:#fff}.cta-band p{color:#adb2aa}
+footer{border-top-color:var(--line)}
+@media(max-width:850px){.hero{grid-template-columns:1fr}.hero-art{height:470px}.hero-photo{inset:0 8px 0 8px}.floating-note{left:0;top:30px}.floating-stat{right:0;bottom:25px}.trust-inner{grid-template-columns:1fr 1fr}.featured,.packages{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.cta-band{align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){.hero-art{height:390px}.floating-note{width:190px;padding:15px}.floating-note b{font-size:20px}.trust-inner{grid-template-columns:1fr}.trust-inner>div{border-left:0;border-top:1px solid var(--line);padding:12px 0}.stats{grid-template-columns:1fr}.feature-card{min-height:auto}.feature-card .visual{height:190px}.window{inset:28px 22px}.cta-band .btn{width:100%}}
+
+.hero-photo{position:absolute;inset:0 0 0 20px;border-radius:30px;overflow:hidden;background:#ddd;transform:rotate(2deg);box-shadow:25px 35px 70px rgba(17,19,15,.18)}
+.hero-photo:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.32))}
+.hero-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.82)}
+.floating-note{position:absolute;left:-18px;top:75px;width:235px;background:#11130f;color:#fff;padding:20px;border-radius:16px;box-shadow:0 20px 45px rgba(0,0,0,.22);transform:rotate(-3deg)}
+.floating-note span{display:block;color:#b8ff3d;font:700 9px "Space Grotesk";letter-spacing:.14em;margin-bottom:28px}
+.floating-note b{font:600 24px/1.05 "Space Grotesk";letter-spacing:-.04em}
+.floating-stat{position:absolute;right:-15px;bottom:60px;background:#b8ff3d;color:#11130f;padding:18px 20px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.18);transform:rotate(3deg)}
+.floating-stat b{font:700 25px "Space Grotesk";display:block}.floating-stat span{font-size:11px}
+.trust-strip{padding:25px 0;border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+.trust-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}.trust-inner>div{padding:5px 20px;border-left:1px solid var(--line)}
+.trust-label{display:block;color:#7c7e77;font:700 9px "Space Grotesk";letter-spacing:.16em;margin-bottom:5px}.trust-inner strong{font:600 12px "Space Grotesk";letter-spacing:.04em}
+.service{background:#fff;border-color:rgba(17,19,15,.1)}.service:hover{border-color:rgba(17,19,15,.28)}
+.case{background:#fff;border-color:rgba(17,19,15,.1)}
+.case-visual{background:#dcd8ce}
+.featured{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;margin-top:14px}.feature-card{min-height:440px;border:1px solid var(--line);border-radius:24px;padding:30px;position:relative;overflow:hidden;background:#fff}
+.feature-card:first-child{grid-row:span 2}.feature-card .visual{height:255px;border-radius:15px;overflow:hidden;margin-bottom:25px}.feature-card:first-child .visual{height:420px}
+.photo-fill{position:absolute;inset:0}.photo-fill img{width:100%;height:100%;object-fit:cover}.photo-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55))}
+.feature-card .visual .photo-label{position:absolute;z-index:2;left:18px;bottom:18px;color:#fff;font:600 12px "Space Grotesk";letter-spacing:.04em}
+.feature-card h3{font:600 26px "Space Grotesk";letter-spacing:-.035em}.feature-card p{color:var(--muted);font-size:13px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}.stat{padding:28px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.55)}.stat b{display:block;font:600 36px "Space Grotesk";letter-spacing:-.05em}.stat span{color:var(--muted);font-size:12px}
+.package{background:#fff;border-color:var(--line)}.package.featured-p{background:#11130f;color:#fff;border-color:#11130f}.package.featured-p p,.package.featured-p li{color:#b6bbb1}
+.cta-band{background:#11130f;color:#fff}.cta-band p{color:#adb2aa}
+footer{border-top-color:var(--line)}
+@media(max-width:850px){.links,.nav-cta{display:none}.menu{display:block}.hero{grid-template-columns:1fr;padding-top:125px;gap:20px}.hero-art{height:390px;order:-1}.orb{width:240px;height:240px}.r1{width:350px}.r2{width:390px}.r3{height:380px}.orb-card{right:5%;bottom:10px}.services{grid-template-columns:1fr}.case-grid,.contact,.offer{grid-template-columns:1fr}.process{grid-template-columns:1fr 1fr}.section-head{display:block}.section-head p{margin-top:18px}.offer{padding:35px}.contact{gap:35px}}
+@media(max-width:520px){.container{width:min(calc(100% - 28px),var(--max))}.hero p{font-size:16px}.hero-art{height:330px}.orb{width:190px;height:190px}.r1{width:280px;height:130px}.r2{width:300px;height:160px}.r3{height:300px}.orb-card{width:180px;padding:13px}.orb-card b{font-size:21px}.process{grid-template-columns:1fr}.case-visual{height:260px}.mini-ui{inset:45px 25px}.foot{flex-direction:column}.actions .btn{width:100%}}
+
+/* FINAL MOBILE PORTFOLIO FIX */
+@media (max-width: 850px){
+  .featured{
+    grid-template-columns:1fr !important;
+    gap:18px;
+  }
+  .feature-card,
+  .feature-card:first-child{
+    grid-row:auto !important;
+    min-height:0 !important;
+    padding:22px;
+  }
+  .feature-card .visual,
+  .feature-card:first-child .visual{
+    height:235px !important;
+    margin-bottom:20px;
+  }
+  .feature-card h3{
+    font-size:25px;
+    line-height:1.08;
+    margin:0 0 9px;
+  }
+  .feature-card p{
+    margin:0;
+    font-size:14px;
+    line-height:1.65;
+    padding-bottom:4px;
+  }
+}
+@media (max-width:520px){
+  .featured{gap:14px}
+  .feature-card,
+  .feature-card:first-child{
+    padding:18px;
+    border-radius:20px;
+  }
+  .feature-card .visual,
+  .feature-card:first-child .visual{
+    height:220px !important;
+    border-radius:13px;
+  }
+  .feature-card h3{font-size:23px}
+  .feature-card p{font-size:13.5px}
+}
+
+
+/* ACCESSIBILITY / READABILITY PASS
+   Light backgrounds use a dark green accent for text.
+   Bright lime remains reserved for fills, dots and dark-background accents. */
+.kicker,
+.step strong{
+  color:#355300 !important;
+}
+.trust-label{
+  color:#555a52 !important;
+}
+.package .p-label{
+  color:#4f554d !important;
+}
+.package.featured-p .p-label{
+  color:#aeb6aa !important;
+}
+footer{
+  color:#596158 !important;
+}
+
+</style>
+</head>
+<body>
+<nav class="nav" id="nav"><div class="container nav-inner">
+<a class="logo" href="#">AMIN<span>.</span></a>
+<div class="links"><a href="#services">Services</a><a href="#work">Work</a><a href="#process">Process</a><a href="#contact">Contact</a></div>
+<a class="nav-cta" href="#contact">Start a project ↗</a><button class="menu" onclick="document.querySelector('.links').classList.toggle('mobile')">☰</button>
+</div></nav>
+
+<main>
+<section class="hero container">
+<div class="reveal">
+<div class="eyebrow"><span class="dot"></span> Available for selected projects</div>
+<h1>Digital experiences that make businesses <em>look ready for more.</em></h1>
+<p>I’m Amin — a freelance Digital Solutions Consultant helping businesses turn ideas into polished websites, smart workflows and practical digital systems.</p>
+<div class="actions"><a class="btn primary" href="#contact">Let’s build something ↗</a><a class="btn secondary" href="#work">Explore my work ↓</a></div>
+</div>
+<div class="hero-art reveal">
+<div class="hero-photo"><img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1100&q=85" alt="Creative business team collaborating"></div>
+<div class="floating-note"><span>01 — DIGITAL PARTNER</span><b>Strategy<br>meets execution.</b></div>
+<div class="floating-stat"><b>Web</b><span>Systems · AI · Automation</span></div>
+</div>
+</section>
+
+<div class="marquee"><div class="track">WEB DESIGN ✦ DIGITAL PRODUCTS ✦ BUSINESS AUTOMATION ✦ LANDING PAGES ✦ BRAND SYSTEMS ✦ WORKFLOW SOLUTIONS ✦ WEB DESIGN ✦ DIGITAL PRODUCTS ✦ BUSINESS AUTOMATION ✦ LANDING PAGES ✦ BRAND SYSTEMS ✦ WORKFLOW SOLUTIONS ✦</div></div>
+
+
+<section class="trust-strip"><div class="container trust-inner reveal">
+<div><span class="trust-label">BUILT FOR</span><strong>SMALL BUSINESS</strong></div>
+<div><span class="trust-label">FOCUS</span><strong>CONVERSION</strong></div>
+<div><span class="trust-label">APPROACH</span><strong>DESIGN + SYSTEMS</strong></div>
+<div><span class="trust-label">DELIVERY</span><strong>END-TO-END</strong></div>
+</div></section>
+
+<section id="services"><div class="container">
+<div class="section-head reveal"><div><div class="kicker">What I do</div><h2>One partner.<br>Many digital problems solved.</h2></div><p>From a first online presence to a connected business workflow, I design practical solutions around what your business actually needs.</p></div>
+<div class="services">
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=85" alt="Modern website analytics" loading="lazy"></div><span class="num">01 / WEB</span><h3>Websites that sell</h3><p>Modern business websites, landing pages and product showcases designed to build trust and turn attention into enquiries.</p></article>
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1000&q=85" alt="Business team working together" loading="lazy"></div><span class="num">02 / SYSTEMS</span><h3>Digital business systems</h3><p>Simple tools, dashboards and workflows that reduce repetitive work and give small businesses more control.</p></article>
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1000&q=85" alt="Technology and automation" loading="lazy"></div><span class="num">03 / AUTOMATION</span><h3>Automation & AI</h3><p>Connect forms, spreadsheets, notifications, CRM steps and AI-powered workflows so routine work happens automatically.</p></article>
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1000&q=85" alt="Digital design workspace" loading="lazy"></div><span class="num">04 / PRODUCTS</span><h3>Digital products</h3><p>Templates, calculators, toolkits and downloadable resources built for professionals, teams and growing businesses.</p></article>
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1000&q=85" alt="Business growth meeting" loading="lazy"></div><span class="num">05 / GROWTH</span><h3>Lead-generation assets</h3><p>Campaign landing pages, enquiry flows, WhatsApp journeys and conversion-focused content that supports business development.</p></article>
+<article class="service reveal"><div class="service-photo"><img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=85" alt="Professional workspace" loading="lazy"></div><span class="num">06 / SUPPORT</span><h3>Launch & support</h3><p>Domain, hosting, deployment, handover and ongoing improvements — without forcing you to become a technical expert.</p></article>
+</div></div></section>
+
+<section id="work"><div class="container">
+<div class="section-head reveal"><div><div class="kicker">Selected work</div><h2>Digital work with<br>a business purpose.</h2></div><p>Not just attractive screens. Every project is shaped around credibility, customer action, operational simplicity or growth.</p></div>
+<div class="featured">
+<article class="feature-card reveal"><div class="visual"><div class="photo-fill"><img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=85" alt="Team planning a digital project"><div class="photo-label">DIGITAL STRATEGY / EXPERIENCE</div></div></div><h3>Premium Business Website</h3><p>A polished product-led experience designed to establish trust, communicate value clearly and turn attention into direct enquiries.</p></article>
+<article class="feature-card reveal"><div class="visual"><div class="photo-fill"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=85" alt="Creative team collaboration"></div></div><h3>Growth & Automation</h3><p>Connected workflows that reduce repetitive work and create a smoother journey from enquiry to action.</p></article>
+<article class="feature-card reveal"><div class="visual"><div class="photo-fill"><img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=85" alt="Modern creative workspace"></div></div><h3>Digital Products</h3><p>Practical templates, tools and resources packaged into useful digital products.</p></article>
+</div>
+<div class="stats reveal"><div class="stat"><b>01</b><span>Strategic partner, not just a web developer</span></div><div class="stat"><b>360°</b><span>From idea and design to launch and handover</span></div><div class="stat"><b>24/7</b><span>Digital experiences designed to keep working</span></div></div>
+</div></section>
+
+<section><div class="container">
+<div class="section-head reveal"><div><div class="kicker">Ways to work together</div><h2>Start small.<br>Build intelligently.</h2></div><p>Choose a starting point or tell me what you need. I can shape the scope around your business instead of forcing you into a rigid package.</p></div>
+<div class="packages">
+<article class="package reveal"><span class="p-label">STARTER</span><h3>Digital Presence</h3><p>For businesses that need a professional online presence.</p><ul><li>Premium responsive website</li><li>WhatsApp enquiry flow</li><li>Basic SEO structure</li><li>Domain & hosting guidance</li></ul><a class="btn secondary" href="#contact">Discuss your site ↗</a></article>
+<article class="package featured-p reveal"><span class="p-label">GROWTH</span><h3>Digital Growth System</h3><p>For businesses ready to connect website, enquiries and workflows.</p><ul><li>Conversion-focused website</li><li>Lead capture & WhatsApp</li><li>Automation opportunities</li><li>Analytics-ready structure</li></ul><a class="btn primary" href="#contact">Build a growth system ↗</a></article>
+<article class="package reveal"><span class="p-label">CUSTOM</span><h3>Digital Solution</h3><p>For a specific workflow, tool, product or automation challenge.</p><ul><li>Discovery & solution mapping</li><li>Custom interface / workflow</li><li>AI & automation integration</li><li>Launch & support</li></ul><a class="btn secondary" href="#contact">Discuss an idea ↗</a></article>
+</div>
+<div class="cta-band reveal"><div><h3>Not sure what you need?</h3><p>Send me the business problem. We’ll identify the simplest useful digital solution.</p></div><a class="btn primary" href="https://wa.me/918610270479?text=Hi%20Amin%2C%20I%20have%20a%20business%20problem%20and%20would%20like%20to%20discuss%20a%20digital%20solution." target="_blank">Talk on WhatsApp ↗</a></div>
+</div></section>
+
+<section id="process"><div class="container">
+<div class="section-head reveal"><div><div class="kicker">How it works</div><h2>Clear process.<br>No digital jargon.</h2></div></div>
+<div class="process">
+<div class="step reveal"><strong>01 / DISCOVER</strong><h3>Understand</h3><p>We define your goals, audience, offer and the problem the solution needs to solve.</p></div>
+<div class="step reveal"><strong>02 / DESIGN</strong><h3>Shape</h3><p>I turn the idea into a clear structure, visual direction and user journey.</p></div>
+<div class="step reveal"><strong>03 / BUILD</strong><h3>Create</h3><p>The solution is developed responsively, tested and refined across devices.</p></div>
+<div class="step reveal"><strong>04 / LAUNCH</strong><h3>Grow</h3><p>Go live, connect your tools and keep improving based on real business needs.</p></div>
+</div></div></section>
+
+<section><div class="container"><div class="offer reveal"><div><div class="kicker">For growing businesses</div><h2>Your business deserves more than a template.</h2><p>Get a digital presence that reflects the quality of what you sell — with the tools behind it to help you operate better.</p><a class="btn primary" href="#contact">Get a project quote ↗</a></div><div class="checks"><div><i>✓</i> Premium responsive design</div><div><i>✓</i> Mobile-first customer experience</div><div><i>✓</i> WhatsApp enquiry integration</div><div><i>✓</i> SEO-ready structure</div><div><i>✓</i> Deployment & handover support</div><div><i>✓</i> Practical automation opportunities</div></div></div></div></section>
+
+<section id="contact"><div class="container contact">
+<div class="reveal"><div class="kicker">Start a conversation</div><h2>Have an idea?<br>Let’s make it real.</h2><p>Tell me what you’re building, what you need fixed, or simply where your business is today. I’ll help you identify the right digital next step.</p><a class="btn secondary" href="https://wa.me/918610270479?text=Hi%20Amin%2C%20I%27d%20like%20to%20discuss%20a%20digital%20solution." target="_blank">WhatsApp me ↗</a></div>
+<form class="contact-form reveal" onsubmit="sendWhatsApp(event)">
+<input id="name" required placeholder="Your name"><input id="business" placeholder="Business / company"><input id="phone" placeholder="Phone / WhatsApp"><textarea id="message" required placeholder="What would you like to build?"></textarea><button class="btn primary" type="submit">Send project enquiry ↗</button>
+</form>
+</div></section>
+</main>
+
+<footer><div class="container foot"><span>© <span id="year"></span> Amin · Digital Solutions Consultant</span><span>Web · Systems · Automation · Digital Products</span></div></footer>
+
+<script>
+const nav=document.getElementById('nav');window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>io.observe(x));
+document.getElementById('year').textContent=new Date().getFullYear();
+function sendWhatsApp(e){e.preventDefault();const n=document.getElementById('name').value,b=document.getElementById('business').value,p=document.getElementById('phone').value,m=document.getElementById('message').value;const t=`Hi Amin, I’m ${n}${b?' from '+b:''}.%0A%0AProject enquiry:%0A${m}%0A%0AMy WhatsApp/phone: ${p||'Not provided'}`;window.open('https://wa.me/918610270479?text='+encodeURIComponent(t),'_blank')}
+</script>
+</body>
+</html>
