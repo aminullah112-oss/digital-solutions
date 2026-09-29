@@ -38,7 +38,13 @@ Open `index.html` (or host the folder anywhere static). Then Settings:
 - Set your name, brand, **portfolio link**, and **real package prices** (defaults are placeholders).
 - Tamil intro template is included; have a native speaker review it before using it.
 
-### Backend (optional: Places search + website audit)
+### Google Places search without a server
+
+Settings → Google Places: paste a Google Cloud API key (Places API (New) enabled). It's called from the browser, so restrict
+the key to your site's referrer and to Places API only, and set a budget alert. The key stays on that device and is not
+included in backups. Website audit still needs the backend (browsers can't fetch other sites' HTML).
+
+### Backend (optional: website audit, or Places behind a token)
 
 ```bash
 export GOOGLE_PLACES_API_KEY=...        # Places API (New) enabled
