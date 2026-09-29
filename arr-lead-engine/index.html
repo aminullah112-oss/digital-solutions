@@ -101,7 +101,7 @@ const REPLY_CLASSES = {
 
 const DEFAULT_SETTINGS = {
   me: 'Amin', brand: 'ARR Digital Solutions', portfolio: '', dailyNew: 20, nurtureDays: 60, defaultValue: 25000,
-  backend: '', token: '',
+  backend: '', token: '', placesKey: '',
   areas: ['Melvisharam', 'Ambur', 'Vaniyambadi', 'Ranipet', 'Vellore', 'Chennai'],
   cadence: [
     { wait: 0, ch: 'whatsapp', tpl: 'intro' },
@@ -618,7 +618,7 @@ function prepareImport(rows, { source, inbound, area }) {
 function addLeads(list) { db.push(...list); save(); }
 
 function viewDiscover() {
-  const cfg = S.backend ? '' : `<div class="tip warn"><span>Google Places search needs the backend. Set its URL in Settings (see README). Paste / CSV import works without it.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`;
+  const cfg = (S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Google Places search needs a Google API key (or the backend). Add it in Settings → Google Places. Paste / CSV import works without it.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`;
   return head('Discover', 'Get businesses in. Duplicates are detected by phone, Place ID and name+area.') + cfg +
     `<div class="card"><h2>Google Places search</h2><div class="form">
      <div><label>Business type</label>${pickField('pl_type', PLACE_TYPES, '', 'Select a type…')}</div>
@@ -655,7 +655,8 @@ function viewSettings() {
      ${S.packages.map((p, i) => `<div class="form" style="grid-template-columns:1fr 120px 2fr auto;margin-bottom:6px"><input class="p_name" value="${esc(p.name)}"><input class="p_price" type="number" value="${p.price}"><input class="p_desc" value="${esc(p.desc)}"><button class="btn small danger" onclick="A.pkgDel(${i})">✕</button></div>`).join('')}
      <button class="btn small" onclick="A.pkgAdd()">+ Add package</button></div>
     <div class="card"><h2>Industry rules (scoring weight + pitch angle)</h2><p class="muted">JSON list: label, match (regex on industry + name), weight, angle. First match wins.</p><textarea id="s_rules" rows="8" style="font-family:monospace;font-size:12px">${esc(JSON.stringify(S.rules, null, 1))}</textarea></div>
-    <div class="card"><h2>Backend helper (Places search, website audit)</h2><div class="form"><div><label>Backend URL</label><input id="s_be" value="${esc(S.backend)}" placeholder="http://localhost:8787"></div><div><label>API token (ARR_API_TOKEN)</label><input id="s_tok" type="password" value="${esc(S.token)}"></div></div><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.health()">Test connection</button></div></div>
+    <div class="card"><h2>Google Places (business search)</h2><p class="muted">Paste a Google Cloud API key with <b>Places API (New)</b> enabled. Because it's used from the browser, restrict it in Google Cloud: <i>Application restriction → Websites → https://aminullah112-oss.github.io/*</i> and <i>API restriction → Places API (New)</i>. Set a budget alert too; every search is billed. The key is stored on this device only and excluded from backups.</p><div class="form"><div class="full"><label>Google Places API key</label><input id="s_pk" type="password" value="${esc(S.placesKey)}" placeholder="AIza…"></div></div></div>
+    <div class="card"><h2>Backend helper (website audit; optional Places proxy)</h2><div class="form"><div><label>Backend URL</label><input id="s_be" value="${esc(S.backend)}" placeholder="http://localhost:8787"></div><div><label>API token (ARR_API_TOKEN)</label><input id="s_tok" type="password" value="${esc(S.token)}"></div></div><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.health()">Test connection</button></div></div>
     <div class="card"><h2>Cloud sync (Supabase)</h2><p class="muted">Optional. Run <code>supabase/schema.sql</code>, create your user, then sign in. The publishable key is safe in the browser only because row-level security limits every row to you. Never paste a service-role key here.</p>
      <div class="form"><div><label>Project URL</label><input id="c_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"></div><div><label>Publishable / anon key</label><input id="c_key" value="${esc(c.key)}"></div><div><label>Email</label><input id="c_email" value="${esc(c.email)}"></div><div><label>Password ${c.session ? '(signed in)' : ''}</label><input id="c_pw" type="password" autocomplete="current-password"></div></div>
      <div class="actions" style="margin-top:8px"><button class="btn primary" onclick="A.cloudLogin()">Sign in</button><button class="btn" onclick="A.cloudSync()" ${c.session ? '' : 'disabled'}>Sync now</button><button class="btn" onclick="A.cloudLogout()" ${c.session ? '' : 'disabled'}>Sign out</button><span class="muted">${M.lastPush ? 'Last sync ' + ago(M.lastPush) : ''}</span></div></div>
@@ -716,6 +717,29 @@ async function api(path, body) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || 'Backend error ' + r.status);
   return j;
+}
+/* Places search straight from the browser. The key is visible to anyone who can open devtools on this
+   device, so it MUST be restricted in Google Cloud (HTTP referrer = this site, API = Places API (New) only). */
+const PLACES_FIELDS = 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken';
+async function placesDirect(query, wanted) {
+  const seen = new Set(), out = []; let token = '';
+  while (out.length < wanted) {
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': S.placesKey, 'X-Goog-FieldMask': PLACES_FIELDS }, body: JSON.stringify({ textQuery: query, pageSize: 20, ...(token ? { pageToken: token } : {}) }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j.error && j.error.message) || 'Google Places error ' + r.status);
+    for (const p of j.places || []) {
+      if (seen.has(p.id) || /^CLOSED/.test(p.businessStatus || '')) continue;
+      seen.add(p.id);
+      out.push({ placeId: p.id, name: (p.displayName || {}).text || '', industry: (p.primaryTypeDisplayName || {}).text || 'Other', area: p.formattedAddress || '', phone: p.internationalPhoneNumber || p.nationalPhoneNumber || '', website: p.websiteUri || '', rating: p.rating || 0, reviews: p.userRatingCount || 0, mapsUrl: p.googleMapsUri || '', source: 'Google Places' });
+    }
+    token = j.nextPageToken || ''; if (!token) break;
+  }
+  return out.slice(0, wanted);
+}
+async function discoverPlaces(type, area, max) {
+  if (S.backend) return (await api('/api/discover', { type, area, maxResults: max })).leads;
+  if (S.placesKey) return placesDirect(`${type} in ${area}`, max);
+  throw new Error('Add a Google Places API key (Settings → Google Places) or a backend URL first');
 }
 async function auditLead(l) {
   const j = await api('/api/audit', { website: l.website });
@@ -894,9 +918,9 @@ const A = {
     const type = pickVal('pl_type'), area = pickVal('pl_area'); if (!type) return toast('Choose a business type'); if (!area) return toast('Choose an area');
     $('#pl_res').innerHTML = '<div class="empty">Searching…</div>';
     try {
-      const j = await api('/api/discover', { type, area, maxResults: +val('pl_max') });
+      const found = await discoverPlaces(type, area, +val('pl_max'));
       const seen = new Set(L().flatMap(dupKeys));
-      placesFound = j.leads.map(p => ({ ...p, area: area.split(',')[0].trim(), address: p.area, dup: dupKeys(newLead({ ...p, area: area.split(',')[0].trim() })).some(k => seen.has(k)) }));
+      placesFound = found.map(p => ({ ...p, area: area.split(',')[0].trim(), address: p.area, dup: dupKeys(newLead({ ...p, area: area.split(',')[0].trim() })).some(k => seen.has(k)) }));
       $('#pl_res').innerHTML = `<div class="tw"><table><thead><tr><th></th><th>Business</th><th>Phone</th><th>Website</th><th>Reviews</th></tr></thead><tbody>${placesFound.map((p, i) => `<tr class="${p.dup ? 'muted' : ''}"><td><input type="checkbox" class="pf" data-i="${i}" ${p.dup ? 'disabled' : 'checked'}></td><td><b>${esc(p.name)}</b><div class="muted">${esc(p.industry)}${p.dup ? ' · already in CRM' : ''}</div></td><td>${esc(p.phone || '—')}</td><td>${p.website ? '✓' : '<b class="ok">none</b>'}</td><td>${p.reviews ? `${p.rating}★ (${p.reviews})` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No results</td></tr>'}</tbody></table></div><div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button><span class="muted">Businesses without a website rank highest.</span></div>`;
     } catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
   },
@@ -929,7 +953,7 @@ const A = {
     S.me = val('s_me').trim() || 'Amin'; S.brand = val('s_brand').trim(); S.portfolio = safeUrl(val('s_port').trim()) ? val('s_port').trim() : (val('s_port').trim() ? 'https://' + val('s_port').trim() : '');
     S.dailyNew = Math.max(1, +val('s_daily') || 20); S.nurtureDays = Math.max(7, +val('s_nurt') || 60); S.defaultValue = +val('s_val') || 25000;
     S.areas = val('s_areas').split(',').map(x => x.trim()).filter(Boolean);
-    S.rules = rules; S.backend = val('s_be').trim().replace(/\/$/, ''); S.token = val('s_tok').trim();
+    S.placesKey = val('s_pk').trim(); S.rules = rules; S.backend = val('s_be').trim().replace(/\/$/, ''); S.token = val('s_tok').trim();
     S.cloud.url = val('c_url').trim().replace(/\/$/, ''); S.cloud.key = val('c_key').trim(); S.cloud.email = val('c_email').trim();
     const w = [...document.querySelectorAll('.cd_w')], c = [...document.querySelectorAll('.cd_c')], t = [...document.querySelectorAll('.cd_t')];
     S.cadence = S.cadence.map((_, i) => ({ wait: i === 0 ? 0 : Math.max(0, +w[i].value || 0), ch: c[i].value, tpl: t[i].value }));
@@ -963,7 +987,7 @@ const A = {
   cloudLogout() { S.cloud.session = null; persist(); render(); },
   /* data */
   exportJSON() {
-    const s = structuredClone(S); s.cloud.session = null; s.token = '';
+    const s = structuredClone(S); s.cloud.session = null; s.token = ''; s.placesKey = '';
     dl(`arr-lead-engine-backup-${today()}.json`, 'application/json', JSON.stringify({ v: 11, leads: db, settings: s }, null, 1)); M.lastBackup = nowIso(); persist(); toast('Backup downloaded'); render();
   },
   importJSON(inp) {
@@ -972,7 +996,7 @@ const A = {
       try {
         const j = JSON.parse(r.result); if (j.v !== 11 || !Array.isArray(j.leads)) throw new Error('Not a V11 backup');
         const n = mergeLeads(j.leads);
-        if (j.settings && confirm('Also restore templates, packages and settings from the backup? (Backend token and cloud login are never restored.)')) { const keep = { token: S.token, cloud: S.cloud }; S = mergeSettings({ ...j.settings, ...keep }); }
+        if (j.settings && confirm('Also restore templates, packages and settings from the backup? (Backend token and cloud login are never restored.)')) { const keep = { token: S.token, placesKey: S.placesKey, cloud: S.cloud }; S = mergeSettings({ ...j.settings, ...keep }); }
         save(); toast(`Restored ${n} lead(s)`); render();
       } catch (e) { toast('Restore failed: ' + e.message); }
     }; r.readAsText(f);

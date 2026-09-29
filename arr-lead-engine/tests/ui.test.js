@@ -50,6 +50,18 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   const sent = await page.evaluate(async () => { let body; S.backend = 'http://x'; const f = window.fetch; window.fetch = async (u, o) => { body = JSON.parse(o.body); return new Response(JSON.stringify({ leads: [] }), { status: 200 }); }; await A.search(); window.fetch = f; S.backend = ''; return body; });
   ok(sent.type === 'tannery' && sent.area === 'Melvisharam', 'search uses dropdown/other values');
 
+  // Direct Places mode (no backend): paginates, drops closed + duplicate places, sends key + field mask
+  const direct = await page.evaluate(async () => {
+    S.placesKey = 'KEY'; S.backend = ''; const calls = []; const f = window.fetch;
+    const pages = [{ places: [{ id: 'a', displayName: { text: 'A' }, internationalPhoneNumber: '+91 98765 43210' }, { id: 'b', displayName: { text: 'B' }, businessStatus: 'CLOSED_PERMANENTLY' }], nextPageToken: 't' }, { places: [{ id: 'a', displayName: { text: 'A' } }, { id: 'c', displayName: { text: 'C' } }] }];
+    window.fetch = async (u, o) => { calls.push({ u, h: o.headers, b: JSON.parse(o.body) }); return new Response(JSON.stringify(pages.shift()), { status: 200 }); };
+    const out = await discoverPlaces('shoe factory', 'Ambur', 60); window.fetch = f; S.placesKey = '';
+    let err = ''; try { await discoverPlaces('x', 'y', 20); } catch (e) { err = e.message; }
+    return { ids: out.map(p => p.placeId), key: calls[0].h['X-Goog-Api-Key'], q: calls[0].b.textQuery, tok: calls[1].b.pageToken, err };
+  });
+  ok(direct.ids.join() === 'a,c' && direct.key === 'KEY' && direct.q === 'shoe factory in Ambur' && direct.tok === 't', 'direct Places mode paginates and filters');
+  ok(/API key/.test(direct.err), 'no key + no backend gives an actionable error');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
