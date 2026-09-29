@@ -38,6 +38,12 @@ Open `index.html` (or host the folder anywhere static). Then Settings:
 - Set your name, brand, **portfolio link**, and **real package prices** (defaults are placeholders).
 - Tamil intro template is included; have a native speaker review it before using it.
 
+### Free map search (OpenStreetMap)
+
+Discover → “Free map search” needs no key and no card. It geocodes the area with Nominatim, then pulls named businesses within
+5–20 km from Overpass, by category. Coverage of small Indian towns is patchy and phone tags are sparse; every result set shows
+how many have a phone so you can judge the source quickly. Data © OpenStreetMap contributors (ODbL).
+
 ### Google Places search without a server
 
 Settings → Google Places: paste a Google Cloud API key (Places API (New) enabled). It's called from the browser, so restrict

@@ -62,6 +62,34 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(direct.ids.join() === 'a,c' && direct.key === 'KEY' && direct.q === 'shoe factory in Ambur' && direct.tok === 't', 'direct Places mode paginates and filters');
   ok(/API key/.test(direct.err), 'no key + no backend gives an actionable error');
 
+  // OpenStreetMap search: geocode -> Overpass; parse tags, coverage note, mirror fallback, errors
+  const osm = await page.evaluate(async () => {
+    const f = window.fetch, calls = [];
+    const els = [
+      { type: 'node', id: 1, tags: { name: 'Zed Leathers', craft: 'shoemaker', phone: '+91 98765 43210; 04172 111', 'addr:street': 'Main Rd' } },
+      { type: 'way', id: 2, tags: { name: 'No Phone Traders', shop: 'shoes', website: 'example.com' } },
+      { type: 'node', id: 3, tags: { shop: 'shoes' } },
+      { type: 'node', id: 1, tags: { name: 'Zed Leathers' } }];
+    window.fetch = async (u) => {
+      calls.push(u);
+      if (u.includes('nominatim')) return new Response(JSON.stringify([{ lat: '12.93', lon: '79.23' }]), { status: 200 });
+      if (u.includes('overpass-api.de')) return new Response('busy', { status: 504 });
+      return new Response(JSON.stringify({ elements: els }), { status: 200 });
+    };
+    const out = await osmSearch('Leather, shoes & footwear', 'Melvisharam', 10);
+    window.fetch = async (u) => u.includes('nominatim') ? new Response('[]', { status: 200 }) : new Response('x', { status: 500 });
+    let e1 = ''; try { await osmSearch('All shops', 'Nowhereville', 5); } catch (e) { e1 = e.message; }
+    window.fetch = f;
+    go('discover'); A.showFound(out, 'Melvisharam', 'note');
+    return { out, calls: calls.length, e1, html: $('#pl_res').innerText, checked: [...document.querySelectorAll('.pf')].filter(c => c.checked).length, total: document.querySelectorAll('.pf').length };
+  });
+  ok(osm.out.length === 2 && osm.out[0].phone === '+91 98765 43210' && osm.out[0].placeId === 'osm:node/1' && osm.out[1].website === 'example.com', 'OSM parsing: skips unnamed + duplicate, takes first phone');
+  ok(osm.calls === 3, 'OSM falls back to the mirror when the first Overpass server is busy');
+  ok(/Could not locate/.test(osm.e1), 'unknown area gives a clear error');
+  ok(/1 with a phone number/.test(osm.html) && osm.checked === 1 && osm.total === 2, 'coverage note shown; only phone-bearing rows pre-ticked');
+  await page.evaluate(() => A.addFound());
+  ok(await page.evaluate(() => L().some(l => l.name === 'Zed Leathers' && l.source === 'OpenStreetMap' && l.phone === '+919876543210')), 'added OSM lead keeps source and normalised phone');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
@@ -142,7 +170,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 6, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 7, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });

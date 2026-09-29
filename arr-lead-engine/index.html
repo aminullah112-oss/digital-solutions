@@ -618,14 +618,20 @@ function prepareImport(rows, { source, inbound, area }) {
 function addLeads(list) { db.push(...list); save(); }
 
 function viewDiscover() {
-  const cfg = (S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Google Places search needs a Google API key (or the backend). Add it in Settings → Google Places. Paste / CSV import works without it.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`;
-  return head('Discover', 'Get businesses in. Duplicates are detected by phone, Place ID and name+area.') + cfg +
-    `<div class="card"><h2>Google Places search</h2><div class="form">
+  return head('Discover', 'Get businesses in. Duplicates are detected by phone, map ID and name+area.') +
+    `<div class="card"><h2>Free map search (OpenStreetMap) <span class="pill">no key, no card</span></h2><div class="form">
+     <div><label>Business category</label>${pickField('osm_cat', Object.keys(OSM_CATS), Object.keys(OSM_CATS)[0], 'Select a category…')}</div>
+     <div><label>Area</label>${pickField('osm_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
+     <div><label>Radius around the area centre</label><select id="osm_rad"><option value="5">5 km</option><option value="10" selected>10 km</option><option value="20">20 km</option></select></div>
+     <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.osmSearch()">Search</button></div></div>
+     <p class="muted">Community-mapped data. Coverage of small Indian towns varies and phone numbers are often missing, so the results show how many have a phone. If the numbers are poor, use Google search or a pasted list.</p></div>
+    <div class="card"><h2>Google Places search</h2>${(S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Needs a Google API key (Settings → Google Places) or the backend.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`}<div class="form">
      <div><label>Business type</label>${pickField('pl_type', PLACE_TYPES, '', 'Select a type…')}</div>
      <div><label>Area</label>${pickField('pl_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
      <div><label>How many (max 60)</label><select id="pl_max"><option>20</option><option>40</option><option>60</option></select></div>
      <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.search()">Search</button></div></div>
-     <p class="muted">Each search is a billed Google Places request. Existing leads are flagged so you don't re-import them.</p><div id="pl_res"></div></div>
+     <p class="muted">Each search is a billed Google Places request (1,000 phone-and-website searches a month are free). Existing leads are flagged so you don't re-import them.</p></div>
+    <div class="card" id="pl_card" style="display:none"><h2>Results</h2><div id="pl_res"></div></div>
     <div class="card"><h2>Paste or upload a list</h2><p class="muted">Columns are matched by header (name, phone, industry, area, website, rating, reviews, email, notes). No header row? Use <code>name, phone, industry, area</code>. Your website-form Google Sheet exports work as-is.</p>
      <textarea id="im_text" rows="6" placeholder="Name, Phone, Industry, Area"></textarea>
      <div class="form" style="margin-top:8px"><div><label>Source label</label><input id="im_src" value="CSV import"></div><div><label>Default area</label><input id="im_area" value="${esc(S.areas[0] || '')}"></div>
@@ -718,6 +724,53 @@ async function api(path, body) {
   if (!r.ok) throw new Error(j.error || 'Backend error ' + r.status);
   return j;
 }
+/* ---- OpenStreetMap search: Nominatim (geocode area) + Overpass (features around it). Free, no key. ---- */
+const OSM_CATS = {
+  'Leather, shoes & footwear': ['["craft"~"shoemaker|leather"]', '["shop"~"leather|shoes|bag"]', '["industrial"~"leather|shoe"]', '["name"~"leather|shoe|footwear|tannery|tanners|chappal|sandal",i]'],
+  'Factories & manufacturers': ['["man_made"="works"]', '["industrial"]', '["craft"]', '["office"="company"]["name"~"industries|exports|enterprises|manufactur|factory|works",i]'],
+  'Restaurants, hotels & food': ['["amenity"~"restaurant|cafe|fast_food|food_court|ice_cream"]', '["tourism"~"hotel|guest_house|motel"]', '["shop"~"bakery|sweets|confectionery"]'],
+  'Clinics & health': ['["amenity"~"clinic|hospital|doctors|dentist|pharmacy"]', '["healthcare"]'],
+  'Schools & coaching': ['["amenity"~"school|college|kindergarten|language_school|university"]', '["office"="educational_institution"]'],
+  'Hardware, building & electrical': ['["shop"~"hardware|doityourself|trade|electrical|paint|tiles"]', '["craft"~"carpenter|electrician|plumber|welder|metal_construction"]'],
+  'Jewellery, clothes & textile': ['["shop"~"jewelry|clothes|fabric|tailor|boutique|shoes"]', '["craft"="tailor"]'],
+  'All shops': ['["shop"]'],
+  'Any named business with a phone': ['["phone"]["name"]', '["contact:phone"]["name"]', '["contact:mobile"]["name"]']
+};
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+function parseOsm(elements, area) {
+  const out = [], seen = new Set();
+  for (const e of elements || []) {
+    const t = e.tags || {}; if (!t.name) continue;
+    const id = `osm:${e.type}/${e.id}`; if (seen.has(id)) continue; seen.add(id);
+    const first = v => String(v || '').split(/[;,]/)[0].trim();
+    const addr = ['addr:housenumber', 'addr:street', 'addr:suburb', 'addr:city'].map(k => t[k]).filter(Boolean).join(', ');
+    const kind = t.craft || t.industrial || t.shop || t.amenity || t.healthcare || t.tourism || t.office || t.man_made || 'business';
+    out.push({
+      placeId: id, name: t.name, industry: String(kind).replace(/_/g, ' '), area, address: addr,
+      phone: first(t.phone || t['contact:phone'] || t['contact:mobile'] || t.mobile), website: first(t.website || t['contact:website'] || t.url),
+      email: first(t.email || t['contact:email']), rating: 0, reviews: 0,
+      mapsUrl: `https://www.openstreetmap.org/${e.type}/${e.id}`, source: 'OpenStreetMap'
+    });
+  }
+  return out;
+}
+async function osmSearch(cat, area, km) {
+  const geo = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q=' + encodeURIComponent(/india/i.test(area) ? area : area + ', Tamil Nadu, India'));
+  if (!geo.ok) throw new Error('Could not look up the area (map service busy). Try again in a minute.');
+  const g = (await geo.json())[0]; if (!g) throw new Error(`Could not locate "${area}" on the map. Try a nearby larger town.`);
+  const around = `(around:${km * 1000},${g.lat},${g.lon})`;
+  const q = `[out:json][timeout:45];(${OSM_CATS[cat].map(f => `nwr${f}${around};`).join('')});out center tags 400;`;
+  let lastErr = 'Map data service is busy. Try again in a minute.';
+  for (const url of OVERPASS) {
+    try {
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+      if (r.ok) return parseOsm((await r.json()).elements, area);
+      lastErr = r.status === 429 || r.status === 504 ? 'Map data service is busy. Try again in a minute.' : 'Map data service error ' + r.status;
+    } catch (e) { lastErr = 'Could not reach the map data service.'; }
+  }
+  throw new Error(lastErr);
+}
+
 /* Places search straight from the browser. The key is visible to anyone who can open devtools on this
    device, so it MUST be restricted in Google Cloud (HTTP referrer = this site, API = Places API (New) only). */
 const PLACES_FIELDS = 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken';
@@ -914,19 +967,32 @@ const A = {
   },
   async audit(id) { const l = byId(id); try { toast('Auditing…'); await auditLead(l); A.open(id); render(); } catch (e) { toast(e.message); } },
   /* discovery */
+  showFound(list, area, note) {
+    const seen = new Set(L().flatMap(dupKeys)), a0 = area.split(',')[0].trim();
+    placesFound = list.map(p => ({ ...p, area: a0, address: p.address || p.area, dup: dupKeys(newLead({ ...p, area: a0 })).some(k => seen.has(k)) }))
+      .sort((x, y) => (!!y.phone - !!x.phone) || (!!x.website - !!y.website));
+    $('#pl_card').style.display = 'block';
+    const withPhone = placesFound.filter(p => p.phone).length;
+    $('#pl_res').innerHTML = `<div class="tip ${withPhone / Math.max(1, placesFound.length) >= .5 ? 'good' : 'warn'}"><span>${placesFound.length} businesses found, <b>${withPhone} with a phone number</b> (${pct(withPhone, placesFound.length)}%). ${note || ''}</span></div>
+      <div class="tw"><table><thead><tr><th></th><th>Business</th><th>Phone</th><th>Website</th><th>Reviews</th></tr></thead><tbody>${placesFound.map((p, i) => `<tr class="${p.dup ? 'muted' : ''}"><td><input type="checkbox" class="pf" data-i="${i}" ${p.dup || !p.phone ? '' : 'checked'} ${p.dup ? 'disabled' : ''}></td><td><b>${esc(p.name)}</b><div class="muted">${esc(p.industry)}${p.dup ? ' · already in CRM' : ''}</div></td><td>${esc(p.phone || '—')}</td><td>${p.website ? '✓' : '<b class="ok">none</b>'}</td><td>${p.reviews ? `${p.rating}★ (${p.reviews})` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No results</td></tr>'}</tbody></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button><span class="muted">Ticked = has a phone and is new. Tick others to add them and find the number later.</span></div>`;
+    $('#pl_card').scrollIntoView({ behavior: 'smooth' });
+  },
   async search() {
     const type = pickVal('pl_type'), area = pickVal('pl_area'); if (!type) return toast('Choose a business type'); if (!area) return toast('Choose an area');
-    $('#pl_res').innerHTML = '<div class="empty">Searching…</div>';
-    try {
-      const found = await discoverPlaces(type, area, +val('pl_max'));
-      const seen = new Set(L().flatMap(dupKeys));
-      placesFound = found.map(p => ({ ...p, area: area.split(',')[0].trim(), address: p.area, dup: dupKeys(newLead({ ...p, area: area.split(',')[0].trim() })).some(k => seen.has(k)) }));
-      $('#pl_res').innerHTML = `<div class="tw"><table><thead><tr><th></th><th>Business</th><th>Phone</th><th>Website</th><th>Reviews</th></tr></thead><tbody>${placesFound.map((p, i) => `<tr class="${p.dup ? 'muted' : ''}"><td><input type="checkbox" class="pf" data-i="${i}" ${p.dup ? 'disabled' : 'checked'}></td><td><b>${esc(p.name)}</b><div class="muted">${esc(p.industry)}${p.dup ? ' · already in CRM' : ''}</div></td><td>${esc(p.phone || '—')}</td><td>${p.website ? '✓' : '<b class="ok">none</b>'}</td><td>${p.reviews ? `${p.rating}★ (${p.reviews})` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No results</td></tr>'}</tbody></table></div><div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button><span class="muted">Businesses without a website rank highest.</span></div>`;
-    } catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
+    $('#pl_card').style.display = 'block'; $('#pl_res').innerHTML = '<div class="empty">Searching Google…</div>';
+    try { A.showFound(await discoverPlaces(type, area, +val('pl_max')), area); }
+    catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
+  },
+  async osmSearch() {
+    const cat = pickVal('osm_cat'), area = pickVal('osm_area'); if (!cat) return toast('Choose a category'); if (!area) return toast('Choose an area');
+    $('#pl_card').style.display = 'block'; $('#pl_res').innerHTML = '<div class="empty">Searching OpenStreetMap… this can take 10–30 seconds.</div>';
+    try { A.showFound(await osmSearch(cat, area, +val('osm_rad')), area, 'Data © OpenStreetMap contributors (ODbL).'); }
+    catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
   },
   addFound() {
     const rows = [...document.querySelectorAll('.pf')].filter(x => x.checked).map(x => placesFound[+x.dataset.i]);
-    const { fresh, dups } = prepareImport(rows, { source: 'Google Places' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`); render();
+    const { fresh, dups } = prepareImport(rows, { source: 'Map search' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`); render();
   },
   readFile(inp) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#im_text').value = r.result; $('#im_src').value = f.name; }; r.readAsText(f); },
   previewImport() {
