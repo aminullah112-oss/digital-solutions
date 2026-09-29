@@ -76,19 +76,32 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
       if (u.includes('overpass-api.de')) return new Response('busy', { status: 504 });
       return new Response(JSON.stringify({ elements: els }), { status: 200 });
     };
-    const out = await osmSearch('Leather, shoes & footwear', 'Melvisharam', 10);
+    const { places: out, meta } = await osmSearch('Leather, shoes & footwear', 'Melvisharam', 10); window._meta = meta;
     window.fetch = async (u) => u.includes('nominatim') ? new Response('[]', { status: 200 }) : new Response('x', { status: 500 });
     let e1 = ''; try { await osmSearch('All shops', 'Nowhereville', 5); } catch (e) { e1 = e.message; }
     window.fetch = f;
     go('discover'); A.showFound(out, 'Melvisharam', 'note');
-    return { out, calls: calls.length, e1, html: $('#pl_res').innerText, checked: [...document.querySelectorAll('.pf')].filter(c => c.checked).length, total: document.querySelectorAll('.pf').length };
+    return { meta: window._meta, out, calls: calls.length, e1, html: $('#pl_res').innerText, checked: [...document.querySelectorAll('.pf')].filter(c => c.checked).length, total: document.querySelectorAll('.pf').length };
   });
   ok(osm.out.length === 2 && osm.out[0].phone === '+91 98765 43210' && osm.out[0].placeId === 'osm:node/1' && osm.out[1].website === 'example.com', 'OSM parsing: skips unnamed + duplicate, takes first phone');
+  ok(osm.meta.raw === 4 && osm.meta.named === 2 && osm.meta.lat === '12.930', 'OSM search reports matched/named counts and resolved location');
   ok(osm.calls === 3, 'OSM falls back to the mirror when the first Overpass server is busy');
   ok(/Could not locate/.test(osm.e1), 'unknown area gives a clear error');
   ok(/1 with a phone number/.test(osm.html) && osm.checked === 1 && osm.total === 2, 'coverage note shown; only phone-bearing rows pre-ticked');
   await page.evaluate(() => A.addFound());
   ok(await page.evaluate(() => L().some(l => l.name === 'Zed Leathers' && l.source === 'OpenStreetMap' && l.phone === '+919876543210')), 'added OSM lead keeps source and normalised phone');
+
+  // Real button click path (mobile), empty OSM result must still be visible + explained; quick add
+  await page.route('**/nominatim.openstreetmap.org/**', r => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify([{ lat: '12.93', lon: '79.23', display_name: 'Melvisharam, Ranipet, Tamil Nadu, India' }]) }));
+  await page.route('**/overpass**', r => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ elements: [] }) }));
+  await page.evaluate(() => go('discover'));
+  await page.click('button:has-text("Search") >> nth=0'); await page.waitForSelector('#pl_res .tip');
+  const empty = await page.locator('#pl_res').innerText();
+  ok(/0 businesses found/.test(empty) && /very little mapped/.test(empty) && /Melvisharam, Ranipet/.test(empty), 'empty OSM result is explained with the resolved place');
+  await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '9000000001'); await page.press('#qa_phone', 'Enter');
+  ok(await page.evaluate(() => L().some(l => l.name === 'Quick Leathers' && l.source === 'Manual (Maps)')) && await page.inputValue('#qa_name') === '', 'quick add saves on Enter and clears for the next');
+  await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '90000 00001'); await page.press('#qa_phone', 'Enter');
+  ok(await page.evaluate(() => L().filter(l => l.name === 'Quick Leathers').length) === 1, 'quick add rejects duplicates');
 
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
@@ -170,7 +183,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 7, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 8, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });

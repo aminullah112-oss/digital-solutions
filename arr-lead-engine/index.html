@@ -619,6 +619,11 @@ function addLeads(list) { db.push(...list); save(); }
 
 function viewDiscover() {
   return head('Discover', 'Get businesses in. Duplicates are detected by phone, map ID and name+area.') +
+    `<div class="card"><h2>Quick add <span class="pill">fastest for hand-picked leads</span></h2><p class="muted">Google Maps → tap a business → copy its name and phone number. Press Enter in the phone box to save and start the next one. Industry and area stay filled in.</p><div class="form">
+     <div><label>Business name</label><input id="qa_name" autocomplete="off"></div><div><label>Phone / WhatsApp</label><input id="qa_phone" type="tel" autocomplete="off" onkeydown="if(event.key==='Enter')A.quick()"></div>
+     <div><label>Industry</label><input id="qa_ind" list="qa_inds" value="Leather goods manufacturer"><datalist id="qa_inds">${PLACE_TYPES.map(x => `<option>${esc(x)}</option>`).join('')}</datalist></div><div><label>Area</label><input id="qa_area" value="${esc(S.areas[0] || '')}"></div>
+     <div class="full"><label>Website (only if they have one)</label><input id="qa_web" autocomplete="off" onkeydown="if(event.key==='Enter')A.quick()"></div></div>
+     <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.quick()">Add &amp; next</button><span class="muted" id="qa_count"></span></div></div>` +
     `<div class="card"><h2>Free map search (OpenStreetMap) <span class="pill">no key, no card</span></h2><div class="form">
      <div><label>Business category</label>${pickField('osm_cat', Object.keys(OSM_CATS), Object.keys(OSM_CATS)[0], 'Select a category…')}</div>
      <div><label>Area</label>${pickField('osm_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
@@ -764,7 +769,10 @@ async function osmSearch(cat, area, km) {
   for (const url of OVERPASS) {
     try {
       const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-      if (r.ok) return parseOsm((await r.json()).elements, area);
+      if (r.ok) {
+        const els = (await r.json()).elements || [], places = parseOsm(els, area);
+        return { places, meta: { where: (g.display_name || area).split(',').slice(0, 3).join(','), lat: (+g.lat).toFixed(3), lon: (+g.lon).toFixed(3), km, raw: els.length, named: places.length } };
+      }
       lastErr = r.status === 429 || r.status === 504 ? 'Map data service is busy. Try again in a minute.' : 'Map data service error ' + r.status;
     } catch (e) { lastErr = 'Could not reach the map data service.'; }
   }
@@ -967,6 +975,14 @@ const A = {
   },
   async audit(id) { const l = byId(id); try { toast('Auditing…'); await auditLead(l); A.open(id); render(); } catch (e) { toast(e.message); } },
   /* discovery */
+  quick() {
+    const name = val('qa_name').trim(), phone = val('qa_phone').trim(); if (!name) return toast('Enter the business name');
+    if (!phone) return toast('Enter a phone number (or leave it and add later from Leads)');
+    const { fresh } = prepareImport([{ name, phone, industry: val('qa_ind'), area: val('qa_area'), website: val('qa_web') }], { source: 'Manual (Maps)' });
+    if (!fresh.length) { toast('Already in your CRM'); $('#qa_name').select(); return; }
+    addLeads(fresh); window._qa = (window._qa || 0) + 1;
+    ['qa_name', 'qa_phone', 'qa_web'].forEach(id => $('#' + id).value = ''); $('#qa_count').textContent = `${window._qa} added this session`; $('#qa_name').focus(); toast('Added ✓');
+  },
   showFound(list, area, note) {
     const seen = new Set(L().flatMap(dupKeys)), a0 = area.split(',')[0].trim();
     placesFound = list.map(p => ({ ...p, area: a0, address: p.address || p.area, dup: dupKeys(newLead({ ...p, area: a0 })).some(k => seen.has(k)) }))
@@ -987,7 +1003,11 @@ const A = {
   async osmSearch() {
     const cat = pickVal('osm_cat'), area = pickVal('osm_area'); if (!cat) return toast('Choose a category'); if (!area) return toast('Choose an area');
     $('#pl_card').style.display = 'block'; $('#pl_res').innerHTML = '<div class="empty">Searching OpenStreetMap… this can take 10–30 seconds.</div>';
-    try { A.showFound(await osmSearch(cat, area, +val('osm_rad')), area, 'Data © OpenStreetMap contributors (ODbL).'); }
+    try {
+      const { places, meta } = await osmSearch(cat, area, +val('osm_rad'));
+      A.showFound(places, area, `Searched ${meta.km} km around ${meta.where} (${meta.lat}, ${meta.lon}). The map matched ${meta.raw} feature(s), ${meta.named} with a name. ${meta.named < 10 ? 'OpenStreetMap has very little mapped here. Use Quick add or Google search instead.' : ''} Data © OpenStreetMap contributors (ODbL).`);
+      toast(`${meta.named} found, ${places.filter(p => p.phone).length} with a phone`);
+    }
     catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
   },
   addFound() {
