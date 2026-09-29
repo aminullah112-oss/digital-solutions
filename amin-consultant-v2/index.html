@@ -9,7 +9,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Amin | Digital Solutions Consultant">
 <meta property="og:description" content="Premium websites, business systems, automation and AI workflows for growing businesses.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311130f'/%3E%3Ctext x='32' y='43' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='%23b8ff3d'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%2311130f'/%3E%3Cpath d='M11 29 20 10l9 19' fill='none' stroke='%23b8ff3d' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14.6 23h10.8' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='30.5' cy='10.5' r='2.6' fill='%23b8ff3d'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -46,7 +46,6 @@ img,svg{display:block;max-width:100%}
 .nav.scrolled{border-color:var(--line);background:rgba(244,241,235,.94);padding:12px 0}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
 .logo{font:700 21px var(--display);letter-spacing:-.04em}
-.logo span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--lime);margin-left:3px;box-shadow:0 0 0 2px var(--ink)}
 .links{display:flex;gap:6px}
 .links a{padding:8px 14px;border-radius:99px;font-size:14px;font-weight:500;color:var(--ink2);transition:.2s}
 .links a:hover{background:rgba(17,19,15,.07);color:var(--ink)}
@@ -248,6 +247,48 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
 .reveal.visible{opacity:1;transform:none}
 
+
+/* Logo */
+.logo{display:inline-flex;align-items:center;gap:11px}
+.logo-mark{width:38px;height:38px;flex:none;transition:transform .4s}
+.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.05)}
+.logo-text{display:flex;flex-direction:column;line-height:1}
+.logo-text b{font:700 19px var(--display);letter-spacing:-.04em}
+.logo-text small{font:600 9.5px var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+/* Photos */
+.photo{position:relative;overflow:hidden;background:linear-gradient(135deg,#e6e2d6,#f3f0e8)}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.85) contrast(1.02);transition:transform .7s ease,filter .5s}
+.photo:has(img):after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(17,19,15,0) 45%,rgba(17,19,15,.28))}
+.service{padding:0;overflow:hidden}
+.svc-photo{height:170px}
+.service:hover .svc-photo img{transform:scale(1.06);filter:saturate(1)}
+.svc-body{padding:0 30px 30px;display:flex;flex-direction:column;flex:1}
+.svc-body .ico{margin:-27px 0 26px;position:relative;z-index:2;border:4px solid var(--panel);width:58px;height:58px;background:var(--sand)}
+
+/* Brand statement */
+.about-band{padding:70px 0 20px}
+.brand-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:64px;align-items:center}
+.brand-photo{aspect-ratio:5/4;border-radius:30px;box-shadow:var(--shadow)}
+.brand-photo .chip{position:absolute;z-index:2;left:20px;bottom:20px;background:rgba(255,255,255,.94);color:var(--ink);font:600 13px var(--body);padding:11px 16px;border-radius:99px;display:flex;align-items:center;gap:9px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+.brand-photo .chip i{width:8px;height:8px;border-radius:50%;background:#7ed800}
+.statement{font:600 clamp(30px,4vw,50px)/1.06 var(--display);letter-spacing:-.05em;margin-bottom:22px}
+.statement em{font-style:normal;background:linear-gradient(transparent 60%,var(--lime) 60% 92%,transparent 92%)}
+.brand-copy>p{color:var(--muted);font-size:17px;max-width:520px}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px;padding-top:28px;border-top:1px solid var(--line)}
+.pillars b{display:block;font:600 16px var(--display);letter-spacing:-.02em;margin-bottom:4px}
+.pillars span{font-size:13.5px;color:var(--muted);line-height:1.5;display:block}
+
+/* Offer photo */
+.offer-bg{position:absolute;inset:0;opacity:.22;mix-blend-mode:luminosity}
+.offer-bg img{width:100%;height:100%;object-fit:cover}
+.offer-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--ink) 20%,transparent 100%)}
+
+/* Footer brand */
+.foot-brand{display:flex;justify-content:space-between;align-items:center;gap:30px;flex-wrap:wrap;padding-bottom:26px;margin-bottom:26px;border-bottom:1px solid var(--line)}
+.foot-brand .logo-text b{font-size:21px}
+.foot-brand p{font:600 clamp(18px,2.2vw,24px)/1.2 var(--display);letter-spacing:-.03em;color:var(--ink);max-width:520px}
+
 /* Tablet */
 @media(max-width:980px){
   .hero{grid-template-columns:1fr;gap:34px;padding-top:112px;min-height:0}
@@ -258,6 +299,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .offer{grid-template-columns:1fr;padding:44px;gap:34px}
   .contact{grid-template-columns:1fr;gap:38px}
   .package.featured{transform:none}
+  .brand-grid{grid-template-columns:1fr;gap:34px}.brand-photo{aspect-ratio:16/10}
   .trust-inner{grid-template-columns:1fr 1fr}
   .trust-inner>div:nth-child(3){border-left:0;padding-left:0}
   .trust-inner>div:nth-child(n+3){border-top:1px solid var(--line)}
@@ -288,6 +330,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .contact-form{padding:22px;border-radius:22px}
   .step h3{margin-top:28px}
   .foot{flex-direction:column}
+  .pillars{grid-template-columns:1fr;gap:16px}.logo-text small{display:none}.svc-photo{height:150px}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -300,7 +343,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <nav class="nav" id="nav" aria-label="Main">
 <div class="container nav-inner">
-  <a class="logo" href="#top" aria-label="Amin — home">AMIN<span></span></a>
+  <a class="logo" href="#top" aria-label="Amin Digital Solutions — home"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M11 29 20 10l9 19" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.6 23h10.8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="30.5" cy="10.5" r="2.6" fill="#b8ff3d"/></svg><span class="logo-text"><b>AMIN</b><small>Digital Solutions</small></span></a>
   <div class="links" id="links">
     <a href="#services">Services</a><a href="#work">Work</a><a href="#packages">Packages</a><a href="#process">Process</a><a href="#contact">Contact</a>
   </div>
@@ -356,15 +399,25 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   <div><span class="trust-label">DELIVERY</span><strong>End-to-end</strong></div>
 </div></section>
 
+<section class="about-band"><div class="container brand-grid">
+  <div class="photo brand-photo reveal"><img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1100&q=80" alt="Planning a digital project together" loading="lazy" onerror="this.remove()"><div class="chip"><i></i>Working with you, not at you</div></div>
+  <div class="brand-copy reveal">
+    <div class="kicker">The Amin approach</div>
+    <h2 class="statement">Practical digital, <em>built properly.</em></h2>
+    <p>I build websites, systems and automations that earn their keep — clear enough to explain, solid enough to rely on, and handed over so you’re never locked in.</p>
+    <div class="pillars"><div><b>Clarity</b><span>Plain language and honest scoping, from the first call.</span></div><div><b>Craft</b><span>Premium, fast, mobile-first work that holds up in daily use.</span></div><div><b>Ownership</b><span>Documented handover, so the business owns what I build.</span></div></div>
+  </div>
+</div></section>
+
 <section id="services"><div class="container">
   <div class="section-head reveal"><div><div class="kicker">What I do</div><h2>One partner.<br>Many digital problems solved.</h2></div><p>From a first online presence to a connected business workflow, I design practical solutions around what your business actually needs.</p></div>
   <div class="services">
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></svg></div><span class="num">01 / WEB</span><h3>Websites that sell</h3><p>Modern business websites, landing pages and product showcases designed to build trust and turn attention into enquiries.</p></article>
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></div><span class="num">02 / SYSTEMS</span><h3>Digital business systems</h3><p>Simple tools, dashboards and workflows that reduce repetitive work and give small businesses more control.</p></article>
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div><span class="num">03 / AUTOMATION</span><h3>Automation &amp; AI</h3><p>Connect forms, spreadsheets, notifications, CRM steps and AI-powered workflows so routine work happens automatically.</p></article>
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></div><span class="num">04 / PRODUCTS</span><h3>Digital products</h3><p>Templates, calculators, toolkits and downloadable resources built for professionals, teams and growing businesses.</p></article>
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div><span class="num">05 / GROWTH</span><h3>Lead-generation assets</h3><p>Campaign landing pages, enquiry flows, WhatsApp journeys and conversion-focused content that supports business development.</p></article>
-    <article class="service reveal"><div class="ico"><svg viewBox="0 0 24 24"><path d="M4 15c0-4 3-7 8-7s8 3 8 7"/><path d="M12 8V4M9 4h6"/><rect x="3" y="15" width="18" height="5" rx="2.5"/></svg></div><span class="num">06 / SUPPORT</span><h3>Launch &amp; support</h3><p>Domain, hosting, deployment, handover and ongoing improvements — without forcing you to become a technical expert.</p></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80" alt="Analytics on a laptop" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></svg></div><span class="num">01 / WEB</span><h3>Websites that sell</h3><p>Modern business websites, landing pages and product showcases designed to build trust and turn attention into enquiries.</p></div></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=80" alt="Team working on a business system" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></div><span class="num">02 / SYSTEMS</span><h3>Digital business systems</h3><p>Simple tools, dashboards and workflows that reduce repetitive work and give small businesses more control.</p></div></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80" alt="Technology and automation" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div><span class="num">03 / AUTOMATION</span><h3>Automation &amp; AI</h3><p>Connect forms, spreadsheets, notifications, CRM steps and AI-powered workflows so routine work happens automatically.</p></div></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80" alt="Digital design workspace" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></div><span class="num">04 / PRODUCTS</span><h3>Digital products</h3><p>Templates, calculators, toolkits and downloadable resources built for professionals, teams and growing businesses.</p></div></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80" alt="Business growth meeting" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div><span class="num">05 / GROWTH</span><h3>Lead-generation assets</h3><p>Campaign landing pages, enquiry flows, WhatsApp journeys and conversion-focused content that supports business development.</p></div></article>
+    <article class="service reveal"><div class="photo svc-photo"><img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80" alt="Professional support workspace" loading="lazy" onerror="this.remove()"></div><div class="svc-body"><div class="ico"><svg viewBox="0 0 24 24"><path d="M4 15c0-4 3-7 8-7s8 3 8 7"/><path d="M12 8V4M9 4h6"/><rect x="3" y="15" width="18" height="5" rx="2.5"/></svg></div><span class="num">06 / SUPPORT</span><h3>Launch &amp; support</h3><p>Domain, hosting, deployment, handover and ongoing improvements — without forcing you to become a technical expert.</p></div></article>
   </div>
 </div></section>
 
@@ -422,7 +475,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   </div>
 </div></section>
 
-<section style="padding-top:20px"><div class="container"><div class="offer reveal">
+<section style="padding-top:20px"><div class="container"><div class="offer reveal"><div class="offer-bg" aria-hidden="true"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy" onerror="this.remove()"></div>
   <div><div class="kicker">For growing businesses</div><h2>Your business deserves more than a template.</h2><p>Get a digital presence that reflects the quality of what you sell — with the tools behind it to help you operate better.</p><a class="btn primary" href="#contact">Get a project quote ↗</a></div>
   <div class="checks"><div><i>✓</i>Premium responsive design</div><div><i>✓</i>Mobile-first customer experience</div><div><i>✓</i>WhatsApp enquiry integration</div><div><i>✓</i>SEO-ready structure</div><div><i>✓</i>Deployment &amp; handover support</div><div><i>✓</i>Practical automation opportunities</div></div>
 </div></div></section>
@@ -445,7 +498,10 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </div></section>
 </main>
 
-<footer><div class="container foot"><span>© <span id="year">2026</span> Amin · Digital Solutions Consultant</span><span>Web · Systems · Automation · Digital Products</span></div></footer>
+<footer><div class="container">
+  <div class="foot-brand"><a class="logo" href="#top" aria-label="Amin Digital Solutions — back to top"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M11 29 20 10l9 19" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.6 23h10.8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="30.5" cy="10.5" r="2.6" fill="#b8ff3d"/></svg><span class="logo-text"><b>AMIN</b><small>Digital Solutions</small></span></a><p>Practical digital, built properly.</p></div>
+  <div class="foot"><span>© <span id="year">2026</span> Amin · Digital Solutions Consultant</span><span>Web · Systems · Automation · Digital Products</span></div>
+</div></footer>
 
 <script>
 const nav=document.getElementById('nav'),links=document.getElementById('links'),menu=document.getElementById('menu');
