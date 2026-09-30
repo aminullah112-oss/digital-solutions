@@ -56,6 +56,7 @@ textarea{resize:vertical;min-height:70px}label{display:block;color:var(--muted);
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chips .btn{padding:6px 10px}.chips .btn.sel{background:var(--a);color:#032;border-color:var(--a)}
 .prog{height:12px;background:#0a1e31;border-radius:12px;overflow:hidden}.prog i{display:block;height:100%;background:var(--ok)}
 pre.msg{white-space:pre-wrap;background:#08192a;border:1px solid var(--line);border-radius:9px;padding:10px;margin:0;font:inherit}
+.opp{color:#a7f3d0;margin-top:3px}.pill.warn{border-color:var(--warn);color:var(--warn)}
 .empty{color:var(--muted);padding:14px;text-align:center}
 .mobilenav{display:none}
 @media(max-width:820px){
@@ -261,22 +262,103 @@ function ruleFor(l) {
   for (const r of S.rules) { try { if (new RegExp(r.match, 'i').test(hay)) return r; } catch (e) { /* bad regex in settings */ } }
   return FALLBACK_RULE;
 }
+/* ---- Website triage + opportunity (what's missing, what ARR can sell) ---- */
+const SOCIAL_HOSTS = ['facebook.com', 'fb.com', 'fb.me', 'instagram.com', 'linktr.ee', 'linkin.bio', 'wa.me', 'whatsapp.com', 'youtube.com', 'youtu.be', 'twitter.com', 'x.com', 'justdial.com', 'indiamart.com', 'sulekha.com', 'tradeindia.com', 'exportersindia.com', 'business.site', 'goo.gl', 'g.page', 'google.com', 'tiktok.com', 'pinterest.com', 'linkedin.com', 'zomato.com', 'swiggy.com', 'magicpin.in', 'tripadvisor.com', 'booking.com'];
+const BUILDER_HOSTS = ['wixsite.com', 'wordpress.com', 'blogspot.com', 'weebly.com', 'godaddysites.com', 'square.site', 'carrd.co', 'webflow.io', 'netlify.app', 'github.io', '000webhostapp.com', 'myshopify.com', 'sites.google.com', 'strikingly.com', 'mystrikingly.com', 'jimdosite.com', 'webnode.com', 'yolasite.com', 'simplesite.com'];
+const hostIs = (h, list) => list.find(d => h === d || h.endsWith('.' + d));
+function siteInfo(l) {
+  const u = l.website || ''; let host = '';
+  try { host = new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { /* no or invalid URL */ }
+  if (!host) return { kind: 'none', host: '', http: false };
+  const http = /^http:\/\//i.test(u);
+  const b = hostIs(host, BUILDER_HOSTS); if (b) return { kind: 'builder', host, http, label: b };
+  const s = hostIs(host, SOCIAL_HOSTS); if (s) return { kind: 'social', host, http, label: s.replace(/\.(com|in|me|site)$/, '').replace(/^./, c => c.toUpperCase()) };
+  return { kind: 'real', host, http };
+}
 function auditGaps(l) {
-  const a = l.audit; if (!a || !a.ok) return [];
+  const a = l.audit; if (!a) return [];
+  if (a.unreachable) return [{ k: 'down', hook: "your website didn't load when I tried it" }];
+  if (!a.ok) return [];
   const g = [];
-  if (!a.https) g.push({ k: 'https', hook: "your website isn't secure (no https), so browsers warn visitors" });
-  if (!a.hasViewport) g.push({ k: 'mobile', hook: "your website isn't mobile-friendly, and most of your customers browse on phones" });
-  if (!a.hasWhatsapp) g.push({ k: 'wa', hook: "your website has no WhatsApp enquiry button, so visitors have no quick way to contact you" });
-  if (!a.hasForm && !a.hasPhone) g.push({ k: 'contact', hook: "I couldn't find a clear enquiry form or tap-to-call number on your website" });
+  if (a.https === false) g.push({ k: 'https', hook: "your website isn't secure (no https), so browsers warn visitors" });
+  if (a.hasViewport === false) g.push({ k: 'mobile', hook: "your website isn't mobile-friendly, and most of your customers browse on phones" });
+  if (a.perf != null && a.perf < 50) g.push({ k: 'slow', hook: `your website is slow on mobile phones (${a.perf}/100 on Google's speed test)` });
+  if (a.hasWhatsapp === false) g.push({ k: 'wa', hook: "your website has no WhatsApp enquiry button, so visitors have no quick way to contact you" });
+  if (a.hasForm === false && a.hasPhone === false) g.push({ k: 'contact', hook: "I couldn't find a clear enquiry form or tap-to-call number on your website" });
+  if (a.seo != null && a.seo < 70) g.push({ k: 'seo', hook: `your website is missing basic Google search settings (${a.seo}/100 SEO score)` });
   if (a.copyrightYear && a.copyrightYear < new Date().getFullYear() - 2) g.push({ k: 'old', hook: `your website looks outdated (last updated around ${a.copyrightYear})` });
   return g;
+}
+/* Ordered list of {sev 1-3, issue, fix}; sev 3 = strongest reason to buy. */
+function opportunity(l) {
+  const si = siteInfo(l), a = l.audit, items = [], add = (sev, issue, fix) => items.push({ sev, issue, fix });
+  if (si.kind === 'none') add(3, 'No website of its own', 'Design and launch a mobile-friendly site with WhatsApp enquiry, Google Maps directions and product/service pages');
+  if (si.kind === 'social') add(3, `Only a ${si.label} page (${si.host}), no website of its own`, 'A real website on their own domain: found on Google, more trusted, and enquiries land straight on WhatsApp');
+  if (si.kind === 'builder') add(2, `Free ${si.label} address instead of their own domain`, 'Own domain + professional site: business email, credibility and better Google ranking');
+  if (si.http && si.kind !== 'none') add(2, 'Opens without https, so browsers show "Not secure"', 'SSL certificate and secure hosting');
+  if (a && a.unreachable) add(3, 'Website did not load at audit time', 'Urgent: fix the hosting or domain, or rebuild. They are losing enquiries right now');
+  if (a && a.ok) {
+    if (a.https === false && !si.http) add(2, 'No https (browsers show "Not secure")', 'SSL certificate and secure hosting');
+    if (a.hasViewport === false) add(3, 'Not mobile-friendly', 'Responsive redesign. Most local customers browse on phones');
+    if (a.perf != null && a.perf < 50) add(2, `Slow on mobile (${a.perf}/100${a.lcp ? `, main content appears after ${(a.lcp / 1000).toFixed(1)}s` : ''})`, 'Speed work: lighter images, better hosting, caching');
+    if (a.hasWhatsapp === false) add(2, 'No WhatsApp enquiry button', 'WhatsApp click-to-chat and a floating chat button');
+    if (a.hasForm === false && a.hasPhone === false) add(2, 'No enquiry form or tap-to-call number', 'Enquiry form and click-to-call on every page');
+    if (a.seo != null && a.seo < 70) add(1, `Weak SEO basics (${a.seo}/100)`, 'On-page SEO: titles, descriptions, Google Business Profile setup');
+    if (a.copyrightYear && a.copyrightYear < new Date().getFullYear() - 2) add(1, `Looks outdated (© ${a.copyrightYear})`, 'Modern redesign');
+  }
+  if (si.kind !== 'real' && l.reviews >= 20 && l.rating >= 4.3) add(1, `Strong Google reputation (${l.rating}★, ${l.reviews} reviews) is not working for them online`, 'Show reviews and testimonials on the site');
+  items.sort((x, y) => y.sev - x.sev);
+  const audited = a && (a.ok || a.unreachable), gaps = items.filter(i => i.sev >= 2 || si.kind !== 'real').length;
+  let headline;
+  if (si.kind === 'none') headline = 'No website';
+  else if (si.kind === 'social') headline = `${si.label} page only`;
+  else if (si.kind === 'builder') headline = 'Free-builder site';
+  else if (!audited) headline = si.http ? 'Not secure (http). Audit for more' : 'Has a website. Not audited yet';
+  else headline = items.length ? `${items.length} website issue${items.length > 1 ? 's' : ''}` : 'Site looks fine, low priority';
+  const bigSite = si.kind === 'none' || si.kind === 'social' ? (l.reviews >= 20 || ruleFor(l).weight >= 12) : items.some(i => i.sev === 3);
+  const pk = S.packages[bigSite ? Math.min(1, S.packages.length - 1) : 0];
+  return { headline, items, audited: !!audited, si, pkg: !items.length ? null : pk };
+}
+const oppShort = l => opportunity(l).headline;
+function scoreChip(label, n) { return n == null ? '' : `<span class="pill" style="border-color:${n >= 90 ? 'var(--ok)' : n >= 50 ? 'var(--warn)' : 'var(--bad)'}">${label} ${n}</span>`; }
+function siteCard(l) {
+  const op = opportunity(l), a = l.audit, shot = shotGet(l.id), can = siteInfo(l).kind === 'real' || siteInfo(l).kind === 'builder';
+  return `<div class="card"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">Website &amp; ARR opportunity</h3>${can ? `<button class="btn small" onclick="A.audit('${l.id}')">${a ? 'Re-audit' : 'Audit website'}</button>` : ''}</div>
+    <div style="margin:8px 0">🌐 ${siteLink(l)} ${a && a.finalUrl && a.finalUrl !== l.website && safeUrl(a.finalUrl) ? `<span class="muted">→ ${esc(a.finalUrl)}</span>` : ''}</div>
+    <div class="actions" style="align-items:flex-start;flex-wrap:nowrap">${shot.startsWith('data:image/') ? `<img alt="Mobile screenshot of the website" src="${shot}" style="width:120px;border-radius:8px;border:1px solid var(--line);flex:none">` : ''}
+    <div style="min-width:0;flex:1">${a && a.ok ? `<div class="chips" style="margin-bottom:8px">${scoreChip('Mobile speed', a.perf)}${scoreChip('SEO', a.seo)}${scoreChip('Best practice', a.bp)}${scoreChip('Accessibility', a.a11y)}</div>` : ''}
+    <div><b>${esc(op.headline)}</b>${!op.audited && op.si.kind === 'real' ? `<div class="muted">${S.placesKey || S.backend ? 'Tap Audit website to see what is missing.' : 'Add your Google key and enable PageSpeed Insights API (Settings) to audit.'}</div>` : ''}</div></div></div>
+    ${op.items.length ? `<h3 style="margin:12px 0 6px">What is missing → what ARR can sell</h3>${op.items.map(i => `<div style="margin:6px 0"><span class="${i.sev === 3 ? 'bad' : i.sev === 2 ? 'warn' : 'muted'}">●</span> <b>${esc(i.issue)}</b><div class="muted" style="margin-left:16px">→ ${esc(i.fix)}</div></div>`).join('')}
+    ${op.pkg ? `<div class="tip good" style="margin-top:8px"><span>Suggested package: <b>${esc(op.pkg.name)}</b> (${money(op.pkg.price)}). ${esc(op.pkg.desc)}</span></div>` : ''}<button class="btn small" onclick="A.copyOpp('${l.id}')">Copy findings for call / proposal</button>` : ''}
+    ${a && a.unreachable ? '<div class="tip bad" style="margin-top:8px"><span>The site did not load when audited. It may be down. Open it yourself to check before you call.</span></div>' : ''}</div>`;
+}
+function siteChip(si) {
+  return si.kind === 'social' ? `<span class="pill warn">${esc(si.label)} page only</span>` : si.kind === 'builder' ? '<span class="pill warn">free builder</span>' : si.http ? '<span class="pill warn">http, not secure</span>' : '';
+}
+function siteLink(l) {
+  const si = siteInfo(l); if (si.kind === 'none') return '<b class="ok">No website</b>';
+  return `${safeUrl(l.website) ? `<a href="${esc(l.website)}" target="_blank" rel="noopener" style="color:var(--b)">${esc(si.host)} ↗</a>` : esc(l.website)} ${siteChip(si)}`;
+}
+/* Screenshots are kept apart from the lead so they are neither synced nor bloat backups. */
+const SHOT_KEY = 'arr_lead_engine_v11_shots';
+function shotGet(id) { try { return (JSON.parse(localStorage.getItem(SHOT_KEY) || '{}')[id] || {}).d || ''; } catch (e) { return ''; } }
+function shotSet(id, d) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SHOT_KEY) || '{}'); all[id] = { d, t: Date.now() };
+    const keys = Object.keys(all).sort((a, b) => all[b].t - all[a].t); keys.slice(30).forEach(k => delete all[k]);
+    localStorage.setItem(SHOT_KEY, JSON.stringify(all));
+  } catch (e) { /* storage full: skip thumbnail */ }
 }
 function scoreLead(l) {
   const parts = []; let s = 0;
   const add = (n, why) => { s += n; parts.push([n, why]); };
-  if (!l.website) add(30, 'No website — clear gap to sell into');
+  const si = siteInfo(l);
+  if (si.kind === 'none') add(30, 'No website: clear gap to sell into');
+  else if (si.kind === 'social') add(30, `Only a ${si.label} page: no website of its own`);
+  else if (si.kind === 'builder') add(20, 'Free-builder site on someone else\'s domain');
+  else if (l.audit && l.audit.unreachable) add(30, 'Website did not load');
   else if (l.audit && l.audit.ok) { const g = auditGaps(l); add(Math.min(24, g.length * 8), g.length ? `${g.length} website gap(s) found` : 'Website audited, looks fine'); }
-  else add(8, 'Has a website (not audited yet)');
+  else add(si.http ? 12 : 8, si.http ? 'Website without https (not audited yet)' : 'Has a website (not audited yet)');
   if (!l.phone || l.phoneBad) add(-25, 'No usable phone number');
   else if (isMobile(l.phone)) add(20, 'Mobile number — reachable on WhatsApp');
   else add(10, 'Landline — call only');
@@ -292,7 +374,10 @@ const scoreCls = n => n >= 70 ? 'hi' : n >= 50 ? 'mid' : 'lo';
 const scorePill = l => { const n = score(l); return `<span class="sc ${scoreCls(n)}" title="Fit score">${n}</span>`; };
 
 function hookFor(l) {
-  if (!l.website) {
+  const si = siteInfo(l);
+  if (si.kind === 'social') return `I noticed ${l.name} is only on ${si.label}, without a website of its own, so people who search on Google can't easily find you or enquire.`;
+  if (si.kind === 'builder') return `I noticed your website sits on a free ${si.label} address rather than your own domain, which makes a good business look less established.`;
+  if (si.kind === 'none') {
     return l.reviews >= 10 && l.rating
       ? `You have ${l.reviews} Google reviews at ${l.rating}★, but I couldn't find a website, so people searching online can't see your work or enquire.`
       : "I couldn't find a website for you, so people searching online can't see your work or enquire.";
@@ -480,7 +565,7 @@ function qrow(l, label) {
   else btns = `<button class="btn wa" onclick="A.compose('${l.id}')">Message</button>${dialOK(l) ? `<button class="btn" onclick="A.call('${l.id}')">📞</button>` : ''}<button class="btn" onclick="A.next('${l.id}')">Next step</button>`;
   if (!l.pending) btns += `<button class="btn" title="Log a reply" onclick="A.reply('${l.id}')">💬 Replied</button><button class="btn" title="Snooze 1 day" onclick="A.snooze('${l.id}',1)">⏭</button>`;
   return `<div class="row ${l.pending ? 'pending' : ''}"><div class="rmain" onclick="A.open('${l.id}')"><b>${esc(l.name)}</b> ${scorePill(l)} <span class="pill">${esc(l.status)}</span>
-  <div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.reviews ? ` · ${l.rating}★ (${l.reviews})` : ''}${l.website ? '' : ' · no website'}${!waOK(l) && l.phone && !l.phoneBad ? ' · landline' : ''}</div>
+  <div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.reviews ? ` · ${l.rating}★ (${l.reviews})` : ''}· ${esc(oppShort(l))}${!waOK(l) && l.phone && !l.phoneBad ? ' · landline' : ''}</div>
   <div>${esc(label || l.nextAction || '')} <span class="${late ? 'bad' : 'muted'}">· ${dueLabel(l.nextDate)}</span></div></div><div class="racts">${btns}</div></div>`;
 }
 function group(title, list, label, note = '', limit = 200) {
@@ -535,9 +620,8 @@ function filterLeads() {
   const a = L().filter(l => (!q || [l.name, l.phone, l.area, l.industry, l.notes].join(' ').toLowerCase().includes(q)) && (!s || l.status === s) && (!ind || ruleFor(l).label === ind) && (!src || l.source === src) &&
     (!f || (f === 'nowebsite' ? !l.website : f === 'nophone' ? (!l.phone || l.phoneBad) : f === 'nonext' ? noNextStep().includes(l) : f === 'hot' ? score(l) >= 70 : l.dnc))).sort((x, y) => score(y) - score(x));
   const shown = a.slice(0, 300);
-  $('#leadres').innerHTML = `<table><thead><tr><th><input type="checkbox" onchange="A.selAll(this.checked)"></th><th>Business</th><th>Fit</th><th>Stage</th><th>Touches</th><th>Next</th><th>Value</th></tr></thead><tbody>${shown.map(l => {
-    const sent = l.activities.filter(x => x.type === 'Message Sent').length;
-    return `<tr><td><input type="checkbox" data-id="${l.id}" ${sel.has(l.id) ? 'checked' : ''} onchange="A.sel('${l.id}',this.checked)"></td><td><a href="#" style="color:var(--b);text-decoration:none" onclick="A.open('${l.id}');return false"><b>${esc(l.name)}</b></a><div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.dnc ? ' · <span class="bad">DNC</span>' : ''}</div></td><td>${scorePill(l)}</td><td><span class="pill">${esc(l.status)}</span></td><td>${sent}</td><td>${esc(l.nextAction || '—')}<div class="muted">${dueLabel(l.nextDate)}</div></td><td>${money(l.proposalValue || l.value)}</td></tr>`;
+  $('#leadres').innerHTML = `<table><thead><tr><th><input type="checkbox" onchange="A.selAll(this.checked)"></th><th>Business</th><th>Fit</th><th>Website / opportunity</th><th>Stage</th><th>Next</th><th>Value</th></tr></thead><tbody>${shown.map(l => {
+    return `<tr><td><input type="checkbox" data-id="${l.id}" ${sel.has(l.id) ? 'checked' : ''} onchange="A.sel('${l.id}',this.checked)"></td><td><a href="#" style="color:var(--b);text-decoration:none" onclick="A.open('${l.id}');return false"><b>${esc(l.name)}</b></a><div class="muted">${esc(l.industry || '')}${l.area ? ' · ' + esc(l.area) : ''}${l.dnc ? ' · <span class="bad">DNC</span>' : ''}</div></td><td>${scorePill(l)}</td><td>${siteLink(l)}<div class="opp">💡 ${esc(oppShort(l))}</div></td><td><span class="pill">${esc(l.status)}</span></td><td>${esc(l.nextAction || '—')}<div class="muted">${dueLabel(l.nextDate)}</div></td><td>${money(l.proposalValue || l.value)}</td></tr>`;
   }).join('') || '<tr><td colspan="7" class="empty">No matching leads.</td></tr>'}</tbody></table>${a.length > 300 ? `<div class="muted">Showing top 300 of ${a.length}. Narrow the filters.</div>` : ''}`;
   $('#bulk').innerHTML = sel.size ? `<b>${sel.size} selected</b><button class="btn small" onclick="A.bulk('qualify')">Mark Qualified</button><button class="btn small" onclick="A.bulk('audit')">Audit websites</button><button class="btn small" onclick="A.bulk('dnc')">Do not contact</button><button class="btn small danger" onclick="A.bulk('delete')">Delete</button>` : `<span class="muted">${a.length} lead(s)</span>`;
 }
@@ -670,8 +754,8 @@ function viewSettings() {
      <ol class="muted" style="margin:0 0 10px;padding-left:20px;line-height:1.7">
       <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/projectcreate">Create a Google Cloud project</a> (any name).</li>
       <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/billing">Link a billing account</a>. Google requires a card, but the first 1,000 searches a month that include phone and website are free.</li>
-      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/library/places.googleapis.com">Enable “Places API (New)”</a>.</li>
-      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/credentials">Create an API key</a>. Under <b>Application restrictions → Websites</b> add <code>https://aminullah112-oss.github.io/*</code>. Under <b>API restrictions</b> pick only Places API (New).</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/library/places.googleapis.com">Enable “Places API (New)”</a> and also <a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com">“PageSpeed Insights API”</a> (free, used for website audits).</li>
+      <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/apis/credentials">Create an API key</a>. Under <b>Application restrictions → Websites</b> add <code>https://aminullah112-oss.github.io/*</code>. Under <b>API restrictions</b> tick Places API (New) and PageSpeed Insights API.</li>
       <li><a target="_blank" rel="noopener" style="color:var(--b)" href="https://console.cloud.google.com/billing/budgets">Create a budget alert</a> (e.g. ₹500) so a mistake can't run up a bill.</li>
       <li>Paste the key below, Save settings, then tap Test key.</li></ol>
      <div class="form"><div class="full"><label>Google Places API key</label><input id="s_pk" type="password" value="${esc(S.placesKey)}" placeholder="AIza…" autocomplete="off"></div></div>
@@ -822,11 +906,64 @@ async function discoverPlaces(type, area, max) {
   if (S.placesKey) return placesDirect(`${type} in ${area}`, max);
   throw new Error('Add a Google Places API key (Settings → Google Places) or a backend URL first');
 }
+/* ---- Real website audit via Google PageSpeed Insights (Lighthouse). Works from the browser with the same Google key. ---- */
+function psiError(status, m) {
+  m = (m || '').toLowerCase();
+  if (/has not been used|is disabled|not enabled|service_disabled/.test(m)) return 'Turn on "PageSpeed Insights API" in Google Cloud (Settings has the link) and allow it on your key, then retry.';
+  if (/blocked|api_key_service_blocked|referer|referrer/.test(m)) return 'Your key is not allowed to call PageSpeed Insights. In the key\'s API restrictions add "PageSpeed Insights API".';
+  if (status === 429 || /quota/.test(m)) return 'Google audit quota reached. Try again later.';
+  return 'Website audit failed (' + status + ')' + (m ? ': ' + m.slice(0, 140) : '');
+}
+async function psiAudit(url) {
+  const q = new URLSearchParams({ url, strategy: 'mobile' });
+  ['performance', 'seo', 'best-practices', 'accessibility'].forEach(c => q.append('category', c));
+  if (S.placesKey) q.set('key', S.placesKey);
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 90000); let r;
+  try { r = await fetch('https://www.googleapis.com/pagespeedonline/v5/runPagespeed?' + q, { signal: ctl.signal }); }
+  catch (e) { throw new Error(e.name === 'AbortError' ? 'Website audit timed out' : 'Could not reach Google PageSpeed'); }
+  finally { clearTimeout(timer); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const m = (j.error && j.error.message) || '';
+    if (/FAILED_DOCUMENT_REQUEST|ERRORED_DOCUMENT_REQUEST|DNS_FAILURE|unable to reliably load/i.test(m)) return { audit: { ok: false, unreachable: true, error: 'Site did not load', source: 'psi', at: nowIso() } };
+    throw new Error(psiError(r.status, m));
+  }
+  const lr = j.lighthouseResult || {}, au = lr.audits || {}, ct = lr.categories || {}, sc = k => ct[k] && ct[k].score != null ? Math.round(ct[k].score * 100) : null;
+  const shot = au['final-screenshot'] && au['final-screenshot'].details && au['final-screenshot'].details.data;
+  return {
+    audit: {
+      ok: true, source: 'psi', at: nowIso(), finalUrl: lr.finalDisplayedUrl || lr.finalUrl || url,
+      https: au['is-on-https'] ? au['is-on-https'].score === 1 : /^https:/.test(lr.finalUrl || url),
+      hasViewport: au['viewport'] ? au['viewport'].score === 1 : undefined,
+      hasMetaDescription: au['meta-description'] ? au['meta-description'].score === 1 : undefined,
+      perf: sc('performance'), seo: sc('seo'), bp: sc('best-practices'), a11y: sc('accessibility'),
+      lcp: au['largest-contentful-paint'] ? Math.round(au['largest-contentful-paint'].numericValue || 0) : 0
+    },
+    shot: typeof shot === 'string' && shot.startsWith('data:image/') && shot.length < 250000 ? shot : ''
+  };
+}
 async function auditLead(l) {
-  const j = await api('/api/audit', { website: l.website });
-  l.audit = { ...j.audit, at: nowIso() };
-  act(l, 'Website Audit', { note: l.audit.ok ? (auditGaps(l).map(g => g.k).join(', ') || 'no gaps found') : 'Could not fetch: ' + l.audit.error });
+  if (!S.placesKey && !S.backend) throw new Error('To audit websites, add your Google key (Settings → Google Places) and enable PageSpeed Insights API');
+  const kind = siteInfo(l).kind; if (kind === 'none') throw new Error('No website to audit'); if (kind === 'social') throw new Error('Only a social/directory page, nothing to audit');
+  const parts = []; let shot = '', firstErr = '';
+  if (S.placesKey) { try { const r = await psiAudit(l.website); parts.push(r.audit); shot = r.shot; } catch (e) { firstErr = e.message; } }
+  if (S.backend) { try { parts.push((await api('/api/audit', { website: l.website })).audit); } catch (e) { firstErr = firstErr || e.message; } }
+  if (!parts.length) throw new Error(firstErr || 'Audit failed');
+  const strip = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null));
+  let merged = {}; for (const p of parts) merged = { ...merged, ...strip(p) };
+  merged.ok = parts.some(p => p.ok);
+  if (merged.ok) delete merged.unreachable; else merged.unreachable = parts.some(p => p.unreachable);
+  l.audit = merged;
+  if (shot) shotSet(l.id, shot);
+  const op = opportunity(l);
+  act(l, 'Website Audit', { note: l.audit.ok ? (op.items.map(i => i.issue).join('; ') || 'no major issues found') : (l.audit.unreachable ? 'Website did not load' : 'Could not audit: ' + (l.audit.error || '')) });
   commit(l);
+}
+async function auditMany(list, workers = 3) {
+  const todo = list.filter(l => ['real', 'builder'].includes(siteInfo(l).kind) && !l.audit); let n = 0, fail = 0, msg = '';
+  const run = async () => { while (todo.length) { const l = todo.shift(); try { await auditLead(l); n++; } catch (e) { fail++; msg = msg || e.message; } } };
+  await Promise.all(Array.from({ length: Math.min(workers, todo.length) }, run));
+  return { n, fail, msg };
 }
 
 /* ---------------------------------------------------------------- actions */
@@ -856,11 +993,11 @@ const A = {
       ${cad && waOK(l) && nt.ch === 'whatsapp' ? `<button class="btn wa" onclick="A.wa('${id}')">WhatsApp: ${esc(tplName)}</button>` : ''}
       ${waOK(l) ? `<button class="btn" onclick="A.compose('${id}')">Message…</button>` : ''}${dialOK(l) ? `<button class="btn" onclick="A.call('${id}')">📞 Call</button>` : ''}
       <button class="btn" onclick="A.reply('${id}')">💬 Log reply</button><button class="btn" onclick="A.proposal('${id}')">📄 Proposal</button><button class="btn good" onclick="A.won('${id}')">🏆 Won</button><button class="btn" onclick="A.lost('${id}')">Lost</button><button class="btn" onclick="A.next('${id}')">Set next step</button>
-      ${cad ? `<button class="btn" onclick="A.skip('${id}')">Skip step</button>` : ''}${l.website ? `<button class="btn" onclick="A.audit('${id}')">Audit website</button>` : ''}</div>
+      ${cad ? `<button class="btn" onclick="A.skip('${id}')">Skip step</button>` : ''}</div>
+     ${siteCard(l)}
      <div class="grid g2"><div class="card"><h3>Details</h3><div class="form">${field('e_name', 'Business', l.name)}${field('e_ind', 'Industry', l.industry)}${field('e_area', 'Area', l.area)}${field('e_phone', 'Phone', l.phone)}${field('e_email', 'Email', l.email)}${field('e_web', 'Website', l.website)}${field('e_val', 'Estimated value (₹)', l.value, 'type="number"')}<div style="display:flex;align-items:flex-end;gap:8px">${safeUrl(l.mapsUrl) ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.mapsUrl)}">Maps</a>` : ''}${safeUrl(l.website) ? `<a class="btn" target="_blank" rel="noopener" href="${esc(l.website)}">Site</a>` : ''}</div>
       <div class="full"><label>Notes</label><textarea id="e_notes" rows="3">${esc(l.notes)}</textarea></div></div><div class="actions" style="margin-top:8px"><button class="btn primary" onclick="A.saveLead('${id}')">Save</button><button class="btn danger" onclick="A.del('${id}')">Delete</button></div>
-      <h3 style="margin-top:14px">Why this score</h3>${sc.parts.map(p => `<div class="${p[0] < 0 ? 'bad' : ''}">${p[0] > 0 ? '+' : ''}${p[0]} · ${esc(p[1])}</div>`).join('')}
-      ${l.audit && l.audit.ok ? `<h3 style="margin-top:14px">Website audit</h3><div class="muted">${esc(l.audit.title || '')}</div>${auditGaps(l).map(g => `<div class="warn">✗ ${esc(g.hook)}</div>`).join('') || '<div class="ok">No major gaps found</div>'}` : ''}</div>
+      <h3 style="margin-top:14px">Why this score</h3>${sc.parts.map(p => `<div class="${p[0] < 0 ? 'bad' : ''}">${p[0] > 0 ? '+' : ''}${p[0]} · ${esc(p[1])}</div>`).join('')}</div>
       <div class="card"><h3>Timeline</h3><div class="tl">${l.activities.slice().reverse().map(a => `<div class="ev"><b>${esc(a.type)}${a.to ? ` → ${esc(a.to)}` : ''}${a.cls ? ` · ${esc(REPLY_CLASSES[a.cls] || a.cls)}` : ''}</b>${a.channel ? ` <span class="muted">${esc(a.channel)}</span>` : ''}<div>${esc(a.note || a.text || '')}</div><div class="t">${new Date(a.at).toLocaleString()}</div></div>`).join('')}</div></div></div>`);
   },
   add() {
@@ -987,13 +1124,18 @@ const A = {
     if (kind === 'qualify') ls.forEach(l => { if (l.status === 'New') { setStage(l, 'Qualified'); l.updated = nowIso(); } });
     if (kind === 'dnc') ls.forEach(l => { l.dnc = true; l.nextDate = ''; l.updated = nowIso(); });
     if (kind === 'audit') {
-      const todo = ls.filter(l => l.website && !l.audit); let n = 0, fail = 0;
-      const worker = async () => { while (todo.length) { const l = todo.shift(); try { await auditLead(l); n++; } catch (e) { fail++; if (fail === 1) toast('Audit failed: ' + e.message); } } };
-      toast(`Auditing ${todo.length} website(s)…`); await Promise.all([worker(), worker(), worker()]); toast(`Audited ${n}${fail ? `, ${fail} failed` : ''}`);
+      const n0 = ls.filter(l => ['real', 'builder'].includes(siteInfo(l).kind) && !l.audit).length;
+      if (!n0) { toast('Nothing to audit: selected leads have no auditable website, or are already audited'); return; }
+      toast(`Auditing ${n0} website(s) in the background…`); const r = await auditMany(ls); toast(r.n ? `Audited ${r.n}${r.fail ? `, ${r.fail} failed` : ''}` : (r.msg || 'Audit failed'));
     }
     save(); sel.clear(); render();
   },
-  async audit(id) { const l = byId(id); try { toast('Auditing…'); await auditLead(l); A.open(id); render(); } catch (e) { toast(e.message); } },
+  async audit(id) { const l = byId(id); try { toast('Auditing… this takes 15–40 seconds'); l.audit = null; await auditLead(l); A.open(id); render(); toast('Audit done'); } catch (e) { toast(e.message); } },
+  copyOpp(id) {
+    const l = byId(id), op = opportunity(l);
+    const txt = `${l.name} (${op.si.host || 'no website'})\n` + op.items.map(i => `- ${i.issue} -> ${i.fix}`).join('\n') + (op.pkg ? `\nSuggested: ${op.pkg.name} (${money(op.pkg.price)})` : '');
+    navigator.clipboard.writeText(txt).then(() => toast('Copied'), () => toast('Copy failed'));
+  },
   /* discovery */
   quick() {
     const name = val('qa_name').trim(), phone = val('qa_phone').trim(); if (!name) return toast('Enter the business name');
@@ -1005,13 +1147,22 @@ const A = {
   },
   showFound(list, area, note) {
     const seen = new Set(L().flatMap(dupKeys)), a0 = area.split(',')[0].trim();
-    placesFound = list.map(p => ({ ...p, area: a0, address: p.address || p.area, dup: dupKeys(newLead({ ...p, area: a0 })).some(k => seen.has(k)) }))
-      .sort((x, y) => (!!y.phone - !!x.phone) || (!!x.website - !!y.website));
+    placesFound = list.map(p => { const t = newLead({ ...p, area: a0 }); return { ...p, area: a0, address: p.address || p.area, dup: dupKeys(t).some(k => seen.has(k)), _t: t }; })
+      .sort((x, y) => (!!y.phone - !!x.phone) || (score(y._t) - score(x._t)));
     $('#pl_card').style.display = 'block';
-    const withPhone = placesFound.filter(p => p.phone).length;
+    const withPhone = placesFound.filter(p => p.phone).length, canAudit = !!(S.placesKey || S.backend);
     $('#pl_res').innerHTML = `<div class="tip ${withPhone / Math.max(1, placesFound.length) >= .5 ? 'good' : 'warn'}"><span>${placesFound.length} businesses found, <b>${withPhone} with a phone number</b> (${pct(withPhone, placesFound.length)}%). ${note || ''}</span></div>
-      <div class="tw"><table><thead><tr><th></th><th>Business</th><th>Phone</th><th>Website</th><th>Reviews</th></tr></thead><tbody>${placesFound.map((p, i) => `<tr class="${p.dup ? 'muted' : ''}"><td><input type="checkbox" class="pf" data-i="${i}" ${p.dup || !p.phone ? '' : 'checked'} ${p.dup ? 'disabled' : ''}></td><td><b>${esc(p.name)}</b><div class="muted">${esc(p.industry)}${p.dup ? ' · already in CRM' : ''}</div></td><td>${esc(p.phone || '—')}</td><td>${p.website ? '✓' : '<b class="ok">none</b>'}</td><td>${p.reviews ? `${p.rating}★ (${p.reviews})` : '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No results</td></tr>'}</tbody></table></div>
-      <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button><span class="muted">Ticked = has a phone and is new. Tick others to add them and find the number later.</span></div>`;
+      ${placesFound.map((p, i) => {
+        const t = p._t, op = opportunity(t), top = op.items[0];
+        return `<label class="row" style="align-items:flex-start;cursor:pointer;${p.dup ? 'opacity:.55' : ''}"><input type="checkbox" class="pf" data-i="${i}" style="width:auto;margin-top:5px" ${p.dup || !p.phone ? '' : 'checked'} ${p.dup ? 'disabled' : ''}>
+        <div class="rmain" style="cursor:pointer"><b>${esc(p.name)}</b> ${scorePill(t)}${p.dup ? ' <span class="muted">· already in CRM</span>' : ''}
+        <div class="muted">${esc(p.industry)} · ${p.phone ? esc(p.phone) : '<span class="warn">no phone</span>'}${p.reviews ? ` · ${p.rating}★ (${p.reviews})` : ''}</div>
+        <div>🌐 ${siteLink(t)}</div>
+        <div class="opp">💡 <b>${esc(op.headline)}</b>${top ? ': ' + esc(top.fix) : op.si.kind === 'real' && !op.audited ? '. Audit it after adding to see what is missing.' : ''}</div></div></label>`;
+      }).join('') || '<div class="empty">No results</div>'}
+      <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button>
+      <label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="pf_audit" style="width:auto" ${canAudit ? 'checked' : 'disabled'}> Audit their websites after adding</label></div>
+      <p class="muted">Ticked = has a phone and is new. ${canAudit ? '' : 'Website audits need your Google key (Settings) with PageSpeed Insights API enabled. '}Audits take 15–40 s per site and run in the background.</p>`;
     $('#pl_card').scrollIntoView({ behavior: 'smooth' });
   },
   async search() {
@@ -1032,7 +1183,12 @@ const A = {
   },
   addFound() {
     const rows = [...document.querySelectorAll('.pf')].filter(x => x.checked).map(x => placesFound[+x.dataset.i]);
-    const { fresh, dups } = prepareImport(rows, { source: 'Map search' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`); render();
+    const { fresh, dups } = prepareImport(rows, { source: 'Map search' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`);
+    const wantAudit = $('#pf_audit') && $('#pf_audit').checked; render();
+    if (wantAudit && fresh.some(l => ['real', 'builder'].includes(siteInfo(l).kind))) {
+      toast('Auditing websites in the background…');
+      auditMany(fresh).then(r => { toast(r.n ? `Audited ${r.n} website(s)${r.fail ? `, ${r.fail} failed` : ''}. See Leads.` : (r.msg || 'Nothing to audit')); if (page === 'leads') render(); });
+    }
   },
   readFile(inp) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#im_text').value = r.result; $('#im_src').value = f.name; }; r.readAsText(f); },
   previewImport() {

@@ -44,6 +44,15 @@ Discover → “Free map search” needs no key and no card. It geocodes the are
 5–20 km from Overpass, by category. Coverage of small Indian towns is patchy and phone tags are sparse; every result set shows
 how many have a phone so you can judge the source quickly. Data © OpenStreetMap contributors (ODbL).
 
+### Website check and ARR opportunity
+
+Every business with a website shows the real link, a badge (free builder, social page only, not secure) and a “💡 opportunity”
+line in Discover, Leads and the lead screen. With a Google key that also has **PageSpeed Insights API** enabled (free, add it
+to the key's API restrictions), “Audit website” runs a real mobile Lighthouse test: speed, SEO, https, mobile-friendliness and
+a screenshot. Findings become a “what is missing → what ARR can sell” list with a suggested package, feed the fit score, and
+open your outreach message (“your website is slow on mobile phones…”). Tick “Audit their websites after adding” to do it in bulk.
+PageSpeed cannot see whether a site has a WhatsApp button or enquiry form. That check needs the optional backend.
+
 ### Google Places search without a server
 
 Settings → Google Places: paste a Google Cloud API key (Places API (New) enabled). It's called from the browser, so restrict

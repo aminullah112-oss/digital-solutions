@@ -123,6 +123,57 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(/Key works/.test(gk.toast), 'Test key button reports success');
   ok(gk.details, 'Quick add + Google search present, OSM inside collapsed details');
 
+  // Website triage + opportunity + PageSpeed audit
+  const site = await page.evaluate(async () => {
+    const mk = (o) => newLead({ name: 'T', phone: '9000011111', ...o }), out = {};
+    out.kinds = ['', 'https://www.acme.in/', 'http://acme.in', 'https://facebook.com/acme', 'https://instagram.com/acme', 'https://acme.wixsite.com/x', 'https://sites.google.com/view/x', 'javascript:alert(1)', 'https://acme.business.site'].map(w => { const si = siteInfo(mk({ website: w })); return si.kind + (si.http ? '+http' : ''); });
+    const none = opportunity(mk({ reviews: 92, rating: 4.9 })), soc = opportunity(mk({ website: 'https://facebook.com/acme' })), bld = opportunity(mk({ website: 'https://a.wixsite.com/x' }));
+    out.none = [none.headline, none.items[0].issue, none.pkg.name]; out.soc = [soc.headline, soc.items[0].issue]; out.bld = bld.headline;
+    // PSI
+    const psi = (perf, seo, viewport, https) => ({ lighthouseResult: { finalDisplayedUrl: 'https://acme.in/', categories: { performance: { score: perf }, seo: { score: seo }, 'best-practices': { score: .9 }, accessibility: { score: .8 } },
+      audits: { 'is-on-https': { score: https ? 1 : 0 }, viewport: { score: viewport ? 1 : 0 }, 'meta-description': { score: 1 }, 'largest-contentful-paint': { numericValue: 6400 }, 'final-screenshot': { details: { data: 'data:image/jpeg;base64,AAAA' } } } } });
+    const f = window.fetch; let calls = [];
+    S.placesKey = 'K';
+    window.fetch = async (u) => { calls.push(u); return new Response(JSON.stringify(psi(.32, .6, false, true)), { status: 200 }); };
+    const l = mk({ website: 'https://acme.in', reviews: 30, rating: 4.5 }); addLeads([l]);
+    const before = score(l); await auditLead(l); const op = opportunity(l);
+    out.psi = { ok: l.audit.ok, perf: l.audit.perf, viewport: l.audit.hasViewport, wa: l.audit.hasWhatsapp, url: calls[0].includes('key=K') && calls[0].includes('strategy=mobile') && calls[0].includes('category=seo'),
+      issues: op.items.map(i => i.issue), scoreUp: score(l) > before, shot: shotGet(l.id).startsWith('data:image/'), pkg: op.pkg && op.pkg.name };
+    // unreachable site
+    window.fetch = async () => new Response(JSON.stringify({ error: { message: 'Lighthouse returned error: FAILED_DOCUMENT_REQUEST. Lighthouse was unable to reliably load the page you requested.' } }), { status: 500 });
+    const d = mk({ website: 'https://dead.example' }); addLeads([d]); await auditLead(d);
+    out.dead = [d.audit.unreachable, opportunity(d).items[0].issue];
+    // errors are actionable
+    window.fetch = async () => new Response(JSON.stringify({ error: { message: 'PageSpeed Insights API has not been used in project 1 before or it is disabled.' } }), { status: 403 });
+    let e1 = ''; try { await auditLead(mk({ website: 'https://z.example' })); } catch (e) { e1 = e.message; }
+    out.err = e1;
+    // social/none can't be audited
+    let e2 = ''; try { await auditLead(mk({ website: 'https://facebook.com/x' })); } catch (e) { e2 = e.message; }
+    out.social = e2;
+    window.fetch = f; S.placesKey = '';
+    // results cards show the real link, chip and opportunity; hostile URL is not linked
+    go('discover');
+    A.showFound([{ placeId: 'g1', name: 'Has Site', phone: '+919000022222', website: 'http://hassite.in/?utm=1', industry: 'shoe', rating: 4.8, reviews: 40 }, { placeId: 'g2', name: 'FB Only', phone: '+919000033333', website: 'https://facebook.com/fbonly', industry: 'shoe' }, { placeId: 'g3', name: 'Nothing', phone: '+919000044444', website: '', industry: 'shoe' }, { placeId: 'g4', name: 'Evil', phone: '+919000055555', website: 'javascript:alert(1)', industry: 'shoe' }], 'Melvisharam', '');
+    out.html = document.querySelector('#pl_res').innerText;
+    out.links = [...document.querySelectorAll('#pl_res a')].map(a => [a.href, a.rel, a.target]);
+    out.bad = document.querySelectorAll('#pl_res a[href^="javascript"]').length;
+    // lead modal + leads table
+    A.open(l.id); out.modal = document.querySelector('#mbox').innerText; out.img = !!document.querySelector('#mbox img'); closeModal();
+    go('leads'); out.table = document.querySelector('#leadres').innerText;
+    return out;
+  });
+  ok(site.kinds.join() === 'none,real,real+http,social,social,builder,builder,none,social', 'website triage classifies real / http / social / builder / invalid: ' + site.kinds.join());
+  ok(site.none[0] === 'No website' && site.none[2] === 'Business' && /Facebook page only/.test(site.soc[0]) && site.bld === 'Free-builder site', 'opportunity headlines + package suggestion');
+  ok(site.psi.ok && site.psi.perf === 32 && site.psi.viewport === false && site.psi.wa === undefined && site.psi.url, 'PageSpeed result parsed (scores, mobile flag, unknown WhatsApp left unknown)');
+  ok(site.psi.issues.some(i => /Not mobile-friendly/.test(i)) && site.psi.issues.some(i => /Slow on mobile \(32\/100, main content appears after 6.4s/.test(i)) && !site.psi.issues.some(i => /WhatsApp/.test(i)), 'issues listed from audit; no false WhatsApp claim');
+  ok(site.psi.scoreUp && site.psi.shot && site.psi.pkg === 'Business', 'audit raises fit score, stores screenshot, suggests Business package');
+  ok(site.dead[0] === true && /did not load/.test(site.dead[1]), 'unreachable site becomes a top opportunity');
+  ok(/PageSpeed Insights API/.test(site.err) && /nothing to audit/.test(site.social), 'audit errors are actionable; social pages not audited');
+  ok(/hassite\.in/.test(site.html) && /Facebook page only/.test(site.html) && /No website/.test(site.html) && /http, not secure/.test(site.html) && /💡/.test(site.html), 'results show real website, chips and opportunity');
+  ok(site.links.every(x => x[1].includes('noopener') && x[2] === '_blank') && site.links.length === 2 && site.bad === 0, 'website links open safely; javascript: URL not linked');
+  ok(/What is missing/.test(site.modal) && /Not mobile-friendly/.test(site.modal) && /Suggested package: Business/.test(site.modal) && site.img && /Mobile speed 32/.test(site.modal), 'lead screen shows findings, opportunity, package, screenshot');
+  ok(/Website \/ opportunity/.test(site.table) && /No website/.test(site.table), 'leads table has opportunity column');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
@@ -203,7 +254,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 8, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 10, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });
