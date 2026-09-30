@@ -122,14 +122,17 @@ const DEFAULT_SETTINGS = {
     { id: 'price', name: 'Reply: pricing', body: "Thanks for getting back, {name} team! Our packages:\n{packages}\n\nFinal price depends on pages and content, and I'm happy to fit your budget. Can we do a quick 10-minute call today or tomorrow?" },
     { id: 'meeting', name: 'Reply: book a call/visit', body: "Great! What time suits you for a 10-minute call or a visit this week? I'll bring a sample made for {name}." },
     { id: 'sitedemo', name: 'Sample website + proposal', body: "Hello {name} team, {me} from {brand}. I made a sample website for {name} so you can see what it could look like:\n{sitelink}\n\nIt has your call and WhatsApp buttons, your Google rating and your location. If you like it, we can put it on your own domain with your real photos and products.\n{packages}\n\nCan I call you this week to hear what you'd change?\n(Reply STOP if you'd rather not hear from me.)" },
+    { id: 'bot_pitch', name: 'Chatbot pitch', body: "Hello {name} team, {me} from {brand}. Customers often message businesses on WhatsApp with the same questions again and again ({botuse}).\n\nWe set up a WhatsApp chatbot that answers those instantly, 24/7, and passes serious enquiries to you. Can I show you a 2-minute demo made for {name}?\n\n(Reply STOP if you'd rather not hear from me.)" },
     { id: 'fu_demo', name: 'Follow-up after sample website', body: "Hello {name} team, {me} from {brand} again. Did you get a chance to look at the sample website I made for {name}?\n{sitelink}\n\nHappy to change the colours, add your photos and products, and launch it on your own domain." },
     { id: 'chase', name: 'Proposal chase', body: "Hello {name} team, just checking whether you had a chance to look at the proposal. Happy to adjust scope or budget. Shall we finalise this week?" }
   ],
   packages: [
     { id: 'starter', name: 'Starter', price: 15000, desc: 'One-page website, WhatsApp enquiry button, Google Maps, mobile-friendly' },
     { id: 'business', name: 'Business', price: 30000, desc: 'Up to 5 pages, product/service catalogue, enquiry form, basic SEO' },
-    { id: 'growth', name: 'Growth', price: 50000, desc: 'Business + Google Business Profile setup + WhatsApp catalogue + 3 months support' }
+    { id: 'growth', name: 'Growth', price: 50000, desc: 'Business + Google Business Profile setup + WhatsApp catalogue + 3 months support' },
+    { id: 'chatbot', name: 'WhatsApp Chatbot (add-on)', price: 10000, desc: 'Answers common questions, shares catalogue/prices and captures enquiries on WhatsApp 24/7, handing serious buyers to you. Setup plus 1 month support' }
   ],
+  seedV12: true,
   rules: [
     { label: 'Manufacturer / exporter', match: 'leather|shoe|footwear|manufactur|factory|export|garment|textile|sheet ?metal|fabricat|engineering|industr', weight: 15, angle: 'a product-catalogue website that buyers and agents can browse and enquire from, with a WhatsApp enquiry button' },
     { label: 'Clinic / health', match: 'clinic|hospital|dental|doctor|pharma|diagnostic|lab\\b|scan', weight: 12, angle: 'an appointment page with WhatsApp booking and directions' },
@@ -229,6 +232,7 @@ function mergeSettings(s) {
   const out = { ...structuredClone(DEFAULT_SETTINGS), ...(s || {}) };
   out.cloud = { ...DEFAULT_SETTINGS.cloud, ...((s || {}).cloud || {}) };
   for (const t of DEFAULT_SETTINGS.templates) if (!out.templates.some(x => x.id === t.id)) out.templates.push(structuredClone(t));
+  if (!(s && s.seedV12)) { out.seedV12 = true; if (!out.packages.some(x => x.id === 'chatbot')) out.packages.push(structuredClone(DEFAULT_SETTINGS.packages.find(x => x.id === 'chatbot'))); }
   return out;
 }
 
@@ -294,7 +298,7 @@ function auditGaps(l) {
 }
 /* Ordered list of {sev 1-3, issue, fix}; sev 3 = strongest reason to buy. */
 function opportunity(l) {
-  const si = siteInfo(l), a = l.audit, items = [], add = (sev, issue, fix) => items.push({ sev, issue, fix });
+  const si = siteInfo(l), a = l.audit, items = [], add = (sev, issue, fix, addon) => items.push({ sev, issue, fix, addon: !!addon });
   if (si.kind === 'none') add(3, 'No website of its own', 'Design and launch a mobile-friendly site with WhatsApp enquiry, Google Maps directions and product/service pages');
   if (si.kind === 'social') add(3, `Only a ${si.label} page (${si.host}), no website of its own`, 'A real website on their own domain: found on Google, more trusted, and enquiries land straight on WhatsApp');
   if (si.kind === 'builder') add(2, `Free ${si.label} address instead of their own domain`, 'Own domain + professional site: business email, credibility and better Google ranking');
@@ -310,6 +314,8 @@ function opportunity(l) {
     if (a.copyrightYear && a.copyrightYear < new Date().getFullYear() - 2) add(1, `Looks outdated (© ${a.copyrightYear})`, 'Modern redesign');
   }
   if (si.kind !== 'real' && l.reviews >= 20 && l.rating >= 4.3) add(1, `Strong Google reputation (${l.rating}★, ${l.reviews} reviews) is not working for them online`, 'Show reviews and testimonials on the site');
+  const botPkg = S.packages.find(x => x.id === 'chatbot');
+  if (botPkg && l.phone && isMobile(l.phone) && !l.phoneBad) add(a && a.hasWhatsapp === false ? 2 : 1, 'Likely no WhatsApp auto-reply or catalogue bot (cannot be checked remotely, ask them)', `Add-on: WhatsApp chatbot to ${botUse(l)}`, true);
   items.sort((x, y) => y.sev - x.sev);
   const audited = a && (a.ok || a.unreachable), gaps = items.filter(i => i.sev >= 2 || si.kind !== 'real').length;
   let headline;
@@ -317,11 +323,21 @@ function opportunity(l) {
   else if (si.kind === 'social') headline = `${si.label} page only`;
   else if (si.kind === 'builder') headline = 'Free-builder site';
   else if (!audited) headline = si.http ? 'Not secure (http). Audit for more' : 'Has a website. Not audited yet';
-  else headline = items.length ? `${items.length} website issue${items.length > 1 ? 's' : ''}` : 'Site looks fine, low priority';
+  else { const n = items.filter(i => !i.addon).length; headline = n ? `${n} website issue${n > 1 ? 's' : ''}` : 'Site looks fine, low priority'; }
   const bigSite = si.kind === 'none' || si.kind === 'social' ? (l.reviews >= 20 || ruleFor(l).weight >= 12) : items.some(i => i.sev === 3);
   const pk = S.packages[bigSite ? Math.min(1, S.packages.length - 1) : 0];
-  return { headline, items, audited: !!audited, si, pkg: !items.length ? null : pk };
+  const core = items.filter(i => !i.addon);
+  return { headline, items, audited: !!audited, si, pkg: !core.length ? null : pk, addon: items.some(i => i.addon) ? botPkg : null };
 }
+const BOT_USES = {
+  'Manufacturer / exporter': 'send the catalogue and price list, and collect bulk and export enquiries',
+  'Clinic / health': 'share timings and fees, and book appointments',
+  'Food / hospitality': 'share the menu, take orders and table bookings',
+  'Education': 'answer fee, course and admission questions',
+  'Retail / trade': 'share the catalogue and prices, and take orders',
+  'Other': 'answer common questions and capture enquiries'
+};
+const botUse = l => BOT_USES[ruleFor(l).label] || BOT_USES.Other;
 const oppShort = l => opportunity(l).headline;
 function scoreChip(label, n) { return n == null ? '' : `<span class="pill" style="border-color:${n >= 90 ? 'var(--ok)' : n >= 50 ? 'var(--warn)' : 'var(--bad)'}">${label} ${n}</span>`; }
 function lpBlock(l) {
@@ -339,8 +355,8 @@ function siteCard(l) {
     <div class="actions" style="align-items:flex-start;flex-wrap:nowrap">${shot.startsWith('data:image/') ? `<img alt="Mobile screenshot of the website" src="${shot}" style="width:120px;border-radius:8px;border:1px solid var(--line);flex:none">` : ''}
     <div style="min-width:0;flex:1">${a && a.ok ? `<div class="chips" style="margin-bottom:8px">${scoreChip('Mobile speed', a.perf)}${scoreChip('SEO', a.seo)}${scoreChip('Best practice', a.bp)}${scoreChip('Accessibility', a.a11y)}</div>` : ''}
     <div><b>${esc(op.headline)}</b>${!op.audited && op.si.kind === 'real' ? `<div class="muted">${S.placesKey || S.backend ? 'Tap Audit website to see what is missing.' : 'Add your Google key and enable PageSpeed Insights API (Settings) to audit.'}</div>` : ''}</div></div></div>
-    ${op.items.length ? `<h3 style="margin:12px 0 6px">What is missing → what ARR can sell</h3>${op.items.map(i => `<div style="margin:6px 0"><span class="${i.sev === 3 ? 'bad' : i.sev === 2 ? 'warn' : 'muted'}">●</span> <b>${esc(i.issue)}</b><div class="muted" style="margin-left:16px">→ ${esc(i.fix)}</div></div>`).join('')}
-    ${op.pkg ? `<div class="tip good" style="margin-top:8px"><span>Suggested package: <b>${esc(op.pkg.name)}</b> (${money(op.pkg.price)}). ${esc(op.pkg.desc)}</span></div>` : ''}<button class="btn small" onclick="A.copyOpp('${l.id}')">Copy findings for call / proposal</button>` : ''}
+    ${op.items.length ? `<h3 style="margin:12px 0 6px">What is missing → what ARR can sell</h3>${op.items.map(i => `<div style="margin:6px 0"><span class="${i.sev === 3 ? 'bad' : i.sev === 2 ? 'warn' : 'muted'}">●</span> ${i.addon ? '<span class="pill">upsell</span> ' : ''}<b>${esc(i.issue)}</b><div class="muted" style="margin-left:16px">→ ${esc(i.fix)}</div></div>`).join('')}
+    ${op.pkg ? `<div class="tip good" style="margin-top:8px"><span>Suggested package: <b>${esc(op.pkg.name)}</b> (${money(op.pkg.price)}). ${esc(op.pkg.desc)}</span></div>` : ''}${op.addon && waOK(l) ? `<div class="tip" style="margin-top:8px"><span>Add-on: <b>${esc(op.addon.name)}</b> (${money(op.addon.price)}). ${esc(op.addon.desc)}</span><button class="btn small wa" onclick="A.compose('${l.id}','bot_pitch')">Send chatbot pitch</button></div>` : ''}<button class="btn small" onclick="A.copyOpp('${l.id}')">Copy findings for call / proposal</button>` : ''}
     ${lpBlock(l)}
     ${a && a.unreachable ? '<div class="tip bad" style="margin-top:8px"><span>The site did not load when audited. It may be down. Open it yourself to check before you call.</span></div>' : ''}</div>`;
 }
@@ -400,7 +416,7 @@ function hookFor(l) {
 function packageLines() { return S.packages.map(p => `• ${p.name} — ${money(p.price)}: ${p.desc}`).join('\n'); }
 function renderTpl(id, l) {
   const t = S.templates.find(x => x.id === id); if (!t) return '';
-  const v = { name: l.name, me: S.me, brand: S.brand, area: l.area, industry: l.industry, hook: hookFor(l), angle: ruleFor(l).angle, portfolio: S.portfolio, packages: packageLines(), sitelink: l.lp ? l.lp.liveUrl : '' };
+  const v = { name: l.name, me: S.me, brand: S.brand, area: l.area, industry: l.industry, hook: hookFor(l), angle: ruleFor(l).angle, portfolio: S.portfolio, packages: packageLines(), sitelink: l.lp ? l.lp.liveUrl : '', botuse: botUse(l) };
   return t.body.split('\n').map(line => {
     let drop = false;
     const out = line.replace(/\{(\w+)\}/g, (m, k) => { if (!(k in v)) return m; if (!v[k]) drop = true; return v[k]; });
@@ -1322,7 +1338,7 @@ const A = {
   lpBriefCopy(id) { const l = byId(id); navigator.clipboard.writeText(lpBrief(l)).then(() => toast('Brief copied. Paste it into Claude Code'), () => toast('Copy failed')); },
   copyOpp(id) {
     const l = byId(id), op = opportunity(l);
-    const txt = `${l.name} (${op.si.host || 'no website'})\n` + op.items.map(i => `- ${i.issue} -> ${i.fix}`).join('\n') + (op.pkg ? `\nSuggested: ${op.pkg.name} (${money(op.pkg.price)})` : '');
+    const txt = `${l.name} (${op.si.host || 'no website'})\n` + op.items.map(i => `- ${i.issue} -> ${i.fix}`).join('\n') + (op.pkg ? `\nSuggested: ${op.pkg.name} (${money(op.pkg.price)})` : '') + (op.addon ? `\nAdd-on: ${op.addon.name} (${money(op.addon.price)})` : '');
     navigator.clipboard.writeText(txt).then(() => toast('Copied'), () => toast('Copy failed'));
   },
   /* discovery */

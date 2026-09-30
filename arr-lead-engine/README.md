@@ -62,6 +62,16 @@ and the next reminder asks whether they saw the sample.
 - Design sample for a fictional business: `arr-lead-engine/sample/index.html`.
 - The preview link uses the third-party rawcdn.githack.com host. Publishing to GitHub Pages is the reliable link to send.
 
+### WhatsApp chatbot upsell
+
+Every WhatsApp-able lead gets an **upsell** line in its opportunity list: a WhatsApp chatbot (answers common questions, shares
+the catalogue or prices, captures enquiries 24/7) worded for the industry: appointments for clinics, menu and orders for food,
+catalogue and bulk enquiries for manufacturers. It is marked *cannot be checked remotely*, because a website audit cannot see
+whether a business already runs a bot, so ask before you pitch. It rises in priority when the audit finds no WhatsApp button.
+The lead screen has **Send chatbot pitch** (a personalised message with opt-out). The package **WhatsApp Chatbot (add-on)**
+is added to Settings → Packages once for existing users, with a placeholder price of ₹10,000; set your real price. The CRM does
+not name any specific chatbot vendor. Decide separately which platform you deliver it on.
+
 ### Discovery only shows new businesses
 
 Search results hide every business already in the CRM: contacted, lost, not-interested, still-new **and deleted** ones. They

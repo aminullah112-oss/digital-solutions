@@ -138,7 +138,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
     const l = mk({ website: 'https://acme.in', reviews: 30, rating: 4.5 }); addLeads([l]);
     const before = score(l); await auditLead(l); const op = opportunity(l);
     out.psi = { ok: l.audit.ok, perf: l.audit.perf, viewport: l.audit.hasViewport, wa: l.audit.hasWhatsapp, url: calls[0].includes('key=K') && calls[0].includes('strategy=mobile') && calls[0].includes('category=seo'),
-      issues: op.items.map(i => i.issue), scoreUp: score(l) > before, shot: shotGet(l.id).startsWith('data:image/'), pkg: op.pkg && op.pkg.name };
+      issues: op.items.filter(i => !i.addon).map(i => i.issue), scoreUp: score(l) > before, shot: shotGet(l.id).startsWith('data:image/'), pkg: op.pkg && op.pkg.name };
     // unreachable site
     window.fetch = async () => new Response(JSON.stringify({ error: { message: 'Lighthouse returned error: FAILED_DOCUMENT_REQUEST. Lighthouse was unable to reliably load the page you requested.' } }), { status: 500 });
     const d = mk({ website: 'https://dead.example' }); addLeads([d]); await auditLead(d);
@@ -296,6 +296,31 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(/Ring Clinic/.test(nb.ringTxt) && /ring 1/.test(nb.ringTxt), 'wider results are shown as new businesses');
   ok(/No new businesses/.test(nb.none) && /Search wider/.test(nb.none) && /already in your CRM/.test(nb.none), 'when everything is known, says so and offers a wider search');
 
+  // Chatbot add-on: upsell shown only for WhatsApp-able leads, clearly marked unverified, industry wording, pitch template, migration
+  const cb = await page.evaluate(() => {
+    const mk = o => newLead({ name: 'Bot Test', phone: '9000012345', ...o }), out = {};
+    const clinic = mk({ industry: 'dental clinic' }), leather = mk({ industry: 'leather goods manufacturer' }), landline = mk({ phone: '04172 222333' });
+    const oc = opportunity(clinic), ol = opportunity(landline);
+    out.clinic = oc.items.find(i => i.addon); out.addon = oc.addon && oc.addon.name; out.landline = ol.items.some(i => i.addon) || !!ol.addon;
+    out.uses = [botUse(clinic), botUse(leather)];
+    const wa = mk({ website: 'https://x.example', audit: { ok: true, https: true, hasViewport: true, hasWhatsapp: false, perf: 90, seo: 90 } });
+    out.sev = opportunity(wa).items.find(i => i.addon).sev; out.headline = opportunity(wa).headline;
+    out.tpl = renderTpl('bot_pitch', clinic);
+    out.card = siteCard(clinic).includes('Send chatbot pitch') && siteCard(clinic).includes('upsell');
+    out.mig = mergeSettings({ packages: [{ id: 'starter', name: 'S', price: 1, desc: '' }] }).packages.map(p => p.id).join();
+    out.mig2 = mergeSettings({ seedV12: true, packages: [{ id: 'starter', name: 'S', price: 1, desc: '' }] }).packages.map(p => p.id).join();
+    out.fresh = DEFAULT_SETTINGS.packages.some(p => p.id === 'chatbot');
+    out.copy = (() => { db.push(clinic); return true; })();
+    return out;
+  });
+  ok(cb.clinic && /cannot be checked remotely/.test(cb.clinic.issue) && /book appointments/.test(cb.clinic.fix) && cb.addon === 'WhatsApp Chatbot (add-on)', 'chatbot add-on offered, worded as unverified, with clinic-specific use');
+  ok(!cb.landline, 'no chatbot upsell for landline-only leads');
+  ok(/catalogue and price list/.test(cb.uses[1]) && /book appointments/.test(cb.uses[0]), 'chatbot use case follows the industry');
+  ok(cb.sev === 2 && /^1 website issue$/.test(cb.headline), 'no WhatsApp button on the site raises the chatbot upsell; add-on does not inflate the issue count');
+  ok(/WhatsApp chatbot that answers those instantly/.test(cb.tpl) && /share timings and fees/.test(cb.tpl) && /STOP/.test(cb.tpl), 'chatbot pitch message is personalised and has an opt-out');
+  ok(cb.card, 'lead screen offers Send chatbot pitch');
+  ok(cb.mig === 'starter,chatbot' && cb.mig2 === 'starter' && cb.fresh, 'chatbot package is added once for existing users and never re-added after deletion');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
@@ -376,7 +401,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 16, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 17, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });
