@@ -97,7 +97,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   await page.evaluate(() => go('discover'));
   await page.click('details summary'); await page.click('button[onclick="A.osmSearch()"]'); await page.waitForSelector('#pl_res .tip');
   const empty = await page.locator('#pl_res').innerText();
-  ok(/0 businesses found/.test(empty) && /very little mapped/.test(empty) && /Melvisharam, Ranipet/.test(empty), 'empty OSM result is explained with the resolved place');
+  ok(/No new businesses/.test(empty) && /very little mapped/.test(empty) && /Melvisharam, Ranipet/.test(empty), 'empty OSM result is explained with the resolved place');
   await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '9000000001'); await page.press('#qa_phone', 'Enter');
   ok(await page.evaluate(() => L().some(l => l.name === 'Quick Leathers' && l.source === 'Manual (Maps)')) && await page.inputValue('#qa_name') === '', 'quick add saves on Enter and clears for the next');
   await page.fill('#qa_name', 'Quick Leathers'); await page.fill('#qa_phone', '90000 00001'); await page.press('#qa_phone', 'Enter');
@@ -253,6 +253,49 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(/wa\.me\/919003850628\?text=Hello%20Dyecode%20Craft%2C%20I%20am%20Ravi/.test(await lpPage.evaluate(() => window.__wa)), 'enquiry form opens WhatsApp to the business with the message');
   await lpPage.screenshot({ path: '/tmp/claude-0/patch/lp-m.png', fullPage: true });
 
+  // Already-approached businesses are hidden; search keeps looking for new ones; wider search rings
+  const nb = await page.evaluate(async () => {
+    const out = {}, f = window.fetch, reqs = [];
+    // CRM already holds: a contacted clinic (by phone), a lost one (by placeId), a deleted one, and a new-status one
+    const mk = o => { const l = newLead(o); db.push(l); return l; };
+    mk({ name: 'Old Clinic A', phone: '9111111111', area: 'Ambur', status: 'Contacted' });
+    mk({ name: 'Lost Clinic B', phone: '', placeId: 'pB', area: 'Ambur', status: 'Lost' });
+    const gone = mk({ name: 'Gone Clinic C', phone: '9333333333', area: 'Ambur' }); gone.deleted = true;
+    mk({ name: 'Fresh Status D', phone: '9444444444', area: 'Ambur' });
+    save();
+    const pl = (id, name, phone, lat, lng) => ({ id, displayName: { text: name }, internationalPhoneNumber: phone, location: { latitude: lat, longitude: lng }, userRatingCount: 5, rating: 4.5 });
+    const pages = { a: { places: [pl('pA', 'Old Clinic A (Google name differs)', '+91 91111 11111', 12.80, 79.20), pl('pB', 'Lost Clinic B', '', 12.80, 79.21), pl('pC', 'Gone Clinic C', '+91 93333 33333', 12.81, 79.2), pl('pD', 'Fresh Status D', '+91 94444 44444', 12.8, 79.2), pl('pN1', 'Brand New One', '+91 95555 55555', 12.82, 79.22)], nextPageToken: 't2' },
+      b: { places: [pl('pN2', 'Brand New Two', '+91 96666 66666', 12.79, 79.19), pl('pN3', 'Brand New Three', '', 12.79, 79.18)] } };
+    S.placesKey = 'K'; S.backend = '';
+    window.fetch = async (u, o) => { const b = JSON.parse(o.body); reqs.push(b); return new Response(JSON.stringify(b.pageToken ? pages.b : (b.locationRestriction ? { places: [pl('R' + reqs.length + 'a', 'Ring Clinic ' + reqs.length, '+91 97000 0000' + reqs.length, 12.9, 79.3)] } : pages.a)), { status: 200 }); };
+    go('discover'); document.querySelector('#pl_type_s').value = 'clinic'; document.querySelector('#pl_area_s').value = 'Ambur'; document.querySelector('#pl_max').value = '20';
+    await A.search();
+    out.txt = document.querySelector('#pl_res').innerText; out.names = [...document.querySelectorAll('#pl_res .rmain > b:first-child')].map(b => b.innerText);
+    out.reqs0 = reqs.length; out.centre = M.centers['clinic|Ambur'];
+    // toggle shows hidden ones greyed out and disabled
+    A.toggleHidden(); out.shown = document.querySelectorAll('#pl_res .row').length; out.disabled = document.querySelectorAll('#pl_res input.pf:disabled').length; A.toggleHidden();
+    // adding removes them from the list but keeps the rest on screen; a fresh search will not offer them again
+    A.addFound(); out.afterAdd = [...document.querySelectorAll('#pl_res .rmain > b:first-child')].map(b => b.innerText);
+    // wider search: 4 restricted rectangles, ring persisted, known ones filtered
+    reqs.length = 0; await A.findMore();
+    out.ringReq = reqs.map(r => !!r.locationRestriction && r.textQuery); out.ring = M.rings['clinic|Ambur']; out.ringTxt = document.querySelector('#pl_res').innerText;
+    const rect = reqs[0].locationRestriction.rectangle; out.rect = [rect.low.longitude > out.centre.lng + 0.02, Math.abs((rect.high.latitude - rect.low.latitude) * 111 - 8) < 0.5];
+    reqs.length = 0; await A.findMore(); out.ring2 = M.rings['clinic|Ambur'];
+    // everything known -> clear message
+    window.fetch = async () => new Response(JSON.stringify({ places: [pl('pA', 'Old Clinic A', '+91 91111 11111', 1, 1)] }), { status: 200 });
+    await A.search(); out.none = document.querySelector('#pl_res').innerText;
+    window.fetch = f; S.placesKey = '';
+    return out;
+  });
+  ok(!nb.names.some(n => /Old Clinic|Lost Clinic|Gone Clinic|Fresh Status/.test(n)) && nb.names.length === 3, 'contacted, lost, deleted and already-logged businesses are hidden (matched by phone or place id): ' + nb.names.join(' | '));
+  ok(/3 new businesses/.test(nb.txt) && /4 already in your CRM hidden/.test(nb.txt), 'note says how many were hidden');
+  ok(nb.shown === 7 && nb.disabled === 4, 'Show them reveals the known ones greyed out and not selectable');
+  ok(nb.afterAdd.join() === 'Brand New Three', 'after adding the ticked ones, results stay on screen and the added ones disappear: ' + nb.afterAdd.join(' | '));
+  ok(nb.ringReq.length === 4 && nb.ringReq.every(x => x === 'clinic') && nb.ring === 1 && nb.ring2 === 2, 'wider search runs 4 location-restricted requests and remembers the ring');
+  ok(nb.rect[0] && nb.rect[1], 'ring rectangles are offset from the centre and about 8 km wide');
+  ok(/Ring Clinic/.test(nb.ringTxt) && /ring 1/.test(nb.ringTxt), 'wider results are shown as new businesses');
+  ok(/No new businesses/.test(nb.none) && /Search wider/.test(nb.none) && /already in your CRM/.test(nb.none), 'when everything is known, says so and offers a wider search');
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
@@ -333,7 +376,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 11, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 16, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });

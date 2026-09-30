@@ -556,13 +556,16 @@ function head(t, s, a = '') { return `<div class="top"><div><h1>${t}</h1><div cl
 function kpi(l, n, e = '') { return `<div class="card kpi"><div class="muted">${l}</div><div class="n">${n}</div><div class="muted">${e}</div></div>`; }
 function bar(label, n, max, right) { return `<div class="brow"><span>${esc(label)}</span><div class="bar"><i style="width:${max ? Math.min(100, n / max * 100) : 0}%"></i></div><b>${right ?? n}</b></div>`; }
 
-function render() {
+function render() { renderChrome(); renderView(); }
+function renderChrome() {
   const q = buildQueue(), badge = q.reply.length + q.deals.length + q.follow.length;
   const nav = PAGES.map(([id, ic, t]) => `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')">${ic} ${t}${id === 'today' && badge ? `<span class="badge">${badge}</span>` : ''}</button>`).join('');
   $('#nav').innerHTML = nav;
   $('#mnav').innerHTML = PAGES.map(([id, ic, t]) => `<button class="${page === id ? 'active' : ''}" onclick="go('${id}')"><span>${ic}</span>${t}${id === 'today' && badge ? `<i class="badge">${badge}</i>` : ''}</button>`).join('');
   const pend = L().filter(l => l.pending);
   $('#banner').innerHTML = pend.length ? `<div class="banner"><b>Did you actually send these?</b> Opening WhatsApp isn't the same as sending.${pend.map(l => `<div class="row"><div>${esc(l.name)} <span class="muted">· opened ${ago(l.pending.at)}</span></div><div class="racts"><button class="btn small good" onclick="A.confirm('${l.id}',1)">✓ Sent</button><button class="btn small" onclick="A.confirm('${l.id}',0)">✗ Not sent</button></div></div>`).join('')}</div>` : '';
+}
+function renderView() {
   $('#view').innerHTML = { today: viewToday, pipeline: viewPipeline, leads: viewLeads, discover: viewDiscover, analytics: viewAnalytics, settings: viewSettings }[page]();
   if (page === 'leads') filterLeads();
 }
@@ -724,9 +727,9 @@ function viewDiscover() {
     `<div class="card"><h2>Google Places search</h2>${(S.backend || S.placesKey) ? '' : `<div class="tip warn"><span>Needs a Google API key (Settings → Google Places) or the backend.</span><button class="btn small" onclick="go('settings')">Settings</button></div>`}<div class="form">
      <div><label>Business type</label>${pickField('pl_type', PLACE_TYPES, '', 'Select a type…')}</div>
      <div><label>Area</label>${pickField('pl_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
-     <div><label>How many (max 60)</label><select id="pl_max"><option>20</option><option>40</option><option>60</option></select></div>
+     <div><label>New businesses to find</label><select id="pl_max"><option>10</option><option selected>20</option><option>40</option></select></div>
      <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="A.search()">Search</button></div></div>
-     <p class="muted">Each search is a billed Google Places request (1,000 phone-and-website searches a month are free). Existing leads are flagged so you don't re-import them.</p></div>
+     <p class="muted">Each search is a billed Google Places request (1,000 phone-and-website searches a month are free). Businesses already in your CRM, including contacted, lost and deleted ones, are hidden so you only see new ones.</p></div>
         <details class="card"><summary style="cursor:pointer;font-weight:700">Free map search (OpenStreetMap) <span class="pill">sparse in small towns</span></summary><div style="height:10px"></div><div class="form">
      <div><label>Business category</label>${pickField('osm_cat', Object.keys(OSM_CATS), Object.keys(OSM_CATS)[0], 'Select a category…')}</div>
      <div><label>Area</label>${pickField('osm_area', S.areas, S.areas[0] || '', 'Select an area…')}</div>
@@ -1019,7 +1022,7 @@ Pitch angle: ${ruleFor(l).angle}`;
 
 /* Places search straight from the browser. The key is visible to anyone who can open devtools on this
    device, so it MUST be restricted in Google Cloud (HTTP referrer = this site, API = Places API (New) only). */
-const PLACES_FIELDS = 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken';
+const PLACES_FIELDS = 'places.location,places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.googleMapsUri,places.businessStatus,nextPageToken';
 function placesError(status, j) {
   const m = ((j.error && j.error.message) || '').toLowerCase(), st = ((j.error && j.error.status) || '');
   if (/referer|referrer/.test(m)) return `Google blocked this address. Your key is limited to specific websites and this page isn't on the list. Open the CRM from https://aminullah112-oss.github.io/digital-solutions/arr-lead-engine/ (not a file or preview link), or add this address to the key's allowed websites.`;
@@ -1030,26 +1033,32 @@ function placesError(status, j) {
   if (status === 429 || /quota|rate/.test(m)) return 'Google quota reached for now. Try later or check quotas in Google Cloud.';
   return 'Google Places error ' + status + (m ? ': ' + m.slice(0, 160) : '');
 }
-async function placesDirect(query, wanted) {
+async function placesDirect(query, wanted, rect, enough) {
   const seen = new Set(), out = []; let token = '';
   while (out.length < wanted) {
-    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': S.placesKey, 'X-Goog-FieldMask': PLACES_FIELDS }, body: JSON.stringify({ textQuery: query, pageSize: 20, ...(token ? { pageToken: token } : {}) }) });
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': S.placesKey, 'X-Goog-FieldMask': PLACES_FIELDS }, body: JSON.stringify({ textQuery: query, pageSize: 20, ...(rect ? { locationRestriction: { rectangle: rect } } : {}), ...(token ? { pageToken: token } : {}) }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(placesError(r.status, j));
     for (const p of j.places || []) {
       if (seen.has(p.id) || /^CLOSED/.test(p.businessStatus || '')) continue;
       seen.add(p.id);
-      out.push({ placeId: p.id, name: (p.displayName || {}).text || '', industry: (p.primaryTypeDisplayName || {}).text || 'Other', area: p.formattedAddress || '', phone: p.internationalPhoneNumber || p.nationalPhoneNumber || '', website: p.websiteUri || '', rating: p.rating || 0, reviews: p.userRatingCount || 0, mapsUrl: p.googleMapsUri || '', source: 'Google Places' });
+      out.push({ placeId: p.id, name: (p.displayName || {}).text || '', industry: (p.primaryTypeDisplayName || {}).text || 'Other', area: p.formattedAddress || '', phone: p.internationalPhoneNumber || p.nationalPhoneNumber || '', website: p.websiteUri || '', rating: p.rating || 0, reviews: p.userRatingCount || 0, mapsUrl: p.googleMapsUri || '', source: 'Google Places', lat: p.location ? p.location.latitude : null, lng: p.location ? p.location.longitude : null });
     }
-    token = j.nextPageToken || ''; if (!token) break;
+    token = j.nextPageToken || ''; if (!token || (enough && enough(out))) break;
   }
   return out.slice(0, wanted);
 }
-async function discoverPlaces(type, area, max) {
-  if (S.backend) return (await api('/api/discover', { type, area, maxResults: max })).leads;
-  if (S.placesKey) return placesDirect(`${type} in ${area}`, max);
+async function discoverPlaces(type, area, max, rect, enough) {
+  if (S.backend) return (await api('/api/discover', { type, area, maxResults: max, ...(rect ? { rect } : {}) })).leads;
+  if (S.placesKey) return placesDirect(rect ? type : `${type} in ${area}`, max, rect, enough);
   throw new Error('Add a Google Places API key (Settings → Google Places) or a backend URL first');
 }
+/* Businesses we already hold (including deleted, lost and not-interested ones) are never shown again. */
+const knownSet = () => new Set(db.flatMap(dupKeys));
+const isKnown = (p, area, known) => dupKeys(newLead({ ...p, area })).some(k => known.has(k));
+const RING_KM = 8, RING_HALF_KM = 4, RING_DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+function rectAround(lat, lng, halfKm) { const dl = halfKm / 111, dg = halfKm / (111 * Math.cos(lat * Math.PI / 180)); return { low: { latitude: lat - dl, longitude: lng - dg }, high: { latitude: lat + dl, longitude: lng + dg } }; }
+const centreOf = list => { const pts = list.filter(p => p.lat != null && p.lng != null); return pts.length ? { lat: pts.reduce((a, p) => a + p.lat, 0) / pts.length, lng: pts.reduce((a, p) => a + p.lng, 0) / pts.length } : null; };
 /* ---- Real website audit via Google PageSpeed Insights (Lighthouse). Works from the browser with the same Google key. ---- */
 function psiError(status, m) {
   m = (m || '').toLowerCase();
@@ -1325,13 +1334,16 @@ const A = {
     addLeads(fresh); window._qa = (window._qa || 0) + 1;
     ['qa_name', 'qa_phone', 'qa_web'].forEach(id => $('#' + id).value = ''); $('#qa_count').textContent = `${window._qa} added this session`; $('#qa_name').focus(); toast('Added ✓');
   },
-  showFound(list, area, note) {
-    const seen = new Set(L().flatMap(dupKeys)), a0 = area.split(',')[0].trim();
-    placesFound = list.map(p => { const t = newLead({ ...p, area: a0 }); return { ...p, area: a0, address: p.address || p.area, dup: dupKeys(t).some(k => seen.has(k)), _t: t }; })
-      .sort((x, y) => (!!y.phone - !!x.phone) || (score(y._t) - score(x._t)));
+  showFound(list, area, note, ctx, showHidden) {
+    const known = knownSet(), a0 = area.split(',')[0].trim();
+    const all = list.map(p => { const t = newLead({ ...p, area: a0 }); return { ...p, area: a0, address: p.address || p.area, dup: dupKeys(t).some(k => known.has(k)), _t: t }; });
+    const hidden = all.filter(p => p.dup).length;
+    placesFound = (showHidden ? all : all.filter(p => !p.dup)).sort((x, y) => (!!y.phone - !!x.phone) || (score(y._t) - score(x._t)));
+    window._lastFound = { list, area, note, ctx, showHidden: !!showHidden };
     $('#pl_card').style.display = 'block';
-    const withPhone = placesFound.filter(p => p.phone).length, canAudit = !!(S.placesKey || S.backend);
-    $('#pl_res').innerHTML = `<div class="tip ${withPhone / Math.max(1, placesFound.length) >= .5 ? 'good' : 'warn'}"><span>${placesFound.length} businesses found, <b>${withPhone} with a phone number</b> (${pct(withPhone, placesFound.length)}%). ${note || ''}</span></div>
+    const fresh = placesFound.filter(p => !p.dup), withPhone = fresh.filter(p => p.phone).length, canAudit = !!(S.placesKey || S.backend);
+    const more = ctx ? `<button class="btn" onclick="A.findMore()">Search wider for more new businesses</button><span class="muted">${ctx.ring ? `Searched out to ring ${ctx.ring} so far. ` : ''}Uses about ${8} Google requests.</span>` : '';
+    $('#pl_res').innerHTML = `<div class="tip ${fresh.length && withPhone / fresh.length >= .5 ? 'good' : 'warn'}"><span>${fresh.length ? `<b>${fresh.length} new businesses</b>, ${withPhone} with a phone number (${pct(withPhone, fresh.length)}%).` : '<b>No new businesses</b> in this search.'} ${hidden ? `${hidden} already in your CRM ${showHidden ? 'shown greyed out' : 'hidden'}. <a href="#" style="color:var(--b)" onclick="A.toggleHidden();return false">${showHidden ? 'Hide them' : 'Show them'}</a>.` : ''} ${note || ''}</span></div>
       ${placesFound.map((p, i) => {
         const t = p._t, op = opportunity(t), top = op.items[0];
         return `<label class="row" style="align-items:flex-start;cursor:pointer;${p.dup ? 'opacity:.55' : ''}"><input type="checkbox" class="pf" data-i="${i}" style="width:auto;margin-top:5px" ${p.dup || !p.phone ? '' : 'checked'} ${p.dup ? 'disabled' : ''}>
@@ -1339,17 +1351,40 @@ const A = {
         <div class="muted">${esc(p.industry)} · ${p.phone ? esc(p.phone) : '<span class="warn">no phone</span>'}${p.reviews ? ` · ${p.rating}★ (${p.reviews})` : ''}</div>
         <div>🌐 ${siteLink(t)}</div>
         <div class="opp">💡 <b>${esc(op.headline)}</b>${top ? ': ' + esc(top.fix) : op.si.kind === 'real' && !op.audited ? '. Audit it after adding to see what is missing.' : ''}</div></div></label>`;
-      }).join('') || '<div class="empty">No results</div>'}
-      <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="A.addFound()">Add selected</button>
-      <label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="pf_audit" style="width:auto" ${canAudit ? 'checked' : 'disabled'}> Audit their websites after adding</label></div>
-      <p class="muted">Ticked = has a phone and is new. ${canAudit ? '' : 'Website audits need your Google key (Settings) with PageSpeed Insights API enabled. '}Audits take 15–40 s per site and run in the background.</p>`;
+      }).join('') || `<div class="empty">${hidden ? 'Everything found is already in your CRM.' : 'No results'}</div>`}
+      <div class="actions" style="margin-top:10px">${fresh.length ? `<button class="btn primary" onclick="A.addFound()">Add selected</button>
+      <label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="pf_audit" style="width:auto" ${canAudit ? 'checked' : 'disabled'}> Audit their websites after adding</label>` : ''}${more}</div>
+      <p class="muted">${fresh.length ? `Ticked = has a phone. ${canAudit ? '' : 'Website audits need your Google key (Settings) with PageSpeed Insights API enabled. '}Audits take 15–40 s per site and run in the background.` : ''}</p>`;
     $('#pl_card').scrollIntoView({ behavior: 'smooth' });
   },
+  toggleHidden() { const f = window._lastFound; if (f) A.showFound(f.list, f.area, f.note, f.ctx, !f.showHidden); },
   async search() {
-    const type = pickVal('pl_type'), area = pickVal('pl_area'); if (!type) return toast('Choose a business type'); if (!area) return toast('Choose an area');
-    $('#pl_card').style.display = 'block'; $('#pl_res').innerHTML = '<div class="empty">Searching Google…</div>';
-    try { A.showFound(await discoverPlaces(type, area, +val('pl_max')), area); }
-    catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
+    const type = pickVal('pl_type'), area = pickVal('pl_area'), want = +val('pl_max'); if (!type) return toast('Choose a business type'); if (!area) return toast('Choose an area');
+    $('#pl_card').style.display = 'block'; $('#pl_res').innerHTML = '<div class="empty">Searching Google for businesses you have not contacted yet…</div>';
+    try {
+      const known = knownSet(), a0 = area.split(',')[0].trim();
+      const list = await discoverPlaces(type, area, 60, null, out => out.filter(p => !isKnown(p, a0, known)).length >= want);
+      const key = `${type}|${a0}`, c = centreOf(list);
+      M.centers = M.centers || {}; M.rings = M.rings || {};
+      if (c) { M.centers[key] = c; persist(); }
+      A.showFound(list, area, '', { type, area, key, want, ring: M.rings[key] || 0 });
+    } catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
+  },
+  async findMore() {
+    const ctx = (window._lastFound || {}).ctx; if (!ctx) return;
+    const c = (M.centers || {})[ctx.key]; if (!c) return toast('Could not work out the centre of this area. Try another search first.');
+    const ring = (ctx.ring || 0) + 1, dist = RING_KM * ring, known = knownSet(), a0 = ctx.area.split(',')[0].trim(), seen = new Set(), out = [];
+    $('#pl_res').innerHTML = `<div class="empty">Searching the area around ${esc(ctx.area)} out to about ${dist} km…</div>`;
+    try {
+      for (const [dx, dy] of RING_DIRS) {
+        const lat = c.lat + dy * dist / 111, lng = c.lng + dx * dist / (111 * Math.cos(c.lat * Math.PI / 180));
+        const got = await discoverPlaces(ctx.type, ctx.area, 40, rectAround(lat, lng, RING_HALF_KM), o => o.filter(p => !isKnown(p, a0, known) && !seen.has(p.placeId)).length >= ctx.want);
+        for (const p of got) if (!seen.has(p.placeId)) { seen.add(p.placeId); out.push(p); }
+        if (out.filter(p => !isKnown(p, a0, known)).length >= ctx.want) break;
+      }
+      M.rings = M.rings || {}; M.rings[ctx.key] = ring; persist();
+      A.showFound(out, ctx.area, `Wider search: ring ${ring}, up to about ${dist} km from the centre.`, { ...ctx, ring });
+    } catch (e) { $('#pl_res').innerHTML = `<div class="tip bad"><span>${esc(e.message)}</span></div>`; }
   },
   async osmSearch() {
     const cat = pickVal('osm_cat'), area = pickVal('osm_area'); if (!cat) return toast('Choose a category'); if (!area) return toast('Choose an area');
@@ -1364,7 +1399,8 @@ const A = {
   addFound() {
     const rows = [...document.querySelectorAll('.pf')].filter(x => x.checked).map(x => placesFound[+x.dataset.i]);
     const { fresh, dups } = prepareImport(rows, { source: 'Map search' }); addLeads(fresh); toast(`Added ${fresh.length}${dups ? `, skipped ${dups} duplicate(s)` : ''}`);
-    const wantAudit = $('#pf_audit') && $('#pf_audit').checked; render();
+    const wantAudit = $('#pf_audit') && $('#pf_audit').checked, lf = window._lastFound; renderChrome();
+    if (lf) A.showFound(lf.list, lf.area, lf.note, lf.ctx, lf.showHidden);
     if (wantAudit && fresh.some(l => ['real', 'builder'].includes(siteInfo(l).kind))) {
       toast('Auditing websites in the background…');
       auditMany(fresh).then(r => { toast(r.n ? `Audited ${r.n} website(s)${r.fail ? `, ${r.fail} failed` : ''}. See Leads.` : (r.msg || 'Nothing to audit')); if (page === 'leads') render(); });

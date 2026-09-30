@@ -62,6 +62,15 @@ and the next reminder asks whether they saw the sample.
 - Design sample for a fictional business: `arr-lead-engine/sample/index.html`.
 - The preview link uses the third-party rawcdn.githack.com host. Publishing to GitHub Pages is the reliable link to send.
 
+### Discovery only shows new businesses
+
+Search results hide every business already in the CRM: contacted, lost, not-interested, still-new **and deleted** ones. They
+are matched by phone number (last 10 digits), Google place ID, or name + area, so a differently spelled Google listing of a
+business you already hold is still caught by its phone. A note says how many were hidden, with a “Show them” toggle. Google
+Text Search only returns about 60 results per query, so when a search runs dry, **Search wider for more new businesses**
+scans four ~8 km squares around the area centre, then further out each time you press it (about 8 Google requests each; the
+ring you reached is remembered per search). Google's free allowance is per request, so widening costs quota, not much money.
+
 ### Website check and ARR opportunity
 
 Every business with a website shows the real link, a badge (free builder, social page only, not secure) and a “💡 opportunity”

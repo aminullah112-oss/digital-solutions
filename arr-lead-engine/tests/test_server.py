@@ -53,6 +53,20 @@ class ServerTests(unittest.TestCase):
             out = server.discover({"type": "shop", "area": "x", "maxResults": 60})
         self.assertEqual([p["placeId"] for p in out], ["a", "c"])
 
+    def test_discover_rect_restricts_location(self):
+        seen = []
+        def fake(url, payload, headers, timeout=25):
+            seen.append(payload)
+            return {"places": [{"id": "r1", "displayName": {"text": "R"}, "location": {"latitude": 12.9, "longitude": 79.2}}]}
+        rect = {"low": {"latitude": 12.8, "longitude": 79.1}, "high": {"latitude": 13.0, "longitude": 79.3}}
+        with mock.patch.object(server, "GOOGLE_KEY", "k"), mock.patch.object(server, "post_json", side_effect=fake):
+            out = server.discover({"type": "clinic", "area": "Ambur", "maxResults": 20, "rect": rect})
+        self.assertEqual(seen[0]["textQuery"], "clinic")
+        self.assertEqual(seen[0]["locationRestriction"], {"rectangle": rect})
+        self.assertEqual((out[0]["lat"], out[0]["lng"]), (12.9, 79.2))
+        with self.assertRaises(server.ApiError):
+            server.parse_rect({"low": {"latitude": 99, "longitude": 0}, "high": {"latitude": 1, "longitude": 1}})
+
     def test_discover_requires_key(self):
         with mock.patch.object(server, "GOOGLE_KEY", ""):
             self.assertEqual(call(self.port, "/api/discover", {"type": "x"})[0], 503)

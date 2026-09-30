@@ -36,7 +36,7 @@ MAX_BODY = 64 * 1024
 PLACES_URL = "https://places.googleapis.com/v1/places:searchText"
 FIELD_MASK = ",".join(
     "places." + f for f in (
-        "id", "displayName", "formattedAddress", "nationalPhoneNumber", "internationalPhoneNumber",
+        "id", "location", "displayName", "formattedAddress", "nationalPhoneNumber", "internationalPhoneNumber",
         "websiteUri", "primaryTypeDisplayName", "rating", "userRatingCount", "googleMapsUri",
         "businessStatus",
     )
@@ -72,7 +72,25 @@ def parse_place(p):
         "mapsUrl": p.get("googleMapsUri", ""),
         "businessStatus": p.get("businessStatus", ""),
         "source": "Google Places",
+        "lat": (p.get("location") or {}).get("latitude"),
+        "lng": (p.get("location") or {}).get("longitude"),
     }
+
+
+def parse_rect(r):
+    """Validate a {low:{latitude,longitude}, high:{...}} viewport; None when absent."""
+    if not r:
+        return None
+    try:
+        low, high = r["low"], r["high"]
+        rect = {"low": {"latitude": float(low["latitude"]), "longitude": float(low["longitude"])},
+                "high": {"latitude": float(high["latitude"]), "longitude": float(high["longitude"])}}
+    except (KeyError, TypeError, ValueError):
+        raise ApiError("rect must contain low/high latitude and longitude")
+    for pt in rect.values():
+        if not (-90 <= pt["latitude"] <= 90 and -180 <= pt["longitude"] <= 180):
+            raise ApiError("rect coordinates out of range")
+    return rect
 
 
 def discover(body):
@@ -84,9 +102,14 @@ def discover(body):
         area = str(body.get("area") or "Melvisharam, Tamil Nadu, India").strip()
         query = f"{kind} in {area}"
     wanted = max(1, min(int(body.get("maxResults", 20)), 60))  # Places returns 20/page, 3 pages max
+    restriction = parse_rect(body.get("rect"))
+    if restriction:
+        query = str(body.get("type") or query).strip()  # the rectangle carries the location
     seen, out, token = set(), [], None
     while len(out) < wanted:
         payload = {"textQuery": query, "pageSize": 20}
+        if restriction:
+            payload["locationRestriction"] = {"rectangle": restriction}
         if token:
             payload["pageToken"] = token
         data = post_json(PLACES_URL, payload, {"X-Goog-Api-Key": GOOGLE_KEY, "X-Goog-FieldMask": FIELD_MASK})
