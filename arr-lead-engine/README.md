@@ -44,6 +44,24 @@ Discover → “Free map search” needs no key and no card. It geocodes the are
 5–20 km from Overpass, by category. Coverage of small Indian towns is patchy and phone tags are sparse; every result set shows
 how many have a phone so you can judge the source quickly. Data © OpenStreetMap contributors (ODbL).
 
+### Landing pages for businesses without a website
+
+On a lead with no website (or only a Facebook/Instagram page), **🌐 Create landing page** builds a sample site from the
+business's details (name, phone, WhatsApp, area, Google rating, map), commits it to its own branch (`lp-<name>-<id>`) at
+`prospects/<slug>/index.html`, and shows a review link. **Publish live** merges it into `master` (live at
+`https://aminullah112-oss.github.io/digital-solutions/prospects/<slug>/` after a minute or two). **Draft proposal message**
+writes the WhatsApp message with the live link and your packages; sending it (after you confirm) advances the follow-up cadence,
+and the next reminder asks whether they saw the sample.
+
+- Needs a fine-grained GitHub token limited to this repo with *Contents: Read and write* (Settings → Landing pages). It is stored
+  on the device only and left out of backups.
+- Pages are marked as a sample, `noindex`, and use only real facts (name, phone, address, Google rating). Section text is
+  placeholder and says so. Don't publish a page for a business that objects.
+- The template is deterministic, not AI-written per business. For a fully custom design, **Copy brief for Claude Code** puts the
+  business facts and build instructions on your clipboard.
+- Design sample for a fictional business: `arr-lead-engine/sample/index.html`.
+- The preview link uses the third-party rawcdn.githack.com host. Publishing to GitHub Pages is the reliable link to send.
+
 ### Website check and ARR opportunity
 
 Every business with a website shows the real link, a badge (free builder, social page only, not secure) and a “💡 opportunity”
