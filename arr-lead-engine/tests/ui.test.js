@@ -174,6 +174,85 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
   ok(/What is missing/.test(site.modal) && /Not mobile-friendly/.test(site.modal) && /Suggested package: Business/.test(site.modal) && site.img && /Mobile speed 32/.test(site.modal), 'lead screen shows findings, opportunity, package, screenshot');
   ok(/Website \/ opportunity/.test(site.table) && /No website/.test(site.table), 'leads table has opportunity column');
 
+  // Landing page generator: HTML safety, GitHub branch/commit/merge flow, message drafting
+  const lp = await page.evaluate(async () => {
+    const out = {}, calls = [], f = window.fetch;
+    const l = newLead({ name: 'Maryam <img src=x onerror=alert(1)> Leather', industry: 'Leather goods manufacturer', area: 'Melvisharam', phone: '8667849698', rating: 4.9, reviews: 19, mapsUrl: 'https://maps.google.com/?cid=1', email: 'a@b.in' });
+    addLeads([l]);
+    S.myPhone = '+919999900000'; S.ghToken = ''; 
+    out.needsSetup = await lpCommit(l).then(() => 'no', e => e.message);
+    S.ghToken = 'tok'; S.ghRepo = 'aminullah112-oss/digital-solutions'; S.ghBase = 'master';
+    let files = {};
+    window.fetch = async (u, o = {}) => {
+      const m = o.method || 'GET', path = u.replace('https://api.github.com/repos/aminullah112-oss/digital-solutions', '');
+      calls.push(m + ' ' + path);
+      const json = (b, s = 200) => new Response(JSON.stringify(b), { status: s });
+      if (path.startsWith('/git/ref/heads/lp-')) return json({ message: 'Not Found' }, 404);
+      if (path === '/git/ref/heads/master') return json({ object: { sha: 'BASESHA' } });
+      if (path === '/git/refs' && m === 'POST') return json({}, 201);
+      if (path.startsWith('/contents/') && m === 'GET') return files[path.split('?')[0]] ? json({ sha: 'FILESHA' }) : json({ message: 'Not Found' }, 404);
+      if (path.startsWith('/contents/') && m === 'PUT') { const b = JSON.parse(o.body); files[path] = b; return json({ commit: { sha: 'COMMIT' + Object.keys(files).length + (b.sha || '') } }, 201); }
+      if (path === '/merges') { calls.push('MERGE ' + o.body); return json({}, 201); }
+      return json({ message: 'unexpected ' + path }, 500);
+    };
+    await lpCommit(l);
+    out.calls = calls.slice(); out.lp = { ...l.lp };
+    const put = Object.values(files)[0]; out.branch = put.branch; out.html = decodeURIComponent(escape(atob(put.content)));
+    // regenerate updates the same file (sha supplied) and keeps slug
+    const slug = l.lp.slug; await lpCommit(l); out.regen = [l.lp.slug === slug, calls[calls.length - 1], JSON.parse(Object.values(files)[0] ? JSON.stringify(Object.values(files)[0]) : '{}').sha];
+    // publish
+    await lpPublish(l); out.pub = [l.lp.status, calls[calls.length - 1]];
+    // message + follow-up template switch
+    out.msg = renderTpl('sitedemo', l); out.fu = nextTouch({ ...l, step: 1, status: 'Contacted', lp: { ...l.lp, sent: true } }).tpl + '/' + nextTouch({ ...l, step: 1, status: 'Contacted' }).tpl;
+    l.status = 'Qualified'; l.step = 0; l.nextDate = today();
+    openWA(l, 'sitedemo', out.msg); confirmPending(l.id, 1); out.sent = [l.lp.sent, l.status, l.step, l.activities.some(a => a.type === 'Message Sent' && a.tpl === 'sitedemo')];
+    window.__opened = [];
+    // token errors
+    window.fetch = async () => new Response(JSON.stringify({ message: 'Bad credentials' }), { status: 401 });
+    out.e401 = await gh('/git/ref/heads/x').then(() => '', e => e.message);
+    window.fetch = async () => new Response(JSON.stringify({ message: 'Resource not accessible' }), { status: 403 });
+    out.e403 = await gh('/git/ref/heads/x').then(() => '', e => e.message);
+    window.fetch = f;
+    // older saved settings get the new templates
+    out.mig = mergeSettings({ templates: [{ id: 'intro', name: 'x', body: 'y' }] }).templates.map(t => t.id).filter(i => ['sitedemo', 'fu_demo'].includes(i)).join();
+    // button visibility in the lead screen
+    const nw = newLead({ name: 'No Site', phone: '9000012345' }), sw = newLead({ name: 'Has Site', phone: '9000012346', website: 'https://hassite.example' }), fb = newLead({ name: 'FB', phone: '9000012347', website: 'https://facebook.com/x' });
+    out.btn = [lpBlock(nw).includes('Create landing page'), lpBlock(sw) === '', lpBlock(fb).includes('Create landing page'), lpBlock(l).includes('Draft proposal message')];
+    out.brief = lpBrief(nw);
+    out.backup = (() => { S.ghToken = 'secret'; const s = structuredClone(S); s.ghToken = ''; return JSON.stringify(s).includes('secret'); })();
+    return out;
+  });
+  ok(lp.needsSetup === 'NEEDS_SETUP', 'landing page asks for setup when no GitHub token');
+  ok(lp.calls[0].startsWith('GET /git/ref/heads/lp-') && lp.calls[1] === 'GET /git/ref/heads/master' && lp.calls[2] === 'POST /git/refs' && lp.calls[4].startsWith('PUT /contents/prospects/'), 'creates a new branch from base, then commits the page: ' + lp.calls.join(' | '));
+  ok(lp.branch === lp.lp.branch && /^lp-maryam-img/.test(lp.branch) && !/[<>]/.test(lp.lp.slug), 'branch and slug are safe and unique');
+  ok(!/<img src=x onerror/.test(lp.html) && /&lt;img src=x onerror=alert\(1\)&gt;/.test(lp.html), 'hostile business name is escaped in the page');
+  ok(/noindex/.test(lp.html) && /Content-Security-Policy/.test(lp.html) && /Sample website prepared for/.test(lp.html), 'page is noindex, has CSP and a sample ribbon');
+  ok(/tel:\+918667849698/.test(lp.html) && /wa\.me\/918667849698/.test(lp.html) && /4\.9 · 19 Google reviews/.test(lp.html) && /wa\.me\/919999900000/.test(lp.html), 'page uses the real phone, WhatsApp, Google rating and ARR contact');
+  ok(!/testimonial|years of experience|since 19|since 20|ISO/i.test(lp.html), 'page invents no testimonials, years or certifications');
+  ok(lp.regen[0] && lp.regen[2] === 'FILESHA', 'regenerate updates the same page (file sha supplied)');
+  ok(lp.pub[0] === 'live' && /MERGE .*"base":"master".*"head":"lp-maryam/.test(lp.pub[1]), 'publish merges branch into base');
+  ok(lp.lp.previewUrl.startsWith('https://rawcdn.githack.com/aminullah112-oss/digital-solutions/COMMIT') && lp.lp.liveUrl.startsWith('https://aminullah112-oss.github.io/digital-solutions/prospects/'), 'preview and live links are built');
+  ok(/aminullah112-oss\.github\.io\/digital-solutions\/prospects\/maryam-img/.test(lp.msg) && /sample website for/.test(lp.msg) && /STOP/.test(lp.msg) && /Starter/.test(lp.msg), 'proposal draft contains the live site link, packages and opt-out');
+  ok(lp.sent[0] === true && lp.sent[1] === 'Contacted' && lp.sent[2] === 1 && lp.sent[3], 'confirmed send marks demo sent and advances the cadence');
+  ok(lp.fu === 'fu_demo/fu1', 'follow-up asks about the sample site once it has been sent');
+  ok(/rejected the token/.test(lp.e401) && /Contents: Read and write/.test(lp.e403), 'GitHub token errors are actionable');
+  ok(lp.mig === 'sitedemo,fu_demo', 'existing users get the new templates');
+  ok(lp.btn.join() === 'true,true,true,true', 'Create landing page shows only for no-site and social-only leads');
+  ok(/Use ONLY the facts below/.test(lp.brief) && /No Site/.test(lp.brief), 'Claude Code brief generated');
+
+  // Render the generated page for real
+  const html = await page.evaluate(() => buildLanding(newLead({ name: 'Dyecode Craft', industry: 'Shoe factory', area: 'Melvisharam', phone: '9003850628', rating: 4.9, reviews: 92, address: '12 Main Rd, Melvisharam', mapsUrl: 'https://maps.google.com/?cid=9' })));
+  const lpPage = await (await browser.newContext({ viewport: { width: 390, height: 900 } })).newPage();
+  const lpErr = []; lpPage.on('pageerror', e => lpErr.push(e.message));
+  await lpPage.route('**/*', r => r.request().url().startsWith('http') ? r.abort() : r.continue());
+  await lpPage.setContent(html);
+  ok(await lpPage.locator('h1').innerText() === 'Dyecode Craft' && await lpPage.locator('.bar .btn').count() === 2 && lpErr.length === 0, 'generated page renders with sticky call/WhatsApp bar and no script errors');
+  ok(!(await lpPage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)), 'generated page has no horizontal overflow on a phone');
+  await lpPage.evaluate(() => window.open = (u) => { window.__wa = u; });
+  await lpPage.fill('input[name=n]', 'Ravi'); await lpPage.fill('textarea', 'Need 200 pairs'); await lpPage.click('form button');
+  ok(/wa\.me\/919003850628\?text=Hello%20Dyecode%20Craft%2C%20I%20am%20Ravi/.test(await lpPage.evaluate(() => window.__wa)), 'enquiry form opens WhatsApp to the business with the message');
+  await lpPage.screenshot({ path: '/tmp/claude-0/patch/lp-m.png', fullPage: true });
+
   // inbound import goes straight to reply queue
   await page.evaluate(() => go('discover'));
   await page.fill('#im_text', 'Name,Company,City,Phone,Email,Interest,Message\nRafi,Rafi Traders,Chennai,9444012345,r@x.com,Website,Need a site');
@@ -254,7 +333,7 @@ const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console
 
   // persistence
   await page.reload();
-  ok(await page.evaluate(() => L().length) === 10, 'data survives reload');
+  ok(await page.evaluate(() => L().length) === 11, 'data survives reload');
 
   // legacy migration (v8 key)
   const ctx2 = await browser.newContext(); const p2 = await ctx2.newPage(); await p2.addInitScript(() => { window.open = () => null; });

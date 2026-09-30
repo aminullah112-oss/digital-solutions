@@ -102,7 +102,7 @@ const REPLY_CLASSES = {
 
 const DEFAULT_SETTINGS = {
   me: 'Amin', brand: 'ARR Digital Solutions', portfolio: '', dailyNew: 20, nurtureDays: 60, defaultValue: 25000,
-  backend: '', token: '', placesKey: '',
+  backend: '', token: '', placesKey: '', ghRepo: 'aminullah112-oss/digital-solutions', ghBase: 'master', ghToken: '', myPhone: '',
   areas: ['Melvisharam', 'Ambur', 'Vaniyambadi', 'Ranipet', 'Vellore', 'Chennai'],
   cadence: [
     { wait: 0, ch: 'whatsapp', tpl: 'intro' },
@@ -121,6 +121,8 @@ const DEFAULT_SETTINGS = {
     { id: 'reengage', name: 'Re-engage (after nurture)', body: "Hello {name} team, {me} from {brand} — it's been a while. {hook}\n\nIs a website / more online enquiries worth a quick chat now? (Reply STOP to opt out.)" },
     { id: 'price', name: 'Reply: pricing', body: "Thanks for getting back, {name} team! Our packages:\n{packages}\n\nFinal price depends on pages and content, and I'm happy to fit your budget. Can we do a quick 10-minute call today or tomorrow?" },
     { id: 'meeting', name: 'Reply: book a call/visit', body: "Great! What time suits you for a 10-minute call or a visit this week? I'll bring a sample made for {name}." },
+    { id: 'sitedemo', name: 'Sample website + proposal', body: "Hello {name} team, {me} from {brand}. I made a sample website for {name} so you can see what it could look like:\n{sitelink}\n\nIt has your call and WhatsApp buttons, your Google rating and your location. If you like it, we can put it on your own domain with your real photos and products.\n{packages}\n\nCan I call you this week to hear what you'd change?\n(Reply STOP if you'd rather not hear from me.)" },
+    { id: 'fu_demo', name: 'Follow-up after sample website', body: "Hello {name} team, {me} from {brand} again. Did you get a chance to look at the sample website I made for {name}?\n{sitelink}\n\nHappy to change the colours, add your photos and products, and launch it on your own domain." },
     { id: 'chase', name: 'Proposal chase', body: "Hello {name} team, just checking whether you had a chance to look at the proposal. Happy to adjust scope or budget. Shall we finalise this week?" }
   ],
   packages: [
@@ -226,6 +228,7 @@ function load() {
 function mergeSettings(s) {
   const out = { ...structuredClone(DEFAULT_SETTINGS), ...(s || {}) };
   out.cloud = { ...DEFAULT_SETTINGS.cloud, ...((s || {}).cloud || {}) };
+  for (const t of DEFAULT_SETTINGS.templates) if (!out.templates.some(x => x.id === t.id)) out.templates.push(structuredClone(t));
   return out;
 }
 
@@ -321,6 +324,14 @@ function opportunity(l) {
 }
 const oppShort = l => opportunity(l).headline;
 function scoreChip(label, n) { return n == null ? '' : `<span class="pill" style="border-color:${n >= 90 ? 'var(--ok)' : n >= 50 ? 'var(--warn)' : 'var(--bad)'}">${label} ${n}</span>`; }
+function lpBlock(l) {
+  const k = siteInfo(l).kind; if (k !== 'none' && k !== 'social') return '';
+  const lp = l.lp;
+  if (!lp) return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><b>Show them what they are missing</b><div class="muted">Builds a sample website from this business's details, saves it to a review branch on GitHub, and drafts the proposal message with the link.</div><div class="actions" style="margin-top:8px"><button class="btn primary" onclick="A.lpCreate('${l.id}')">🌐 Create landing page</button><button class="btn small" onclick="A.lpBriefCopy('${l.id}')">Copy brief for Claude Code</button></div></div>`;
+  return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><b>Sample landing page</b> <span class="pill ${lp.status === 'live' ? '' : 'warn'}">${lp.status === 'live' ? 'live' : 'preview only'}</span>
+    <div style="margin:6px 0"><a style="color:var(--b)" target="_blank" rel="noopener" href="${esc(lp.previewUrl)}">Open preview ↗</a>${lp.status === 'live' ? ` · <a style="color:var(--b)" target="_blank" rel="noopener" href="${esc(lp.liveUrl)}">Live link ↗</a>` : ''}</div>
+    <div class="actions"><button class="btn small primary" onclick="A.lpMsg('${l.id}')">Draft proposal message</button>${lp.status === 'live' ? '' : `<button class="btn small good" onclick="A.lpPublish('${l.id}')">Publish live</button>`}<button class="btn small" onclick="A.lpCreate('${l.id}')">Regenerate</button><button class="btn small" onclick="A.lpBriefCopy('${l.id}')">Copy brief for Claude Code</button></div></div>`;
+}
 function siteCard(l) {
   const op = opportunity(l), a = l.audit, shot = shotGet(l.id), can = siteInfo(l).kind === 'real' || siteInfo(l).kind === 'builder';
   return `<div class="card"><div class="actions" style="justify-content:space-between"><h3 style="margin:0">Website &amp; ARR opportunity</h3>${can ? `<button class="btn small" onclick="A.audit('${l.id}')">${a ? 'Re-audit' : 'Audit website'}</button>` : ''}</div>
@@ -330,6 +341,7 @@ function siteCard(l) {
     <div><b>${esc(op.headline)}</b>${!op.audited && op.si.kind === 'real' ? `<div class="muted">${S.placesKey || S.backend ? 'Tap Audit website to see what is missing.' : 'Add your Google key and enable PageSpeed Insights API (Settings) to audit.'}</div>` : ''}</div></div></div>
     ${op.items.length ? `<h3 style="margin:12px 0 6px">What is missing → what ARR can sell</h3>${op.items.map(i => `<div style="margin:6px 0"><span class="${i.sev === 3 ? 'bad' : i.sev === 2 ? 'warn' : 'muted'}">●</span> <b>${esc(i.issue)}</b><div class="muted" style="margin-left:16px">→ ${esc(i.fix)}</div></div>`).join('')}
     ${op.pkg ? `<div class="tip good" style="margin-top:8px"><span>Suggested package: <b>${esc(op.pkg.name)}</b> (${money(op.pkg.price)}). ${esc(op.pkg.desc)}</span></div>` : ''}<button class="btn small" onclick="A.copyOpp('${l.id}')">Copy findings for call / proposal</button>` : ''}
+    ${lpBlock(l)}
     ${a && a.unreachable ? '<div class="tip bad" style="margin-top:8px"><span>The site did not load when audited. It may be down. Open it yourself to check before you call.</span></div>' : ''}</div>`;
 }
 function siteChip(si) {
@@ -388,7 +400,7 @@ function hookFor(l) {
 function packageLines() { return S.packages.map(p => `• ${p.name} — ${money(p.price)}: ${p.desc}`).join('\n'); }
 function renderTpl(id, l) {
   const t = S.templates.find(x => x.id === id); if (!t) return '';
-  const v = { name: l.name, me: S.me, brand: S.brand, area: l.area, industry: l.industry, hook: hookFor(l), angle: ruleFor(l).angle, portfolio: S.portfolio, packages: packageLines() };
+  const v = { name: l.name, me: S.me, brand: S.brand, area: l.area, industry: l.industry, hook: hookFor(l), angle: ruleFor(l).angle, portfolio: S.portfolio, packages: packageLines(), sitelink: l.lp ? l.lp.liveUrl : '' };
   return t.body.split('\n').map(line => {
     let drop = false;
     const out = line.replace(/\{(\w+)\}/g, (m, k) => { if (!(k in v)) return m; if (!v[k]) drop = true; return v[k]; });
@@ -406,7 +418,8 @@ function setStage(l, to, why = '') {
 }
 function nextTouch(l) {
   if (l.status === 'Nurture' && l.step === 0) return { ch: 'whatsapp', tpl: 'reengage' };
-  return S.cadence[Math.min(l.step, S.cadence.length - 1)];
+  const t = S.cadence[Math.min(l.step, S.cadence.length - 1)];
+  return l.lp && l.lp.sent && t.tpl === 'fu1' ? { ...t, tpl: 'fu_demo' } : t;   // already sent the sample site: follow up on it
 }
 function advanceCadence(l) {
   l.step++; l.callTries = 0;
@@ -467,7 +480,7 @@ function confirmPending(id, yes) {
       act(l, 'Proposal Sent', { value: p.value, note: p.note || '' });
       setStage(l, 'Proposal'); l.proposalValue = p.value; l.lastContacted = nowIso();
       l.nextAction = 'Chase proposal'; l.nextDate = addDays(2);
-    } else recordSent(l, { tpl: p.tpl, text: p.text, cadence: p.cadence });
+    } else { recordSent(l, { tpl: p.tpl, text: p.text, cadence: p.cadence }); if (p.tpl === 'sitedemo' && l.lp) l.lp.sent = true; }
     toast('Logged as sent ✓');
   } else toast('Not logged');
   commit(l); render();
@@ -761,6 +774,11 @@ function viewSettings() {
      <div class="form"><div class="full"><label>Google Places API key</label><input id="s_pk" type="password" value="${esc(S.placesKey)}" placeholder="AIza…" autocomplete="off"></div></div>
      <div class="actions" style="margin-top:8px"><button class="btn" onclick="A.testKey()">Test key (uses 1 search)</button></div>
      <p class="muted">The key is stored on this device only and is left out of backups. It is visible to anyone using this browser, which is why the website and API restrictions matter. Paste it on each device you use.</p></div>
+    <div class="card"><h2>Landing pages (GitHub)</h2><p class="muted">“Create landing page” saves a sample site for a business to its own branch in this repository. It uses a fine-grained GitHub token limited to <b>this one repository</b> with <b>Contents: Read and write</b>. The token is stored only on this device, is left out of backups, and can be revoked any time on GitHub. Anyone using this browser could commit to that repository, so don't paste it on shared computers.</p>
+     <div class="form"><div><label>Repository (owner/name)</label><input id="s_ghr" value="${esc(S.ghRepo)}"></div><div><label>Base branch</label><input id="s_ghb" value="${esc(S.ghBase)}"></div>
+     <div class="full"><label>GitHub token</label><input id="s_ght" type="password" value="${esc(S.ghToken)}" placeholder="github_pat_…" autocomplete="off"></div>
+     <div class="full"><label>Your WhatsApp number (shown on the sample site footer)</label><input id="s_myp" value="${esc(S.myPhone)}" placeholder="+91…"></div></div>
+     <div class="actions" style="margin-top:8px"><button class="btn small" onclick="A.lpSetup()">How to create the token</button></div></div>
     <div class="card"><h2>Backend helper (website audit; optional Places proxy)</h2><div class="form"><div><label>Backend URL</label><input id="s_be" value="${esc(S.backend)}" placeholder="http://localhost:8787"></div><div><label>API token (ARR_API_TOKEN)</label><input id="s_tok" type="password" value="${esc(S.token)}"></div></div><div class="actions" style="margin-top:8px"><button class="btn" onclick="A.health()">Test connection</button></div></div>
     <div class="card"><h2>Cloud sync (Supabase)</h2><p class="muted">Optional. Run <code>supabase/schema.sql</code>, create your user, then sign in. The publishable key is safe in the browser only because row-level security limits every row to you. Never paste a service-role key here.</p>
      <div class="form"><div><label>Project URL</label><input id="c_url" value="${esc(c.url)}" placeholder="https://xxxx.supabase.co"></div><div><label>Publishable / anon key</label><input id="c_key" value="${esc(c.key)}"></div><div><label>Email</label><input id="c_email" value="${esc(c.email)}"></div><div><label>Password ${c.session ? '(signed in)' : ''}</label><input id="c_pw" type="password" autocomplete="current-password"></div></div>
@@ -871,6 +889,132 @@ async function osmSearch(cat, area, km) {
     } catch (e) { lastErr = 'Could not reach the map data service.'; }
   }
   throw new Error(lastErr);
+}
+
+/* ---- Landing page generator: builds a self-contained sample site for a business, commits it to a GitHub branch ---- */
+const LP_PAL = {
+  'Manufacturer / exporter': ['#9a3412', '#7c2d12', '#fff7ed'], 'Clinic / health': ['#0f766e', '#115e59', '#f0fdfa'], 'Food / hospitality': ['#b91c1c', '#991b1b', '#fef2f2'],
+  'Education': ['#1d4ed8', '#1e40af', '#eff6ff'], 'Retail / trade': ['#7c3aed', '#6d28d9', '#f5f3ff'], 'Other': ['#0f766e', '#115e59', '#f0fdfa']
+};
+const LP_COPY = {
+  'Manufacturer / exporter': { tag: 'Quality manufacturing. Bulk and custom orders.', sub: 'Buyers, retailers and export agents can see what we make and enquire in one tap.', cta: 'Request catalogue / price list', ph: 'Tell us what you need: product, quantity and delivery place',
+    cards: [['Our products', 'Show the full range with photos, sizes and materials so buyers can browse before they call.'], ['Bulk & custom orders', 'Explain minimum quantities, lead times and customisation so serious buyers enquire faster.'], ['Quality & process', 'Show the workshop, materials and quality checks to build trust with new buyers.'], ['Trade & export enquiries', 'A clear path for distributors and agents to ask for catalogues and price lists.']] },
+  'Clinic / health': { tag: 'Care you can trust, close to home.', sub: 'Book an appointment or ask a question on WhatsApp.', cta: 'Book an appointment', ph: 'Your name, preferred date and time, and the reason for your visit',
+    cards: [['Services', 'List treatments and specialities so patients know what is offered.'], ['Doctors & team', 'Introduce the doctors with qualifications and experience.'], ['Appointments', 'One-tap booking on WhatsApp or by phone.'], ['Timings & directions', 'Clinic hours and a map so patients can find you easily.']] },
+  'Food / hospitality': { tag: 'Fresh food, served with care.', sub: 'See the menu, order or book a table in one tap.', cta: 'Order or book on WhatsApp', ph: 'What would you like to order, and for when?',
+    cards: [['Menu', 'A clear, photo-led menu with prices that customers can read on their phones.'], ['Orders & table booking', 'Customers message on WhatsApp to order or reserve.'], ['Catering & bulk orders', 'Enquiries for functions, offices and large orders.'], ['Find us', 'Address, timings and directions.']] },
+  'Education': { tag: 'Learn with confidence.', sub: 'Course details, admissions and fees, with answers on WhatsApp.', cta: 'Ask about admission', ph: 'Your name, the course or class you are interested in',
+    cards: [['Courses & classes', 'What is taught, for whom, and how long it takes.'], ['Admissions', 'How to apply, key dates and documents needed.'], ['Faculty & results', 'Introduce the teachers and share real achievements.'], ['Fees & timings', 'Clear fees, batch timings and location.']] },
+  'Retail / trade': { tag: 'Everything you need, in one place.', sub: 'Browse what we stock and order on WhatsApp.', cta: 'Order on WhatsApp', ph: 'What are you looking for?',
+    cards: [['Products', 'A photo catalogue of what the shop stocks, by category.'], ['Offers', 'Current offers and new arrivals.'], ['Order on WhatsApp', 'Customers send a message and collect or get delivery.'], ['Visit us', 'Address, timings and directions.']] },
+  'Other': { tag: 'A local business you can rely on.', sub: 'Find out what we do and get in touch in one tap.', cta: 'Send an enquiry', ph: 'How can we help you?',
+    cards: [['Services', 'What the business offers, in plain words with photos.'], ['About us', 'Who is behind the business and why customers choose it.'], ['Enquire', 'Call, WhatsApp or send a message from any page.'], ['Find us', 'Address, timings and directions.']] }
+};
+const fmtPhone = p => { const m = /^\+91(\d{5})(\d{5})$/.exec(p || ''); return m ? `+91 ${m[1]} ${m[2]}` : (p || ''); };
+function slugify(name) { const b = String(name || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); return (b || 'business') + '-' + Math.random().toString(36).slice(2, 6); }
+function buildLanding(l) {
+  const key = ruleFor(l).label, c = LP_COPY[key] || LP_COPY.Other, [ac, dk, soft] = LP_PAL[key] || LP_PAL.Other;
+  const name = esc(l.name), area = esc(l.area || ''), ind = esc(String(l.industry || '').replace(/^./, x => x.toUpperCase()));
+  const digits = (l.phone || '').replace(/\D/g, ''), wa = digits ? `https://wa.me/${digits}` : '';
+  const where = `${l.name} ${l.address || l.area || ''}`.trim();
+  const maps = safeUrl(l.mapsUrl) ? l.mapsUrl : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(where);
+  const embed = 'https://maps.google.com/maps?q=' + encodeURIComponent(where) + '&output=embed';
+  const me = esc(S.me), brand = esc(S.brand), myWa = (S.myPhone || '').replace(/\D/g, '');
+  const rating = l.rating > 0 && l.reviews > 0 ? `<a class="badge" href="${esc(maps)}" target="_blank" rel="noopener">★ ${esc(l.rating)} · ${esc(l.reviews)} Google reviews</a>` : '';
+  const cta = (cls) => `${wa ? `<a class="btn wa ${cls}" href="${wa}?text=${encodeURIComponent('Hello ' + l.name + ', I found you online and would like to enquire.')}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${digits ? `<a class="btn call ${cls}" href="tel:+${digits}">Call ${esc(fmtPhone(l.phone))}</a>` : ''}`;
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; frame-src https://*.google.com; base-uri 'none'; form-action 'none'">
+<title>${name} | sample website</title>
+<style>
+:root{--a:${ac};--d:${dk};--s:${soft};--t:#1f2937;--m:#6b7280}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--t);background:#fff}
+a{color:inherit}.w{max-width:1040px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #e5e7eb}header .w{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
+.logo{font-weight:800;font-size:18px;color:var(--d);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{display:inline-block;padding:12px 20px;border-radius:10px;font-weight:700;text-decoration:none;border:2px solid var(--a);color:var(--a);background:#fff;text-align:center}
+.btn.wa{background:#16a34a;border-color:#16a34a;color:#fff}.btn.call{background:var(--a);color:#fff}.btn.sm{padding:8px 14px;font-size:14px}
+.hero{background:linear-gradient(135deg,var(--s),#fff);padding:56px 0 48px}.hero h1{font-size:clamp(30px,6vw,52px);line-height:1.1;margin:8px 0 12px;color:var(--d)}
+.kick{color:var(--a);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:13px}.hero p{font-size:19px;color:#374151;max-width:640px;margin:0 0 22px}
+.row{display:flex;flex-wrap:wrap;gap:12px}.badge{display:inline-block;margin-top:18px;background:#fff;border:1px solid #fcd34d;color:#92400e;padding:6px 14px;border-radius:999px;font-weight:700;text-decoration:none}
+section{padding:52px 0}h2{font-size:28px;margin:0 0 8px;color:var(--d)}.lead{color:var(--m);margin:0 0 26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{border:1px solid #e5e7eb;border-radius:14px;padding:20px;background:#fff}.card h3{margin:0 0 6px;color:var(--a);font-size:18px}.card p{margin:0;color:#4b5563;font-size:15px}
+.alt{background:var(--s)}form{display:grid;gap:12px;max-width:560px}input,textarea{font:inherit;padding:12px;border:1px solid #cbd5e1;border-radius:10px;width:100%}textarea{min-height:110px}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:24px}iframe{width:100%;height:280px;border:0;border-radius:14px;background:#e5e7eb}
+footer{background:#111827;color:#d1d5db;padding:28px 0 90px;font-size:14px}footer a{color:#fff}
+.ribbon{background:#fef3c7;color:#78350f;border-bottom:1px solid #fcd34d;font-size:13px;padding:8px 0;text-align:center}
+.bar{display:none}
+@media(max-width:700px){.info{grid-template-columns:1fr}header .btn{display:none}.bar{display:flex;position:fixed;left:0;right:0;bottom:0;gap:8px;padding:10px;background:#fff;border-top:1px solid #e5e7eb;z-index:6}.bar .btn{flex:1;padding:12px 8px}}
+</style></head><body>
+<div class="ribbon"><div class="w">Sample website prepared for ${name} by ${brand}. Not live yet. Section text is placeholder; the name, phone, location and Google rating are real.</div></div>
+<header><div class="w"><a class="logo" href="#top">${name}</a>${cta('sm')}</div></header>
+<main id="top">
+<div class="hero"><div class="w"><div class="kick">${ind}${area ? ' · ' + area : ''}</div><h1>${name}</h1><p>${esc(c.tag)} ${esc(c.sub)}</p><div class="row">${cta('')}</div>${rating}</div></div>
+<section><div class="w"><h2>What we offer</h2><p class="lead">Sample sections. The final site uses your real photos, products and wording.</p>
+<div class="grid">${c.cards.map(x => `<div class="card"><h3>${esc(x[0])}</h3><p>${esc(x[1])}</p></div>`).join('')}</div></div></section>
+${digits ? `<section class="alt"><div class="w"><h2>${esc(c.cta)}</h2><p class="lead">Your message opens in WhatsApp, so the business replies directly.</p>
+<form id="enq" data-wa="${digits}" data-biz="${name}"><input name="n" placeholder="Your name" autocomplete="name"><textarea name="m" placeholder="${esc(c.ph)}"></textarea><button class="btn wa" type="submit">Send on WhatsApp</button></form></div></section>` : ''}
+<section><div class="w"><h2>Find us</h2><p class="lead">${esc(l.address || l.area || '')}</p>
+<div class="info"><div>${digits ? `<p><b>Phone / WhatsApp</b><br>${esc(fmtPhone(l.phone))}</p>` : ''}${l.email ? `<p><b>Email</b><br>${esc(l.email)}</p>` : ''}<p><a class="btn" href="${esc(maps)}" target="_blank" rel="noopener">Open in Google Maps</a></p></div>
+<iframe title="Map" loading="lazy" src="${esc(embed)}"></iframe></div></div></section>
+</main>
+<footer><div class="w">© ${name}. Sample design by ${brand}${myWa ? ` · Like it? <a href="https://wa.me/${myWa}" target="_blank" rel="noopener">Talk to ${me} on WhatsApp</a>` : ''}</div></footer>
+${digits ? `<div class="bar">${cta('')}</div>` : ''}
+<script>var f=document.getElementById('enq');if(f)f.addEventListener('submit',function(e){e.preventDefault();var n=f.n.value.trim(),m=f.m.value.trim(),t='Hello '+f.dataset.biz+', '+(n?'I am '+n+'. ':'')+m;window.open('https://wa.me/'+f.dataset.wa+'?text='+encodeURIComponent(t),'_blank','noopener')})<\/script>
+</body></html>`;
+}
+
+/* ---- GitHub (branch + commit + merge) ---- */
+const repoParts = () => { const [owner, repo] = (S.ghRepo || '').split('/'); return { owner, repo }; };
+async function gh(path, opt = {}) {
+  const { owner, repo } = repoParts();
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}${path}`, { ...opt, headers: { Authorization: 'Bearer ' + S.ghToken, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json', ...(opt.headers || {}) } });
+  if (r.status === 404 && opt.allow404) return null;
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (r.status === 401) throw new Error('GitHub rejected the token. Create a new one in Settings → Landing pages.');
+    if (r.status === 403) throw new Error('The GitHub token is not allowed to do that. It needs "Contents: Read and write" on this repository.' + (j.message ? ' (' + j.message.slice(0, 80) + ')' : ''));
+    if (r.status === 404) throw new Error('GitHub cannot find that repository for this token. Check the repository name and that the token includes it.');
+    if (r.status === 409 && /merge/i.test(j.message || '')) throw new Error('The branch conflicts with ' + S.ghBase + '. Regenerate the page or resolve it on GitHub.');
+    throw new Error('GitHub error ' + r.status + (j.message ? ': ' + j.message.slice(0, 120) : ''));
+  }
+  return { status: r.status, body: j };
+}
+const b64 = s => { const bytes = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); };
+const lpUrls = (slug, branch, sha) => { const { owner, repo } = repoParts(); return { previewUrl: `https://rawcdn.githack.com/${owner}/${repo}/${sha}/prospects/${slug}/index.html`, liveUrl: `https://${owner}.github.io/${repo}/prospects/${slug}/`, srcUrl: `https://github.com/${owner}/${repo}/blob/${branch}/prospects/${slug}/index.html` }; };
+async function lpCommit(l) {
+  if (!S.ghToken || !/^[\w.-]+\/[\w.-]+$/.test(S.ghRepo || '')) throw new Error('NEEDS_SETUP');
+  const slug = (l.lp && l.lp.slug) || slugify(l.name), branch = (l.lp && l.lp.branch) || 'lp-' + slug, path = `prospects/${slug}/index.html`;
+  const have = await gh(`/git/ref/heads/${branch}`, { allow404: true });
+  if (!have) {
+    const base = await gh(`/git/ref/heads/${S.ghBase}`);
+    await gh('/git/refs', { method: 'POST', body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: base.body.object.sha }) });
+  }
+  const cur = await gh(`/contents/${path}?ref=${branch}`, { allow404: true });
+  const put = await gh(`/contents/${path}`, { method: 'PUT', body: JSON.stringify({ message: `Sample landing page for ${l.name}\n\nCo-Authored-By: ARR Lead Engine <noreply@arr.local>`, content: b64(buildLanding(l)), branch, ...(cur ? { sha: cur.body.sha } : {}) }) });
+  const sha = put.body.commit.sha;
+  l.lp = { ...(l.lp || {}), slug, branch, path, sha, status: 'preview', at: nowIso(), ...lpUrls(slug, branch, sha) };
+  act(l, 'Landing Page', { note: `Sample page committed to branch ${branch}` });
+  commit(l);
+}
+async function lpPublish(l) {
+  await gh('/merges', { method: 'POST', body: JSON.stringify({ base: S.ghBase, head: l.lp.branch, commit_message: `Publish sample landing page for ${l.name}` }) });
+  l.lp.status = 'live'; l.lp.publishedAt = nowIso();
+  act(l, 'Landing Page', { note: `Published: ${l.lp.liveUrl}` }); commit(l);
+}
+function lpBrief(l) {
+  const si = siteInfo(l);
+  return `Build a bespoke one-page website for a local business that has no website. Work on a new branch and put the page at prospects/${(l.lp && l.lp.slug) || slugify(l.name)}/index.html (one self-contained HTML file: inline CSS/JS, no external assets except a Google Maps embed). Mobile-first, fast, accessible, with a sticky Call + WhatsApp bar, a WhatsApp enquiry form, Google rating badge, location/map, and <meta name="robots" content="noindex">. Add a visible ribbon saying it is a sample prepared by ${S.brand} and not yet live. Use ONLY the facts below; do not invent products, years in business, testimonials or certifications. Mark any illustrative section text as placeholder.
+
+Business: ${l.name}
+Type: ${l.industry || 'n/a'} (${ruleFor(l).label})
+Area: ${l.area || 'n/a'}${l.address ? '\nAddress: ' + l.address : ''}
+Phone/WhatsApp: ${l.phone || 'n/a'}${l.email ? '\nEmail: ' + l.email : ''}
+Google rating: ${l.rating ? `${l.rating} stars from ${l.reviews} reviews` : 'n/a'}${safeUrl(l.mapsUrl) ? '\nGoogle Maps: ' + l.mapsUrl : ''}
+Current web presence: ${si.kind === 'social' ? 'only ' + si.label + ' (' + si.host + ')' : 'none found'}
+Notes: ${l.notes || 'none'}
+Pitch angle: ${ruleFor(l).angle}`;
 }
 
 /* Places search straight from the browser. The key is visible to anyone who can open devtools on this
@@ -1131,6 +1275,42 @@ const A = {
     save(); sel.clear(); render();
   },
   async audit(id) { const l = byId(id); try { toast('Auditing… this takes 15–40 seconds'); l.audit = null; await auditLead(l); A.open(id); render(); toast('Audit done'); } catch (e) { toast(e.message); } },
+  lpSetup() {
+    modal(`<h2>Set up landing pages (one time)</h2><p class="muted">The CRM saves each sample site to its own branch of your GitHub repository, using a GitHub token you create once. It needs no other service.</p>
+      <ol class="muted" style="line-height:1.8;padding-left:20px"><li>Open <a target="_blank" rel="noopener" style="color:var(--b)" href="https://github.com/settings/personal-access-tokens/new">GitHub → new fine-grained token</a>.</li><li>Repository access: <b>Only select repositories</b> → ${esc(S.ghRepo)}.</li><li>Permissions → Repository → <b>Contents: Read and write</b>. Leave everything else off.</li><li>Set an expiry (90 days), generate, copy the token.</li><li>Paste it in Settings → Landing pages and save.</li></ol>
+      <div class="actions"><button class="btn primary" onclick="closeModal();go('settings')">Open Settings</button><button class="btn" onclick="closeModal()">Close</button></div>`);
+  },
+  async lpCreate(id) {
+    const l = byId(id); if (!l) return;
+    if (!S.ghToken) return A.lpSetup();
+    modal(`<h2>Creating landing page…</h2><p class="muted">Building the page, creating a branch and committing it to GitHub. About 5–10 seconds.</p>`);
+    try { await lpCommit(l); A.lpDone(id); render(); }
+    catch (e) { if (e.message === 'NEEDS_SETUP') return A.lpSetup(); modal(`<h2>Could not create the page</h2><div class="tip bad"><span>${esc(e.message)}</span></div><div class="actions"><button class="btn" onclick="A.open('${id}')">Back</button><button class="btn" onclick="A.lpSetup()">Token setup help</button></div>`); }
+  },
+  lpDone(id) {
+    const l = byId(id), lp = l.lp;
+    modal(`<h2>✅ Landing page ready for review</h2><p class="muted">${esc(l.name)} · branch <code>${esc(lp.branch)}</code></p>
+      <div class="card"><div class="muted">Preview link (only people with the link can find it)</div><div style="overflow-wrap:anywhere;margin:6px 0"><a style="color:var(--b)" target="_blank" rel="noopener" href="${esc(lp.previewUrl)}">${esc(lp.previewUrl)}</a></div>
+      <div class="actions"><a class="btn primary" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(lp.previewUrl)}">Open preview</a><button class="btn" onclick="navigator.clipboard.writeText('${esc(lp.previewUrl)}').then(()=>toast('Copied'))">Copy link</button><a class="btn" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(lp.srcUrl)}">View code on GitHub</a></div>
+      <p class="muted" style="margin-top:8px">The preview is served by a third-party GitHub file host and can take up to a minute to appear the first time.</p></div>
+      <div class="card"><b>Happy with it?</b><div class="muted">Publish merges the branch into <code>${esc(S.ghBase)}</code>, which puts it at <span style="overflow-wrap:anywhere">${esc(lp.liveUrl)}</span> within a couple of minutes. That is the link the prospect receives.</div>
+      <div class="actions" style="margin-top:8px">${lp.status === 'live' ? '<span class="ok">Already live</span>' : `<button class="btn good" onclick="A.lpPublish('${id}')">Publish live</button>`}<button class="btn primary" onclick="A.lpMsg('${id}')">Draft proposal message</button><button class="btn" onclick="A.open('${id}')">Back to lead</button></div></div>`);
+  },
+  async lpPublish(id) {
+    const l = byId(id); if (!l || !l.lp) return;
+    if (!confirm(`Publish this sample site at ${l.lp.liveUrl}? Anyone with the link can see it. It is marked as a sample and hidden from search engines.`)) return;
+    try { toast('Publishing…'); await lpPublish(l); toast('Published. Live in 1–2 minutes'); A.lpDone(id); render(); } catch (e) { toast(e.message); }
+  },
+  lpMsg(id) {
+    const l = byId(id), lp = l.lp; if (!lp) return;
+    const live = lp.status === 'live';
+    modal(`<h2>Proposal message</h2><p class="muted">${esc(l.name)}</p>${live ? '' : `<div class="tip warn"><span>This message carries the LIVE link, which only works after you publish. Publish first, then send.</span><button class="btn small good" onclick="A.lpPublish('${id}')">Publish live</button></div>`}
+      <textarea id="c_txt" rows="12">${esc(renderTpl('sitedemo', l))}</textarea>
+      <div class="actions" style="margin-top:10px"><button class="btn wa" ${live && waOK(l) ? '' : 'disabled'} onclick="A.lpSend('${id}')">Open WhatsApp</button><button class="btn" onclick="A.copy()">Copy</button><button class="btn" onclick="A.lpDone('${id}')">Back</button></div>
+      <p class="muted">${waOK(l) ? 'Sending this counts as your next follow-up touch. The next reminder asks whether they saw the sample.' : 'This lead has no WhatsApp-able number. Copy the message and send it another way.'} Give the site 1–2 minutes to deploy after publishing before you send.</p>`);
+  },
+  lpSend(id) { const l = byId(id), txt = $('#c_txt').value; closeModal(); openWA(l, 'sitedemo', txt); },
+  lpBriefCopy(id) { const l = byId(id); navigator.clipboard.writeText(lpBrief(l)).then(() => toast('Brief copied. Paste it into Claude Code'), () => toast('Copy failed')); },
   copyOpp(id) {
     const l = byId(id), op = opportunity(l);
     const txt = `${l.name} (${op.si.host || 'no website'})\n` + op.items.map(i => `- ${i.issue} -> ${i.fix}`).join('\n') + (op.pkg ? `\nSuggested: ${op.pkg.name} (${money(op.pkg.price)})` : '');
@@ -1215,7 +1395,7 @@ const A = {
     S.me = val('s_me').trim() || 'Amin'; S.brand = val('s_brand').trim(); S.portfolio = safeUrl(val('s_port').trim()) ? val('s_port').trim() : (val('s_port').trim() ? 'https://' + val('s_port').trim() : '');
     S.dailyNew = Math.max(1, +val('s_daily') || 20); S.nurtureDays = Math.max(7, +val('s_nurt') || 60); S.defaultValue = +val('s_val') || 25000;
     S.areas = val('s_areas').split(',').map(x => x.trim()).filter(Boolean);
-    S.placesKey = val('s_pk').trim(); S.rules = rules; S.backend = val('s_be').trim().replace(/\/$/, ''); S.token = val('s_tok').trim();
+    S.placesKey = val('s_pk').trim(); S.ghRepo = val('s_ghr').trim() || S.ghRepo; S.ghBase = val('s_ghb').trim() || 'master'; S.ghToken = val('s_ght').trim(); S.myPhone = normPhone(val('s_myp')); S.rules = rules; S.backend = val('s_be').trim().replace(/\/$/, ''); S.token = val('s_tok').trim();
     S.cloud.url = val('c_url').trim().replace(/\/$/, ''); S.cloud.key = val('c_key').trim(); S.cloud.email = val('c_email').trim();
     const w = [...document.querySelectorAll('.cd_w')], c = [...document.querySelectorAll('.cd_c')], t = [...document.querySelectorAll('.cd_t')];
     S.cadence = S.cadence.map((_, i) => ({ wait: i === 0 ? 0 : Math.max(0, +w[i].value || 0), ch: c[i].value, tpl: t[i].value }));
@@ -1255,7 +1435,7 @@ const A = {
   cloudLogout() { S.cloud.session = null; persist(); render(); },
   /* data */
   exportJSON() {
-    const s = structuredClone(S); s.cloud.session = null; s.token = ''; s.placesKey = '';
+    const s = structuredClone(S); s.cloud.session = null; s.token = ''; s.placesKey = ''; s.ghToken = '';
     dl(`arr-lead-engine-backup-${today()}.json`, 'application/json', JSON.stringify({ v: 11, leads: db, settings: s }, null, 1)); M.lastBackup = nowIso(); persist(); toast('Backup downloaded'); render();
   },
   importJSON(inp) {
@@ -1264,7 +1444,7 @@ const A = {
       try {
         const j = JSON.parse(r.result); if (j.v !== 11 || !Array.isArray(j.leads)) throw new Error('Not a V11 backup');
         const n = mergeLeads(j.leads);
-        if (j.settings && confirm('Also restore templates, packages and settings from the backup? (Backend token and cloud login are never restored.)')) { const keep = { token: S.token, placesKey: S.placesKey, cloud: S.cloud }; S = mergeSettings({ ...j.settings, ...keep }); }
+        if (j.settings && confirm('Also restore templates, packages and settings from the backup? (Backend token and cloud login are never restored.)')) { const keep = { token: S.token, placesKey: S.placesKey, ghToken: S.ghToken, cloud: S.cloud }; S = mergeSettings({ ...j.settings, ...keep }); }
         save(); toast(`Restored ${n} lead(s)`); render();
       } catch (e) { toast('Restore failed: ' + e.message); }
     }; r.readAsText(f);
