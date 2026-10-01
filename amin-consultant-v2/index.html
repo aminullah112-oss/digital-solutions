@@ -10,7 +10,7 @@
 <meta property="og:title" content="ARR Digital | Websites, Systems &amp; Automation">
 <meta property="og:site_name" content="ARR Digital">
 <meta property="og:description" content="Premium websites, business systems, automation and AI workflows for growing businesses.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%2311130f'/%3E%3Ctext x='20' y='27' text-anchor='middle' font-family='Arial' font-weight='700' font-size='17' fill='%23b8ff3d'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%2311130f'/%3E%3Cpath d='M9 30 20 9.5 31 30' fill='none' stroke='%23fff' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14.8 30 20 20.5 25.2 30' fill='none' stroke='%23b8ff3d' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -256,7 +256,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 /* Logo */
 .logo{display:inline-flex;align-items:center;gap:11px}
 .logo-mark{width:38px;height:38px;flex:none;transition:transform .4s}
-.logo:hover .logo-mark{transform:rotate(-8deg) scale(1.05)}
+.logo:hover .logo-mark{transform:translateY(-2px) scale(1.06)}
 .logo-text{display:flex;flex-direction:column;line-height:1}
 .logo-text b{font:700 19px var(--display);letter-spacing:-.03em}
 .logo-text b i{font-style:normal;font-weight:500;color:var(--ink2)}
@@ -295,6 +295,41 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 .foot-brand .logo-text b{font-size:21px}
 .foot-brand p{font:600 clamp(18px,2.2vw,24px)/1.2 var(--display);letter-spacing:-.03em;color:var(--ink);max-width:520px}
 
+
+/* Feedback */
+.fb{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.testi-wrap[hidden]{display:none}
+.testis{display:grid;gap:16px}
+.testi{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px}
+.stars{color:#c77d00;letter-spacing:3px;font-size:17px;margin-bottom:12px}
+.testi blockquote{font:500 18px/1.45 var(--display);letter-spacing:-.02em}
+.testi footer{border:0;padding:0;margin-top:16px;font-size:14px;color:var(--muted)}
+.testi footer b{color:var(--ink);font-weight:600}
+.fb-invite{background:var(--ink);color:#fff;border-radius:28px;padding:38px;position:relative;overflow:hidden}
+.fb-invite:before{content:"“";position:absolute;right:26px;top:-18px;font:700 180px/1 var(--display);color:rgba(184,255,61,.16)}
+.fb-invite .kicker{color:var(--lime)}.fb-invite .kicker:before{background:var(--lime)}
+.fb-invite h2{font-size:clamp(30px,3.6vw,44px);margin-bottom:16px;position:relative}
+.fb-invite p{color:#c3c8bd;font-size:16px;position:relative}
+.fb-points{list-style:none;display:grid;gap:10px;margin-top:22px;position:relative}
+.fb-points li{display:flex;gap:10px;font-size:14.5px;color:#e5e9de}
+.fb-points li:before{content:"";flex:none;width:18px;height:18px;margin-top:2px;border-radius:50%;background:var(--lime) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%230b1405' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5l3.2 3L15 6.8'/%3E%3C/svg%3E") center/12px no-repeat}
+.fb-form{display:grid;gap:16px;background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:34px;box-shadow:var(--shadow)}
+.fb-form h3{font:600 24px var(--display);letter-spacing:-.035em}
+.fb-form input[type=text],.fb-form textarea{width:100%;background:var(--bg);border:1px solid transparent;border-radius:14px;padding:15px 16px;color:var(--ink);font:400 16px var(--body);transition:.2s}
+.fb-form input::placeholder,.fb-form textarea::placeholder{color:#8a8c85}
+.fb-form input:focus,.fb-form textarea:focus{outline:none;background:#fff;border-color:var(--ink);box-shadow:0 0 0 4px rgba(184,255,61,.45)}
+.fb-form textarea{min-height:120px;resize:vertical}
+.rate{border:0;padding:0;min-width:0}
+.rate legend{font:600 13px var(--body);color:var(--ink2);margin-bottom:8px;padding:0}
+.rate-row{display:flex;gap:6px;flex-direction:row-reverse;justify-content:flex-end}
+.rate input{position:absolute;opacity:0;pointer-events:none}
+.rate label{font-size:34px;line-height:1;color:#d6d2c6;cursor:pointer;transition:color .15s,transform .15s}
+.rate label:hover,.rate label:hover~label,.rate input:checked~label{color:#f2a900}
+.rate label:hover{transform:scale(1.12)}
+.rate input:focus-visible+label{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink2);cursor:pointer}
+.consent input{margin-top:4px;width:18px;height:18px;accent-color:#11130f;flex:none}
+
 /* Tablet */
 @media(max-width:980px){
   .hero{grid-template-columns:1fr;gap:34px;padding-top:112px;min-height:0}
@@ -305,6 +340,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .offer{grid-template-columns:1fr;padding:44px;gap:34px}
   .contact{grid-template-columns:1fr;gap:38px}
   .package.featured{transform:none}
+  .fb{grid-template-columns:1fr}
   .brand-grid{grid-template-columns:1fr;gap:34px}.brand-photo{aspect-ratio:16/10}
   .trust-inner{grid-template-columns:1fr 1fr}
   .trust-inner>div:nth-child(3){border-left:0;padding-left:0}
@@ -336,6 +372,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .contact-form{padding:22px;border-radius:22px}
   .step h3{margin-top:28px}
   .foot{flex-direction:column}
+  .fb-invite,.fb-form{padding:26px 22px;border-radius:24px}.rate label{font-size:38px}
   .pillars{grid-template-columns:1fr;gap:16px}.logo-text small{font-size:8.5px;letter-spacing:.1em}.svc-photo{height:150px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -349,9 +386,9 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <nav class="nav" id="nav" aria-label="Main">
 <div class="container nav-inner">
-  <a class="logo" href="#top" aria-label="ARR Digital — Digital that earns its keep. Home"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><text x="20" y="25.5" text-anchor="middle" font-family="Space Grotesk,Arial,sans-serif" font-weight="700" font-size="14.5" letter-spacing="-.5" fill="#fff">ARR</text><path d="M9 31h22" stroke="#b8ff3d" stroke-width="3" stroke-linecap="round"/><circle cx="31" cy="9" r="2.6" fill="#b8ff3d"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a>
+  <a class="logo" href="#top" aria-label="ARR Digital — Digital that earns its keep. Home"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M9 30 20 9.5 31 30" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.8 30 20 20.5 25.2 30" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a>
   <div class="links" id="links">
-    <a href="#services">Services</a><a href="#work">Work</a><a href="#packages">Packages</a><a href="#process">Process</a><a href="#contact">Contact</a>
+    <a href="#services">Services</a><a href="#work">Work</a><a href="#packages">Packages</a><a href="#process">Process</a><a href="#feedback">Reviews</a><a href="#contact">Contact</a>
   </div>
   <a class="btn dark" href="#contact">Start a project ↗</a>
   <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="links"><span></span></button>
@@ -481,6 +518,39 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   </div>
 </div></section>
 
+<section id="feedback" style="padding-top:20px"><div class="container">
+  <div class="testi-wrap" id="testiWrap" hidden>
+    <div class="section-head reveal"><div><div class="kicker">Client words</div><h2>What clients say.</h2></div></div>
+    <div class="testis" id="testis" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:56px"></div>
+  </div>
+  <div class="fb">
+    <div class="fb-invite reveal">
+      <div class="kicker">Worked with me before?</div>
+      <h2>Your feedback shapes how I work.</h2>
+      <p>If we’ve built something together, I’d value a few honest lines — what worked, what didn’t, and what I should do better next time.</p>
+      <ul class="fb-points"><li>Takes about a minute</li><li>Goes straight to me on WhatsApp</li><li>I only publish it with your permission</li></ul>
+    </div>
+    <form class="fb-form reveal" id="feedbackForm">
+      <h3>Leave a review</h3>
+      <fieldset class="rate"><legend>How was your experience?</legend>
+        <div class="rate-row"><input type="radio" name="rating" id="r5" value="5"><label for="r5" title="Excellent" aria-label="5 stars">★</label>
+        <input type="radio" name="rating" id="r4" value="4"><label for="r4" title="Good" aria-label="4 stars">★</label>
+        <input type="radio" name="rating" id="r3" value="3"><label for="r3" title="Okay" aria-label="3 stars">★</label>
+        <input type="radio" name="rating" id="r2" value="2"><label for="r2" title="Poor" aria-label="2 stars">★</label>
+        <input type="radio" name="rating" id="r1" value="1"><label for="r1" title="Very poor" aria-label="1 star">★</label></div>
+      </fieldset>
+      <div class="form-row">
+        <div class="field"><label for="fbName">Your name</label><input type="text" id="fbName" autocomplete="name" required placeholder="Jane Doe"></div>
+        <div class="field"><label for="fbBiz">Business / project</label><input type="text" id="fbBiz" autocomplete="organization" placeholder="What we worked on"></div>
+      </div>
+      <div class="field"><label for="fbMsg">Your feedback</label><textarea id="fbMsg" required placeholder="What went well? What could be better?"></textarea></div>
+      <label class="consent"><input type="checkbox" id="fbOk"> <span>You may feature my feedback on your website</span></label>
+      <button class="btn dark" type="submit">Send feedback ↗</button>
+      <p class="form-note" id="fbNote">Opens WhatsApp with your feedback pre-filled.</p>
+    </form>
+  </div>
+</div></section>
+
 <section style="padding-top:20px"><div class="container"><div class="offer reveal"><div class="offer-bg" aria-hidden="true"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy" onerror="this.remove()"></div>
   <div><div class="kicker">For growing businesses</div><h2>Your business deserves more than a template.</h2><p>Get a digital presence that reflects the quality of what you sell — with the tools behind it to help you operate better.</p><a class="btn primary" href="#contact">Get a project quote ↗</a></div>
   <div class="checks"><div><i>✓</i>Premium responsive design</div><div><i>✓</i>Mobile-first customer experience</div><div><i>✓</i>WhatsApp enquiry integration</div><div><i>✓</i>SEO-ready structure</div><div><i>✓</i>Deployment &amp; handover support</div><div><i>✓</i>Practical automation opportunities</div></div>
@@ -505,7 +575,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </main>
 
 <footer><div class="container">
-  <div class="foot-brand"><a class="logo" href="#top" aria-label="ARR Digital — back to top"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><text x="20" y="25.5" text-anchor="middle" font-family="Space Grotesk,Arial,sans-serif" font-weight="700" font-size="14.5" letter-spacing="-.5" fill="#fff">ARR</text><path d="M9 31h22" stroke="#b8ff3d" stroke-width="3" stroke-linecap="round"/><circle cx="31" cy="9" r="2.6" fill="#b8ff3d"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a><p>Practical digital, built properly.</p></div>
+  <div class="foot-brand"><a class="logo" href="#top" aria-label="ARR Digital — back to top"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M9 30 20 9.5 31 30" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.8 30 20 20.5 25.2 30" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a><p>Practical digital, built properly.</p></div>
   <div class="foot"><span>© <span id="year">2026</span> ARR Digital · Led by Amin</span><span>Web · Systems · Automation · Digital Products</span></div>
 </div></footer>
 
@@ -526,6 +596,25 @@ document.getElementById('enquiry').addEventListener('submit',e=>{
   e.preventDefault();
   const v=id=>document.getElementById(id).value.trim();
   const t=`Hi Amin, I’m ${v('name')}${v('business')?' from '+v('business'):''}.\n\nProject enquiry:\n${v('message')}\n\nMy WhatsApp/phone: ${v('phone')||'Not provided'}`;
+  window.open('https://wa.me/918610270479?text='+encodeURIComponent(t),'_blank','noopener');
+});
+
+/* Client testimonials: add real, approved reviews here and they appear automatically.
+   Example: {name:"Client Name", role:"Business, Town", rating:5, text:"What they said."} */
+const TESTIMONIALS=[];
+(function(){
+  if(!TESTIMONIALS.length)return;
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  document.getElementById('testis').innerHTML=TESTIMONIALS.map(t=>`<article class="testi"><div class="stars" aria-label="${+t.rating} out of 5">${'★'.repeat(+t.rating)}${'☆'.repeat(5-t.rating)}</div><blockquote>“${esc(t.text)}”</blockquote><footer><b>${esc(t.name)}</b>${t.role?' · '+esc(t.role):''}</footer></article>`).join('');
+  document.getElementById('testiWrap').hidden=false;
+})();
+document.getElementById('feedbackForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const v=id=>document.getElementById(id).value.trim();
+  const r=document.querySelector('input[name=rating]:checked');
+  if(!r){const n=document.getElementById('fbNote');n.textContent='Please choose a star rating first.';n.style.color='#b3261e';return}
+  const stars='★'.repeat(+r.value)+'☆'.repeat(5-r.value);
+  const t=`Hi Amin, here's my feedback.\n\nRating: ${stars} (${r.value}/5)\nName: ${v('fbName')}${v('fbBiz')?'\nProject: '+v('fbBiz'):''}\n\n${v('fbMsg')}\n\nOkay to feature on your website: ${document.getElementById('fbOk').checked?'Yes':'No'}`;
   window.open('https://wa.me/918610270479?text='+encodeURIComponent(t),'_blank','noopener');
 });
 </script>
