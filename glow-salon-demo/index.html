@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glow Salon — Book on WhatsApp (Demo by ARR Digital)</title>
+<meta name="description" content="Live demo of a WhatsApp-first salon booking system by ARR Digital. Pick a service, choose a slot, and get a WhatsApp confirmation.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#4a1d3d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234a1d3d'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' text-anchor='middle' fill='%23f1c9b6'%3EG%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf6f1;--panel:#fff;--ink:#2a1f24;--muted:#6f6169;--line:rgba(42,31,36,.12);--plum:#4a1d3d;--rose:#d8a48f;--rose-soft:#f6e6de;--ok:#1f7a4d;--danger:#b3261e;--shadow:0 1px 2px rgba(42,31,36,.06),0 18px 40px -18px rgba(42,31,36,.25);--serif:"Fraunces",Georgia,serif;--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input{font:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--plum);outline-offset:3px;border-radius:8px}
+.wrap{width:min(calc(100% - 32px),980px);margin:auto}
+
+/* demo ribbon */
+.ribbon{background:var(--ink);color:#fff;font-size:13px;padding:9px 0}
+.ribbon .wrap{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.ribbon b{color:#b8ff3d;font-weight:600}
+.ribbon a{color:#b8ff3d;font-weight:600;text-decoration:none;white-space:nowrap}
+
+header.top{padding:22px 0 8px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:46px;height:46px;border-radius:14px;background:var(--plum);color:var(--rose);display:grid;place-items:center;font:600 26px var(--serif)}
+.brand h1{font:600 26px/1 var(--serif);letter-spacing:-.01em}
+.brand p{font-size:13px;color:var(--muted)}
+
+.tabs{display:inline-flex;background:#efe6dd;border-radius:99px;padding:4px;margin:18px 0 22px}
+.tab{border:0;background:none;padding:10px 18px;border-radius:99px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--plum);color:#fff}
+.tab .count{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--rose);color:var(--plum);font-size:12px;line-height:20px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr);gap:18px;align-items:start}
+.grid>*{min-width:0}
+
+.steps{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.step i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#efe6dd;font-size:12px}
+.step.on{color:var(--ink)}.step.on i{background:var(--plum);color:#fff}
+.step.done i{background:var(--ok);color:#fff}
+.step+.step:before{content:"";width:18px;height:1px;background:var(--line);margin-right:2px}
+
+h2{font:600 24px/1.2 var(--serif);margin-bottom:6px}
+.sub{color:var(--muted);font-size:14.5px;margin-bottom:18px}
+
+.services{display:grid;gap:10px}
+.svc{display:flex;justify-content:space-between;align-items:center;gap:14px;text-align:left;width:100%;background:var(--bg);border:1.5px solid transparent;border-radius:16px;padding:15px 16px;cursor:pointer;transition:.18s}
+.svc:hover{border-color:var(--rose)}
+.svc[aria-pressed="true"]{border-color:var(--plum);background:var(--rose-soft)}
+.svc b{display:block;font-size:16px}.svc small{color:var(--muted);font-size:13px}
+.svc .price{font:600 17px var(--serif);white-space:nowrap}
+
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:thin}
+.day{flex:none;min-width:74px;text-align:center;background:var(--bg);border:1.5px solid transparent;border-radius:14px;padding:10px 8px;cursor:pointer}
+.day small{display:block;color:var(--muted);font-size:12px}.day b{font-size:18px;display:block}
+.day[aria-pressed="true"]{background:var(--plum);color:#fff}.day[aria-pressed="true"] small{color:#e7cdd8}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.slot{background:var(--bg);border:1.5px solid transparent;border-radius:12px;padding:11px 6px;font-weight:600;font-size:14px;cursor:pointer}
+.slot:hover:not(:disabled){border-color:var(--rose)}
+.slot[aria-pressed="true"]{background:var(--plum);color:#fff}
+.slot:disabled{background:transparent;border:1.5px dashed var(--line);color:#b6a9af;text-decoration:line-through;cursor:not-allowed}
+
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-weight:600;font-size:13.5px}
+.field input{width:100%;padding:14px 15px;border-radius:14px;border:1.5px solid transparent;background:var(--bg);font-size:16px}
+.field input:focus{outline:none;border-color:var(--plum);background:#fff;box-shadow:0 0 0 4px rgba(74,29,61,.12)}
+.field .err{color:var(--danger);font-size:13px;min-height:1em}
+
+.actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.btn{border:0;border-radius:99px;padding:14px 22px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--plum);color:#fff}.btn.primary:hover:not(:disabled){background:#5d2650}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.wa{background:#25d366;color:#06280f}.btn.wa:hover{filter:brightness(.95)}
+.btn{white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.summary{position:sticky;top:16px}
+.summary h3{font:600 18px var(--serif);margin-bottom:12px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+.row:last-of-type{border-bottom:0}
+.row span:first-child{color:var(--muted)}
+.row.total{font-weight:700;font-size:16px}
+.hours{font-size:13px;color:var(--muted);margin-top:14px}
+
+.success{text-align:center;padding:10px 0}
+.tick{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px;font-size:30px}
+.msgbox{background:#e7f8e4;border:1px solid #b7e2b1;border-radius:16px;padding:14px 16px;text-align:left;font-size:14px;white-space:pre-line;margin:18px 0}
+.msgbox small{display:block;color:var(--ok);font-weight:700;letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase;font-size:11px}
+
+/* owner view */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--bg);border-radius:16px;padding:16px}
+.stat b{display:block;font:600 28px var(--serif)}.stat span{font-size:13px;color:var(--muted)}
+.bk{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
+.bk:last-child{border-bottom:0}
+.bk h4{font-size:16px}.bk p{font-size:13.5px;color:var(--muted)}
+.bk .when{font-weight:600;color:var(--plum);font-size:14px}
+.bk .btns{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:700;padding:5px 10px;border-radius:99px;background:#e4f3ea;color:var(--ok)}
+.btn.sm{padding:9px 14px;font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.note{font-size:13px;color:var(--muted);margin-top:16px;background:var(--rose-soft);border-radius:14px;padding:12px 14px}
+.hidden{display:none!important}
+footer{padding:34px 0 50px;text-align:center;font-size:13.5px;color:var(--muted)}
+footer a{color:var(--plum);font-weight:600}
+
+@media(max-width:760px){
+  .grid{grid-template-columns:minmax(0,1fr)}.summary{position:static}
+  .card{padding:20px;border-radius:20px}
+  .stats{grid-template-columns:1fr 1fr 1fr;gap:8px}.stat{padding:12px}.stat b{font-size:22px}
+  .bk{grid-template-columns:1fr}
+  .step span{display:none}.step.on span{display:inline}
+  .actions .btn{flex:1;padding:14px 12px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="ribbon"><div class="wrap">
+  <span><b>LIVE DEMO</b> · Glow Salon is a fictional business. This is what ARR Digital builds for yours.</span>
+  <a href="https://aminullah112-oss.github.io/digital-solutions/amin-consultant-v2/#packages">Get this for my business ↗</a>
+</div></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo" aria-hidden="true">G</div><div><h1>Glow Salon</h1><p>Hair · Skin · Grooming &nbsp;|&nbsp; Open Mon–Sat, 10 am – 7 pm</p></div></div>
+    <div class="tabs" role="tablist" aria-label="Demo view">
+      <button class="tab" role="tab" id="tabCustomer" aria-selected="true" aria-controls="viewCustomer">What your customer sees</button>
+      <button class="tab" role="tab" id="tabOwner" aria-selected="false" aria-controls="viewOwner">What you see <span class="count" id="ownerCount">0</span></button>
+    </div>
+  </header>
+
+  <!-- CUSTOMER VIEW -->
+  <main>
+  <section id="viewCustomer" role="tabpanel" aria-labelledby="tabCustomer">
+    <div class="grid">
+      <div class="card" id="flow">
+        <div class="steps" id="stepper" aria-label="Booking steps">
+          <div class="step on" data-s="1"><i>1</i><span>Service</span></div>
+          <div class="step" data-s="2"><i>2</i><span>Date &amp; time</span></div>
+          <div class="step" data-s="3"><i>3</i><span>Your details</span></div>
+        </div>
+
+        <div id="s1">
+          <h2>What would you like done?</h2>
+          <p class="sub">Choose a service. Takes under a minute to book.</p>
+          <div class="services" id="serviceList"></div>
+          <div class="actions"><button class="btn primary" id="to2" disabled>Choose a time →</button></div>
+        </div>
+
+        <div id="s2" class="hidden">
+          <h2>Pick a day and time</h2>
+          <p class="sub" id="s2sub">Greyed-out slots are already taken.</p>
+          <div class="days" id="dayList" role="group" aria-label="Day"></div>
+          <div class="slots" id="slotList" role="group" aria-label="Time slots"></div>
+          <div class="actions"><button class="btn ghost" id="back1">← Back</button><button class="btn primary" id="to3" disabled>Your details →</button></div>
+        </div>
+
+        <form id="s3" class="hidden" novalidate>
+          <h2>Almost done</h2>
+          <p class="sub">We'll confirm on WhatsApp — no app, no sign-up.</p>
+          <div class="field"><label for="name">Your name</label><input id="name" autocomplete="name" maxlength="60" placeholder="e.g. Priya"><div class="err" id="nameErr" aria-live="polite"></div></div>
+          <div class="field"><label for="phone">WhatsApp number</label><input id="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="10-digit mobile number"><div class="err" id="phoneErr" aria-live="polite"></div></div>
+          <div class="actions"><button type="button" class="btn ghost" id="back2">← Back</button><button type="submit" class="btn primary">Confirm booking</button></div>
+        </form>
+
+        <div id="s4" class="hidden success" aria-live="polite">
+          <div class="tick" aria-hidden="true">✓</div>
+          <h2>You're booked!</h2>
+          <p class="sub" id="doneLine"></p>
+          <div class="msgbox"><small>Your WhatsApp confirmation</small><span id="doneMsg"></span></div>
+          <div class="actions" style="justify-content:center">
+            <a class="btn wa" id="waBtn" target="_blank" rel="noopener">Send confirmation on WhatsApp ↗</a>
+            <button class="btn ghost" id="again">Book another</button>
+          </div>
+          <p class="note" style="text-align:left">In the real system this message is sent automatically from the salon's WhatsApp number, followed by a reminder 2 hours before your slot. Switch to <b>“What you see”</b> to view the salon's side.</p>
+        </div>
+      </div>
+
+      <aside class="card summary" aria-label="Booking summary">
+        <h3>Your booking</h3>
+        <div class="row"><span>Service</span><span id="sumSvc">—</span></div>
+        <div class="row"><span>Day</span><span id="sumDay">—</span></div>
+        <div class="row"><span>Time</span><span id="sumTime">—</span></div>
+        <div class="row total"><span>Total</span><span id="sumPrice">—</span></div>
+        <p class="hours">Pay at the salon. Free rescheduling up to 2 hours before.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- OWNER VIEW -->
+  <section id="viewOwner" class="hidden" role="tabpanel" aria-labelledby="tabOwner">
+    <div class="card">
+      <h2>Salon dashboard</h2>
+      <p class="sub">Every booking lands here instantly (in the live system: a Google Sheet you own) and you get a WhatsApp alert.</p>
+      <div class="stats">
+        <div class="stat"><b id="stUp">0</b><span>Upcoming</span></div>
+        <div class="stat"><b id="stToday">0</b><span>Today</span></div>
+        <div class="stat"><b id="stRev">₹0</b><span>Expected revenue</span></div>
+      </div>
+      <div id="bkList"></div>
+      <p class="note"><b>Try it:</b> make a booking as a customer, then come back here. The slot you took is blocked for the next customer — no double-booking. Demo data is saved only in your own browser.</p>
+      <div class="actions"><button class="btn ghost sm" id="reset">Reset demo</button></div>
+    </div>
+  </section>
+  </main>
+
+  <footer>Demo built by <a href="https://aminullah112-oss.github.io/digital-solutions/amin-consultant-v2/">ARR Digital</a> · Simple tech. Real results.</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- CONFIG ---------- */
+const SALON_WA = '918610270479';   // number that receives booking messages (demo: ARR Digital)
+const SHEET_ENDPOINT = '';          // paste the Apps Script web-app URL to also log bookings to a Google Sheet
+const STORE = 'glowSalonDemo.v1';
+const SERVICES = [
+  {id:'cut',  name:'Haircut',      note:'Wash, cut & style · 45 min',   price:300},
+  {id:'col',  name:'Hair colour',  note:'Global colour · 2 hrs',        price:1500},
+  {id:'spa',  name:'Hair spa',     note:'Deep conditioning · 1 hr',     price:1000},
+  {id:'fac',  name:'Facial',       note:'Cleanse & glow · 1 hr',        price:800},
+  {id:'beard',name:'Beard trim',   note:'Shape & line-up · 20 min',     price:150}
+];
+const TIMES = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+const $ = id => document.getElementById(id);
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const fmtTime = t => { const [h,m]=t.split(':').map(Number); return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h>=12?'pm':'am'); };
+const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const longDay = s => new Date(s+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
+
+/* ---------- storage (safe) ---------- */
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE))||[] }catch(e){ return mem } }
+let mem=[];
+function save(a){ mem=a; try{ localStorage.setItem(STORE,JSON.stringify(a)) }catch(e){} }
+
+/* ---------- days & seeded availability ---------- */
+function upcomingDays(n){
+  const out=[], d=new Date(); d.setHours(0,0,0,0);
+  const now=new Date();
+  // include today only if the last slot has not passed yet
+  const start = (now.getDay()!==0 && now.getHours()<17) ? 0 : 1;
+  d.setDate(d.getDate()+start);
+  while(out.length<n){ if(d.getDay()!==0) out.push(new Date(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function seededTaken(dateIso,time){ // deterministic "busy" look, ~30% of slots
+  let h=0; const s=dateIso+time; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+  return h%10<3;
+}
+function isTaken(dateIso,time){
+  if(seededTaken(dateIso,time)) return true;
+  if(load().some(b=>b.date===dateIso&&b.time===time)) return true;
+  const now=new Date();
+  if(dateIso===iso(now)){ const [h]=time.split(':').map(Number); if(h<=now.getHours()) return true; }
+  return false;
+}
+
+/* ---------- state ---------- */
+let sel={svc:null,date:null,time:null};
+const days=upcomingDays(6);
+
+/* ---------- render: services ---------- */
+const sl=$('serviceList');
+SERVICES.forEach(s=>{
+  const b=document.createElement('button'); b.type='button'; b.className='svc'; b.setAttribute('aria-pressed','false'); b.dataset.id=s.id;
+  b.innerHTML='<span><b>'+s.name+'</b><small>'+s.note+'</small></span><span class="price">'+inr(s.price)+'</span>';
+  b.addEventListener('click',()=>{ sel.svc=s; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); $('to2').disabled=false; summary(); });
+  sl.appendChild(b);
+});
+
+/* ---------- render: days + slots ---------- */
+function renderDays(){
+  const dl=$('dayList'); dl.innerHTML='';
+  days.forEach(d=>{
+    const b=document.createElement('button'); b.type='button'; b.className='day'; b.setAttribute('aria-pressed',String(sel.date===iso(d)));
+    b.innerHTML='<small>'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</small><b>'+d.getDate()+'</b><small>'+d.toLocaleDateString('en-IN',{month:'short'})+'</small>';
+    b.addEventListener('click',()=>{ sel.date=iso(d); sel.time=null; $('to3').disabled=true; renderDays(); renderSlots(); summary(); });
+    dl.appendChild(b);
+  });
+}
+function renderSlots(){
+  const box=$('slotList'); box.innerHTML='';
+  if(!sel.date){ box.innerHTML='<p class="sub" style="grid-column:1/-1">Select a day to see free times.</p>'; return; }
+  TIMES.forEach(t=>{
+    const b=document.createElement('button'); b.type='button'; b.className='slot'; b.textContent=fmtTime(t);
+    const taken=isTaken(sel.date,t); b.disabled=taken; if(taken) b.setAttribute('aria-label',fmtTime(t)+' taken');
+    b.setAttribute('aria-pressed',String(sel.time===t));
+    b.addEventListener('click',()=>{ sel.time=t; $('to3').disabled=false; renderSlots(); summary(); });
+    box.appendChild(b);
+  });
+}
+
+function summary(){
+  $('sumSvc').textContent = sel.svc? sel.svc.name : '—';
+  $('sumDay').textContent = sel.date? longDay(sel.date) : '—';
+  $('sumTime').textContent= sel.time? fmtTime(sel.time) : '—';
+  $('sumPrice').textContent= sel.svc? inr(sel.svc.price) : '—';
+}
+
+/* ---------- stepper / navigation ---------- */
+function go(n){
+  ['s1','s2','s3','s4'].forEach((id,i)=>$(id).classList.toggle('hidden',i+1!==n));
+  document.querySelectorAll('.step').forEach(el=>{
+    const s=+el.dataset.s; el.classList.toggle('on',s===Math.min(n,3)); el.classList.toggle('done',s<n);
+  });
+  $('stepper').classList.toggle('hidden',n===4);
+  if(n===2){ renderDays(); renderSlots(); }
+  $('flow').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+}
+$('to2').addEventListener('click',()=>go(2));
+$('back1').addEventListener('click',()=>go(1));
+$('to3').addEventListener('click',()=>go(3));
+$('back2').addEventListener('click',()=>go(2));
+
+/* ---------- submit ---------- */
+function cleanPhone(v){ let p=v.replace(/[\s\-()]/g,''); p=p.replace(/^\+?91/,''); return p; }
+$('s3').addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=$('name').value.trim(), phone=cleanPhone($('phone').value);
+  let ok=true;
+  $('nameErr').textContent = name? '' : 'Please enter your name.'; if(!name) ok=false;
+  $('phoneErr').textContent = /^[6-9]\d{9}$/.test(phone)? '' : 'Enter a valid 10-digit mobile number.'; if(!/^[6-9]\d{9}$/.test(phone)) ok=false;
+  if(!ok) return;
+  if(isTaken(sel.date,sel.time)){ alert('Sorry, that slot was just taken. Please pick another.'); go(2); return; }
+  const b={id:Date.now().toString(36),svc:sel.svc.name,price:sel.svc.price,date:sel.date,time:sel.time,name:name,phone:'91'+phone,created:new Date().toISOString()};
+  const all=load(); all.push(b); save(all);
+  if(SHEET_ENDPOINT){ try{ const fd=new URLSearchParams({name:b.name,phone:b.phone,service:b.svc,price:b.price,date:b.date,time:b.time}); fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',body:fd}); }catch(_){} }
+  const msg='Hi Glow Salon, this is '+name+'.\nI have booked:\n• '+b.svc+' ('+inr(b.price)+')\n• '+longDay(b.date)+', '+fmtTime(b.time)+'\nPlease confirm. Thank you!';
+  $('doneLine').textContent=b.svc+' · '+longDay(b.date)+' · '+fmtTime(b.time);
+  $('doneMsg').textContent='Hi '+name+' 👋 Your '+b.svc+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'.\nWe\'ll remind you 2 hours before. Reply CHANGE to reschedule.';
+  $('waBtn').href='https://wa.me/'+SALON_WA+'?text='+encodeURIComponent(msg);
+  renderOwner(); go(4);
+});
+$('again').addEventListener('click',()=>{ sel={svc:null,date:null,time:null}; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed','false')); $('to2').disabled=true; $('to3').disabled=true; $('s3').reset(); summary(); go(1); });
+
+/* ---------- owner view ---------- */
+function renderOwner(){
+  const all=load().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('ownerCount').textContent=all.length;
+  const today=iso(new Date());
+  $('stUp').textContent=all.length; $('stToday').textContent=all.filter(b=>b.date===today).length;
+  $('stRev').textContent=inr(all.reduce((s,b)=>s+b.price,0));
+  const box=$('bkList'); box.innerHTML='';
+  if(!all.length){ box.innerHTML='<p class="empty">No bookings yet.<br>Book a slot as a customer and it will appear here.</p>'; return; }
+  all.forEach(b=>{
+    const row=document.createElement('div'); row.className='bk';
+    const info=document.createElement('div');
+    const h=document.createElement('h4'); h.textContent=b.name+' · '+b.svc;
+    const p=document.createElement('p'); p.textContent='+'+b.phone;
+    const w=document.createElement('div'); w.className='when'; w.textContent=longDay(b.date)+' · '+fmtTime(b.time)+' · '+inr(b.price);
+    info.append(h,w,p);
+    const btns=document.createElement('div'); btns.className='btns';
+    const chip=document.createElement('span'); chip.className='chip'; chip.textContent='Confirmed';
+    const m=document.createElement('a'); m.className='btn wa sm'; m.target='_blank'; m.rel='noopener'; m.textContent='Message';
+    m.href='https://wa.me/'+b.phone+'?text='+encodeURIComponent('Hi '+b.name+', your '+b.svc+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'. See you then!');
+    const c=document.createElement('button'); c.className='btn ghost sm'; c.type='button'; c.textContent='Cancel';
+    c.addEventListener('click',()=>{ save(load().filter(x=>x.id!==b.id)); renderOwner(); renderSlots(); });
+    btns.append(chip,m,c); row.append(info,btns); box.appendChild(row);
+  });
+}
+$('reset').addEventListener('click',()=>{ save([]); renderOwner(); renderSlots(); });
+
+/* ---------- tabs ---------- */
+function tab(which){
+  const own=which==='owner';
+  $('viewCustomer').classList.toggle('hidden',own); $('viewOwner').classList.toggle('hidden',!own);
+  $('tabCustomer').setAttribute('aria-selected',String(!own)); $('tabOwner').setAttribute('aria-selected',String(own));
+  if(own) renderOwner(); else renderSlots();
+}
+$('tabCustomer').addEventListener('click',()=>tab('customer'));
+$('tabOwner').addEventListener('click',()=>tab('owner'));
+
+/* ---------- init ---------- */
+mem=load(); summary(); renderOwner();
+})();
+</script>
+</body>
+</html>
