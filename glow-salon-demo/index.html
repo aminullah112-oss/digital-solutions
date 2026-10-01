@@ -109,6 +109,20 @@ h2{font:600 24px/1.2 var(--serif);margin-bottom:6px}
 .btn.sm{padding:9px 14px;font-size:13px}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
 .note{font-size:13px;color:var(--muted);margin-top:16px;background:var(--rose-soft);border-radius:14px;padding:12px 14px}
+
+/* stylists */
+.stylists{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.sty{text-align:left;background:var(--bg);border:1.5px solid transparent;border-radius:18px;padding:14px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;transition:.18s}
+.sty:hover{border-color:var(--rose)}
+.sty[aria-pressed="true"]{border-color:var(--plum);background:var(--rose-soft)}
+.pic{width:46px;height:46px;border-radius:50%;background:var(--plum);color:var(--rose);display:grid;place-items:center;font:600 20px var(--serif);grid-row:span 2}
+.pic.any{background:var(--rose);color:var(--plum)}
+.sty b{font-size:15.5px;line-height:1.2}.sty small{color:var(--muted);font-size:12.5px;line-height:1.3}
+.sty .tags{grid-column:1/-1;display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.sty .tg{font-size:11px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--plum);padding:3px 8px;border-radius:99px}
+.filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fchip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)}
+.fchip[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:#fff}
 .hidden{display:none!important}
 footer{padding:34px 0 50px;text-align:center;font-size:13.5px;color:var(--muted)}
 footer a{color:var(--plum);font-weight:600}
@@ -147,34 +161,42 @@ footer a{color:var(--plum);font-weight:600}
       <div class="card" id="flow">
         <div class="steps" id="stepper" aria-label="Booking steps">
           <div class="step on" data-s="1"><i>1</i><span>Service</span></div>
-          <div class="step" data-s="2"><i>2</i><span>Date &amp; time</span></div>
-          <div class="step" data-s="3"><i>3</i><span>Your details</span></div>
+          <div class="step" data-s="2"><i>2</i><span>Stylist</span></div>
+          <div class="step" data-s="3"><i>3</i><span>Date &amp; time</span></div>
+          <div class="step" data-s="4"><i>4</i><span>Details</span></div>
         </div>
 
         <div id="s1">
           <h2>What would you like done?</h2>
           <p class="sub">Choose a service. Takes under a minute to book.</p>
           <div class="services" id="serviceList"></div>
-          <div class="actions"><button class="btn primary" id="to2" disabled>Choose a time →</button></div>
+          <div class="actions"><button class="btn primary" id="to2" disabled>Choose a stylist →</button></div>
         </div>
 
         <div id="s2" class="hidden">
-          <h2>Pick a day and time</h2>
-          <p class="sub" id="s2sub">Greyed-out slots are already taken.</p>
-          <div class="days" id="dayList" role="group" aria-label="Day"></div>
-          <div class="slots" id="slotList" role="group" aria-label="Time slots"></div>
-          <div class="actions"><button class="btn ghost" id="back1">← Back</button><button class="btn primary" id="to3" disabled>Your details →</button></div>
+          <h2>Who would you like?</h2>
+          <p class="sub" id="s2sub">Only stylists who offer your service are shown.</p>
+          <div class="stylists" id="stylistList"></div>
+          <div class="actions"><button class="btn ghost" id="back1">← Back</button><button class="btn primary" id="to3" disabled>Pick a time →</button></div>
         </div>
 
-        <form id="s3" class="hidden" novalidate>
+        <div id="s3" class="hidden">
+          <h2>Pick a day and time</h2>
+          <p class="sub" id="s3sub">Greyed-out slots are already taken.</p>
+          <div class="days" id="dayList" role="group" aria-label="Day"></div>
+          <div class="slots" id="slotList" role="group" aria-label="Time slots"></div>
+          <div class="actions"><button class="btn ghost" id="backS">← Back</button><button class="btn primary" id="to4" disabled>Your details →</button></div>
+        </div>
+
+        <form id="s4" class="hidden" novalidate>
           <h2>Almost done</h2>
           <p class="sub">We'll confirm on WhatsApp — no app, no sign-up.</p>
           <div class="field"><label for="name">Your name</label><input id="name" autocomplete="name" maxlength="60" placeholder="e.g. Priya"><div class="err" id="nameErr" aria-live="polite"></div></div>
           <div class="field"><label for="phone">WhatsApp number</label><input id="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="20" placeholder="10-digit mobile number"><div class="err" id="phoneErr" aria-live="polite"></div></div>
-          <div class="actions"><button type="button" class="btn ghost" id="back2">← Back</button><button type="submit" class="btn primary">Confirm booking</button></div>
+          <div class="actions"><button type="button" class="btn ghost" id="back3">← Back</button><button type="submit" class="btn primary">Confirm booking</button></div>
         </form>
 
-        <div id="s4" class="hidden success" aria-live="polite">
+        <div id="s5" class="hidden success" aria-live="polite">
           <div class="tick" aria-hidden="true">✓</div>
           <h2>You're booked!</h2>
           <p class="sub" id="doneLine"></p>
@@ -190,6 +212,7 @@ footer a{color:var(--plum);font-weight:600}
       <aside class="card summary" aria-label="Booking summary">
         <h3>Your booking</h3>
         <div class="row"><span>Service</span><span id="sumSvc">—</span></div>
+        <div class="row"><span>Stylist</span><span id="sumSty">—</span></div>
         <div class="row"><span>Day</span><span id="sumDay">—</span></div>
         <div class="row"><span>Time</span><span id="sumTime">—</span></div>
         <div class="row total"><span>Total</span><span id="sumPrice">—</span></div>
@@ -208,6 +231,7 @@ footer a{color:var(--plum);font-weight:600}
         <div class="stat"><b id="stToday">0</b><span>Today</span></div>
         <div class="stat"><b id="stRev">₹0</b><span>Expected revenue</span></div>
       </div>
+      <div class="filter" id="stFilter" role="group" aria-label="Filter by stylist"></div>
       <div id="bkList"></div>
       <p class="note"><b>Try it:</b> make a booking as a customer, then come back here. The slot you took is blocked for the next customer — no double-booking. Demo data is saved only in your own browser.</p>
       <div class="actions"><button class="btn ghost sm" id="reset">Reset demo</button></div>
@@ -224,7 +248,7 @@ footer a{color:var(--plum);font-weight:600}
 /* ---------- CONFIG ---------- */
 const SALON_WA = '918610270479';   // number that receives booking messages (demo: ARR Digital)
 const SHEET_ENDPOINT = '';          // paste the Apps Script web-app URL to also log bookings to a Google Sheet
-const STORE = 'glowSalonDemo.v1';
+const STORE = 'glowSalonDemo.v2';
 const SERVICES = [
   {id:'cut',  name:'Haircut',      note:'Wash, cut & style · 45 min',   price:300},
   {id:'col',  name:'Hair colour',  note:'Global colour · 2 hrs',        price:1500},
@@ -232,42 +256,63 @@ const SERVICES = [
   {id:'fac',  name:'Facial',       note:'Cleanse & glow · 1 hr',        price:800},
   {id:'beard',name:'Beard trim',   note:'Shape & line-up · 20 min',     price:150}
 ];
+const STAFF = [
+  {id:'ayesha', name:'Ayesha', role:'Senior hair stylist',  exp:'8 yrs', skills:['cut','col','spa']},
+  {id:'rahul',  name:'Rahul',  role:'Barber & grooming',    exp:'6 yrs', skills:['cut','beard']},
+  {id:'meena',  name:'Meena',  role:'Skin therapist',       exp:'7 yrs', skills:['fac','spa']},
+  {id:'karthik',name:'Karthik',role:'Colour specialist',    exp:'5 yrs', skills:['col','cut']}
+];
 const TIMES = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
 const $ = id => document.getElementById(id);
 const inr = n => '₹' + n.toLocaleString('en-IN');
+const svcName = id => (SERVICES.find(x=>x.id===id)||{}).name||id;
 const fmtTime = t => { const [h,m]=t.split(':').map(Number); return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h>=12?'pm':'am'); };
 const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const longDay = s => new Date(s+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'});
 
 /* ---------- storage (safe) ---------- */
-function load(){ try{ return JSON.parse(localStorage.getItem(STORE))||[] }catch(e){ return mem } }
 let mem=[];
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE))||[] }catch(e){ return mem } }
 function save(a){ mem=a; try{ localStorage.setItem(STORE,JSON.stringify(a)) }catch(e){} }
 
-/* ---------- days & seeded availability ---------- */
+/* ---------- days & availability ---------- */
 function upcomingDays(n){
   const out=[], d=new Date(); d.setHours(0,0,0,0);
   const now=new Date();
-  // include today only if the last slot has not passed yet
   const start = (now.getDay()!==0 && now.getHours()<17) ? 0 : 1;
   d.setDate(d.getDate()+start);
   while(out.length<n){ if(d.getDay()!==0) out.push(new Date(d)); d.setDate(d.getDate()+1); }
   return out;
 }
-function seededTaken(dateIso,time){ // deterministic "busy" look, ~30% of slots
-  let h=0; const s=dateIso+time; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+function seededTaken(stylistId,dateIso,time){ // deterministic "busy" look, ~30% of each stylist's slots
+  let h=0; const s=stylistId+dateIso+time; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
   return h%10<3;
 }
-function isTaken(dateIso,time){
-  if(seededTaken(dateIso,time)) return true;
-  if(load().some(b=>b.date===dateIso&&b.time===time)) return true;
+const remote={}; // date -> [{stylist,time}] from the Google Sheet (when SHEET_ENDPOINT is set)
+function stylistTaken(st,dateIso,time){
+  if(seededTaken(st.id,dateIso,time)) return true;
+  if(load().some(b=>b.date===dateIso&&b.time===time&&b.stylistId===st.id)) return true;
+  if((remote[dateIso]||[]).some(r=>r.time===time&&String(r.stylist).toLowerCase()===st.name.toLowerCase())) return true;
   const now=new Date();
   if(dateIso===iso(now)){ const [h]=time.split(':').map(Number); if(h<=now.getHours()) return true; }
   return false;
 }
+function qualified(){ return sel.svc? STAFF.filter(x=>x.skills.includes(sel.svc.id)) : []; }
+function candidates(){ return sel.stylist==='any'? qualified() : STAFF.filter(x=>x.id===sel.stylist); }
+function slotFree(dateIso,time){ return candidates().some(st=>!stylistTaken(st,dateIso,time)); }
+function pickStylist(dateIso,time){ return candidates().find(st=>!stylistTaken(st,dateIso,time)); }
+
+async function loadRemote(dateIso){
+  if(!SHEET_ENDPOINT||remote[dateIso]) return;
+  try{
+    const r=await fetch(SHEET_ENDPOINT+'?date='+encodeURIComponent(dateIso));
+    const j=await r.json(); remote[dateIso]=Array.isArray(j.taken)?j.taken:[];
+    if(sel.date===dateIso) renderSlots();
+  }catch(_){ remote[dateIso]=[]; }
+}
 
 /* ---------- state ---------- */
-let sel={svc:null,date:null,time:null};
+let sel={svc:null,stylist:null,date:null,time:null};
 const days=upcomingDays(6);
 
 /* ---------- render: services ---------- */
@@ -275,9 +320,29 @@ const sl=$('serviceList');
 SERVICES.forEach(s=>{
   const b=document.createElement('button'); b.type='button'; b.className='svc'; b.setAttribute('aria-pressed','false'); b.dataset.id=s.id;
   b.innerHTML='<span><b>'+s.name+'</b><small>'+s.note+'</small></span><span class="price">'+inr(s.price)+'</span>';
-  b.addEventListener('click',()=>{ sel.svc=s; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); $('to2').disabled=false; summary(); });
+  b.addEventListener('click',()=>{
+    if(sel.svc&&sel.svc.id!==s.id){ sel.stylist=null; sel.time=null; $('to3').disabled=true; $('to4').disabled=true; }
+    sel.svc=s; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); $('to2').disabled=false; summary();
+  });
   sl.appendChild(b);
 });
+
+/* ---------- render: stylists ---------- */
+function renderStylists(){
+  const box=$('stylistList'); box.innerHTML='';
+  const list=qualified();
+  const mk=(id,pic,name,role,tags,anyCls)=>{
+    const b=document.createElement('button'); b.type='button'; b.className='sty'; b.setAttribute('aria-pressed',String(sel.stylist===id));
+    const p=document.createElement('div'); p.className='pic'+(anyCls?' any':''); p.textContent=pic;
+    const n=document.createElement('b'); n.textContent=name; const r=document.createElement('small'); r.textContent=role;
+    b.append(p,n,r);
+    if(tags){ const t=document.createElement('div'); t.className='tags'; tags.forEach(x=>{const e=document.createElement('span');e.className='tg';e.textContent=x;t.appendChild(e)}); b.appendChild(t); }
+    b.addEventListener('click',()=>{ sel.stylist=id; sel.time=null; $('to3').disabled=false; $('to4').disabled=true; renderStylists(); summary(); });
+    box.appendChild(b);
+  };
+  mk('any','★','Any available','Fastest — first free expert',null,true);
+  list.forEach(st=>mk(st.id,st.name[0],st.name,st.role+' · '+st.exp,st.skills.map(svcName),false));
+}
 
 /* ---------- render: days + slots ---------- */
 function renderDays(){
@@ -285,7 +350,7 @@ function renderDays(){
   days.forEach(d=>{
     const b=document.createElement('button'); b.type='button'; b.className='day'; b.setAttribute('aria-pressed',String(sel.date===iso(d)));
     b.innerHTML='<small>'+d.toLocaleDateString('en-IN',{weekday:'short'})+'</small><b>'+d.getDate()+'</b><small>'+d.toLocaleDateString('en-IN',{month:'short'})+'</small>';
-    b.addEventListener('click',()=>{ sel.date=iso(d); sel.time=null; $('to3').disabled=true; renderDays(); renderSlots(); summary(); });
+    b.addEventListener('click',()=>{ sel.date=iso(d); sel.time=null; $('to4').disabled=true; renderDays(); renderSlots(); summary(); loadRemote(sel.date); });
     dl.appendChild(b);
   });
 }
@@ -294,15 +359,24 @@ function renderSlots(){
   if(!sel.date){ box.innerHTML='<p class="sub" style="grid-column:1/-1">Select a day to see free times.</p>'; return; }
   TIMES.forEach(t=>{
     const b=document.createElement('button'); b.type='button'; b.className='slot'; b.textContent=fmtTime(t);
-    const taken=isTaken(sel.date,t); b.disabled=taken; if(taken) b.setAttribute('aria-label',fmtTime(t)+' taken');
+    const free=slotFree(sel.date,t); b.disabled=!free; if(!free) b.setAttribute('aria-label',fmtTime(t)+' taken');
     b.setAttribute('aria-pressed',String(sel.time===t));
-    b.addEventListener('click',()=>{ sel.time=t; $('to3').disabled=false; renderSlots(); summary(); });
+    b.addEventListener('click',()=>{ sel.time=t; $('to4').disabled=false; renderSlots(); summary(); });
     box.appendChild(b);
   });
 }
 
+function stylistLabel(){
+  if(!sel.stylist) return '—';
+  if(sel.stylist==='any'){
+    if(sel.date&&sel.time){ const p=pickStylist(sel.date,sel.time); return p? p.name+' (assigned)' : 'Any available'; }
+    return 'Any available';
+  }
+  return STAFF.find(x=>x.id===sel.stylist).name;
+}
 function summary(){
   $('sumSvc').textContent = sel.svc? sel.svc.name : '—';
+  $('sumSty').textContent = stylistLabel();
   $('sumDay').textContent = sel.date? longDay(sel.date) : '—';
   $('sumTime').textContent= sel.time? fmtTime(sel.time) : '—';
   $('sumPrice').textContent= sel.svc? inr(sel.svc.price) : '—';
@@ -310,66 +384,78 @@ function summary(){
 
 /* ---------- stepper / navigation ---------- */
 function go(n){
-  ['s1','s2','s3','s4'].forEach((id,i)=>$(id).classList.toggle('hidden',i+1!==n));
+  ['s1','s2','s3','s4','s5'].forEach((id,i)=>$(id).classList.toggle('hidden',i+1!==n));
   document.querySelectorAll('.step').forEach(el=>{
-    const s=+el.dataset.s; el.classList.toggle('on',s===Math.min(n,3)); el.classList.toggle('done',s<n);
+    const s=+el.dataset.s; el.classList.toggle('on',s===Math.min(n,4)); el.classList.toggle('done',s<n);
   });
-  $('stepper').classList.toggle('hidden',n===4);
-  if(n===2){ renderDays(); renderSlots(); }
+  $('stepper').classList.toggle('hidden',n===5);
+  if(n===2) renderStylists();
+  if(n===3){ renderDays(); renderSlots(); if(sel.date) loadRemote(sel.date); }
   $('flow').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
 }
 $('to2').addEventListener('click',()=>go(2));
 $('back1').addEventListener('click',()=>go(1));
 $('to3').addEventListener('click',()=>go(3));
-$('back2').addEventListener('click',()=>go(2));
+$('backS').addEventListener('click',()=>go(2));
+$('to4').addEventListener('click',()=>{ summary(); go(4); });
+$('back3').addEventListener('click',()=>go(3));
 
 /* ---------- submit ---------- */
 function cleanPhone(v){ let p=v.replace(/[\s\-()]/g,''); p=p.replace(/^\+?91/,''); return p; }
-$('s3').addEventListener('submit',e=>{
+$('s4').addEventListener('submit',e=>{
   e.preventDefault();
   const name=$('name').value.trim(), phone=cleanPhone($('phone').value);
   let ok=true;
   $('nameErr').textContent = name? '' : 'Please enter your name.'; if(!name) ok=false;
   $('phoneErr').textContent = /^[6-9]\d{9}$/.test(phone)? '' : 'Enter a valid 10-digit mobile number.'; if(!/^[6-9]\d{9}$/.test(phone)) ok=false;
   if(!ok) return;
-  if(isTaken(sel.date,sel.time)){ alert('Sorry, that slot was just taken. Please pick another.'); go(2); return; }
-  const b={id:Date.now().toString(36),svc:sel.svc.name,price:sel.svc.price,date:sel.date,time:sel.time,name:name,phone:'91'+phone,created:new Date().toISOString()};
+  const st=pickStylist(sel.date,sel.time);
+  if(!st){ alert('Sorry, that slot was just taken. Please pick another.'); go(3); return; }
+  const b={id:Date.now().toString(36),svc:sel.svc.name,price:sel.svc.price,stylistId:st.id,stylist:st.name,date:sel.date,time:sel.time,name:name,phone:'91'+phone,created:new Date().toISOString()};
   const all=load(); all.push(b); save(all);
-  if(SHEET_ENDPOINT){ try{ const fd=new URLSearchParams({name:b.name,phone:b.phone,service:b.svc,price:b.price,date:b.date,time:b.time}); fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',body:fd}); }catch(_){} }
-  const msg='Hi Glow Salon, this is '+name+'.\nI have booked:\n• '+b.svc+' ('+inr(b.price)+')\n• '+longDay(b.date)+', '+fmtTime(b.time)+'\nPlease confirm. Thank you!';
-  $('doneLine').textContent=b.svc+' · '+longDay(b.date)+' · '+fmtTime(b.time);
-  $('doneMsg').textContent='Hi '+name+' 👋 Your '+b.svc+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'.\nWe\'ll remind you 2 hours before. Reply CHANGE to reschedule.';
+  if(SHEET_ENDPOINT){ try{ const fd=new URLSearchParams({name:b.name,phone:b.phone,service:b.svc,stylist:b.stylist,price:b.price,date:b.date,time:b.time}); fetch(SHEET_ENDPOINT,{method:'POST',mode:'no-cors',body:fd}); delete remote[b.date]; }catch(_){} }
+  const msg='Hi Glow Salon, this is '+name+'.\nI have booked:\n• '+b.svc+' with '+b.stylist+' ('+inr(b.price)+')\n• '+longDay(b.date)+', '+fmtTime(b.time)+'\nPlease confirm. Thank you!';
+  $('doneLine').textContent=b.svc+' with '+b.stylist+' · '+longDay(b.date)+' · '+fmtTime(b.time);
+  $('doneMsg').textContent='Hi '+name+' 👋 Your '+b.svc+' with '+b.stylist+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'.\nWe\'ll remind you 2 hours before. Reply CHANGE to reschedule.';
   $('waBtn').href='https://wa.me/'+SALON_WA+'?text='+encodeURIComponent(msg);
-  renderOwner(); go(4);
+  renderOwner(); go(5);
 });
-$('again').addEventListener('click',()=>{ sel={svc:null,date:null,time:null}; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed','false')); $('to2').disabled=true; $('to3').disabled=true; $('s3').reset(); summary(); go(1); });
+$('again').addEventListener('click',()=>{ sel={svc:null,stylist:null,date:null,time:null}; sl.querySelectorAll('.svc').forEach(x=>x.setAttribute('aria-pressed','false')); ['to2','to3','to4'].forEach(i=>$(i).disabled=true); $('s4').reset(); summary(); go(1); });
 
 /* ---------- owner view ---------- */
+let filter='all';
 function renderOwner(){
-  const all=load().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  $('ownerCount').textContent=all.length;
+  const every=load().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  $('ownerCount').textContent=every.length;
   const today=iso(new Date());
-  $('stUp').textContent=all.length; $('stToday').textContent=all.filter(b=>b.date===today).length;
-  $('stRev').textContent=inr(all.reduce((s,b)=>s+b.price,0));
+  $('stUp').textContent=every.length; $('stToday').textContent=every.filter(b=>b.date===today).length;
+  $('stRev').textContent=inr(every.reduce((s,b)=>s+b.price,0));
+  const f=$('stFilter'); f.innerHTML='';
+  [['all','All stylists']].concat(STAFF.map(x=>[x.id,x.name])).forEach(([id,label])=>{
+    const c=document.createElement('button'); c.type='button'; c.className='fchip'; c.setAttribute('aria-pressed',String(filter===id));
+    const n=id==='all'? every.length : every.filter(b=>b.stylistId===id).length;
+    c.textContent=label+' ('+n+')'; c.addEventListener('click',()=>{ filter=id; renderOwner(); }); f.appendChild(c);
+  });
+  const all=filter==='all'? every : every.filter(b=>b.stylistId===filter);
   const box=$('bkList'); box.innerHTML='';
-  if(!all.length){ box.innerHTML='<p class="empty">No bookings yet.<br>Book a slot as a customer and it will appear here.</p>'; return; }
+  if(!all.length){ box.innerHTML='<p class="empty">'+(every.length?'No bookings for this stylist.':'No bookings yet.<br>Book a slot as a customer and it will appear here.')+'</p>'; return; }
   all.forEach(b=>{
     const row=document.createElement('div'); row.className='bk';
     const info=document.createElement('div');
-    const h=document.createElement('h4'); h.textContent=b.name+' · '+b.svc;
+    const h=document.createElement('h4'); h.textContent=b.name+' · '+b.svc+' · with '+b.stylist;
     const p=document.createElement('p'); p.textContent='+'+b.phone;
     const w=document.createElement('div'); w.className='when'; w.textContent=longDay(b.date)+' · '+fmtTime(b.time)+' · '+inr(b.price);
     info.append(h,w,p);
     const btns=document.createElement('div'); btns.className='btns';
     const chip=document.createElement('span'); chip.className='chip'; chip.textContent='Confirmed';
     const m=document.createElement('a'); m.className='btn wa sm'; m.target='_blank'; m.rel='noopener'; m.textContent='Message';
-    m.href='https://wa.me/'+b.phone+'?text='+encodeURIComponent('Hi '+b.name+', your '+b.svc+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'. See you then!');
+    m.href='https://wa.me/'+b.phone+'?text='+encodeURIComponent('Hi '+b.name+', your '+b.svc+' with '+b.stylist+' at Glow Salon is confirmed for '+longDay(b.date)+', '+fmtTime(b.time)+'. See you then!');
     const c=document.createElement('button'); c.className='btn ghost sm'; c.type='button'; c.textContent='Cancel';
     c.addEventListener('click',()=>{ save(load().filter(x=>x.id!==b.id)); renderOwner(); renderSlots(); });
     btns.append(chip,m,c); row.append(info,btns); box.appendChild(row);
   });
 }
-$('reset').addEventListener('click',()=>{ save([]); renderOwner(); renderSlots(); });
+$('reset').addEventListener('click',()=>{ save([]); filter='all'; renderOwner(); renderSlots(); });
 
 /* ---------- tabs ---------- */
 function tab(which){
