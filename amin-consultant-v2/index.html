@@ -10,7 +10,7 @@
 <meta property="og:title" content="ARR Digital | Websites, Systems &amp; Automation">
 <meta property="og:site_name" content="ARR Digital">
 <meta property="og:description" content="Premium websites, business systems, automation and AI workflows for growing businesses.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%2311130f'/%3E%3Cpath d='M9 30 20 9.5 31 30' fill='none' stroke='%23fff' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14.8 30 20 20.5 25.2 30' fill='none' stroke='%23b8ff3d' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -254,11 +254,12 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 
 /* Logo */
-.logo{display:inline-flex;align-items:center;gap:11px}
-.logo-mark{width:38px;height:38px;flex:none;transition:transform .4s}
-.logo:hover .logo-mark{transform:translateY(-2px) scale(1.06)}
+.logo{display:inline-flex;align-items:center;gap:12px}
+.logo-img{height:32px;width:auto;flex:none;transition:transform .4s}
+.logo:hover .logo-img{transform:translateY(-2px) scale(1.06)}
 .logo-text{display:flex;flex-direction:column;line-height:1}
-.logo-text b{font:700 19px var(--display);letter-spacing:-.03em}
+.logo-text{padding-left:12px;border-left:1px solid var(--line)}
+.logo-text b{font:500 19px var(--display);letter-spacing:-.02em}
 .logo-text b i{font-style:normal;font-weight:500;color:var(--ink2)}
 .logo-text small{font:600 9.5px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 
@@ -292,7 +293,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 /* Footer brand */
 .foot-brand{display:flex;justify-content:space-between;align-items:center;gap:30px;flex-wrap:wrap;padding-bottom:26px;margin-bottom:26px;border-bottom:1px solid var(--line)}
-.foot-brand .logo-text b{font-size:21px}
+.foot-brand .logo-img{height:38px}.foot-brand .logo-text b{font-size:21px}
 .foot-brand p{font:600 clamp(18px,2.2vw,24px)/1.2 var(--display);letter-spacing:-.03em;color:var(--ink);max-width:520px}
 
 
@@ -386,7 +387,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <nav class="nav" id="nav" aria-label="Main">
 <div class="container nav-inner">
-  <a class="logo" href="#top" aria-label="ARR Digital — Digital that earns its keep. Home"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M9 30 20 9.5 31 30" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.8 30 20 20.5 25.2 30" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a>
+  <a class="logo" href="#top" aria-label="ARR Digital — Digital that earns its keep. Home"><img class="logo-img" src="logo-mark.svg" alt="" width="79" height="32"><span class="logo-text"><b>Digital</b><small>That earns its keep</small></span></a>
   <div class="links" id="links">
     <a href="#services">Services</a><a href="#work">Work</a><a href="#packages">Packages</a><a href="#process">Process</a><a href="#feedback">Reviews</a><a href="#contact">Contact</a>
   </div>
@@ -575,7 +576,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </main>
 
 <footer><div class="container">
-  <div class="foot-brand"><a class="logo" href="#top" aria-label="ARR Digital — back to top"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#11130f"/><path d="M9 30 20 9.5 31 30" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.8 30 20 20.5 25.2 30" fill="none" stroke="#b8ff3d" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="logo-text"><b>ARR <i>Digital</i></b><small>Digital that earns its keep</small></span></a><p>Practical digital, built properly.</p></div>
+  <div class="foot-brand"><a class="logo" href="#top" aria-label="ARR Digital — back to top"><img class="logo-img" src="logo-mark.svg" alt="" width="79" height="32"><span class="logo-text"><b>Digital</b><small>That earns its keep</small></span></a><p>Practical digital, built properly.</p></div>
   <div class="foot"><span>© <span id="year">2026</span> ARR Digital · Led by Amin</span><span>Web · Systems · Automation · Digital Products</span></div>
 </div></footer>
 
