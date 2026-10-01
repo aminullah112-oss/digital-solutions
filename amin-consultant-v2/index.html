@@ -173,6 +173,10 @@ h2{font:600 clamp(34px,4.8vw,56px)/1.03 var(--display);letter-spacing:-.05em}
 .system:hover{box-shadow:var(--shadow);border-color:rgba(17,19,15,.28)}
 .system-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 .system-cat{font:700 11px var(--display);letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.system{padding:0;overflow:hidden}
+.sys-photo{height:150px}
+.system:hover .sys-photo img{transform:scale(1.06);filter:saturate(1)}
+.sys-body{padding:26px 28px 28px}
 .status{font:700 11px var(--body);padding:5px 11px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .status:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .status.delivered{background:#e4efd0;color:#2f4a06}
@@ -326,7 +330,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .actions .btn{width:100%}
   .services,.packages,.values,.process,.form-row{grid-template-columns:1fr}
   .ico{margin-bottom:30px}
-  .sites,.systems{grid-template-columns:1fr}.site-visual{height:230px}.system{padding:22px}
+  .sites,.systems{grid-template-columns:1fr}.site-visual{height:230px}.sys-body{padding:22px}.sys-photo{height:130px}
   .offer{padding:30px 22px;border-radius:26px}
   .cta-band{flex-direction:column;align-items:flex-start;padding:26px}.cta-band .btn{width:100%}
   .contact-form{padding:22px;border-radius:22px}
@@ -445,10 +449,10 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   </div>
   <div class="sub-head reveal" style="margin-top:56px"><h3>Business systems &amp; automation</h3><span>Built and iterated with the people using them</span></div>
   <div class="systems" style="margin-top:0">
-    <article class="system reveal"><div class="system-top"><span class="system-cat">Operations</span><span class="status delivered">Delivered</span></div><h3>School Furniture Manufacturing ERP</h3><p>Started as an Excel tracker, rebuilt as a Python / SQLite desktop app, then as a Flask PWA packaged into a single-file Android app — three iterations chasing what the client actually needed.</p><div class="tags"><span class="tag">Python</span><span class="tag">SQLite</span><span class="tag">Flask PWA</span></div></article>
-    <article class="system reveal"><div class="system-top"><span class="system-cat">Operations</span><span class="status delivered">Delivered</span></div><h3>Payroll &amp; Billing System</h3><p>Payroll and billing for a 300-person manpower contracting company, handling recurring billing cycles and staff payroll.</p><div class="tags"><span class="tag">Python</span><span class="tag">SQLite</span></div></article>
-    <article class="system reveal"><div class="system-top"><span class="system-cat">AI &amp; Automation</span><span class="status live">Live</span></div><h3>AI Content Pipeline</h3><p>An n8n workflow that pulls ideas from Google Sheets, drafts posts with the Claude API, routes them through Telegram for approval and auto-publishes to LinkedIn.</p><div class="tags"><span class="tag">n8n</span><span class="tag">Claude API</span><span class="tag">Telegram</span></div></article>
-    <article class="system reveal"><div class="system-top"><span class="system-cat">AI &amp; Automation</span><span class="status prototype">Prototype</span></div><h3>WhatsApp Salon Booking</h3><p>A prototype that lets customers book salon appointments entirely through WhatsApp, on a FastAPI / PostgreSQL / Redis stack.</p><div class="tags"><span class="tag">FastAPI</span><span class="tag">PostgreSQL</span><span class="tag">Redis</span></div></article>
+    <article class="system reveal"><div class="photo sys-photo"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="Business dashboard on a screen" loading="lazy" onerror="this.remove()"></div><div class="sys-body"><div class="system-top"><span class="system-cat">Operations</span><span class="status delivered">Delivered</span></div><h3>School Furniture Manufacturing ERP</h3><p>Started as an Excel tracker, rebuilt as a Python / SQLite desktop app, then as a Flask PWA packaged into a single-file Android app — three iterations chasing what the client actually needed.</p><div class="tags"><span class="tag">Python</span><span class="tag">SQLite</span><span class="tag">Flask PWA</span></div></div></article>
+    <article class="system reveal"><div class="photo sys-photo"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80" alt="Accounts and payroll paperwork with a laptop" loading="lazy" onerror="this.remove()"></div><div class="sys-body"><div class="system-top"><span class="system-cat">Operations</span><span class="status delivered">Delivered</span></div><h3>Payroll &amp; Billing System</h3><p>Payroll and billing for a 300-person manpower contracting company, handling recurring billing cycles and staff payroll.</p><div class="tags"><span class="tag">Python</span><span class="tag">SQLite</span></div></div></article>
+    <article class="system reveal"><div class="photo sys-photo"><img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=800&q=80" alt="Abstract AI and automation" loading="lazy" onerror="this.remove()"></div><div class="sys-body"><div class="system-top"><span class="system-cat">AI &amp; Automation</span><span class="status live">Live</span></div><h3>AI Content Pipeline</h3><p>An n8n workflow that pulls ideas from Google Sheets, drafts posts with the Claude API, routes them through Telegram for approval and auto-publishes to LinkedIn.</p><div class="tags"><span class="tag">n8n</span><span class="tag">Claude API</span><span class="tag">Telegram</span></div></div></article>
+    <article class="system reveal"><div class="photo sys-photo"><img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80" alt="Salon interior" loading="lazy" onerror="this.remove()"></div><div class="sys-body"><div class="system-top"><span class="system-cat">AI &amp; Automation</span><span class="status prototype">Prototype</span></div><h3>WhatsApp Salon Booking</h3><p>A prototype that lets customers book salon appointments entirely through WhatsApp, on a FastAPI / PostgreSQL / Redis stack.</p><div class="tags"><span class="tag">FastAPI</span><span class="tag">PostgreSQL</span><span class="tag">Redis</span></div></div></article>
   </div>
   <div class="values reveal">
     <div class="value"><b>Strategy first</b><span>A strategic partner, not just a web developer.</span></div>
