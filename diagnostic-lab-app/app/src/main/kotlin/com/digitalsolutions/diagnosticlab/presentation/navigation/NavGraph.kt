@@ -19,6 +19,7 @@ import com.digitalsolutions.diagnosticlab.presentation.auth.ProfileSetupScreen
 import com.digitalsolutions.diagnosticlab.presentation.auth.WelcomeScreen
 import com.digitalsolutions.diagnosticlab.presentation.lab.LabHomeScreen
 import com.digitalsolutions.diagnosticlab.presentation.lab.LabOrderDetailScreen
+import com.digitalsolutions.diagnosticlab.presentation.lab.RegisterLabScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingAddressScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingDateTimeScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingReviewScreen
@@ -210,7 +211,14 @@ fun DiagnosticLabNavGraph() {
                 onSignedOut = { navController.navigate(Routes.LOGIN) { popUpTo(0) } },
                 onBack = { navController.popBackStack() },
                 onReports = { navController.navigate(Routes.REPORTS) },
-                onMedicalHistory = { navController.navigate(Routes.MEDICAL_HISTORY) }
+                onMedicalHistory = { navController.navigate(Routes.MEDICAL_HISTORY) },
+                onRegisterLab = { navController.navigate(Routes.REGISTER_LAB) }
+            )
+        }
+        composable(Routes.REGISTER_LAB) {
+            RegisterLabScreen(
+                onRegistered = { navController.navigate(Routes.LAB_HOME) { popUpTo(0) } },
+                onBack = { navController.popBackStack() }
             )
         }
 

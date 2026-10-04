@@ -56,7 +56,10 @@ data class Laboratory(
     val homeCollectionAvailable: Boolean,
     val estimatedReportHours: Int,
     val rating: Float,
-    val active: Boolean = true
+    val active: Boolean = true,
+    val onboardingStatus: LabOnboardingStatus = LabOnboardingStatus.ACTIVE,
+    val ownerUserId: String? = null,
+    val licenseNumber: String? = null
 )
 
 data class Investigation(

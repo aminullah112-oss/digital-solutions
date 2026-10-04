@@ -29,6 +29,7 @@ object Routes {
     const val COMPLAINT_NEW = "complaint_new"
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
+    const val REGISTER_LAB = "register_lab"
 
     // Phlebotomist
     const val PHLEBOTOMIST_HOME = "phlebotomist_home"

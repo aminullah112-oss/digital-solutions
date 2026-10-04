@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.digitalsolutions.diagnosticlab.data.repository.AdminRepository
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.DashboardStats
+import com.digitalsolutions.diagnosticlab.domain.model.LabOnboardingStatus
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
@@ -37,6 +38,7 @@ class AdminHomeViewModel(private val adminRepository: AdminRepository) : ViewMod
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun toggleLab(id: String, active: Boolean) = viewModelScope.launch { adminRepository.setLabActive(id, active) }
+    fun reviewLab(id: String, approve: Boolean) = viewModelScope.launch { adminRepository.reviewLabOnboarding(id, approve) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +49,8 @@ fun AdminHomeScreen(onSignedOut: () -> Unit) {
     val viewModel: AdminHomeViewModel = viewModel(factory = viewModelFactory { initializer { AdminHomeViewModel(container.adminRepository) } })
     val stats by viewModel.stats.collectAsState()
     val labs by viewModel.laboratories.collectAsState()
+    val pending = labs.filter { it.onboardingStatus == LabOnboardingStatus.PENDING_APPROVAL }
+    val reviewed = labs.filterNot { it.onboardingStatus == LabOnboardingStatus.PENDING_APPROVAL }
 
     Scaffold(
         topBar = {
@@ -68,10 +72,30 @@ fun AdminHomeScreen(onSignedOut: () -> Unit) {
                 item {
                     StatGrid(s)
                 }
+                if (pending.isNotEmpty()) {
+                    item {
+                        Text("Pending Lab Approvals", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    items(pending, key = { it.id }) { lab ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text(lab.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("${lab.address}, ${lab.city}", style = MaterialTheme.typography.bodyMedium)
+                                Text(lab.phone, style = MaterialTheme.typography.bodyMedium)
+                                lab.licenseNumber?.let { Text("License: $it", style = MaterialTheme.typography.bodyMedium) }
+                                Spacer(Modifier.height(10.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Button(onClick = { viewModel.reviewLab(lab.id, approve = true) }) { Text("Approve") }
+                                    OutlinedButton(onClick = { viewModel.reviewLab(lab.id, approve = false) }) { Text("Reject") }
+                                }
+                            }
+                        }
+                    }
+                }
                 item {
                     Text("Laboratories", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
-                items(labs, key = { it.id }) { lab ->
+                items(reviewed, key = { it.id }) { lab ->
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column {

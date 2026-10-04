@@ -2,8 +2,8 @@ package com.digitalsolutions.diagnosticlab.data.repository
 
 import com.digitalsolutions.diagnosticlab.domain.model.DashboardStats
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -11,7 +11,10 @@ import kotlinx.coroutines.tasks.await
 
 /** Backs the admin/owner dashboard. [observeDashboard] just reads the stats/dashboard doc the
  * recalcDashboardStats Cloud Function keeps up to date — no client-side aggregation needed. */
-class AdminRepository(private val firestore: FirebaseFirestore) {
+class AdminRepository(
+    private val firestore: FirebaseFirestore,
+    private val functions: FirebaseFunctions
+) {
 
     fun observeDashboard(): Flow<DashboardStats> = callbackFlow {
         val registration = firestore.collection("stats").document("dashboard").addSnapshotListener { snapshot, error ->
@@ -52,21 +55,19 @@ class AdminRepository(private val firestore: FirebaseFirestore) {
     suspend fun setLabActive(id: String, active: Boolean) {
         firestore.collection("laboratories").document(id).update("active", active).await()
     }
-}
 
-private fun DocumentSnapshot.toLaboratory(): Laboratory? {
-    if (!exists()) return null
-    return Laboratory(
-        id = id,
-        name = getString("name").orEmpty(),
-        city = getString("city").orEmpty(),
-        address = getString("address").orEmpty(),
-        phone = getString("phone").orEmpty(),
-        openTime = getString("openTime").orEmpty(),
-        closeTime = getString("closeTime").orEmpty(),
-        homeCollectionAvailable = getBoolean("homeCollectionAvailable") ?: false,
-        estimatedReportHours = (getLong("estimatedReportHours") ?: 0L).toInt(),
-        rating = (getDouble("rating") ?: 0.0).toFloat(),
-        active = getBoolean("active") ?: true
-    )
+    /** Approve/reject a self-registered lab (laboratories.onboardingStatus ==
+     * PENDING_APPROVAL) — the only path that flips active/onboardingStatus for one of those,
+     * since the admin app's own direct [setLabActive] write only touches `active` and would
+     * leave onboardingStatus stuck at PENDING_APPROVAL forever. Pre-existing admin-seeded labs
+     * (no onboardingStatus field at all) keep using [setLabActive] via the UI's plain toggle. */
+    suspend fun reviewLabOnboarding(labId: String, approve: Boolean, reason: String? = null) {
+        functions.getHttpsCallable("reviewLaboratoryOnboarding").call(
+            mapOf(
+                "labId" to labId,
+                "decision" to if (approve) "APPROVE" else "REJECT",
+                "reason" to reason
+            )
+        ).await()
+    }
 }

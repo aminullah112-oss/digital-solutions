@@ -19,10 +19,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.digitalsolutions.diagnosticlab.data.repository.BookingRepository
+import com.digitalsolutions.diagnosticlab.data.repository.LaboratoryOnboardingRepository
 import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Booking
 import com.digitalsolutions.diagnosticlab.domain.model.BookingStatus
+import com.digitalsolutions.diagnosticlab.domain.model.LabOnboardingStatus
+import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.domain.model.SampleRejectionReason
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
@@ -48,11 +51,19 @@ private val LAB_RELEVANT_STATUSES = setOf(
     BookingStatus.PROCESSING, BookingStatus.REPORT_READY, BookingStatus.REJECTED_RECOLLECTION_NEEDED
 )
 
-class LabHomeViewModel(bookingRepository: BookingRepository, sessionManager: SessionManager) : ViewModel() {
-    val orders: StateFlow<List<Booking>?> = sessionManager.session
-        .filterNotNull()
-        .map { it.linkedEntityId }
-        .filterNotNull()
+class LabHomeViewModel(
+    bookingRepository: BookingRepository,
+    laboratoryOnboardingRepository: LaboratoryOnboardingRepository,
+    sessionManager: SessionManager
+) : ViewModel() {
+    private val labId: kotlinx.coroutines.flow.Flow<String> = sessionManager.session
+        .filterNotNull().map { it.linkedEntityId }.filterNotNull()
+
+    val laboratory: StateFlow<Laboratory?> = labId
+        .flatMapLatest { laboratoryOnboardingRepository.observeLaboratory(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val orders: StateFlow<List<Booking>?> = labId
         .flatMapLatest { bookingRepository.observeBookingsForLab(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 }
@@ -62,24 +73,33 @@ class LabHomeViewModel(bookingRepository: BookingRepository, sessionManager: Ses
 fun LabHomeScreen(onOpenOrder: (String) -> Unit, onSignedOut: () -> Unit) {
     val container = LocalAppContainer.current
     val scope = rememberCoroutineScope()
-    val viewModel: LabHomeViewModel = viewModel(factory = viewModelFactory { initializer { LabHomeViewModel(container.bookingRepository, container.sessionManager) } })
+    val viewModel: LabHomeViewModel = viewModel(
+        factory = viewModelFactory { initializer { LabHomeViewModel(container.bookingRepository, container.laboratoryOnboardingRepository, container.sessionManager) } }
+    )
+    val laboratory by viewModel.laboratory.collectAsState()
     val orders by viewModel.orders.collectAsState()
     val relevant = orders?.filter { it.status in LAB_RELEVANT_STATUSES || it.status == BookingStatus.REPORT_DELIVERED }
+    val signOut: () -> Unit = { scope.launch { container.sessionManager.signOut(); withContext(Dispatchers.Main.immediate) { onSignedOut() } } }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Incoming Orders") },
                 actions = {
-                    IconButton(onClick = { scope.launch { container.sessionManager.signOut(); withContext(Dispatchers.Main.immediate) { onSignedOut() } } }) {
+                    IconButton(onClick = signOut) {
                         Icon(Icons.Filled.Logout, contentDescription = "Sign out")
                     }
                 }
             )
         }
     ) { padding ->
+        val lab = laboratory
         when {
-            orders == null -> LoadingState(Modifier.padding(padding))
+            lab == null || orders == null -> LoadingState(Modifier.padding(padding))
+            // A self-registered lab (registerLaboratory, functions/src/index.ts) starts
+            // PENDING_APPROVAL and stays blocked from managing orders until an admin reviews
+            // it — see "Pending approvals" on AdminHomeScreen.
+            lab.onboardingStatus != LabOnboardingStatus.ACTIVE -> PendingApprovalState(lab.onboardingStatus, Modifier.padding(padding), signOut)
             relevant.isNullOrEmpty() -> EmptyState("No orders yet.", Modifier.padding(padding))
             else -> LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(relevant, key = { it.id }) { booking ->
@@ -95,6 +115,35 @@ fun LabHomeScreen(onOpenOrder: (String) -> Unit, onSignedOut: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PendingApprovalState(status: LabOnboardingStatus, modifier: Modifier = Modifier, onSignOut: () -> Unit) {
+    Column(
+        modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (status == LabOnboardingStatus.REJECTED) {
+            Text("Registration not approved", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Your lab registration wasn't approved. Contact support for details.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Text("Registration under review", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Thanks for registering! An admin is reviewing your lab's details. You'll be able to manage orders once it's approved.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.height(20.dp))
+        BigSecondaryButton(text = "Sign out", onClick = onSignOut)
     }
 }
 

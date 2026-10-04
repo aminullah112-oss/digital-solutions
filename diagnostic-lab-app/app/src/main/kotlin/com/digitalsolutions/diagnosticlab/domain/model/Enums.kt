@@ -4,6 +4,10 @@ enum class UserRole {
     PATIENT, PHLEBOTOMIST, LABORATORY, ADMIN
 }
 
+/** A self-registered lab's review state — see registerLaboratory/reviewLaboratoryOnboarding in
+ * functions/src/index.ts. Only ACTIVE labs are ever shown to patients (laboratories.active). */
+enum class LabOnboardingStatus { PENDING_APPROVAL, ACTIVE, REJECTED }
+
 enum class Relation {
     MYSELF, SPOUSE, FATHER, MOTHER, SON, DAUGHTER, OTHER
 }

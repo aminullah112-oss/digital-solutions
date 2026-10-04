@@ -175,6 +175,130 @@ export const verifyRazorpayPayment = onCall(
 );
 
 /**
+ * Lets a signed-in account self-register as a new, pending laboratory. This is the one case a
+ * client is allowed to change its own role (PATIENT -> LABORATORY) — firestore.rules otherwise
+ * permanently blocks that client-side (users/{uid}'s update rule requires role to stay
+ * unchanged; see AuthRepository.kt's kdoc: staff roles are meant to be human/server-granted
+ * only). Runs with the Admin SDK specifically to cross that boundary safely: the new
+ * laboratories doc is created with active:false/onboardingStatus:'PENDING_APPROVAL', so it's
+ * invisible to patients and to every other lab until reviewLaboratoryOnboarding approves it —
+ * a self-registered entity shouldn't start collecting samples under the marketplace's name
+ * unvetted.
+ */
+export const registerLaboratory = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+
+  const data = request.data ?? {};
+  const name = typeof data.name === "string" ? data.name.trim() : "";
+  const address = typeof data.address === "string" ? data.address.trim() : "";
+  const city = typeof data.city === "string" ? data.city.trim() : "";
+  const phone = typeof data.phone === "string" ? data.phone.trim() : "";
+  const openTime = typeof data.openTime === "string" ? data.openTime.trim() : "";
+  const closeTime = typeof data.closeTime === "string" ? data.closeTime.trim() : "";
+  const homeCollectionAvailable = data.homeCollectionAvailable === true;
+  const licenseNumber = typeof data.licenseNumber === "string" && data.licenseNumber.trim() ? data.licenseNumber.trim() : null;
+
+  if (!name || !address || !city || !phone || !openTime || !closeTime) {
+    throw new HttpsError("invalid-argument", "name, address, city, phone, openTime, and closeTime are required.");
+  }
+
+  const userRef = db.collection("users").doc(uid);
+  const userSnap = await userRef.get();
+  const currentRole = userSnap.exists ? userSnap.data()?.role : "PATIENT";
+  if (currentRole && currentRole !== "PATIENT") {
+    throw new HttpsError("failed-precondition", "This account already holds a staff role and can't register a lab.");
+  }
+
+  const labRef = db.collection("laboratories").doc();
+  await labRef.set({
+    name,
+    address,
+    city,
+    phone,
+    openTime,
+    closeTime,
+    homeCollectionAvailable,
+    estimatedReportHours: 24,
+    rating: null,
+    active: false,
+    onboardingStatus: "PENDING_APPROVAL",
+    ownerUserId: uid,
+    licenseNumber,
+    registeredAtMillis: Date.now(),
+  });
+
+  // merge: true preserves mobileNumber (and fcmToken, if already set) already on this doc.
+  await userRef.set({ role: "LABORATORY", linkedEntityId: labRef.id }, { merge: true });
+
+  return { labId: labRef.id };
+});
+
+/**
+ * A self-onboarded lab editing its own profile after registration. Deliberately excludes
+ * active/onboardingStatus/ownerUserId/rejectionReason — those only ever change via
+ * reviewLaboratoryOnboarding, so a lab can never approve itself by writing straight to its own
+ * doc, even through this function.
+ */
+export const updateLaboratoryProfile = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+  const labId = request.data?.labId;
+  if (typeof labId !== "string" || !labId) throw new HttpsError("invalid-argument", "labId is required.");
+
+  const labRef = db.collection("laboratories").doc(labId);
+  const labSnap = await labRef.get();
+  if (!labSnap.exists) throw new HttpsError("not-found", "Laboratory not found.");
+
+  const userSnap = await db.collection("users").doc(uid).get();
+  const isAdminCaller = userSnap.data()?.role === "ADMIN";
+  if (labSnap.data()?.ownerUserId !== uid && !isAdminCaller) {
+    throw new HttpsError("permission-denied", "You don't own this laboratory.");
+  }
+
+  const data = request.data ?? {};
+  const updates: Record<string, unknown> = {};
+  for (const field of ["name", "address", "city", "phone", "openTime", "closeTime", "licenseNumber"]) {
+    if (typeof data[field] === "string") updates[field] = data[field].trim();
+  }
+  if (typeof data.homeCollectionAvailable === "boolean") {
+    updates.homeCollectionAvailable = data.homeCollectionAvailable;
+  }
+  if (Object.keys(updates).length === 0) {
+    throw new HttpsError("invalid-argument", "No editable fields provided.");
+  }
+  await labRef.update(updates);
+  return { updated: true };
+});
+
+/**
+ * Admin-only approve/reject gate for a self-registered lab — the only path that can ever flip
+ * laboratories.active/onboardingStatus, so neither a lab's own client nor updateLaboratoryProfile
+ * above can self-approve.
+ */
+export const reviewLaboratoryOnboarding = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+  const userSnap = await db.collection("users").doc(uid).get();
+  if (userSnap.data()?.role !== "ADMIN") throw new HttpsError("permission-denied", "Admin only.");
+
+  const labId = request.data?.labId;
+  const decision = request.data?.decision;
+  if (typeof labId !== "string" || !labId) throw new HttpsError("invalid-argument", "labId is required.");
+  if (decision !== "APPROVE" && decision !== "REJECT") {
+    throw new HttpsError("invalid-argument", "decision must be APPROVE or REJECT.");
+  }
+
+  const reason = typeof request.data?.reason === "string" ? request.data.reason.trim() : null;
+  await db.collection("laboratories").doc(labId).update({
+    active: decision === "APPROVE",
+    onboardingStatus: decision === "APPROVE" ? "ACTIVE" : "REJECTED",
+    rejectionReason: decision === "REJECT" ? reason : null,
+  });
+  return { decision };
+});
+
+/**
  * Maps a Booking.status transition (see Enums.kt BookingStatus) to the notification shown
  * in-app and pushed via FCM. Statuses not listed here (PENDING_PAYMENT, cancellations,
  * rejections) don't generate a push — those are surfaced directly in the booking screen

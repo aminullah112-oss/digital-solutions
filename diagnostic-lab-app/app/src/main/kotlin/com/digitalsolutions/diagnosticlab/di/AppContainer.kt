@@ -85,7 +85,9 @@ class AppContainer(context: Context) {
 
     val complaintRepository = ComplaintRepository(firestore, notificationRepository)
 
-    val adminRepository = AdminRepository(firestore)
+    val adminRepository = AdminRepository(firestore, functions)
+
+    val laboratoryOnboardingRepository = LaboratoryOnboardingRepository(firestore, functions)
 
     init {
         // Real push delivery needs users/{uid}.fcmToken populated — onBookingStatusChange

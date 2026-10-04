@@ -17,6 +17,15 @@ service cloud.firestore {
     function isLab() {
       return isSignedIn() && myRole() == 'LABORATORY';
     }
+    // The lab a LABORATORY-role account is staff of (users/{uid}.linkedEntityId). Self-service
+    // onboarding (registerLaboratory, functions/src/index.ts) means laboratories/{labId} is no
+    // longer only ever admin-seeded, trusted data — isLab() alone used to grant blanket read/
+    // write on every booking, report, and tracking event regardless of which lab it belonged
+    // to, which was harmless while every LABORATORY account was admin-provisioned by hand, but
+    // becomes a real cross-tenant data leak once any self-registered lab can hold that role.
+    function myLabId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedEntityId;
+    }
 
     // A real online payment is only ever confirmed by the verifyRazorpayPayment Cloud
     // Function, after it recomputes and checks Razorpay's signature server-side — the Admin
@@ -66,13 +75,23 @@ service cloud.firestore {
       );
     }
 
-    // Public catalog data: everyone signed in can read, only admin edits.
+    // Public catalog data. A self-registered lab (laboratories.onboardingStatus ==
+    // 'PENDING_APPROVAL') stays invisible to every other signed-in user until an admin
+    // approves it (active flips true) — only its own owner and admin can see it beforehand.
+    // All writes go through registerLaboratory/updateLaboratoryProfile/
+    // reviewLaboratoryOnboarding (functions/src/index.ts, Admin SDK bypasses these rules) or
+    // the admin app's direct write; a lab can never flip its own active/onboardingStatus.
     match /laboratories/{labId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (
+        resource.data.active == true || resource.data.ownerUserId == request.auth.uid || isAdmin()
+      );
       allow write: if isAdmin();
+      // Pricing is non-sensitive catalog data (no patient PII), so a lab manages its own
+      // directly from the client rather than needing a dedicated Cloud Function per field —
+      // unlike the parent lab doc, which gates identity/approval fields behind functions.
       match /pricing/{investigationId} {
         allow read: if isSignedIn();
-        allow write: if isAdmin();
+        allow write: if isAdmin() || (isLab() && myLabId() == labId);
       }
     }
     match /investigations/{investigationId} {
@@ -85,13 +104,13 @@ service cloud.firestore {
       allow read: if isSignedIn() && (
         resource.data.patientAccountOwnerUserId == request.auth.uid ||
         resource.data.assignedPhlebotomistUid == request.auth.uid ||
-        isLab() || isAdmin()
+        (isLab() && resource.data.laboratoryId == myLabId()) || isAdmin()
       );
       allow create: if isSignedIn() && request.resource.data.patientAccountOwnerUserId == request.auth.uid;
       allow update: if isSignedIn() && (
         (resource.data.patientAccountOwnerUserId == request.auth.uid && !clientClaimsNewOnlinePaymentSuccess()) ||
         resource.data.assignedPhlebotomistUid == request.auth.uid ||
-        isLab() || isAdmin()
+        (isLab() && resource.data.laboratoryId == myLabId()) || isAdmin()
       );
       allow delete: if false;
 
@@ -104,12 +123,12 @@ service cloud.firestore {
         allow read: if isSignedIn() && (
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.patientAccountOwnerUserId == request.auth.uid ||
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.assignedPhlebotomistUid == request.auth.uid ||
-          isLab() || isAdmin()
+          (isLab() && get(/databases/$(database)/documents/bookings/$(bookingId)).data.laboratoryId == myLabId()) || isAdmin()
         );
         allow create: if isSignedIn() && (
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.patientAccountOwnerUserId == request.auth.uid ||
           get(/databases/$(database)/documents/bookings/$(bookingId)).data.assignedPhlebotomistUid == request.auth.uid ||
-          isLab() || isAdmin()
+          (isLab() && get(/databases/$(database)/documents/bookings/$(bookingId)).data.laboratoryId == myLabId()) || isAdmin()
         );
         allow update, delete: if false;
       }
@@ -129,8 +148,11 @@ service cloud.firestore {
     }
 
     match /reports/{reportId} {
-      allow read: if isSignedIn() && (resource.data.patientAccountOwnerUserId == request.auth.uid || isLab() || isAdmin());
-      allow write: if isLab() || isAdmin();
+      allow read: if isSignedIn() && (
+        resource.data.patientAccountOwnerUserId == request.auth.uid ||
+        (isLab() && resource.data.laboratoryId == myLabId()) || isAdmin()
+      );
+      allow write: if (isLab() && request.resource.data.laboratoryId == myLabId()) || isAdmin();
     }
 
     match /complaints/{complaintId} {

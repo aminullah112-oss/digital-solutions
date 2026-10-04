@@ -57,7 +57,13 @@ class ProfileHeaderViewModel(patientRepository: PatientRepository, sessionManage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onSignedOut: () -> Unit, onBack: () -> Unit, onReports: () -> Unit = {}, onMedicalHistory: () -> Unit = {}) {
+fun SettingsScreen(
+    onSignedOut: () -> Unit,
+    onBack: () -> Unit,
+    onReports: () -> Unit = {},
+    onMedicalHistory: () -> Unit = {},
+    onRegisterLab: () -> Unit = {}
+) {
     val container = LocalAppContainer.current
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -93,6 +99,13 @@ fun SettingsScreen(onSignedOut: () -> Unit, onBack: () -> Unit, onReports: () ->
                 ProfileListRow(Icons.Filled.MedicalServices, "Medical History", onMedicalHistory)
                 Divider()
                 ProfileListRow(Icons.Filled.Description, "My Reports", onReports)
+            }
+            Spacer(Modifier.height(20.dp))
+
+            Text("PARTNER WITH US", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            SectionCard {
+                ProfileListRow(Icons.Filled.MedicalServices, "Register Your Lab", onRegisterLab)
             }
             Spacer(Modifier.height(20.dp))
 
