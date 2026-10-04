@@ -61,22 +61,10 @@ class CatalogRepository(private val firestore: FirebaseFirestore) {
     }
 }
 
-private fun DocumentSnapshot.toLaboratory(): Laboratory? {
-    if (!exists()) return null
-    return Laboratory(
-        id = id,
-        name = getString("name").orEmpty(),
-        city = getString("city").orEmpty(),
-        address = getString("address").orEmpty(),
-        phone = getString("phone").orEmpty(),
-        openTime = getString("openTime").orEmpty(),
-        closeTime = getString("closeTime").orEmpty(),
-        homeCollectionAvailable = getBoolean("homeCollectionAvailable") ?: false,
-        estimatedReportHours = (getLong("estimatedReportHours") ?: 0L).toInt(),
-        rating = (getDouble("rating") ?: 0.0).toFloat(),
-        active = getBoolean("active") ?: true
-    )
-}
+// toLaboratory() is defined once, in LaboratoryOnboardingRepository.kt (same package, so no
+// import needed) — this file used to carry its own duplicate copy, which started conflicting
+// the moment that shared one was added (two same-signature extensions in one package is an
+// overload-resolution-ambiguity compile error, not a silent shadow).
 
 private fun DocumentSnapshot.toInvestigation(): Investigation? {
     if (!exists()) return null
