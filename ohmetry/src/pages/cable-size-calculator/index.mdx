@@ -1,0 +1,70 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Cable Size Calculator with Derating (IEC) | Ohmetry"
+description: "Work out the tabulated current rating a cable needs after derating factors, plus the minimum area for voltage drop. IEC 60364 method."
+h1: "IEC Cable Size Calculator with Derating Factors"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Cable size (IEC)"
+---
+import CableDerating from '../../components/CableDerating.tsx';
+import Related from '../../components/Related.astro';
+
+<CableDerating client:load />
+
+Under the IEC 60364 method, a cable is selected in three steps: find the tabulated current rating it needs once installation conditions are accounted for, check it against the protective device, and check voltage drop. This calculator does the arithmetic for steps one and three. It does not contain the rating tables or the correction factors, which belong to the standard, so you enter the factors from the tables for your installation.
+
+## The method
+
+<div class="formula">I<sub>b</sub> ≤ I<sub>n</sub> ≤ I<sub>z</sub><br/>I<sub>z</sub> = I<sub>t</sub> × k<sub>1</sub> × k<sub>2</sub> × …<br/>so I<sub>t</sub> ≥ I<sub>n</sub> / (k<sub>1</sub> × k<sub>2</sub> × …)</div>
+
+I<sub>b</sub> is the design current of the circuit. I<sub>n</sub> is the rating of the protective device. I<sub>z</sub> is the current-carrying capacity of the cable in its actual conditions. I<sub>t</sub> is the tabulated current rating for the cable type and installation method, at reference conditions. The k factors correct for ambient temperature, grouping with other circuits, soil thermal resistivity, depth of burial and similar effects. The overload protection rule also requires the current that makes the device operate within its conventional time, I<sub>2</sub>, not to exceed 1.45 I<sub>z</sub>. That condition is met automatically by standard circuit breakers, but it is not met by every type of fuse.
+
+## Worked example
+
+A three-phase circuit has a design current of 55 A, protected by a 63 A breaker. The cable runs in an ambient where the temperature factor is 0.87, grouped with others for a factor of 0.80.
+
+k = 0.87 × 0.80 = 0.696.
+I<sub>t</sub> ≥ 63 / 0.696 = 90.5 A.
+
+Look in the tabulated ratings for the cable type and installation method and pick the smallest size whose rating is at least 90.5 A. The calculator does not choose it because the value depends on the insulation (PVC or XLPE), the number of loaded conductors and the method.
+
+## Voltage drop
+
+For a three-phase circuit, the resistive drop is √3 × I × L × ρ / A. The calculator takes the line-to-line voltage and uses a conductor temperature of 70 °C, which is the working temperature for PVC insulation, and reports the smallest standard size that stays within the limit you set. For the example above with 50 m of copper, a 3 % limit at 400 V needs 8.2 mm², so 10 mm² is the next size, with a drop of 2.5 %. Typical limits are in the range of 3 to 5 %, but national rules and project specifications differ, so use the one that applies to you.
+
+The drop calculation here is resistive only. For large conductors, the reactance of the cable adds to the drop at lower power factors, and a full calculation uses the cable's impedance from the data sheet.
+
+## Final selection
+
+The cable must satisfy all of these:
+
+1. A tabulated rating at or above the figure above.
+2. A cross-section at or above the voltage-drop result.
+3. A fault withstand check. The cable must survive the fault current for the time the protection takes to clear it, which is the adiabatic check S ≥ √(I²t) / k. The k constant depends on the insulation and conductor, with values of 115 for PVC-insulated copper and 143 for XLPE copper commonly used. This check is not in the calculator.
+
+Take the largest of the three.
+
+## Common mistakes
+
+- **Applying factors to the design current instead of dividing the device rating.** The derating is applied to the cable's capacity, which is the same as dividing the requirement.
+- **Using the 20 °C resistivity for a loaded cable.** The calculator uses 70 °C.
+- **Forgetting the grouping factor for cables sharing a tray or duct.**
+
+## Questions
+
+### What is a typical grouping factor?
+It depends on the number of circuits and the arrangement. The tables in IEC 60364-5-52 give values that fall as more loaded circuits are grouped together. Read them from the standard.
+
+### Why divide by the factors instead of multiplying?
+The factors reduce the cable's capacity, so the tabulated rating at reference conditions must be larger by the inverse of the combined factor.
+
+### Does this work for NEC installations?
+No. The NEC uses ampacity tables with different correction factors. Use the <a href="/breaker-size-calculator/">breaker size calculator</a> and the NEC tables.
+
+<Related items={[
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+]} />

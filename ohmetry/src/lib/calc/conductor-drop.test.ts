@@ -30,3 +30,10 @@ describe('conductor-drop', () => {
     expect(() => minAreaMm2({ ...base, tempC: 500 })).toThrow();
   });
 });
+
+describe('three-phase circuit', () => {
+  // sqrt3*100*50*0.017241/(400*0.03) = 149.31/12 = 12.443 mm2 (20 C)
+  const t = { amps: 100, oneWayMetres: 50, volts: 400, maxDropPercent: 3, material: 'copper' as const, tempC: 20, circuit: 'three' as const };
+  it('100 A, 50 m, 400 V, 3 %', () => expect(minAreaMm2(t)).toBeCloseTo(12.4426, 3));
+  it('is sqrt3/2 of the two-wire result', () => expect(minAreaMm2(t) / minAreaMm2({ ...t, circuit: 'two-wire' })).toBeCloseTo(Math.sqrt(3) / 2, 9));
+});

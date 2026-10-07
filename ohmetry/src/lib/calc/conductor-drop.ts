@@ -27,7 +27,11 @@ export interface DropInput {
   maxDropPercent: number;
   material: Material;
   tempC: number;        // conductor operating temperature
+  /** 'two-wire' (default): out and back, factor 2. 'three': balanced three-phase, line-to-line V, factor sqrt3. Resistance only, reactance ignored. */
+  circuit?: 'two-wire' | 'three';
 }
+
+const loopFactor = (c?: 'two-wire' | 'three') => (c === 'three' ? Math.sqrt(3) : 2);
 
 /** Minimum cross-section (mm2) for a two-conductor circuit: out and back. */
 export function minAreaMm2(i: DropInput): number {
@@ -35,11 +39,11 @@ export function minAreaMm2(i: DropInput): number {
   if (!(i.maxDropPercent > 0 && i.maxDropPercent < 100)) throw new Error('Allowed drop must be between 0 and 100 %');
   if (!(i.tempC >= -40 && i.tempC <= 150)) throw new Error('Temperature must be between -40 and 150 C');
   const rho = resistivity(i.material, i.tempC);
-  return (2 * i.oneWayMetres * i.amps * rho) / (i.volts * (i.maxDropPercent / 100));
+  return (loopFactor(i.circuit) * i.oneWayMetres * i.amps * rho) / (i.volts * (i.maxDropPercent / 100));
 }
 
 export function dropVolts(i: Omit<DropInput, 'maxDropPercent' | 'volts'>, areaMm2: number): number {
-  return (2 * i.oneWayMetres * i.amps * resistivity(i.material, i.tempC)) / areaMm2;
+  return (loopFactor(i.circuit) * i.oneWayMetres * i.amps * resistivity(i.material, i.tempC)) / areaMm2;
 }
 
 export function nextIecSize(areaMm2: number): number | null {
