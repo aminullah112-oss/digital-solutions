@@ -8,6 +8,7 @@ hubHref: /electrical/
 crumb: "kW to amps"
 ---
 import KwToAmps from '../../components/KwToAmps.tsx';
+import Related from '../../components/Related.astro';
 
 <KwToAmps client:load />
 
@@ -21,4 +22,9 @@ For three-phase, V is the line-to-line voltage.
 
 A 10 kW three-phase motor load at 400 V and 0.8 power factor: I = 10 000 / (1.732 × 400 × 0.8) = 18.04 A. This is the load current. Conductor and breaker sizing add further factors that are covered on their own pages.
 
-TODO before launch: expand to 500 to 900 words, add questions and related links.
+<Related items={[
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+]} />
