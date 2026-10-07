@@ -1,0 +1,71 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Transformer Full Load Current Calculator | Ohmetry"
+description: "Calculate primary and secondary full-load current of a three-phase transformer from kVA and voltages. Formula and worked examples."
+h1: "Transformer Full-Load Current Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Transformer full-load current"
+---
+import TransformerFlc from '../../components/TransformerFlc.tsx';
+import Related from '../../components/Related.astro';
+
+<TransformerFlc client:load />
+
+Full-load current is the rated current a transformer carries at its nameplate kVA. It is the first number needed for switchgear selection, cable sizing, relay settings and fault-level estimates. Every one of those starts from the same two currents: one on the primary winding and one on the secondary.
+
+## Formula
+
+<div class="formula">I = kVA × 1000 / (√3 × V<sub>LL</sub>)</div>
+
+V<sub>LL</sub> is the line-to-line voltage of the winding in question. Apply the formula twice, once with the primary voltage and once with the secondary voltage. The kVA is the same on both sides, so the currents are inversely proportional to the voltages, apart from small losses. That inverse ratio is a quick way to check your own numbers.
+
+## Worked examples
+
+**1,000 kVA, 11 kV / 400 V.**
+Primary: 1,000,000 / (1.732 × 11,000) = 52.5 A.
+Secondary: 1,000,000 / (1.732 × 400) = 1,443 A.
+The ratio 1,443 / 52.5 = 27.5, which equals 11,000 / 400.
+
+**500 kVA, 33 kV / 11 kV.**
+Primary 8.75 A, secondary 26.2 A.
+
+**2,500 kVA, 11 kV / 415 V.**
+Primary 131 A, secondary 3,478 A. A secondary current this size usually means busbar trunking and several parallel cables, not a single circuit.
+
+## What to do with the result
+
+On the primary side, full-load current sets the minimum rating of the switchgear and the fuse or relay element. Protection is normally set well above it, because a transformer drawing magnetizing inrush on energization can take several times its rated current for a short time. Values of 8 to 12 times rated current are often quoted for inrush, and the real figure depends on the design, the residual flux in the core and the point on the voltage wave where the breaker closes. Relays on the supply side either have an inrush restraint or are set with a time delay or high enough pickup to avoid tripping on energization.
+
+On the secondary side, the full-load current sets the size of the main breaker and the incoming cable or busbar. It is also the base for a fault-level estimate: the <a href="/short-circuit-current-calculator/">short-circuit current calculator</a> divides it by the transformer impedance.
+
+## Assumptions
+
+- **Three-phase, balanced.** For a single-phase transformer, use the <a href="/kva-to-amps-calculator/">kVA to amps calculator</a> in single-phase mode.
+- **Rated voltage.** If the transformer runs on a tap other than nominal, the current at a given kVA changes with the actual voltage.
+- **Rated kVA.** Many oil-filled units are rated for ONAN cooling and carry a higher rating with fans (ONAF). Use the rating relevant to your design, which is usually the highest one if you expect to use it.
+- **Overload.** The calculation gives the rated current. Short-term overload capability, as in IEC 60076-7, is a separate matter.
+
+## Common mistakes
+
+- **Using the phase voltage in the √3 formula.** Use line-to-line voltage.
+- **Quoting only one side.** Cables, fuses and relays on each side are selected from that side's current.
+- **Confusing kVA with kW.** The nameplate rating is apparent power.
+
+## Questions
+
+### How do I find the full-load current from the nameplate?
+Many nameplates print both currents. If they do, use them. If not, calculate from kVA and the rated voltages.
+
+### Is the current the same for delta and star windings?
+The line current is. The winding (phase) current differs: in a delta winding it is the line current divided by √3.
+
+### What fuse rating goes on the primary?
+It depends on the standard, the fuse type and the inrush. Take the full-load current as the starting point, then follow the fuse maker's transformer-protection tables.
+
+<Related items={[
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/idmt-relay-calculator/', label: 'IDMT relay time calculator' },
+]} />

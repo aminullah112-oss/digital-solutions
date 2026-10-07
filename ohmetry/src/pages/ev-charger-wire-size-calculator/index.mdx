@@ -1,0 +1,69 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "EV Charger Wire and Breaker Size Calculator | Ohmetry"
+description: "Find the breaker, minimum conductor ampacity and voltage-drop cable size for a home EV charger, plus charge time. NEC 125% rule."
+h1: "EV Charger Breaker and Wire Size Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "EV charger"
+---
+import EvCharger from '../../components/EvCharger.tsx';
+import Related from '../../components/Related.astro';
+
+<EvCharger client:load />
+
+Home EV charging is a continuous load that runs for hours, so the circuit is sized for more than the charger's rated current. This calculator gives the breaker, the current the cable must be able to carry, and the cable size needed to keep voltage drop acceptable over the run. It models a single-phase, two-wire circuit.
+
+## The rules it applies
+
+<div class="formula">Breaker ≥ 1.25 × charger current, rounded up to a standard size<br/>Conductor ampacity ≥ 1.25 × charger current<br/>Area for drop = 2 × L × I × ρ / (V × allowed drop)</div>
+
+Under the NEC, the overcurrent device for EV supply equipment is sized at no less than 125 % of the equipment's maximum load (625.41), and the conductors for a continuous load carry 125 % as well (210.19(A)(1)). Breaker sizes come from 240.6(A). Check these section numbers against your adopted edition. A charger with an adjustable current setting is sized from the setting only if the installation instructions and the code allow it, so read the equipment's listing.
+
+## Worked examples
+
+**A 32 A charger** (7.7 kW at 240 V): 1.25 × 32 = 40 A, so a 40 A breaker, and conductors rated for at least 40 A.
+
+**A 7.2 kW charger at 240 V** draws 30 A: 1.25 × 30 = 37.5 A, so a 40 A breaker.
+
+**An 11.5 kW charger at 240 V** draws 47.9 A: 1.25 × 47.9 = 59.9 A, so a 60 A breaker.
+
+**Charge time.** Adding 60 kWh at 7.7 kW with 90 % charging efficiency takes 60 / (7.68 × 0.9) = 8.7 hours.
+
+## Ampacity versus voltage drop
+
+The ampacity figure tells you the minimum current rating of the cable, and you read the conductor size off the code's table for your insulation, temperature rating and installation method. The voltage-drop size is a second requirement that matters on long runs. The cable must satisfy both, so use the larger. For a 20 m run at 32 A the drop calculation is satisfied by a small cable and the 40 A ampacity decides, while at 60 m the drop calculation asks for about 10 mm² and takes over.
+
+## What affects the real charge rate
+
+The car's onboard charger can limit AC charging below the supply's capacity. Many cars accept 7 to 11 kW on AC. The battery slows its charging as it fills, which is why the last 20 % takes longer than the first, and the charging efficiency is usually below 100 %, around 85 to 92 % for AC charging.
+
+## Limits of this calculator
+
+- **Three-phase chargers** are not modelled. The voltage-drop formula changes, and the current per phase is lower.
+- **Load management.** A home with a limited service may need a load-management device, and the code has rules for it.
+- **Local requirements.** Some places need a dedicated circuit, a ground-fault device, an outdoor-rated enclosure or a permit. Check with the local authority having jurisdiction.
+
+## Common mistakes
+
+- **Sizing the breaker at exactly the charger current.**
+- **Using the 125 % result as the cable size.** It is a minimum rating, and the table decides the size.
+- **Forgetting the run length.**
+
+## Questions
+
+### What size breaker for a 48 A charger?
+1.25 × 48 = 60 A, so a 60 A breaker. These are commonly installed with 6 AWG copper in the US, but confirm against the tables and the equipment's terminal rating.
+
+### What gauge wire for a Level 2 charger?
+It depends on the current, the insulation and the installation. Use the 125 % ampacity above with the NEC table, then compare with the voltage-drop result.
+
+### Can I use a 50 A breaker for a 32 A charger?
+It is allowed to protect a larger circuit if the cable and the charger instructions support it, but the minimum is 40 A.
+
+<Related items={[
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+]} />

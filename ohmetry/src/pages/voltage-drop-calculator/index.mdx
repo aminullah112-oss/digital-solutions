@@ -1,0 +1,70 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Voltage Drop Calculator (Single and Three-Phase) | Ohmetry"
+description: "Calculate voltage drop in volts and percent for single-phase, DC and three-phase cables from current, length and conductor size."
+h1: "Voltage Drop Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Voltage drop"
+---
+import VoltageDrop from '../../components/VoltageDrop.tsx';
+import Related from '../../components/Related.astro';
+
+<VoltageDrop client:load />
+
+Voltage drop is the voltage lost along a cable because of its resistance, and for longer AC runs its reactance. Too much of it makes motors run hot, lights dim and electronics reset. This calculator gives the drop for a cable you have already chosen. To work the other way and find the smallest cable for a limit, use the <a href="/cable-size-calculator/">cable size calculator</a> or the <a href="/solar-wire-size-calculator/">solar DC cable size calculator</a>.
+
+## Formulas
+
+<div class="formula">Two-wire or DC: ΔV = 2 × I × L × R<br/>Three-phase: ΔV = √3 × I × L × R<br/>With reactance: ΔV = k × I × L × (R cos φ + X sin φ)<br/>R = ρ / A</div>
+
+I is the load current, L the one-way length, R the conductor resistance per unit length, ρ the resistivity and A the cross-section. The factor k is 2 for two wires (out and back) and √3 for a balanced three-phase circuit, where the result is a line-to-line voltage. For the full derivation and more examples, see the <a href="/voltage-drop-formula/">voltage drop formula guide</a>.
+
+## Worked example
+
+A 230 V single-phase circuit carries 20 A over 30 m of 4 mm² copper at an operating temperature of 70 °C. Resistivity at 70 °C is 0.020629 Ω·mm²/m.
+
+ΔV = 2 × 30 × 20 × 0.020629 / 4 = 6.19 V, which is 2.7 % of 230 V. The load sees 223.8 V.
+
+Now a three-phase 400 V feeder carrying 100 A over 50 m of 25 mm² copper at 20 °C: ΔV = 1.732 × 100 × 50 × 0.017241 / 25 = 5.97 V, or 1.49 % of 400 V.
+
+## Temperature, resistance and reactance
+
+Conductor resistance rises about 0.39 % per °C for copper, so a cable at 70 °C has roughly 20 % more resistance than the same cable at 20 °C. The default of 70 °C matches PVC insulation at its rated load, and 90 °C suits XLPE. Using the cold value understates the drop on a heavily loaded circuit.
+
+For small cables, resistance dominates and the resistive formula is enough. For larger conductors, from roughly 25 mm² upward, the reactance of the cable adds to the drop at normal power factors. If you enter a reactance from the cable data sheet in Ω/km, the calculator applies the full formula using the power factor you give. Without a reactance value, the calculation is resistance only and ignores power factor, which can understate the drop for large cables carrying an inductive load.
+
+## What drop is acceptable?
+
+Limits come from the regulations and the equipment. As examples, BS 7671 gives 3 % for lighting and 5 % for other uses, and the informational notes in the NEC suggest 3 % on a branch circuit and 5 % for feeder and branch circuit combined. Those are recommendations in some codes and requirements in others. Motors have a further limit during starting, when the drop is much larger because of the starting current, and some equipment states its own tolerance.
+
+## What the result does not cover
+
+- **Starting current.** Motor starting draws several times the running current and the drop is proportionally larger for those seconds.
+- **Ampacity.** A cable that passes the drop test can still overheat. Check its current rating as well.
+- **Unbalanced three-phase loads.** The formula assumes balanced currents.
+- **Long DC or low-voltage runs.** The same drop is a much larger percentage at 12 V or 24 V than at 230 V.
+
+## Common mistakes
+
+- **Using the round-trip length as the one-way length.** The calculator doubles it for you.
+- **Using 20 °C resistivity for a fully loaded cable.**
+- **Taking the percentage against the wrong voltage.** On three-phase, use line-to-line voltage with the √3 form.
+
+## Questions
+
+### How do I calculate voltage drop in a three-phase circuit?
+Multiply √3 by the current, the one-way length in kilometres and the resistance per kilometre. Add the reactance term if the cable is large or the load is inductive.
+
+### How do I convert the drop to a percentage?
+Divide it by the supply voltage and multiply by 100.
+
+### Does cable length or size matter more?
+Both are in the formula directly. Doubling the length doubles the drop, and doubling the cross-section halves it.
+
+<Related items={[
+  { href: '/voltage-drop-formula/', label: 'Voltage drop formula guide with worked examples' },
+  { href: '/cable-size-calculator/', label: 'IEC cable size calculator' },
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+]} />

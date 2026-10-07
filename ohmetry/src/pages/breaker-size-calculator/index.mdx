@@ -1,0 +1,75 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Breaker Size Calculator (NEC 125% Rule) | Ohmetry"
+description: "Find the minimum breaker size for a continuous load using the NEC 125% rule and the standard ratings in NEC 240.6(A)."
+h1: "Breaker Size Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Breaker size"
+---
+import BreakerSize from '../../components/BreakerSize.tsx';
+import Related from '../../components/Related.astro';
+
+<BreakerSize client:load />
+
+This calculator finds the minimum overcurrent device rating for a load under the NEC continuous-load rule, then rounds up to the next standard size. It does not select the conductor, and it does not replace the code or the authority having jurisdiction.
+
+## The rule
+
+A continuous load is one expected to run for three hours or more. For these loads, NEC 210.20(A) for branch circuits and 215.3 for feeders require the overcurrent device to be rated at no less than 125% of the continuous load plus 100% of the noncontinuous load. Standard ratings are listed in 240.6(A).
+
+<div class="formula">Minimum rating = 1.25 × I<sub>continuous</sub> + I<sub>noncontinuous</sub><br/>Breaker = next standard rating ≥ minimum</div>
+
+Standard ratings from 15 to 100 A are 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90 and 100 A, continuing at 110, 125, 150, 175, 200, 225, 250, 300, 350, 400 A and larger. The calculator's list should be checked against your edition of the code before you rely on it.
+
+## Worked example
+
+A 32 A EV charger is a continuous load. 1.25 × 32 = 40 A, which is a standard rating, so a 40 A breaker is the minimum. For a 40 A charger, 1.25 × 40 = 50 A, so a 50 A breaker.
+
+A mixed case: 16 A of continuous load plus 10 A of noncontinuous load gives 1.25 × 16 + 10 = 30 A, so a 30 A breaker.
+
+A load of 25 A continuous gives 31.25 A, and the next standard size above that is 35 A.
+
+## What this leaves out
+
+- **Conductor sizing.** The conductor must also carry the 125% current after any ambient and bundling adjustments, using the 310.16 tables and the termination temperature limits in 110.14(C). Use the breaker as the starting point and check the cable separately.
+- **Motors and other special loads.** Motor circuits follow Article 430, with their own rules for the protective device. Air conditioners and heat pumps follow Article 440.
+- **100%-rated assemblies.** Some listed breaker and enclosure combinations are rated to carry 100% of continuous load. The calculator doesn't model them.
+- **EV equipment.** Article 625 gives rules for EV supply equipment, and the nameplate rating of the equipment governs.
+
+## Worked workflow: an EV charger circuit
+
+Suppose a charger is rated 40 A. Electric vehicle supply equipment is treated as a continuous load, so the breaker is sized at 1.25 × 40 = 50 A, which is a standard rating. The conductor then has to be at least adequate for 50 A under the code's tables and the terminal temperature rating of the equipment, and the circuit is protected at 50 A. A 50 A breaker supports 40 A continuous, and that is 80% of its rating.
+
+## Branch circuits and feeders
+
+The same 125% logic runs through a feeder. A feeder serving a mix of continuous and noncontinuous loads sums the noncontinuous load at 100% and the continuous load at 125%, then applies any demand factors the code permits to the loads. This calculator takes two numbers, so for a feeder, work out the total continuous and noncontinuous currents first, then enter them.
+
+## When the 125% factor does not apply
+
+If every load on the circuit is noncontinuous, the minimum is 100% of the load. Enter zero for the continuous load and the calculator will not derate it. Some assemblies are listed for operation at 100% of rating, in which case the rule is relaxed. Those need manufacturer documentation and are outside the calculator.
+
+## Documenting the result
+
+The print button produces a page listing the inputs and result. For a submittal, add the code edition and the breaker's interrupting rating, which must be at least the available fault current at the panel.
+
+## Questions
+
+### Why 125%?
+A load that runs for hours heats the breaker and its terminals more than a short peak does. Sizing at 125% keeps the continuous current at 80% of the device rating.
+
+### Can I round down to the lower breaker size?
+No. For this calculation the device must be at least the calculated minimum, so a 31.25 A result needs 35 A, not 30 A. The next-size-up allowance in 240.4(B) is a separate rule about protecting conductors and doesn't change this.
+
+### Is the 125% rule the same outside the US?
+No. IEC systems size the protective device against design current and the conductor's current-carrying capacity under a different method. This page is NEC-only.
+
+### What counts as continuous?
+Loads expected to run three hours or more, such as EV charging, lighting in commercial buildings and some process equipment.
+
+<Related items={[
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+]} />

@@ -1,0 +1,67 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Off-Grid Solar Calculator: Panels, Battery, Inverter | Ohmetry"
+description: "Size an off-grid solar system: number of panels, battery bank, inverter and charge controller from your daily load and site sun hours."
+h1: "Off-Grid Solar System Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "Off-grid solar"
+---
+import OffGrid from '../../components/OffGrid.tsx';
+import Related from '../../components/Related.astro';
+
+<OffGrid client:load />
+
+An off-grid system is a chain: panels charge a battery through a controller, and an inverter turns the battery's DC into AC for the load. Each link has a size, and all four depend on how much energy you use. This calculator sizes them together from nine inputs, each with a default you can change.
+
+## How it works
+
+1. **Array.** The panels must replace the day's energy plus the loss in the battery and inverter. Array (W) = daily load / efficiency / (peak sun hours × performance ratio).
+2. **Battery.** Capacity (Ah) = daily load × days of autonomy / (DoD × V × efficiency), the same formula as the <a href="/battery-bank-calculator/">battery bank calculator</a>.
+3. **Inverter.** The continuous rating is the peak simultaneous load plus a 25 % margin.
+4. **Charge controller.** Output current = installed array watts / battery voltage × 1.25, which is the current an MPPT controller can push into the battery at full sun, with margin.
+
+## Worked example
+
+A cabin uses 5,000 Wh per day with a 2,000 W peak. It has 5 peak sun hours in its worst month, a performance ratio of 0.75, 400 W panels, a 48 V bank, 2 days of autonomy, 50 % DoD and a 0.9 efficiency.
+
+- Energy the array must supply: 5,000 / 0.9 = 5,556 Wh.
+- Array: 5,556 / (5 × 0.75) = 1,481 W, which is 3.7 panels, so 4 panels (1,600 W).
+- Battery: 5,000 × 2 / (0.5 × 48 × 0.9) = 463 Ah, or 22.2 kWh nominal.
+- Inverter: 2,000 × 1.25 = 2,500 W.
+- Controller: 1,600 / 48 × 1.25 = 41.7 A, so the next standard size up, such as a 50 A controller.
+
+## Choosing the design month
+
+An off-grid system fails in its worst month, not its average one. In the northern hemisphere, that is usually December. If you design from an annual average of 5 hours and winter gives 2, the batteries will go flat for weeks. Either design for winter, which means a larger and more expensive array that is oversized for summer, or add a generator and accept some fuel use in the weak months.
+
+## What to check next
+
+- **Controller input voltage.** The array's open-circuit voltage, especially at low temperature, must stay below the controller's limit. This depends on how panels are wired in series and parallel, and the calculator does not design strings.
+- **Cable sizes.** Battery cables carry large currents. Use the <a href="/solar-wire-size-calculator/">solar DC cable size calculator</a> and check ampacity.
+- **Protection.** Fuses or breakers are needed on the battery, the array and the inverter, selected against the applicable code.
+- **Surge loads.** Pumps and compressors need more inverter capacity than their running power. See the <a href="/inverter-size-calculator/">inverter size calculator</a>.
+
+## Common mistakes
+
+- **Sizing on average sun.**
+- **Sizing the battery on watts instead of watt-hours.**
+- **Forgetting that a larger battery needs a larger array to recharge it.**
+
+## Questions
+
+### How many solar panels do I need to run a house off-grid?
+It depends entirely on daily energy use and the worst-month sun. A home using 20 kWh per day needs around 6 kW of panels at 5 peak sun hours, and much more in a poor winter.
+
+### Is a generator cheaper than extra batteries?
+Often, for the last few days a year. Compare the cost of the extra days of autonomy with the cost of a generator and its fuel.
+
+### Does the calculator assume MPPT or PWM?
+The controller figure is a minimum output current. An MPPT controller is the common choice at these sizes.
+
+<Related items={[
+  { href: '/solar-panel-calculator/', label: 'Solar panel system size calculator' },
+  { href: '/battery-bank-calculator/', label: 'Battery bank calculator' },
+  { href: '/inverter-size-calculator/', label: 'Inverter size calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+]} />

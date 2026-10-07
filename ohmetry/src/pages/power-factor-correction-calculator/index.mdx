@@ -1,0 +1,70 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Power Factor Correction Calculator (kvar) | Ohmetry"
+description: "Calculate the capacitor size in kvar needed to raise power factor, and the reduction in apparent power and line current."
+h1: "Power Factor Correction Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Power factor correction"
+---
+import PfCorrection from '../../components/PfCorrection.tsx';
+import Related from '../../components/Related.astro';
+
+<PfCorrection client:load />
+
+Most industrial loads are inductive: motors, transformers and lighting ballasts draw reactive power as well as real power. The extra current heats cables, takes capacity from transformers and, on many tariffs, costs money. A capacitor bank supplies the reactive power locally and lowers the current drawn from the supply. This calculator finds the size of the bank.
+
+## Formula
+
+<div class="formula">Q<sub>c</sub> = P × (tan φ<sub>1</sub> − tan φ<sub>2</sub>)<br/>φ = cos⁻¹(power factor)</div>
+
+P is the real power in kW, φ<sub>1</sub> the angle at the present power factor and φ<sub>2</sub> the angle at the target. Q<sub>c</sub> comes out in kvar. The real power does not change, so the apparent power after correction is simply P divided by the new power factor.
+
+## Worked example
+
+A plant draws 100 kW at a power factor of 0.80 and the target is 0.95.
+
+- tan(cos⁻¹ 0.80) = 0.750 and tan(cos⁻¹ 0.95) = 0.329.
+- Q<sub>c</sub> = 100 × (0.750 − 0.329) = 42.1 kvar.
+- Apparent power falls from 125 kVA to 105.3 kVA, and the line current falls by 15.8 %.
+
+Correcting to unity would take 75 kvar, which is the full reactive power of the load. Going from 0.95 to unity costs a lot of extra capacitance for a small further gain, which is why targets of 0.95 to 0.98 are common.
+
+## How a bank is built
+
+Banks are built from stock capacitor sizes, so the result is rounded up to the next available step, or split into steps of a controller-switched bank when the load varies. A fixed bank sized for the maximum demand overcorrects at light load. A power factor controller, switching steps in and out, tracks the load. For a single motor, the capacitor can be connected at the motor terminals, but the size must not exceed the limit the motor manufacturer gives, otherwise a self-excited overvoltage can occur when the motor is switched off while the capacitor stays connected.
+
+## Harmonics are the main trap
+
+Capacitors and the supply inductance form a resonant circuit. If the resonant frequency sits near a harmonic produced by drives, rectifiers or other non-linear loads, the capacitors can draw high currents and fail, and voltage distortion rises. Where such loads are a large part of the demand, the bank is fitted with series detuning reactors, which move the resonance below the lowest significant harmonic, and the harmonic spectrum is measured before the bank is chosen. This calculation assumes a sinusoidal load.
+
+## What else to check
+
+- **Voltage rise.** A capacitor bank lifts the voltage slightly at its point of connection, more on weak supplies.
+- **Switching.** Capacitor contactors carry high inrush currents and are specified for the duty.
+- **Overcorrection.** A load that goes leading is penalised by some utilities, and can cause overvoltage.
+- **Protection.** Fuses and breakers are rated for the capacitor current, which is higher than the nominal because of tolerance and harmonics. Follow the capacitor manufacturer's selection rules.
+
+## Common mistakes
+
+- **Using kVA instead of kW.** The formula needs real power.
+- **Using the nameplate power factor, not the measured one.** Take readings at typical load, which are often lower than the nameplate.
+- **Sizing for peak demand with a fixed bank.**
+
+## Questions
+
+### What power factor should I target?
+Utility tariffs and rules differ. A target of 0.95 is common, but check the tariff, which may set a penalty threshold.
+
+### Why does correction reduce the line current but not the energy used?
+The kW stay the same. Only the reactive component, which does no work, is removed from the supply side.
+
+### Can I correct at the main incomer instead of at each motor?
+Yes, and it is cheaper. It lowers the current in the supply and the transformer, but not in the cables between the incomer and each motor.
+
+<Related items={[
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+]} />
