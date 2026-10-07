@@ -27,4 +27,5 @@ Root directory `ohmetry`, build command `npm run build`, output `dist`. Sitemap 
 
 - Domain is not bought. `site` in `astro.config.mjs` and `public/robots.txt` assume `ohmetry.com`.
 - Trust pages contain `TODO` placeholders (author bio, contact email, privacy details).
-- Calculator pages are under the 500-word target and have no FAQ or related links yet.
+- Toolkit page: set `gumroadUrl` and `emailFormAction` in `src/data/site.ts`. Until both are set the page is `noindex`, has no form, and is excluded from the sitemap. Review the page copy against the real product.
+- Add a consent banner and name the email provider on the privacy page before enabling email capture.
