@@ -1,0 +1,65 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Solar Panel Calculator: How Many Panels Do I Need? | Ohmetry"
+description: "Estimate array size and panel count from your daily energy use, peak sun hours and system losses. Formula and worked example."
+h1: "Solar Panel System Size Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "Solar panel size"
+---
+import SolarPanel from '../../components/SolarPanel.tsx';
+import Related from '../../components/Related.astro';
+
+<SolarPanel client:load />
+
+The calculator answers one question: how many watts of panels are needed to produce a given amount of energy per day. It gives a planning estimate. A real design also checks the roof, the shading, the inverter and the local rules.
+
+## Formula
+
+<div class="formula">Array (W) = daily energy (Wh) / (peak sun hours × performance ratio)<br/>Panels = array (W) / panel rating (W), rounded up</div>
+
+**Peak sun hours (PSH)** are the number of hours per day at an irradiance of 1,000 W/m² that would deliver the same energy as the real day. A site with 5 kWh/m² of daily sunlight has 5 peak sun hours. Values of 3 to 6 are typical, depending on latitude, climate and season. Look up your site in a tool such as NREL's PVWatts or the Global Solar Atlas and use the figure for the plane of your array, not for flat ground.
+
+**Performance ratio (PR)** bundles every loss between the panel's rated output and the energy you can use: heat, dust, wiring, mismatch, inverter conversion. About 0.75 is a common planning value for a well-built system, and a poor one can be lower.
+
+## Worked example
+
+A household uses 30 kWh per day and has 5 peak sun hours. With a PR of 0.75:
+
+Array = 30,000 / (5 × 0.75) = 8,000 W.
+
+With 400 W panels that is 8,000 / 400 = 20 panels. The calculator rounds up, so a result of 7.8 panels becomes 8, and it reports the expected daily output of the rounded-up array.
+
+## Getting the inputs right
+
+- **Daily energy.** Take a year of electricity bills, divide the total kWh by 365, and decide whether you want to cover all of it or only part. Off-grid and winter-limited systems need the worst month, not the average.
+- **Peak sun hours.** An annual average hides the winter shortfall. If your goal is year-round cover, size from the weakest month, or accept that the grid or a generator fills the gap.
+- **Panel rating.** The rating is measured under standard test conditions of 1,000 W/m² and 25 °C cell temperature. Real cells run hotter, and silicon loses roughly 0.3 to 0.4 % of its output per °C above 25 °C, which is part of the PR.
+
+## What this does not cover
+
+Roof area is a practical limit: a 400 W panel is typically close to 2 m². Shading from chimneys, trees and neighbouring buildings can cut output far more than the PR assumes, especially when one shaded panel limits a string. Panels also lose a fraction of a percent of their output each year. Grid-connected systems also face export rules and inverter size limits that depend on the utility and the country.
+
+## Common mistakes
+
+- **Multiplying panel watts by 24 hours.** Panels produce at full rating only around midday in clear conditions.
+- **Forgetting the PR.** Using the nameplate overstates output by a quarter or more.
+- **Using a sunny-month figure for a winter-critical load.**
+
+## Questions
+
+### How many panels do I need for a 2,000 kWh monthly bill?
+That is about 66.7 kWh per day. At 5 peak sun hours and a PR of 0.75, the array is 17.8 kW, or 45 panels of 400 W.
+
+### How many kWh does a 5 kW array produce per day?
+At 5 peak sun hours and a PR of 0.75, about 18.8 kWh.
+
+### Does the calculator size the inverter?
+No. See the <a href="/inverter-size-calculator/">inverter size calculator</a>, and for a battery system the <a href="/off-grid-solar-calculator/">off-grid calculator</a>.
+
+<Related items={[
+  { href: '/off-grid-solar-calculator/', label: 'Off-grid solar system calculator' },
+  { href: '/battery-bank-calculator/', label: 'Battery bank calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+  { href: '/inverter-size-calculator/', label: 'Inverter size calculator' },
+]} />

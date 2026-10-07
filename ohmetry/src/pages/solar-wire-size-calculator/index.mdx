@@ -1,0 +1,65 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Solar Wire Size Calculator (DC Voltage Drop) | Ohmetry"
+description: "Find the minimum cable cross-section for a solar or battery DC run from current, length and allowed voltage drop. Formula and worked example."
+h1: "Solar DC Cable Size Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "Solar DC cable"
+---
+import DcCable from '../../components/DcCable.tsx';
+import Related from '../../components/Related.astro';
+
+<DcCable client:load />
+
+This calculator sizes a cable so the voltage lost along its length stays within a limit you choose. It is half of cable selection. The other half is current-carrying capacity, which depends on the insulation, how the cable is installed and the code in force, and it is not calculated here.
+
+## Formula
+
+<div class="formula">Area (mm²) = 2 × L × I × ρ / (V × allowed drop)<br/>ρ = ρ<sub>20</sub> × (1 + α × (T − 20))</div>
+
+L is the one-way length in metres, doubled because current flows out and back. I is the current, V the system voltage, and the allowed drop is a fraction (2 % is 0.02). ρ is the resistivity: 0.017241 Ω·mm²/m for copper at 20 °C and 0.028264 for aluminium, rising about 0.39 % per °C for copper and 0.40 % for aluminium. The calculator corrects for the conductor temperature you enter.
+
+## Worked example
+
+A battery feed carries 10 A over 10 m at 48 V, with a 2 % allowed drop, copper conductors at 20 °C:
+
+Area = 2 × 10 × 10 × 0.017241 / (48 × 0.02) = 3.59 mm².
+
+At 30 °C the same calculation gives 3.73 mm². Either way the next IEC size is 4 mm² and the nearest AWG is 10. With 4 mm² at 20 °C the drop is 0.86 V, which is 1.8 % of 48 V (1.87 % at 30 °C).
+
+## Why voltage changes everything
+
+The allowed drop is a percentage of the system voltage, so a low-voltage system has a small number of volts to spend. The same 10 A over 10 m at 12 V needs 14.4 mm², nearly four times the area. This is why solar strings run at hundreds of volts and why 48 V batteries are favoured over 12 V ones for larger systems.
+
+## What to choose as the allowed drop
+
+There isn't one legal figure for solar DC circuits. Designers commonly aim for 1 to 3 % on array wiring and a lower value on battery cables, where the current is high and the loss is a straight waste of stored energy. The NEC's informational notes suggest a total of 5 % for feeders plus branch circuits, which is guidance, not a rule for PV. Check the standard or the equipment manufacturer's requirement for your project.
+
+## The ampacity check
+
+After the drop calculation, check the cable's current rating. For PV circuits, the code applies multipliers to the array's short-circuit current when sizing conductors and protective devices (see NEC 690.8), and the result is larger than the running current. The cable must also be rated for the temperature, the sunlight and the installation method. Use PV-rated cable, for example EN 50618 H1Z2Z2-K in Europe or USE-2/PV wire in the US, for exposed array wiring. Take the final size as the larger of the two results.
+
+## Common mistakes
+
+- **Using the round-trip length as the one-way length.** The calculator doubles it for you.
+- **Using the open-circuit voltage.** Use the operating voltage of the circuit.
+- **Trusting the drop calculation alone.** A short, heavily loaded cable can pass the drop test and still overheat.
+
+## Questions
+
+### What size wire for a 100 W panel at 12 V over 5 m?
+A 12 V nominal 100 W panel is typically rated around 6 A. At a 3 % allowed drop, copper at 30 °C needs about 3.0 mm², so 4 mm² is the nearest size up, subject to the ampacity check.
+
+### Is aluminium acceptable?
+It is used for large feeders. It needs about 1.64 times the area of copper for the same drop, and its terminations need parts rated for aluminium.
+
+### Does the temperature setting matter?
+Modestly. A hot conductor has higher resistance, so use a realistic operating temperature, not 20 °C.
+
+<Related items={[
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+  { href: '/off-grid-solar-calculator/', label: 'Off-grid solar system calculator' },
+  { href: '/battery-bank-calculator/', label: 'Battery bank calculator' },
+  { href: '/inverter-size-calculator/', label: 'Inverter size calculator' },
+]} />

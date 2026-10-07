@@ -40,6 +40,7 @@ const ld = {
       .result div { background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:8px 12px }
       .result span { display:block; font-size:.8rem; color:var(--muted) }
       .result strong { font-size:1.2rem }
+      label small { font-size:.75rem; color:var(--muted) }
       .hint { color:var(--muted); min-height:1.6em }
       .print { margin-top:12px; font:inherit; padding:8px 14px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); cursor:pointer }
       footer { border-top:1px solid var(--line); margin-top:48px; padding-top:16px; padding-bottom:32px; font-size:.9rem; color:var(--muted) }
@@ -49,7 +50,7 @@ const ld = {
     </style>
   </head>
   <body>
-    <header><a class="brand" href="/">Ohmetry</a><a href="/electrical/">Electrical</a></header>
+    <header><a class="brand" href="/">Ohmetry</a><span><a href="/electrical/">Electrical</a> &nbsp; <a href="/solar-ev/">Solar and EV</a></span></header>
     <main>
       {breadcrumbs.length > 0 && (
         <nav class="crumbs" aria-label="Breadcrumb">
