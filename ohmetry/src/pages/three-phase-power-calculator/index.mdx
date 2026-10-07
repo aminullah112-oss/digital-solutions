@@ -36,6 +36,24 @@ The formulas assume the three phases carry equal current and are equally loaded,
 
 The reactive power figure is what you need for power factor correction. To raise a power factor, capacitors supply some of the kvar locally. The size of the bank is the difference between the load's kvar and the kvar at the target power factor.
 
+## How to use the calculator
+
+Enter the line-to-line voltage, the current in each line, and the power factor. The calculator returns kVA, kW and kvar. Use a true-RMS meter reading for the current where you can, since loads with harmonics read incorrectly on average-responding meters.
+
+## Example: sizing power factor correction
+
+Take the earlier load of 5.543 kW at a power factor of 0.8. The reactive power is 5.543 × tan(cos⁻¹ 0.8) = 5.543 × 0.75 = 4.157 kvar. To raise the power factor to 0.95, the remaining reactive power is 5.543 × tan(cos⁻¹ 0.95) = 5.543 × 0.3287 = 1.822 kvar. The capacitor bank must supply the difference, 4.157 − 1.822 = 2.335 kvar. This is how a power factor correction capacitor bank is sized.
+
+The line current falls too. At 0.95 the same 5.543 kW needs 5,543 / (1.732 × 400 × 0.95) = 8.42 A, down from 10 A.
+
+## Unbalanced loads
+
+If the three line currents differ, the single-formula result is wrong. Calculate each phase separately as V<sub>phase</sub> × I<sub>phase</sub> × PF, then add the three real powers. Do the same for reactive power, keeping the sign, since inductive and capacitive kvar offset each other.
+
+## Typical power factors
+
+Induction motors run at about 0.8 to 0.9 near full load, and can fall well below 0.5 at light load, which is why oversized motors waste current. Resistive heating is at 1. Fluorescent lighting with magnetic ballasts and welding equipment sit lower, while variable-speed drives and electronic loads depend on their input stage. If the meter shows both kW and kVA, divide the two to get the power factor and use the measured value instead of an assumed one.
+
 ## Questions
 
 ### Why is there a √3 in three-phase power?

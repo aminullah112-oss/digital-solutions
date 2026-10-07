@@ -37,6 +37,22 @@ A load of 25 A continuous gives 31.25 A, and the next standard size above that i
 - **100%-rated assemblies.** Some listed breaker and enclosure combinations are rated to carry 100% of continuous load. The calculator doesn't model them.
 - **EV equipment.** Article 625 gives rules for EV supply equipment, and the nameplate rating of the equipment governs.
 
+## Worked workflow: an EV charger circuit
+
+Suppose a charger is rated 40 A. Electric vehicle supply equipment is treated as a continuous load, so the breaker is sized at 1.25 × 40 = 50 A, which is a standard rating. The conductor then has to be at least adequate for 50 A under the code's tables and the terminal temperature rating of the equipment, and the circuit is protected at 50 A. A 50 A breaker supports 40 A continuous, and that is 80% of its rating.
+
+## Branch circuits and feeders
+
+The same 125% logic runs through a feeder. A feeder serving a mix of continuous and noncontinuous loads sums the noncontinuous load at 100% and the continuous load at 125%, then applies any demand factors the code permits to the loads. This calculator takes two numbers, so for a feeder, work out the total continuous and noncontinuous currents first, then enter them.
+
+## When the 125% factor does not apply
+
+If every load on the circuit is noncontinuous, the minimum is 100% of the load. Enter zero for the continuous load and the calculator will not derate it. Some assemblies are listed for operation at 100% of rating, in which case the rule is relaxed. Those need manufacturer documentation and are outside the calculator.
+
+## Documenting the result
+
+The print button produces a page listing the inputs and result. For a submittal, add the code edition and the breaker's interrupting rating, which must be at least the available fault current at the panel.
+
 ## Questions
 
 ### Why 125%?

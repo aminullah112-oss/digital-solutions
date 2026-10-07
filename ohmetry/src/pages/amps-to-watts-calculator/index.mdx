@@ -36,6 +36,20 @@ You can enter both sets of numbers above and compare.
 
 For resistive loads like heaters and incandescent lamps, use 1. Induction motors typically run at 0.8 to 0.9 near full load and much lower when lightly loaded. Switch-mode power supplies and drives vary widely, so use the nameplate or the measured value. If you don't know it, measure it or take it from the nameplate rather than guessing, because the wattage scales directly with it. To go the other way and find the current for a known power, use the <a href="/kw-to-amps-calculator/">kW to amps calculator</a>.
 
+## Quick reference examples
+
+- **DC:** 5 A at 24 V is 5 × 24 = 120 W.
+- **Single-phase, resistive:** 10 A at 230 V and PF 1 is 2,300 W.
+- **Three-phase motor:** 25 A at 400 V and PF 0.85 is 1.732 × 400 × 25 × 0.85 = 14,722 W.
+
+## Watts versus watt-hours
+
+Watts are an instantaneous rate. Energy is watts multiplied by time, so a 1,620 W load running for two hours uses 3,240 Wh, or 3.24 kWh. This is the figure on an electricity bill. For battery runtime, divide the battery's usable watt-hours by the load in watts.
+
+## Reading an appliance label
+
+Labels give power in different ways. If the label shows watts, use that figure for the real power. If it shows only amps and volts, multiplying them gives volt-amps, which is the upper limit of the real power. The two are equal only when the power factor is 1. The same applies to a breaker or a socket: its amp rating limits the current, so the watts it can supply grow with the voltage, which is why 230 V circuits deliver almost twice the power of 120 V circuits on the same cable.
+
 ## Common mistakes
 
 - **Using the wrong voltage on three-phase.** Using the line-to-neutral voltage (for example 230 V) with the √3 formula understates power by a factor of 1.732. Use 400 V with √3, or use three times 230 V × I × PF.
