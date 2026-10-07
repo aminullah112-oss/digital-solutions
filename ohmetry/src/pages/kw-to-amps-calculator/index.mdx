@@ -1,0 +1,24 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "kW to Amps Calculator (Single and Three-Phase) | Ohmetry"
+description: "Convert kW to amps for single-phase and three-phase loads with power factor. Formula and worked example included."
+h1: "kW to Amps Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "kW to amps"
+---
+import KwToAmps from '../../components/KwToAmps.tsx';
+
+<KwToAmps client:load />
+
+## Formulas
+
+<div class="formula">Single-phase: I = kW × 1000 / (V × PF)<br/>Three-phase: I = kW × 1000 / (√3 × V × PF)</div>
+
+For three-phase, V is the line-to-line voltage.
+
+## Worked example
+
+A 10 kW three-phase motor load at 400 V and 0.8 power factor: I = 10 000 / (1.732 × 400 × 0.8) = 18.04 A. This is the load current. Conductor and breaker sizing add further factors that are covered on their own pages.
+
+TODO before launch: expand to 500 to 900 words, add questions and related links.

@@ -1,0 +1,9 @@
+---
+import Base from './Base.astro';
+const { frontmatter } = Astro.props;
+const crumbs = [{ name: frontmatter.hub, href: frontmatter.hubHref }, { name: frontmatter.crumb, href: Astro.url.pathname }];
+---
+<Base title={frontmatter.title} description={frontmatter.description} breadcrumbs={crumbs}>
+  <h1>{frontmatter.h1}</h1>
+  <slot />
+</Base>

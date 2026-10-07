@@ -1,0 +1,24 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Ohm's Law Calculator | Ohmetry"
+description: "Enter any two of voltage, current, resistance and power to get the other two. Formulas and a worked example included."
+h1: "Ohm's Law Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Ohm's law"
+---
+import OhmsLaw from '../../components/OhmsLaw.tsx';
+
+<OhmsLaw client:load />
+
+## Formulas
+
+<div class="formula">V = I × R<br/>P = V × I = I² × R = V² / R</div>
+
+Enter any two of V, I, R, P and the other two follow. All values are for DC or for the RMS values of a purely resistive AC load.
+
+## Worked example
+
+A 6 Ω heating element runs from 12 V. Current is 12 / 6 = 2 A. Power is 12 × 2 = 24 W. Enter 12 V and 6 Ω above to confirm.
+
+TODO before launch: expand to 500 to 900 words (limits of the law, AC reactive loads, common mistakes), add 3 to 5 real questions and related-calculator links.
