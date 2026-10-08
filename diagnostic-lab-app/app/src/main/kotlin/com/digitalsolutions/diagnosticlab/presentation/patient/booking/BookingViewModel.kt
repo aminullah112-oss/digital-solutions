@@ -152,7 +152,7 @@ class BookingViewModel(
         val checkout = Checkout()
         checkout.setKeyID(order.keyId)
         val options = JSONObject().apply {
-            put("name", "Diagnostic Lab")
+            put("name", "Medwyn Labs")
             put("description", "Booking $bookingId")
             put("order_id", order.orderId)
             put("currency", order.currency)

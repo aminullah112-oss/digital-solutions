@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Lab Connect</string>
+    <string name="app_name">Medwyn Labs</string>
 
     <!-- Home -->
     <string name="home_greeting">Hello, %1$s</string>
