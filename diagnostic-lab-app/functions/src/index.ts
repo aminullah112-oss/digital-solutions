@@ -2,7 +2,7 @@ import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import * as crypto from "crypto";
 import * as https from "https";
@@ -399,6 +399,86 @@ export const assignPhlebotomistOnBookingWrite = onDocumentWritten("bookings/{boo
     actorRole: "PHLEBOTOMIST",
     notes: null,
   });
+});
+
+/**
+ * Maintains patients/{patientId}.authorizedLabIds and .authorizedPhlebotomistUids —
+ * firestore.rules grants a LABORATORY or PHLEBOTOMIST account read access to a patient
+ * profile only via membership in these arrays, scoped to labs/phlebotomists actually
+ * involved in a booking for that patient. The old rule granted isLab()/isPhlebotomist()
+ * blanket read access to every patient document regardless of any booking relationship —
+ * a real cross-tenant data leak once self-registered labs exist (see firestore.rules'
+ * myLabId() comment for the same class of bug on bookings/reports, fixed earlier). This
+ * closes the same hole for patient profiles (DOB, sex, mobile number, email).
+ *
+ * Runs via the Admin SDK (bypasses rules) on every booking write: grants the lab on
+ * creation (a lab must see the patient profile the moment a booking lands on it) and
+ * grants a phlebotomist the moment they're assigned (covers reassignment after a
+ * rejection too — the array only ever grows, past assignees keep having touched the
+ * case, which is correct, not a loosening of the old behavior since the old behavior was
+ * already-unscoped access for every lab/phlebotomist on the roster).
+ */
+export const grantPatientAccessOnBookingWrite = onDocumentWritten("bookings/{bookingId}", async (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (!after || !after.patientId) return; // booking deleted, or no patient reference
+
+  const updates: Record<string, FirebaseFirestore.FieldValue> = {};
+  if (!before) {
+    updates.authorizedLabIds = FieldValue.arrayUnion(after.laboratoryId);
+  }
+  if (after.assignedPhlebotomistUid && before?.assignedPhlebotomistUid !== after.assignedPhlebotomistUid) {
+    updates.authorizedPhlebotomistUids = FieldValue.arrayUnion(after.assignedPhlebotomistUid);
+  }
+  if (Object.keys(updates).length === 0) return;
+
+  await db.collection("patients").doc(after.patientId).set(updates, { merge: true });
+});
+
+/**
+ * One-time admin-triggered backfill for patients/{patientId}.authorizedLabIds/
+ * authorizedPhlebotomistUids on bookings that existed before grantPatientAccessOnBookingWrite
+ * started running (that trigger only fires on a NEW booking write, so pre-existing bookings
+ * never populate these arrays on their own). Safe to call more than once — arrayUnion is
+ * idempotent. Call once after deploying this fix if there's any existing booking data.
+ */
+export const backfillPatientAccess = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Sign in required.");
+  const callerSnap = await db.collection("users").doc(uid).get();
+  if (callerSnap.data()?.role !== "ADMIN") throw new HttpsError("permission-denied", "Admin only.");
+
+  const bookingsSnap = await db.collection("bookings").get();
+  const patientUpdates = new Map<string, { labIds: Set<string>; phlebotomistUids: Set<string> }>();
+
+  bookingsSnap.forEach((doc) => {
+    const b = doc.data();
+    if (!b.patientId) return;
+    const entry = patientUpdates.get(b.patientId) ?? { labIds: new Set(), phlebotomistUids: new Set() };
+    if (b.laboratoryId) entry.labIds.add(b.laboratoryId);
+    if (b.assignedPhlebotomistUid) entry.phlebotomistUids.add(b.assignedPhlebotomistUid);
+    patientUpdates.set(b.patientId, entry);
+  });
+
+  let batch = db.batch();
+  let opsInBatch = 0;
+  for (const [patientId, entry] of patientUpdates) {
+    const fields: Record<string, FirebaseFirestore.FieldValue> = {};
+    if (entry.labIds.size > 0) fields.authorizedLabIds = FieldValue.arrayUnion(...entry.labIds);
+    if (entry.phlebotomistUids.size > 0) fields.authorizedPhlebotomistUids = FieldValue.arrayUnion(...entry.phlebotomistUids);
+    if (Object.keys(fields).length === 0) continue;
+
+    batch.set(db.collection("patients").doc(patientId), fields, { merge: true });
+    opsInBatch++;
+    if (opsInBatch === 400) {
+      await batch.commit();
+      batch = db.batch();
+      opsInBatch = 0;
+    }
+  }
+  if (opsInBatch > 0) await batch.commit();
+
+  return { patientsUpdated: patientUpdates.size };
 });
 
 /**

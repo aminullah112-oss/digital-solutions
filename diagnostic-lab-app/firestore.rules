@@ -66,9 +66,21 @@ service cloud.firestore {
     }
 
     // Family member profiles, owned by the account that created them.
+    //
+    // A lab or phlebotomist only gets read access once they're actually involved in a
+    // booking for this patient — authorizedLabIds/authorizedPhlebotomistUids are
+    // maintained server-side by grantPatientAccessOnBookingWrite (functions/src/index.ts)
+    // on every booking write, Admin SDK only, a client can never set these fields itself.
+    // The old rule granted isLab()/isPhlebotomist() blanket read on every patient profile
+    // regardless of any booking relationship — the same class of cross-tenant leak as
+    // myLabId() above fixed for bookings/reports, just never closed here. .get(field, [])
+    // defaults safely to an empty list for any patient doc predating this fix until
+    // backfillPatientAccess (functions/src/index.ts) runs.
     match /patients/{patientId} {
       allow read: if isSignedIn() && (
-        resource.data.accountOwnerUserId == request.auth.uid || isAdmin() || isPhlebotomist() || isLab()
+        resource.data.accountOwnerUserId == request.auth.uid || isAdmin() ||
+        (isPhlebotomist() && request.auth.uid in resource.data.get('authorizedPhlebotomistUids', [])) ||
+        (isLab() && myLabId() in resource.data.get('authorizedLabIds', []))
       );
       allow write: if isSignedIn() && (
         request.resource.data.accountOwnerUserId == request.auth.uid || isAdmin()
