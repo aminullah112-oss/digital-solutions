@@ -28,3 +28,12 @@ diagnostic-lab-app/captures/
 # diagnostic-lab-app: Firebase Cloud Functions — Node deps and TypeScript build output
 diagnostic-lab-app/functions/node_modules/
 diagnostic-lab-app/functions/lib/
+
+# diagnostic-lab-app: the Play Store release signing keystore must NEVER be committed — unlike
+# app/keystore/debug.keystore (deliberately committed; see its own comment in build.gradle.kts),
+# this one signs real Play Store releases. It lives only with whoever owns the app listing, and
+# in CI as a base64-encoded GitHub Actions secret (RELEASE_KEYSTORE_BASE64), decoded to a file
+# at build time and never written back to the repo. This rule is a safety net, not the only
+# safeguard — nothing in this repo should ever reference a keystore file under this name/pattern.
+diagnostic-lab-app/**/*release*.keystore
+diagnostic-lab-app/**/*release*.jks

@@ -43,12 +43,36 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        // The real Play Store signing key — deliberately NOT a file in this repo (contrast the
+        // committed debug.keystore above). Only ever supplied as env vars: locally, a developer
+        // exports them in their own shell before running a release build; in CI, the release
+        // workflow decodes the RELEASE_KEYSTORE_BASE64 GitHub Actions secret to a temp file and
+        // sets these same three env vars from the matching secrets. All three are null on any
+        // ordinary build (debug builds, PR checks), which is why the release buildType below
+        // only attaches this config when a keystore path is actually present — a release build
+        // attempted without it fails fast with a clear Gradle error instead of silently trying
+        // to sign with nothing.
+        create("release") {
+            val keystorePath = System.getenv("RELEASE_KEYSTORE_PATH")
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                // PKCS12 (what this project's release keystore is) only supports one password
+                // for both the store and the key entry — keytool silently ignores a second one
+                // at generation time, so there's deliberately no separate RELEASE_KEY_PASSWORD.
+                keyPassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (System.getenv("RELEASE_KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
