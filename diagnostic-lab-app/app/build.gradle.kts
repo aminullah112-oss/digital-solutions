@@ -117,6 +117,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")
+    // Forces a modern Fragment version across the whole dependency graph — something
+    // transitive (most likely Razorpay's checkout SDK, an older library) was resolving an
+    // old androidx.fragment below 1.3.0, which only ever surfaced as a release-build failure:
+    // lintVitalRelease (AGP's always-on, can't-be-disabled release check) flags
+    // registerForActivityResult in MainActivity.kt against any such old Fragment anywhere in
+    // the graph, even though MainActivity itself has nothing to do with fragments. Debug
+    // builds never run lintVital, so this was invisible until the first real release build.
+    implementation("androidx.fragment:fragment-ktx:1.8.2")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
