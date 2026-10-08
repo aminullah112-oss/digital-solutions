@@ -3,6 +3,7 @@ package com.digitalsolutions.diagnosticlab.data.repository
 import com.digitalsolutions.diagnosticlab.domain.model.Investigation
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.domain.model.PricedInvestigation
+import com.digitalsolutions.diagnosticlab.domain.model.TestPackage
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
@@ -59,12 +60,43 @@ class CatalogRepository(private val firestore: FirebaseFirestore) {
             }
         awaitClose { registration.remove() }
     }
+
+    /** Fixed-price bundles for a lab (e.g. real fever panels), filtered to active ones only —
+     * inactive packages a lab has retired stay in Firestore for historical bookings but never
+     * show up for new ones. */
+    fun observePackagesForLab(laboratoryId: String): Flow<List<TestPackage>> = callbackFlow {
+        val registration = firestore.collection("laboratories").document(laboratoryId).collection("packages")
+            .whereEqualTo("active", true)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot?.documents.orEmpty().mapNotNull { it.toTestPackage() })
+            }
+        awaitClose { registration.remove() }
+    }
 }
 
 // toLaboratory() is defined once, in LaboratoryOnboardingRepository.kt (same package, so no
 // import needed) — this file used to carry its own duplicate copy, which started conflicting
 // the moment that shared one was added (two same-signature extensions in one package is an
 // overload-resolution-ambiguity compile error, not a silent shadow).
+
+private fun DocumentSnapshot.toTestPackage(): TestPackage? {
+    if (!exists()) return null
+    @Suppress("UNCHECKED_CAST")
+    val investigationIds = get("investigationIds") as? List<String> ?: emptyList()
+    return TestPackage(
+        id = id,
+        name = getString("name").orEmpty(),
+        description = getString("description").orEmpty(),
+        price = getDouble("price") ?: 0.0,
+        investigationIds = investigationIds,
+        homeCollectionAvailable = getBoolean("homeCollectionAvailable") ?: false,
+        active = getBoolean("active") ?: true
+    )
+}
 
 private fun DocumentSnapshot.toInvestigation(): Investigation? {
     if (!exists()) return null

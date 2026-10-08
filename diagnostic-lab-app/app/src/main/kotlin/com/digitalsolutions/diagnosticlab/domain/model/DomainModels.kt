@@ -78,6 +78,21 @@ data class PricedInvestigation(
     val homeCollectionAvailable: Boolean
 )
 
+/** A lab-defined bundle of investigations at one fixed price — e.g. Dr. Sheela Fever Labs'
+ * real "Comprehensive Fever Panel" (CBC, ESR, Malaria, Dengue NS1, LFT, Creatinine for ₹1,200).
+ * Lives at laboratories/{labId}/packages/{packageId}; seeded the same operator-managed way as
+ * investigations/pricing (see functions/src/index.ts seedCatalog) — no in-app authoring UI yet,
+ * same as the rest of the catalog. */
+data class TestPackage(
+    val id: String,
+    val name: String,
+    val description: String,
+    val price: Double,
+    val investigationIds: List<String>,
+    val homeCollectionAvailable: Boolean,
+    val active: Boolean = true
+)
+
 data class BookingItem(val investigation: Investigation, val price: Double)
 
 data class Booking(
@@ -96,7 +111,13 @@ data class Booking(
     val items: List<BookingItem>,
     val totalAmount: Double,
     val phlebotomistId: String?,
-    val createdAtMillis: Long
+    val createdAtMillis: Long,
+    // Null for an entirely a-la-carte booking. When set, packagePrice is already folded into
+    // totalAmount — the matching BookingItems for the package's own tests carry price 0.0 (see
+    // BookingRepository.createBooking) so totalAmount stays a simple sum, never double-counted.
+    val packageId: String? = null,
+    val packageName: String? = null,
+    val packagePrice: Double? = null
 )
 
 data class PhlebotomistProfile(

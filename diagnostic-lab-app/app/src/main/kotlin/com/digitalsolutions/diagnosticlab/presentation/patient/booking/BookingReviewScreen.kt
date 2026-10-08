@@ -55,7 +55,19 @@ fun BookingReviewScreen(
             }
             Spacer(Modifier.height(12.dp))
             SectionCard("Tests (${state.selectedCount})") {
-                state.availableInvestigations.filter { it.investigation.id in state.selectedInvestigationIds }.forEach {
+                state.selectedPackage?.let { pkg ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.weight(1f)) {
+                            Text(pkg.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                            if (pkg.description.isNotBlank()) {
+                                Text(pkg.description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        Text("₹${"%.0f".format(pkg.price)}", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                }
+                state.availableInvestigations.filter { it.investigation.id in state.adHocInvestigationIds }.forEach {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(it.investigation.name, style = MaterialTheme.typography.bodyMedium)
                         Text("₹${"%.0f".format(it.price)}", style = MaterialTheme.typography.bodyMedium)

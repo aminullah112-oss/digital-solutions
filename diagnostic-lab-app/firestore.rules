@@ -93,6 +93,13 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow write: if isAdmin() || (isLab() && myLabId() == labId);
       }
+      // Fixed-price bundles (#the bundled-packages feature) — same non-sensitive-catalog-data
+      // reasoning as pricing above: a lab manages its own packages directly, no Cloud Function
+      // needed.
+      match /packages/{packageId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin() || (isLab() && myLabId() == labId);
+      }
     }
     match /investigations/{investigationId} {
       allow read: if isSignedIn();

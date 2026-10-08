@@ -543,6 +543,46 @@ export const seedCatalog = onRequest(async (req, res) => {
     });
   });
 
+  // Real fixed-price bundles for the actual onboarded customer (feverlabs.in) — these are
+  // their own published panels/pricing, not fictional demo data like LABS/INVESTIGATIONS
+  // above. Deliberately scoped to LAB-6 only; the other demo labs have no packages, matching
+  // how a real lab wouldn't necessarily offer bundles at all.
+  const FEVER_LABS_PACKAGES = [
+    {
+      id: "PKG-FEVER-BASIC",
+      name: "Basic Fever Panel",
+      description: "Complete Blood Count (CBC), ESR, Malaria Test",
+      price: 800.0,
+      investigationIds: ["INV-001", "INV-015", "INV-004"],
+    },
+    {
+      id: "PKG-FEVER-COMPREHENSIVE",
+      name: "Comprehensive Fever Panel",
+      description: "CBC, ESR, Malaria, Dengue NS1 Antigen, Liver Function Test, Creatinine",
+      price: 1200.0,
+      investigationIds: ["INV-001", "INV-015", "INV-004", "INV-003", "INV-006", "INV-021"],
+    },
+    {
+      id: "PKG-FEVER-ELABORATE",
+      name: "Elaborate Fever & Inflammation Panel",
+      description: "CBC, ESR, Malaria, Dengue NS1, LFT, Creatinine, CRP, Typhoid Test, Electrolytes",
+      price: 1800.0,
+      investigationIds: ["INV-001", "INV-015", "INV-004", "INV-003", "INV-006", "INV-021", "INV-002", "INV-005", "INV-022"],
+    },
+  ];
+  FEVER_LABS_PACKAGES.forEach((pkg) => {
+    batch.set(db.collection("laboratories").doc("LAB-6").collection("packages").doc(pkg.id), {
+      name: pkg.name,
+      description: pkg.description,
+      price: pkg.price,
+      investigationIds: pkg.investigationIds,
+      homeCollectionAvailable: true,
+      active: true,
+    });
+  });
+
   await batch.commit();
-  res.status(200).send(`Seeded ${LABS.length} labs and ${INVESTIGATIONS.length} investigations.`);
+  res.status(200).send(
+    `Seeded ${LABS.length} labs, ${INVESTIGATIONS.length} investigations, and ${FEVER_LABS_PACKAGES.length} packages.`
+  );
 });

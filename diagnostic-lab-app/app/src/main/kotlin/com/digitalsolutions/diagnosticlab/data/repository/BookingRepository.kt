@@ -44,6 +44,7 @@ class BookingRepository(
         laboratoryId: String,
         addressId: String,
         investigationPrices: Map<String, Double>,
+        selectedPackage: TestPackage?,
         scheduledDate: LocalDate,
         scheduledTimeSlot: String
     ): String {
@@ -51,9 +52,14 @@ class BookingRepository(
         val labSnap = firestore.collection("laboratories").document(laboratoryId).get().await()
         val addressSnap = firestore.collection("users").document(bookedByUserId)
             .collection("addresses").document(addressId).get().await()
-        val investigationSnaps = if (investigationPrices.isEmpty()) emptyList() else
+        // Union of a-la-carte test IDs and the selected package's own tests (if any) — every
+        // one of them needs a real BookingItem so the lab sees the full list of what to
+        // actually collect/perform, regardless of which ones are individually priced vs.
+        // folded into the package's fixed price.
+        val allInvestigationIds = (investigationPrices.keys + selectedPackage?.investigationIds.orEmpty()).distinct()
+        val investigationSnaps = if (allInvestigationIds.isEmpty()) emptyList() else
             firestore.collection("investigations")
-                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), investigationPrices.keys.toList().take(30))
+                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), allInvestigationIds.take(30))
                 .get().await().documents
 
         val items = investigationSnaps.map { doc ->
@@ -65,10 +71,12 @@ class BookingRepository(
                 "sampleType" to doc.getString("sampleType").orEmpty(),
                 "preparationInstructions" to doc.getString("preparationInstructions").orEmpty(),
                 "reportTurnaroundHours" to (doc.getLong("reportTurnaroundHours") ?: 0L),
+                // 0.0 for a package-only test (not in investigationPrices) — its cost already
+                // lives in packagePrice below, so items summed alone never double-count it.
                 "price" to (investigationPrices[doc.id] ?: 0.0)
             )
         }
-        val total = investigationPrices.values.sum()
+        val total = investigationPrices.values.sum() + (selectedPackage?.price ?: 0.0)
         val bookingId = nextBookingId()
         val now = System.currentTimeMillis()
 
@@ -94,6 +102,9 @@ class BookingRepository(
                 "status" to BookingStatus.PENDING_PAYMENT.name,
                 "items" to items,
                 "totalAmount" to total,
+                "packageId" to selectedPackage?.id,
+                "packageName" to selectedPackage?.name,
+                "packagePrice" to selectedPackage?.price,
                 "assignedPhlebotomistUid" to null,
                 "createdAtMillis" to now,
                 "updatedAtMillis" to now
@@ -488,6 +499,9 @@ private fun DocumentSnapshot.toBooking(): Booking? {
         },
         totalAmount = getDouble("totalAmount") ?: 0.0,
         phlebotomistId = getString("assignedPhlebotomistUid"),
-        createdAtMillis = getLong("createdAtMillis") ?: 0L
+        createdAtMillis = getLong("createdAtMillis") ?: 0L,
+        packageId = getString("packageId"),
+        packageName = getString("packageName"),
+        packagePrice = getDouble("packagePrice")
     )
 }
