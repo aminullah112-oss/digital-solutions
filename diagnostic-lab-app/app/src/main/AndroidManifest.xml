@@ -41,6 +41,14 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="booking_updates" />
+
+        <!-- ${MAPS_API_KEY} comes from build.gradle.kts's manifestPlaceholders, itself read from
+             a Gradle property (-PMAPS_API_KEY=... locally, a CI secret in GitHub Actions) — never
+             hardcoded here. Safe to ship in the compiled app regardless (restricted by package
+             name + SHA-1 + API on the Google Cloud Console side, not by secrecy). -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
     </application>
 
 </manifest>

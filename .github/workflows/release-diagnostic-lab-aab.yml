@@ -54,12 +54,16 @@ jobs:
           fi
           echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
 
+      # MAPS_API_KEY (#42) is optional here too — blank until that repository secret exists,
+      # and the build still succeeds either way (see build.gradle.kts); only the map itself
+      # won't work at runtime until it's set.
       - name: Build signed release AAB and APK
         env:
           RELEASE_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        run: gradle bundleRelease assembleRelease --stacktrace
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: gradle bundleRelease assembleRelease -PMAPS_API_KEY="$MAPS_API_KEY" --stacktrace
 
       - name: Upload signed AAB (what Play Store needs)
         uses: actions/upload-artifact@v4

@@ -1,5 +1,10 @@
 package com.digitalsolutions.diagnosticlab.presentation.phlebotomist
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Looper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,8 +13,10 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,6 +36,11 @@ import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusColor
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusLabel
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -105,6 +117,8 @@ class PhlebotomistAssignmentViewModel(
     fun setTravelStatus(status: AssignmentStatus) = viewModelScope.launch { bookingRepository.updateAssignmentTravelStatus(bookingId, status) }
     fun collectSample(sampleType: String, location: String) = viewModelScope.launch { bookingRepository.recordSampleCollected(bookingId, sampleType, location) }
     fun markInTransit() = viewModelScope.launch { bookingRepository.markSampleInTransit(bookingId) }
+    fun reportLocation(latitude: Double, longitude: Double) =
+        viewModelScope.launch { bookingRepository.updatePhlebotomistLocation(bookingId, latitude, longitude) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,6 +131,47 @@ fun PhlebotomistAssignmentScreen(bookingId: String, onBack: () -> Unit) {
     )
     val booking by viewModel.booking.collectAsState()
     val assignment by viewModel.assignment.collectAsState()
+    val context = LocalContext.current
+
+    var hasLocationPermission by remember {
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+    }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        hasLocationPermission = granted
+    }
+    // Ask only once actually needed (travel starts), not up front at screen open — the manifest
+    // already declares the permission, but requesting it before there's a reason to confuses
+    // a user who hasn't even accepted the assignment yet.
+    LaunchedEffect(assignment?.status) {
+        if (assignment?.status == AssignmentStatus.ON_THE_WAY && !hasLocationPermission) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+    // Live tracking (#42) is foreground-only by design: it runs while this screen is open and
+    // the assignment is ON_THE_WAY, and stops the moment either stops being true (screen closed,
+    // status moves to ARRIVED, permission revoked). A background service that keeps reporting
+    // location after the app is backgrounded is real additional scope — a foreground-service
+    // notification, Android's stricter background-location review for Play Store — deliberately
+    // not built here; this covers the common case (phlebotomist has the app open while driving)
+    // without that cost.
+    DisposableEffect(assignment?.status, hasLocationPermission) {
+        if (assignment?.status == AssignmentStatus.ON_THE_WAY &&
+            hasLocationPermission &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val client = LocationServices.getFusedLocationProviderClient(context)
+            val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 15_000L).build()
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.lastLocation?.let { viewModel.reportLocation(it.latitude, it.longitude) }
+                }
+            }
+            client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            onDispose { client.removeLocationUpdates(callback) }
+        } else {
+            onDispose { }
+        }
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(bookingId) }) }

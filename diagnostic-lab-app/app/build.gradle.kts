@@ -25,6 +25,15 @@ android {
         // bug the check exists to avoid). This flag is deterministic instead: it's true exactly
         // when the CI workflow itself set it, nothing to guess.
         buildConfigField("boolean", "IS_CI", (project.findProperty("ci") == "true").toString())
+
+        // Maps SDK keys are safe to compile into the client (unlike Razorpay's secret) — their
+        // security model is API/package/SHA-1 restriction on the Google Cloud Console side, not
+        // secrecy. Still never hardcoded here: read from a Gradle property so local devs pass
+        // -PMAPS_API_KEY=... and CI reads it from a repository secret, matching the -Pci=true
+        // pattern above. Left blank, the manifest's meta-data value is an empty string — Maps
+        // SDK then fails at runtime with a clear "no API key" error rather than a confusing one,
+        // and the app still compiles fine either way (this value never affects compilation).
+        manifestPlaceholders["MAPS_API_KEY"] = (project.findProperty("MAPS_API_KEY") as String?).orEmpty()
     }
 
     // Firebase Phone Auth's Play Integrity/reCAPTCHA verification needs the app's signing
@@ -147,6 +156,12 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+
+    // Live phlebotomist tracking (#42): the map itself, plus FusedLocationProviderClient for
+    // reading the phlebotomist's own device location to report while en route.
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // Firebase: Auth (real phone OTP), Firestore (cross-role sync), Messaging (push),
     // Functions (privileged server-side logic like payment verification). BOM pins all

@@ -375,12 +375,33 @@ class BookingRepository(
                             professionalId = assignment["professionalId"] as? String ?: "",
                             rating = (assignment["rating"] as? Double)?.toFloat() ?: 0f
                         ),
-                        status = status
+                        status = status,
+                        phlebotomistLatitude = assignment["phlebotomistLatitude"] as? Double,
+                        phlebotomistLongitude = assignment["phlebotomistLongitude"] as? Double,
+                        locationUpdatedAtMillis = assignment["locationUpdatedAtMillis"] as? Long
                     )
                 )
             }
         }
         awaitClose { registration.remove() }
+    }
+
+    /**
+     * Written periodically by the phlebotomist's own device while assignment.status ==
+     * ON_THE_WAY (see PhlebotomistAssignmentScreen) — read back by the patient's BookingDetail
+     * screen to render a live map (#42). No firestore.rules change needed: the bookings update
+     * rule already grants the assigned phlebotomist full write access to their own booking doc.
+     * A stale write (assignment moved past ON_THE_WAY, or the booking reassigned) is harmless —
+     * the field is only ever read while status is still ON_THE_WAY.
+     */
+    suspend fun updatePhlebotomistLocation(bookingId: String, latitude: Double, longitude: Double) {
+        bookingsRef().document(bookingId).update(
+            mapOf(
+                "assignment.phlebotomistLatitude" to latitude,
+                "assignment.phlebotomistLongitude" to longitude,
+                "assignment.locationUpdatedAtMillis" to System.currentTimeMillis()
+            )
+        ).await()
     }
 
     fun observeAllBookings(): Flow<List<Booking>> = observeQuery(bookingsRef())

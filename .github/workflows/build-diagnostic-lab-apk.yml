@@ -40,8 +40,13 @@ jobs:
       # this is the APK a person actually installs on a real device to test the app, and
       # BuildConfig.IS_CI there would disable Play Integrity/reCAPTCHA verification, breaking
       # real-number OTP sign-in on a real phone (confirmed as a real bug: see AppContainer.kt).
+      # -PMAPS_API_KEY is blank until the MAPS_API_KEY repository secret is added (#42) — the
+      # build still succeeds either way (see build.gradle.kts), just without a working map at
+      # runtime until that secret exists.
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: gradle assembleDebug -PMAPS_API_KEY="$MAPS_API_KEY" --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

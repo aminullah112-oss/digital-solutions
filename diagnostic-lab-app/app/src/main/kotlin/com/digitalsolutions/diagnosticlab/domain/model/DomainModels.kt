@@ -111,7 +111,12 @@ data class Assignment(
     val id: String,
     val bookingId: String,
     val phlebotomist: PhlebotomistProfile,
-    val status: AssignmentStatus
+    val status: AssignmentStatus,
+    // Reported by the phlebotomist's own device while en route (#42 live tracking) — only
+    // meaningful when status == ON_THE_WAY; null otherwise, or before their first location fix.
+    val phlebotomistLatitude: Double? = null,
+    val phlebotomistLongitude: Double? = null,
+    val locationUpdatedAtMillis: Long? = null
 )
 
 data class TrackingEvent(

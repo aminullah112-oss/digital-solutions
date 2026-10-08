@@ -19,11 +19,13 @@ import com.digitalsolutions.diagnosticlab.data.repository.BookingRepository
 import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Assignment
+import com.digitalsolutions.diagnosticlab.domain.model.AssignmentStatus
 import com.digitalsolutions.diagnosticlab.domain.model.Booking
 import com.digitalsolutions.diagnosticlab.domain.model.TrackingEvent
 import com.digitalsolutions.diagnosticlab.domain.util.BookingStatusMachine
 import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigSecondaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.LiveTrackingMap
 import com.digitalsolutions.diagnosticlab.presentation.components.LoadingState
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusTimeline
@@ -95,6 +97,22 @@ fun BookingDetailScreen(bookingId: String, onBack: () -> Unit) {
                         Text("Rating ${assignment.phlebotomist.rating}", style = MaterialTheme.typography.bodyMedium)
                     }
                     Spacer(Modifier.height(12.dp))
+                    // Only while actually en route, and only once they've reported a real fix —
+                    // avoids a map centered on (0,0) or a stale pin from a much earlier leg.
+                    val patientLat = booking.addressLatitude
+                    val patientLng = booking.addressLongitude
+                    if (assignment.status == AssignmentStatus.ON_THE_WAY &&
+                        assignment.phlebotomistLatitude != null && assignment.phlebotomistLongitude != null &&
+                        patientLat != null && patientLng != null
+                    ) {
+                        LiveTrackingMap(
+                            patientLatitude = patientLat,
+                            patientLongitude = patientLng,
+                            phlebotomistLatitude = assignment.phlebotomistLatitude,
+                            phlebotomistLongitude = assignment.phlebotomistLongitude
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
                 }
                 SectionCard("Tests") {
                     booking.items.forEach { Text("• ${it.investigation.name}", style = MaterialTheme.typography.bodyMedium) }
