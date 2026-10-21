@@ -34,7 +34,9 @@ abirami-sree-hardwares/  Client site for Abirami Sree Hardware & Kaveen's
                        No build step; edit index.html/css/js directly.
 jafka-trading/          One-page site for Jafka Trading (plastics/disposables
                        supplier), built from their brochure PDF. Static HTML,
-                       product photos in img/.
+                       product photos in img/. rev2/ is a second design
+                       (dark/gold, product filter, WhatsApp enquiry list)
+                       for client review; it reuses ../img/.
 ```
 
 ## Local development
