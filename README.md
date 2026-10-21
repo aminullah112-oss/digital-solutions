@@ -32,6 +32,9 @@ abirami-sree-hardwares/  Client site for Abirami Sree Hardware & Kaveen's
                        Construction (Thiruporur) — a standalone static
                        HTML/CSS/JS site, unrelated to the portfolio app above.
                        No build step; edit index.html/css/js directly.
+jafka-trading/          One-page site for Jafka Trading (plastics/disposables
+                       supplier), built from their brochure PDF. Static HTML,
+                       product photos in img/.
 ```
 
 ## Local development
