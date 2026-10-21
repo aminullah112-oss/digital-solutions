@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jafka Trading | Your Partner in Plastics</title>
+<meta name="description" content="Jafka Trading supplies disposable gloves, masks, head and beard caps, shoe covers, arm sleeves, and cashier, price, date and weight label rolls. Shara Arbaeen, Rehab." />
+<meta name="theme-color" content="#07090d" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2307090d'/%3E%3Crect x='22' y='22' width='56' height='56' fill='none' stroke='%23d9b46a' stroke-width='6' transform='rotate(45 50 50)'/%3E%3Ctext x='50' y='63' font-size='38' text-anchor='middle' fill='%23fff' font-family='Arial Black,Arial' font-weight='900'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07090d;--bg2:#0d1118;--panel:#121722;--line:rgba(255,255,255,.09);--text:#eef3f8;--muted:#8d99a8;--blue:#2b8be6;--sky:#5cc4f2;--gold:#d9b46a;--gold2:#a8823d;--green:#20c767;--r:22px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;line-height:1.6;overflow-x:hidden}a{color:inherit;text-decoration:none}img{display:block;max-width:100%}button{font:inherit;cursor:pointer}.wrap{width:min(1180px,calc(100% - 32px));margin:auto}
+.display{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;line-height:.95;letter-spacing:.5px}
+.gold{background:linear-gradient(100deg,#f3dca6,var(--gold) 40%,var(--gold2) 70%,#f3dca6);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:sheen 6s linear infinite}
+@keyframes sheen{to{background-position:-200% 0}}
+.outline{color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.75)}
+
+/* nav */
+.nav{position:fixed;top:14px;left:0;right:0;z-index:40}.nav .bar{display:flex;align-items:center;gap:22px;height:64px;padding:0 10px 0 18px;border:1px solid var(--line);border-radius:18px;background:rgba(10,13,19,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:background .3s}.nav.solid .bar{background:rgba(10,13,19,.88)}
+.logo{display:flex;align-items:center;gap:10px}.logo svg{width:38px;height:38px}.logo b{font:400 21px/1 'Anton';letter-spacing:1.5px}.logo small{display:block;font-size:9px;letter-spacing:3.5px;color:var(--gold)}
+.links{display:flex;gap:28px;margin-left:auto;font-size:14px;color:#c4ceda}.links a:hover{color:#fff}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#14100a;font-weight:700;font-size:14px}
+
+/* hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 0 80px;overflow:hidden;isolation:isolate}
+.hero:before{content:"";position:absolute;inset:-20%;z-index:-2;background:radial-gradient(40% 50% at 75% 40%,rgba(43,139,230,.45),transparent 70%),radial-gradient(30% 40% at 15% 85%,rgba(92,196,242,.18),transparent 70%),radial-gradient(25% 30% at 60% 90%,rgba(217,180,106,.12),transparent 70%)}
+.hero:after{content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(-28deg,transparent 0 22px,rgba(255,255,255,.035) 22px 23px);mask:radial-gradient(70% 70% at 70% 45%,#000,transparent)}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border:1px solid rgba(217,180,106,.35);border-radius:99px;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}.tag i{width:7px;height:7px;transform:rotate(45deg);background:var(--gold)}
+.hero h1{font-size:clamp(58px,9vw,132px);margin:22px 0 24px}.hero h1 span{display:block}
+.hero p{font-size:19px;color:#b5c1ce;max-width:540px;font-weight:300;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}.btn{display:inline-flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;font-weight:600;font-size:15px;border:1px solid transparent;transition:transform .2s,box-shadow .2s}.btn:hover{transform:translateY(-2px)}.btn-wa{background:var(--green);color:#fff;box-shadow:0 10px 30px rgba(32,199,103,.25)}.btn-line{border-color:var(--line);background:rgba(255,255,255,.03)}.btn-line:hover{border-color:rgba(255,255,255,.3)}
+.btn svg{width:18px;height:18px;fill:currentColor}
+
+/* 3D emblem */
+.stage{position:relative;height:520px;perspective:1100px}
+.emblem{position:absolute;left:50%;top:50%;width:280px;height:280px;margin:-140px 0 0 -140px;transform-style:preserve-3d;animation:spin 14s linear infinite}
+.emblem .face{position:absolute;inset:0;display:grid;place-items:center;backface-visibility:hidden}
+.emblem .face svg{width:100%;height:100%}
+.emblem .back{transform:rotateY(180deg)}
+@keyframes spin{0%{transform:rotateY(-25deg) rotateX(8deg)}50%{transform:rotateY(25deg) rotateX(-6deg)}100%{transform:rotateY(-25deg) rotateX(8deg)}}
+.glow{position:absolute;left:50%;top:50%;width:360px;height:360px;margin:-180px 0 0 -180px;border-radius:50%;background:radial-gradient(circle,rgba(43,139,230,.55),transparent 65%);filter:blur(20px)}
+.ring{position:absolute;left:50%;top:50%;width:440px;height:440px;margin:-220px 0 0 -220px;border:1px dashed rgba(217,180,106,.25);border-radius:50%;animation:rot 40s linear infinite}.ring.r2{width:520px;height:520px;margin:-260px 0 0 -260px;border-style:solid;border-color:rgba(255,255,255,.05);animation-duration:70s;animation-direction:reverse}
+@keyframes rot{to{transform:rotate(360deg)}}
+.pyr{position:absolute;width:var(--s);height:var(--s);transform:translate3d(0,0,0);animation:float var(--d,7s) ease-in-out infinite;animation-delay:var(--dl,0s);filter:drop-shadow(0 18px 24px rgba(0,0,0,.6))}
+.pyr svg{width:100%;height:100%;overflow:visible}
+@keyframes float{50%{translate:0 -18px;rotate:8deg}}
+.scroll-cue{position:absolute;left:50%;bottom:26px;translate:-50% 0;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:8px}.scroll-cue i{width:1px;height:36px;background:linear-gradient(var(--gold),transparent);animation:cue 2s ease-in-out infinite}@keyframes cue{50%{transform:scaleY(.4);transform-origin:top}}
+
+/* marquee */
+.marquee{border-block:1px solid var(--line);background:var(--bg2);overflow:hidden;white-space:nowrap}.track{display:inline-flex;gap:44px;padding:18px 0;animation:mq 32s linear infinite;font:400 22px/1 'Anton';letter-spacing:1.5px;text-transform:uppercase;color:#c9d3de}.track b{color:var(--gold);font-weight:400}@keyframes mq{to{transform:translateX(-50%)}}
+
+/* sections */
+.section{padding:120px 0;position:relative}.kicker{display:flex;align-items:center;gap:12px;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:var(--gold)}.kicker:before{content:"";width:34px;height:1px;background:var(--gold)}
+.section h2{font-size:clamp(42px,6vw,84px);margin:16px 0 0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap;margin-bottom:54px}.head p{color:var(--muted);max-width:430px;margin:0}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+.big{grid-row:span 2;padding:44px;border-radius:var(--r);background:linear-gradient(160deg,#16314f,#0d1724 60%);border:1px solid rgba(92,196,242,.18);position:relative;overflow:hidden}
+.big:after{content:"";position:absolute;right:-70px;bottom:-70px;width:260px;height:260px;border:1px solid rgba(217,180,106,.3);transform:rotate(45deg)}
+.big h3{font:400 40px/1 'Anton';text-transform:uppercase;margin:18px 0 18px}.big p{color:#c2d0de;font-size:17px;margin:0;max-width:520px;position:relative;z-index:1}
+.vm{padding:34px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);transition:border-color .3s,transform .3s}.vm:hover{border-color:rgba(217,180,106,.4);transform:translateY(-4px)}
+.vm .n{font:400 14px 'Anton';color:var(--gold);letter-spacing:2px}.vm h3{font:400 30px/1 'Anton';text-transform:uppercase;margin:10px 0 12px}.vm p{color:var(--muted);margin:0}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:22px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.pillar{background:var(--bg);padding:26px}.pillar b{display:block;font:400 34px/1 'Anton';color:#fff}.pillar span{color:var(--muted);font-size:14px}
+
+/* products */
+.products{background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{padding:10px 18px;border-radius:99px;border:1px solid var(--line);background:transparent;color:#c4ceda;font-size:14px;transition:.2s}.tab:hover{border-color:rgba(255,255,255,.3)}.tab.on{background:#fff;color:#0b0e13;border-color:#fff;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{position:relative;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s,opacity .3s;transform-style:preserve-3d}
+.card:hover{border-color:rgba(217,180,106,.45)}
+.card.hide{display:none}
+.card .ph{margin:10px;border-radius:16px;aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#fff,#e9eef4);display:grid;place-items:center;overflow:hidden}
+.card .ph img{width:86%;height:86%;object-fit:contain;transition:transform .5s cubic-bezier(.2,.8,.2,1)}.card:hover .ph img{transform:scale(1.07)}
+.card.wide{grid-column:span 2}.card.wide .ph{aspect-ratio:2.06/1}
+.card .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 18px 18px}
+.card h3{margin:0;font-size:17px;font-weight:600}.card small{display:block;color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.add{flex:0 0 auto;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font-size:22px;line-height:1;display:grid;place-items:center;transition:.2s}
+.add:hover{border-color:var(--gold);color:var(--gold)}.card.picked{border-color:var(--gold)}.card.picked .add{background:var(--gold);border-color:var(--gold);color:#14100a;font-size:16px}
+.rolls{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.roll{padding:26px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:22px;justify-content:space-between;min-height:190px;transition:border-color .3s}
+.roll .ic{width:54px;height:54px;border-radius:14px;background:linear-gradient(140deg,#1f4a78,#10243b);display:grid;place-items:center}.roll .ic svg{width:28px;height:28px;stroke:var(--sky);fill:none;stroke-width:1.6}
+.roll h3{font:400 24px/1 'Anton';text-transform:uppercase;margin:0}.roll p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.roll .row{display:flex;justify-content:space-between;align-items:end;gap:10px}.roll.picked{border-color:var(--gold)}.roll.picked .add{background:var(--gold);border-color:var(--gold);color:#14100a;font-size:16px}
+.sub{display:flex;align-items:center;gap:14px;margin:60px 0 22px;font:400 26px 'Anton';text-transform:uppercase;letter-spacing:.5px}.sub:after{content:"";flex:1;height:1px;background:var(--line)}
+.roll-pics{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+
+/* tray */
+.tray{position:fixed;left:50%;bottom:20px;z-index:50;translate:-50% 140%;transition:translate .45s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;gap:16px;padding:10px 10px 10px 20px;border-radius:18px;background:rgba(18,23,34,.92);border:1px solid rgba(217,180,106,.4);backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(0,0,0,.5);max-width:calc(100% - 24px)}
+.tray.show{translate:-50% 0}.tray .count{font-size:14px;color:#c4ceda;white-space:nowrap}.tray .count b{color:var(--gold);font-size:18px}
+.tray .btn{white-space:nowrap}.tray .clear{background:none;border:0;color:var(--muted);font-size:13px;text-decoration:underline}
+
+/* contact */
+.contact{overflow:hidden}
+.cwrap{position:relative;border-radius:32px;padding:70px;background:radial-gradient(60% 90% at 90% 10%,rgba(92,196,242,.35),transparent 60%),linear-gradient(135deg,#1c6fc0,#0d3768);overflow:hidden;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.cwrap:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-28deg,transparent 0 20px,rgba(255,255,255,.05) 20px 21px)}
+.cwrap>*{position:relative}.cwrap h2{font-size:clamp(44px,6vw,80px);margin:14px 0 18px}.cwrap p{color:#d7e9fb;font-size:18px;max-width:480px;margin:0}
+.cwrap .kicker{color:#f3dca6}.cwrap .kicker:before{background:#f3dca6}
+.info{display:grid;gap:12px}.info a,.info div{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:16px;background:rgba(7,9,13,.35);border:1px solid rgba(255,255,255,.15);transition:background .2s}.info a:hover{background:rgba(7,9,13,.55)}
+.info small{display:block;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#a9cdf0}.info b{font-size:20px;font-weight:600}.info .i{width:44px;height:44px;flex:0 0 auto;border-radius:12px;background:rgba(255,255,255,.1);display:grid;place-items:center}.info .i svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.7}
+.cpyr{position:absolute;right:-30px;bottom:-40px;width:260px;opacity:.9;pointer-events:none}
+
+footer{padding:40px 0 110px;color:var(--muted);font-size:13px}footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:30px}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1);transition-delay:var(--rd,0s)}.rv.in{opacity:1;transform:none}
+
+@media(max-width:1000px){.links{display:none}.cta{margin-left:auto}.hero-grid{grid-template-columns:1fr}.stage{height:360px;order:-1;margin-top:10px}.emblem{width:200px;height:200px;margin:-100px 0 0 -100px}.ring{width:310px;height:310px;margin:-155px 0 0 -155px}.ring.r2{width:360px;height:360px;margin:-180px 0 0 -180px}.glow{width:260px;height:260px;margin:-130px 0 0 -130px}.hero{min-height:auto;padding-top:96px}.scroll-cue{display:none}.about-grid,.cwrap{grid-template-columns:1fr}.big{grid-row:auto}.grid,.rolls{grid-template-columns:repeat(2,1fr)}.pillars{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.nav{top:8px}.nav .bar{height:58px;padding:0 8px 0 12px}.cta{padding:10px 13px;font-size:13px}.hero h1{font-size:60px}.hero p{font-size:16px}.stage{height:300px}.section{padding:80px 0}.head{margin-bottom:34px}.big,.vm{padding:26px}.big h3{font-size:32px}.grid,.rolls{gap:10px}.card .meta{padding:4px 12px 14px}.card h3{font-size:15px}.add{width:34px;height:34px}.card.wide .ph{aspect-ratio:1.6/1}.roll{padding:18px;min-height:160px}.roll h3{font-size:20px}.roll-pics{gap:10px}.cwrap{padding:40px 22px;border-radius:24px}.info b{font-size:17px}.track{font-size:18px}.tray{gap:10px;padding-left:14px;width:calc(100% - 24px);justify-content:space-between}.tray .count{font-size:13px}.tray .long{display:none}.tray .btn{padding:12px 14px;font-size:14px}.cpyr{width:160px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gEdge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dca6"/><stop offset=".5" stop-color="#d9b46a"/><stop offset="1" stop-color="#8f6a2c"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 200 200">
+      <rect x="38" y="38" width="124" height="124" fill="none" stroke="url(#gEdge)" stroke-width="4" transform="rotate(45 100 100)"/>
+      <text x="100" y="112" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="58" fill="#fff">JAFKA</text>
+      <text x="100" y="138" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="17" letter-spacing="1" fill="#d9b46a">TRADING</text>
+    </symbol>
+    <symbol id="icon" viewBox="0 0 100 100">
+      <rect x="20" y="20" width="60" height="60" fill="none" stroke="url(#gEdge)" stroke-width="5" transform="rotate(45 50 50)"/>
+      <text x="50" y="64" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="40" fill="#fff">J</text>
+    </symbol>
+    <symbol id="pyr" viewBox="0 0 100 90">
+      <path d="M50 2 2 70 58 88Z" fill="#262a31"/><path d="M50 2 58 88 98 60Z" fill="#101216"/>
+      <path d="M50 2 2 70 58 88 98 60Z M50 2 58 88" fill="none" stroke="url(#gEdge)" stroke-width="1.2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="wa" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3Z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav"><div class="wrap bar">
+  <a class="logo" href="#top" aria-label="Jafka Trading home"><svg><use href="#icon"/></svg><span><b>JAFKA</b><small>TRADING</small></span></a>
+  <nav class="links"><a href="#about">About</a><a href="#products">Products</a><a href="#contact">Contact</a></nav>
+  <a class="cta" href="#contact">Get a Quote</a>
+</div></header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="tag rv"><i></i>Jafka Trading</div>
+      <h1 class="display"><span class="rv" style="--rd:.08s">Your partner</span><span class="rv outline" style="--rd:.16s">in</span><span class="rv gold" style="--rd:.24s">plastics</span></h1>
+      <p class="rv" style="--rd:.32s">Disposable gloves, protective wear, and label &amp; till rolls, supplied in bulk to shops, kitchens, clinics and warehouses.</p>
+      <div class="btns rv" style="--rd:.4s">
+        <a class="btn btn-wa" href="https://wa.me/966539535690?text=Hello%20Jafka%20Trading%2C%20I%27d%20like%20a%20quote." target="_blank" rel="noopener"><svg><use href="#wa"/></svg>WhatsApp us</a>
+        <a class="btn btn-line" href="#products">Browse products →</a>
+      </div>
+    </div>
+    <div class="stage" id="stage" aria-hidden="true">
+      <div class="glow"></div><div class="ring"></div><div class="ring r2"></div>
+      <div class="emblem"><div class="face"><svg><use href="#mark"/></svg></div><div class="face back"><svg><use href="#mark"/></svg></div></div>
+      <div class="pyr" data-depth="40" style="--s:90px;left:4%;top:8%;--d:7s"><svg><use href="#pyr"/></svg></div>
+      <div class="pyr" data-depth="70" style="--s:64px;right:6%;top:14%;--d:6s;--dl:-2s"><svg><use href="#pyr"/></svg></div>
+      <div class="pyr" data-depth="25" style="--s:120px;right:0;bottom:6%;--d:9s;--dl:-4s"><svg><use href="#pyr"/></svg></div>
+      <div class="pyr" data-depth="55" style="--s:54px;left:12%;bottom:12%;--d:5.5s;--dl:-1s"><svg><use href="#pyr"/></svg></div>
+      <div class="pyr" data-depth="90" style="--s:36px;left:46%;top:2%;--d:6.5s;--dl:-3s"><svg><use href="#pyr"/></svg></div>
+    </div>
+  </div>
+  <div class="scroll-cue">Scroll<i></i></div>
+</section>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="track">
+  <span>Vinyl Gloves</span><b>◆</b><span>Nitrile Gloves</span><b>◆</b><span>Latex Gloves</span><b>◆</b><span>Poly Gloves</span><b>◆</b><span>Cotton Gloves</span><b>◆</b><span>Face Masks</span><b>◆</b><span>Head Caps</span><b>◆</b><span>Beard Caps</span><b>◆</b><span>Shoe Covers</span><b>◆</b><span>Arm Sleeves</span><b>◆</b><span>Cashier Rolls</span><b>◆</b><span>Price Rolls</span><b>◆</b><span>Date Rolls</span><b>◆</b><span>Weight Rolls</span><b>◆</b>
+</div></div>
+
+<section class="section" id="about"><div class="wrap">
+  <div class="head"><div><div class="kicker rv">Who we are</div><h2 class="display rv" style="--rd:.08s">Built on <span class="gold">trust</span></h2></div><p class="rv" style="--rd:.16s">A plastic trading company supplying everyday disposables and consumables, with a focus on quality and long-term partnerships.</p></div>
+  <div class="about-grid">
+    <div class="big rv"><div class="kicker">About us</div><h3>A reliable partner<br>for your business</h3><p>Jafka is a premier plastic trading company, committed to supplying top-tier products to a diverse range of industries. Our focus on quality, innovation, and customer service has established us as a reliable partner for businesses. With a dedicated team and a strong ethical foundation, Jafka continually strives to exceed expectations.</p></div>
+    <div class="vm rv" style="--rd:.1s"><div class="n">01 — Vision</div><h3>Trusted leader</h3><p>To be a trusted leader in the plastic trading industry, consistently delivering high-quality products that meet the needs of our clients while promoting sustainability and innovation.</p></div>
+    <div class="vm rv" style="--rd:.2s"><div class="n">02 — Mission</div><h3>Exceptional value</h3><p>Superior service and reliable solutions — fostering long-term partnerships, prioritizing customer satisfaction, and driving sustainable practices in every part of our business.</p></div>
+  </div>
+  <div class="pillars rv">
+    <div class="pillar"><b>05</b><span>Glove types</span></div>
+    <div class="pillar"><b>05</b><span>Protective wear lines</span></div>
+    <div class="pillar"><b>04</b><span>Label &amp; till rolls</span></div>
+    <div class="pillar"><b>Bulk</b><span>Supply on request</span></div>
+  </div>
+</div></section>
+
+<section class="section products" id="products"><div class="wrap">
+  <div class="head"><div><div class="kicker rv">Catalogue</div><h2 class="display rv" style="--rd:.08s">Our <span class="gold">products</span></h2></div>
+    <div class="tabs rv" style="--rd:.16s" role="tablist">
+      <button class="tab on" data-f="all">All</button><button class="tab" data-f="gloves">Gloves</button><button class="tab" data-f="protective">Protective wear</button><button class="tab" data-f="rolls">Rolls</button>
+    </div>
+  </div>
+  <p class="rv" style="color:var(--muted);margin:-30px 0 34px">Tap <b style="color:var(--gold)">+</b> on anything you need, then send the whole list to us on WhatsApp in one message.</p>
+
+  <div class="grid" id="grid">
+    <article class="card rv" data-c="gloves" data-n="Vinyl Gloves"><div class="ph"><img src="../img/vinyl-gloves.jpg" alt="Vinyl gloves" loading="lazy"></div><div class="meta"><div><small>Gloves</small><h3>Vinyl Gloves</h3></div><button class="add" aria-label="Add Vinyl Gloves to enquiry">+</button></div></article>
+    <article class="card rv" data-c="gloves" data-n="Nitrile Gloves" style="--rd:.06s"><div class="ph"><img src="../img/nitrile-gloves.jpg" alt="Blue nitrile gloves" loading="lazy"></div><div class="meta"><div><small>Gloves</small><h3>Nitrile Gloves</h3></div><button class="add" aria-label="Add Nitrile Gloves to enquiry">+</button></div></article>
+    <article class="card rv" data-c="gloves" data-n="Latex Gloves" style="--rd:.12s"><div class="ph"><img src="../img/latex-gloves.jpg" alt="Latex gloves" loading="lazy"></div><div class="meta"><div><small>Gloves</small><h3>Latex Gloves</h3></div><button class="add" aria-label="Add Latex Gloves to enquiry">+</button></div></article>
+    <article class="card rv" data-c="gloves" data-n="Poly Gloves" style="--rd:.18s"><div class="ph"><img src="../img/poly-gloves.jpg" alt="Clear poly gloves" loading="lazy"></div><div class="meta"><div><small>Gloves</small><h3>Poly Gloves</h3></div><button class="add" aria-label="Add Poly Gloves to enquiry">+</button></div></article>
+    <article class="card rv" data-c="gloves" data-n="Cotton Gloves"><div class="ph"><img src="../img/cotton-gloves.jpg" alt="White cotton gloves" loading="lazy"></div><div class="meta"><div><small>Gloves</small><h3>Cotton Gloves</h3></div><button class="add" aria-label="Add Cotton Gloves to enquiry">+</button></div></article>
+    <article class="card wide rv" data-c="protective" data-n="Face Masks (blue / black)" style="--rd:.06s"><div class="ph"><img src="../img/masks.jpg" alt="Black and blue disposable face masks" loading="lazy"></div><div class="meta"><div><small>Protective · Blue &amp; black</small><h3>Face Masks</h3></div><button class="add" aria-label="Add Face Masks to enquiry">+</button></div></article>
+    <article class="card rv" data-c="protective" data-n="Head Caps" style="--rd:.12s"><div class="ph"><img src="../img/head-cap.jpg" alt="Disposable head cap" loading="lazy"></div><div class="meta"><div><small>Protective</small><h3>Head Cap</h3></div><button class="add" aria-label="Add Head Caps to enquiry">+</button></div></article>
+    <article class="card rv" data-c="protective" data-n="Beard Caps"><div class="ph"><img src="../img/beard-cap.jpg" alt="Disposable beard cap" loading="lazy"></div><div class="meta"><div><small>Protective</small><h3>Beard Cap</h3></div><button class="add" aria-label="Add Beard Caps to enquiry">+</button></div></article>
+    <article class="card rv" data-c="protective" data-n="Shoe Covers" style="--rd:.06s"><div class="ph"><img src="../img/shoe-cover.jpg" alt="Blue disposable shoe covers" loading="lazy"></div><div class="meta"><div><small>Protective</small><h3>Shoe Cover</h3></div><button class="add" aria-label="Add Shoe Covers to enquiry">+</button></div></article>
+    <article class="card rv" data-c="protective" data-n="Arm Sleeves" style="--rd:.12s"><div class="ph"><img src="../img/arm-sleeve.jpg" alt="Black arm sleeve" loading="lazy"></div><div class="meta"><div><small>Protective</small><h3>Arm Sleeve</h3></div><button class="add" aria-label="Add Arm Sleeves to enquiry">+</button></div></article>
+  </div>
+
+  <div id="rollsBlock" data-c="rolls">
+    <div class="sub rv">Barcodes / stickers</div>
+    <div class="rolls">
+      <article class="roll rv" data-n="Cashier Rolls"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 3h12v15l-2-1.5L14 18l-2-1.5L10 18l-2-1.5L6 18Z"/><path d="M9 7h6M9 10h6M9 13h4"/></svg></div><div class="row"><div><h3>Cashier Roll</h3><p>Till &amp; POS receipts</p></div><button class="add" aria-label="Add Cashier Rolls to enquiry">+</button></div></article>
+      <article class="roll rv" data-n="Price Rolls" style="--rd:.06s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8Z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg></div><div class="row"><div><h3>Price Roll</h3><p>For pricing guns</p></div><button class="add" aria-label="Add Price Rolls to enquiry">+</button></div></article>
+      <article class="roll rv" data-n="Date Rolls" style="--rd:.12s"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div class="row"><div><h3>Date Roll</h3><p>Production &amp; expiry dates</p></div><button class="add" aria-label="Add Date Rolls to enquiry">+</button></div></article>
+      <article class="roll rv" data-n="Weight Rolls" style="--rd:.18s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M6 8h12l2 13H4Z"/><circle cx="12" cy="5" r="2.2"/></svg></div><div class="row"><div><h3>Weight Roll</h3><p>Scale labels</p></div><button class="add" aria-label="Add Weight Rolls to enquiry">+</button></div></article>
+    </div>
+    <div class="roll-pics">
+      <div class="card rv"><div class="ph" style="aspect-ratio:1.5/1"><img src="../img/paper-rolls.jpg" alt="Thermal cashier paper rolls" loading="lazy"></div></div>
+      <div class="card rv" style="--rd:.08s"><div class="ph" style="aspect-ratio:1.5/1"><img src="../img/labeller.jpg" alt="Price labelling gun with label rolls" loading="lazy"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="section contact" id="contact"><div class="wrap">
+  <div class="cwrap rv">
+    <svg class="cpyr" viewBox="0 0 100 90" aria-hidden="true"><use href="#pyr"/></svg>
+    <div>
+      <div class="kicker">Contact</div>
+      <h2 class="display">Let's talk<br>supply</h2>
+      <p>Tell us the product, size and quantity you need — we'll come back with price and availability.</p>
+      <div class="btns"><a class="btn btn-wa" href="https://wa.me/966539535690?text=Hello%20Jafka%20Trading%2C%20I%27d%20like%20a%20quote." target="_blank" rel="noopener"><svg><use href="#wa"/></svg>WhatsApp us</a></div>
+    </div>
+    <div class="info">
+      <div><span class="i"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><span><small>Address</small><b>Shara Arbaeen, Rehab</b></span></div>
+      <a href="tel:+966539535690"><span class="i"><svg viewBox="0 0 24 24"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg></span><span><small>Mobile</small><b>0539 535 690</b></span></a>
+      <a href="tel:+966575668845"><span class="i"><svg viewBox="0 0 24 24"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2Z"/></svg></span><span><small>Mobile</small><b>0575 66 8845</b></span></a>
+    </div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <a class="logo" href="#top"><svg><use href="#icon"/></svg><span><b>JAFKA</b><small>TRADING</small></span></a>
+  <span>© <span id="yr">2026</span> Jafka Trading · Your partner in plastics</span>
+</div></footer>
+
+<div class="tray" id="tray" role="region" aria-label="Enquiry list" aria-live="polite">
+  <span class="count"><b id="cnt">0</b> items in enquiry</span>
+  <button class="clear" id="clear">Clear</button>
+  <a class="btn btn-wa" id="send" href="#" target="_blank" rel="noopener"><svg><use href="#wa"/></svg>Send<span class="long"> on WhatsApp</span></a>
+</div>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // marquee: duplicate content for a seamless loop
+  var track = document.getElementById('track'); track.innerHTML += track.innerHTML;
+
+  // nav background once scrolled
+  var nav = document.getElementById('nav');
+  addEventListener('scroll', function(){ nav.classList.toggle('solid', scrollY > 40); }, {passive:true});
+
+  // scroll reveal
+  var els = document.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) { els.forEach(function(e){ e.classList.add('in'); }); }
+  else {
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
+    els.forEach(function(e){ io.observe(e); });
+  }
+
+  // hero parallax
+  var stage = document.getElementById('stage');
+  if (!reduce && matchMedia('(pointer:fine)').matches) {
+    var pyrs = stage.querySelectorAll('.pyr');
+    addEventListener('mousemove', function(ev){
+      var x = ev.clientX / innerWidth - .5, y = ev.clientY / innerHeight - .5;
+      pyrs.forEach(function(p){ var d = +p.dataset.depth; p.style.transform = 'translate3d(' + (-x*d) + 'px,' + (-y*d) + 'px,0)'; });
+    });
+    // card tilt
+    document.querySelectorAll('.card').forEach(function(c){
+      c.addEventListener('mousemove', function(ev){ var r = c.getBoundingClientRect(); var x = (ev.clientX - r.left)/r.width - .5, y = (ev.clientY - r.top)/r.height - .5; c.style.transform = 'perspective(800px) rotateY(' + (x*7) + 'deg) rotateX(' + (-y*7) + 'deg) translateY(-4px)'; });
+      c.addEventListener('mouseleave', function(){ c.style.transform = ''; });
+    });
+  }
+
+  // category filter
+  var tabs = document.querySelectorAll('.tab'), cards = document.querySelectorAll('#grid .card'), rolls = document.getElementById('rollsBlock');
+  tabs.forEach(function(t){ t.addEventListener('click', function(){
+    tabs.forEach(function(x){ x.classList.toggle('on', x === t); });
+    var f = t.dataset.f;
+    cards.forEach(function(c){ c.classList.toggle('hide', f !== 'all' && c.dataset.c !== f); });
+    document.getElementById('grid').style.display = f === 'rolls' ? 'none' : '';
+    rolls.style.display = (f === 'all' || f === 'rolls') ? '' : 'none';
+  }); });
+
+  // enquiry list -> WhatsApp
+  var picked = [], tray = document.getElementById('tray'), cnt = document.getElementById('cnt'), send = document.getElementById('send');
+  function render(){
+    cnt.textContent = picked.length; tray.classList.toggle('show', picked.length > 0);
+    var msg = 'Hello Jafka Trading, I would like a quote for:\n' + picked.map(function(n){ return '- ' + n; }).join('\n') + '\n\nQuantity / size: ';
+    send.href = 'https://wa.me/966539535690?text=' + encodeURIComponent(msg);
+  }
+  document.querySelectorAll('[data-n] .add').forEach(function(b){
+    var item = b.closest('[data-n]');
+    b.addEventListener('click', function(){
+      var n = item.dataset.n, i = picked.indexOf(n);
+      if (i < 0) picked.push(n); else picked.splice(i, 1);
+      var on = i < 0; item.classList.toggle('picked', on); b.textContent = on ? '✓' : '+';
+      b.setAttribute('aria-pressed', on); render();
+    });
+  });
+  document.getElementById('clear').addEventListener('click', function(){
+    picked = []; document.querySelectorAll('[data-n].picked').forEach(function(i){ i.classList.remove('picked'); var b = i.querySelector('.add'); b.textContent = '+'; b.setAttribute('aria-pressed', false); }); render();
+  });
+})();
+</script>
+</body>
+</html>
