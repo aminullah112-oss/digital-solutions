@@ -36,7 +36,10 @@ jafka-trading/          One-page site for Jafka Trading (plastics/disposables
                        supplier), built from their brochure PDF. Static HTML,
                        product photos in img/. rev2/ is a second design
                        (dark/gold, product filter, WhatsApp enquiry list)
-                       for client review; it reuses ../img/.
+                       for client review; rev3/ (light corporate bento) and
+                       rev4/ (blue/yellow price-tag concept) are two more.
+                       All revisions reuse ../img/ and share a Rev 1-4
+                       switcher for review.
 ```
 
 ## Local development

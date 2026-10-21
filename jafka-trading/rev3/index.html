@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jafka Trading | Your Partner in Plastics</title>
+<meta name="description" content="Jafka Trading supplies disposable gloves, masks, head and beard caps, shoe covers, arm sleeves, and cashier, price, date and weight label rolls. Shara Arbaeen, Rehab." />
+<meta name="theme-color" content="#ffffff" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231d5fd6'/%3E%3Crect x='22' y='22' width='56' height='56' fill='none' stroke='%23fff' stroke-width='6' transform='rotate(45 50 50)'/%3E%3Ctext x='50' y='63' font-size='38' text-anchor='middle' fill='%23fff' font-family='Arial Black,Arial' font-weight='900'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Inter:wght@400;500;600&family=Noto+Kufi+Arabic:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f9;--white:#fff;--ink:#0a1220;--muted:#5b6575;--line:#e3e8ef;--blue:#1d5fd6;--blue-d:#0f3d96;--sky:#5cc4f2;--green:#20c767;--r:26px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;overflow-x:hidden}a{color:inherit;text-decoration:none}img{display:block;max-width:100%}button{font:inherit;cursor:pointer}.wrap{width:min(1200px,calc(100% - 32px));margin:auto}
+.x{font-family:'Archivo',sans-serif;font-stretch:125%;font-weight:850;letter-spacing:-.02em;line-height:.95}
+.blue{color:var(--blue)}
+
+.topbar{background:var(--ink);color:#c8d2e0;font-size:13px}.topbar .wrap{display:flex;justify-content:space-between;gap:16px;padding:9px 0}.topbar a{color:#fff;font-weight:600}.topbar .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:8px;box-shadow:0 0 0 4px rgba(32,199,103,.18)}
+
+.nav{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.nav .wrap{display:flex;align-items:center;gap:28px;height:72px}
+.logo{display:flex;align-items:center;gap:11px}.logo svg{width:40px;height:40px}.logo b{font:850 20px/1 'Archivo';font-stretch:125%;letter-spacing:.02em}.logo small{display:block;font-size:9px;letter-spacing:4px;color:var(--muted);margin-top:3px;font-weight:600}
+.links{display:flex;gap:30px;margin-left:auto;font-size:14px;font-weight:500;color:var(--muted)}.links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:14px 22px;border-radius:999px;font-weight:600;font-size:15px;border:1px solid transparent;transition:transform .2s,box-shadow .2s,background .2s}.btn:hover{transform:translateY(-2px)}
+.btn-blue{background:var(--blue);color:#fff;box-shadow:0 10px 26px rgba(29,95,214,.28)}.btn-blue:hover{background:var(--blue-d)}
+.btn-wa{background:var(--green);color:#fff}.btn-out{border-color:var(--line);background:#fff}.btn-out:hover{border-color:var(--ink)}
+.btn svg{width:18px;height:18px;fill:currentColor}.nav .btn{padding:11px 18px;font-size:14px}
+
+/* hero */
+.hero{padding:64px 0 90px}.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:500}.pill b{background:var(--blue);color:#fff;border-radius:999px;padding:4px 10px;font-size:11px;letter-spacing:1px}
+.hero h1{font-size:clamp(50px,6.4vw,92px);margin:26px 0 10px}
+.ar{font-family:'Noto Kufi Arabic',sans-serif;font-size:22px;color:var(--blue);margin:0 0 22px;direction:rtl;text-align:left}
+.hero p.lead{font-size:18px;color:var(--muted);max-width:500px;margin:0}
+.hero .btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:34px}.chips a{padding:8px 14px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--muted);transition:.2s}.chips a:hover{border-color:var(--blue);color:var(--blue)}
+.bento{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:180px 180px 180px;gap:14px}
+.tile{position:relative;border-radius:var(--r);background:#fff;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center}
+.tile img{width:84%;height:84%;object-fit:contain;transition:transform .6s cubic-bezier(.2,.8,.2,1)}.tile:hover img{transform:scale(1.06)}
+.tile .lb{position:absolute;left:12px;bottom:12px;padding:5px 11px;border-radius:999px;background:rgba(10,18,32,.86);color:#fff;font-size:12px;font-weight:600}
+.t-logo{grid-column:span 2;background:linear-gradient(135deg,var(--blue),var(--blue-d));border:0;color:#fff;place-items:stretch;padding:24px}
+.t-logo:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-28deg,transparent 0 16px,rgba(255,255,255,.07) 16px 17px)}
+.t-logo .in{position:relative;display:flex;justify-content:space-between;align-items:end;gap:10px}
+.t-logo svg{width:140px;height:140px}.t-logo .k{font:850 15px/1.2 'Archivo';font-stretch:110%;text-transform:uppercase;max-width:160px;opacity:.9}
+.t-tall{grid-row:span 2}.t-wide{grid-column:span 2}
+.t-stat{background:var(--ink);border:0;color:#fff;place-items:start;padding:22px;align-content:space-between}.t-stat b{font:850 54px/1 'Archivo';font-stretch:125%;color:var(--sky)}.t-stat span{font-size:13px;color:#aab6c6}
+
+/* trust bar */
+.strip{background:#fff;border-block:1px solid var(--line)}.strip .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+.strip div{padding:26px 22px;border-left:1px solid var(--line);display:flex;gap:14px;align-items:center}.strip div:first-child{border-left:0}
+.strip svg{width:34px;height:34px;flex:0 0 auto;stroke:var(--blue);fill:none;stroke-width:1.6}.strip b{display:block;font-size:15px}.strip span{font-size:13px;color:var(--muted)}
+
+/* sections */
+.section{padding:110px 0}.eyebrow{font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--blue)}.eyebrow i{font-style:normal;color:var(--muted);margin-right:10px}
+.section h2{font-size:clamp(38px,5vw,68px);margin:14px 0 0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:30px;flex-wrap:wrap;margin-bottom:48px}.head p{max-width:420px;color:var(--muted);margin:0}
+
+/* categories */
+.cats{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px}
+.cat{position:relative;border-radius:var(--r);background:#fff;border:1px solid var(--line);padding:28px;min-height:360px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;transition:transform .35s,box-shadow .35s}
+.cat:hover{transform:translateY(-6px);box-shadow:0 30px 60px rgba(10,18,32,.1)}
+.cat .num{font:850 15px 'Archivo';color:var(--blue)}.cat h3{font:850 34px/1 'Archivo';font-stretch:125%;margin:10px 0 8px}.cat p{margin:0;color:var(--muted);font-size:14px;max-width:260px}
+.cat img{position:absolute;right:-6%;bottom:-6%;width:62%;transition:transform .6s cubic-bezier(.2,.8,.2,1)}.cat:hover img{transform:scale(1.06) rotate(-2deg)}
+.cat .go{position:relative;z-index:1;width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:20px;transition:background .2s}.cat:hover .go{background:var(--blue)}
+.cat.dark{background:var(--ink);border-color:var(--ink);color:#fff}.cat.dark p{color:#aab6c6}.cat.dark .num{color:var(--sky)}.cat.dark .go{background:#fff;color:var(--ink)}
+
+/* products */
+.products{background:#fff;border-block:1px solid var(--line)}
+.block{margin-top:70px}.block:first-of-type{margin-top:0}
+.bhead{display:flex;align-items:baseline;gap:16px;margin-bottom:22px;border-bottom:2px solid var(--ink);padding-bottom:14px}.bhead h3{font:850 30px/1 'Archivo';font-stretch:125%;margin:0}.bhead span{margin-left:auto;font-size:13px;color:var(--muted)}
+.row5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.p{position:relative;border-radius:20px;background:var(--bg);overflow:hidden;transition:background .3s}.p:hover{background:#e9eef6}
+.p .im{aspect-ratio:1;display:grid;place-items:center;padding:12px}.p .im img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;transition:transform .5s cubic-bezier(.2,.8,.2,1)}.p:hover .im img{transform:scale(1.07)}
+.p .cap{display:flex;justify-content:space-between;align-items:center;padding:0 16px 16px;font-weight:600;font-size:15px}.p .cap i{font-style:normal;font:850 12px 'Archivo';color:var(--blue)}
+.pro{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;gap:14px}.pro .wide{grid-column:span 2;grid-row:span 2}.pro .wide .im{aspect-ratio:auto;height:calc(100% - 50px)}
+.rolls{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rlist{border-radius:20px;background:var(--ink);color:#fff;padding:12px 28px}
+.rlist div{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid rgba(255,255,255,.12)}.rlist div:last-child{border:0}
+.rlist b{font:850 24px/1 'Archivo';font-stretch:115%}.rlist span{font-size:13px;color:#aab6c6}
+.rpics{display:grid;grid-template-columns:1fr 1fr;gap:14px}.rpics .p .im{aspect-ratio:auto;height:100%;min-height:240px}
+
+/* vision band */
+.band{background:var(--blue);color:#fff;position:relative;overflow:hidden}.band:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-28deg,transparent 0 22px,rgba(255,255,255,.06) 22px 23px)}
+.band .wrap{position:relative;display:grid;grid-template-columns:1.2fr 1fr;gap:60px;align-items:start}
+.band .eyebrow{color:#bcd4ff}.band blockquote{margin:16px 0 0;font:850 clamp(30px,3.6vw,48px)/1.08 'Archivo';font-stretch:112%}
+.vm{display:grid;gap:14px}.vm div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:24px}.vm b{font:850 18px 'Archivo';font-stretch:120%;text-transform:uppercase;letter-spacing:.04em}.vm p{margin:8px 0 0;color:#dbe7ff;font-size:15px}
+
+/* contact */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ccard{border-radius:var(--r);background:#fff;border:1px solid var(--line);padding:40px}
+.ccard h2{margin-top:10px}.ccard p{color:var(--muted);font-size:17px;max-width:420px}
+.phones{display:grid;gap:14px}
+.phone{display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:var(--r);padding:28px 32px;background:var(--ink);color:#fff;transition:background .25s}.phone:hover{background:var(--blue)}
+.phone small{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#aab6c6}.phone b{font:850 clamp(26px,3vw,38px)/1.1 'Archivo';font-stretch:115%}
+.phone .ar2{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:22px;flex:0 0 auto}
+.addr{border-radius:var(--r);border:1px solid var(--line);background:#fff;padding:24px 32px;display:flex;align-items:center;gap:16px}.addr svg{width:28px;height:28px;stroke:var(--blue);fill:none;stroke-width:1.7}
+
+footer{padding:36px 0 100px;color:var(--muted);font-size:13px}footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.wa-float{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;background:var(--green);display:grid;place-items:center;z-index:45;box-shadow:0 12px 30px rgba(0,0,0,.2)}.wa-float svg{width:28px;height:28px;fill:#fff}
+
+.rv{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}.rv.in{opacity:1;transform:none}
+
+@media(max-width:1000px){.links{display:none}.nav .btn{margin-left:auto}.hero-grid,.band .wrap,.cgrid{grid-template-columns:1fr}.cats{grid-template-columns:1fr 1fr}.cats .cat:first-child{grid-column:span 2}.row5{grid-template-columns:repeat(3,1fr)}.pro{grid-template-columns:repeat(2,1fr)}.rolls{grid-template-columns:1fr}.strip .wrap{grid-template-columns:1fr 1fr}.strip div:nth-child(3){border-left:0}.strip div:nth-child(n+3){border-top:1px solid var(--line)}}
+@media(max-width:600px){.topbar .hide-s{display:none}.nav .wrap{height:64px}.hero{padding:40px 0 64px}.hero h1{font-size:46px}.ar{font-size:18px}.hero p.lead{font-size:16px}.bento{grid-template-rows:130px 130px 130px;gap:10px}.t-logo{padding:16px}.t-logo svg{width:92px;height:92px}.t-logo .k{font-size:11px}.t-stat{padding:14px}.t-stat b{font-size:36px}.tile .lb{font-size:10px;left:8px;bottom:8px}.section{padding:72px 0}.cats{grid-template-columns:1fr}.cats .cat:first-child{grid-column:auto}.cat{min-height:280px}.cat h3{font-size:28px}.row5{grid-template-columns:1fr 1fr;gap:10px}.pro{gap:10px}.p .cap{font-size:13px;padding:0 12px 12px}.bhead h3{font-size:22px}.strip .wrap{grid-template-columns:1fr}.strip div{border-left:0!important;border-top:1px solid var(--line)}.strip div:first-child{border-top:0}.ccard{padding:26px}.phone{padding:22px}.rlist{padding:6px 20px}.rlist b{font-size:20px}.rpics .p .im{min-height:170px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+.revs{position:fixed;left:20px;bottom:20px;z-index:45;display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(11,14,20,.82);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.25);font:600 12px/1 Outfit,sans-serif;letter-spacing:.5px;transition:opacity .25s}.revs a{padding:9px 13px;border-radius:99px;color:#c4ceda}.revs a:hover{color:#fff}.revs a[aria-current]{background:#fff;color:#0b0e13}@media(max-width:420px){.revs{left:12px}.revs a{padding:9px 10px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="mark" viewBox="0 0 200 200">
+    <rect x="38" y="38" width="124" height="124" fill="none" stroke="currentColor" stroke-width="5" transform="rotate(45 100 100)"/>
+    <text x="100" y="112" text-anchor="middle" font-family="Archivo,Impact,sans-serif" font-weight="900" font-stretch="112%" font-size="36" fill="currentColor">JAFKA</text>
+    <text x="100" y="136" text-anchor="middle" font-family="Archivo,Impact,sans-serif" font-weight="700" font-size="14" letter-spacing="4" fill="currentColor">TRADING</text>
+  </symbol>
+  <symbol id="icon" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100" rx="24" fill="#1d5fd6"/><rect x="25" y="25" width="50" height="50" fill="none" stroke="#fff" stroke-width="5" transform="rotate(45 50 50)"/><text x="50" y="62" text-anchor="middle" font-family="Archivo,Arial" font-weight="900" font-size="34" fill="#fff">J</text></symbol>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3Z"/></symbol>
+</defs></svg>
+
+<div class="topbar"><div class="wrap"><span><i class="dot"></i>Taking bulk orders now<span class="hide-s"> · Gloves · Protective wear · Label rolls</span></span><a href="https://wa.me/966539535690" target="_blank" rel="noopener">WhatsApp 0539 535 690 →</a></div></div>
+
+<header class="nav"><div class="wrap">
+  <a class="logo" href="#top" aria-label="Jafka Trading home"><svg><use href="#icon"/></svg><span><b>JAFKA</b><small>TRADING</small></span></a>
+  <nav class="links"><a href="#categories">Categories</a><a href="#products">Products</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+  <a class="btn btn-blue" href="#contact">Request a quote</a>
+</div></header>
+
+<main id="top">
+<section class="hero"><div class="wrap hero-grid">
+  <div>
+    <span class="pill rv"><b>JAFKA</b>Plastic &amp; disposables trading</span>
+    <h1 class="x rv" style="--d:.06s">Your partner in plastics<span class="blue">.</span></h1>
+    <p class="ar rv" style="--d:.12s" lang="ar">شريكك في البلاستيك</p>
+    <p class="lead rv" style="--d:.18s">Gloves, protective wear and label &amp; till rolls, supplied in bulk to shops, kitchens, clinics and warehouses, with fast quotes on WhatsApp.</p>
+    <div class="btns rv" style="--d:.24s">
+      <a class="btn btn-blue" href="#products">Explore products →</a>
+      <a class="btn btn-out" href="https://wa.me/966539535690?text=Hello%20Jafka%20Trading%2C%20I%27d%20like%20a%20quote." target="_blank" rel="noopener"><svg style="fill:#20c767"><use href="#wa"/></svg>Get a quote</a>
+    </div>
+    <div class="chips rv" style="--d:.3s"><a href="#gloves">Vinyl</a><a href="#gloves">Nitrile</a><a href="#gloves">Latex</a><a href="#protective">Masks</a><a href="#protective">Shoe covers</a><a href="#rolls">Cashier rolls</a></div>
+  </div>
+  <div class="bento">
+    <div class="tile t-logo rv"><div class="in"><svg><use href="#mark"/></svg><span class="k">Your partner<br>in plastics</span></div></div>
+    <div class="tile t-tall rv" style="--d:.08s"><img src="../img/nitrile-gloves.jpg" alt="Blue nitrile gloves"><span class="lb">Nitrile</span></div>
+    <div class="tile rv" style="--d:.12s"><img src="../img/shoe-cover.jpg" alt="Shoe covers"><span class="lb">Shoe covers</span></div>
+    <div class="tile t-stat rv" style="--d:.16s"><b>14</b><span>product lines in one place</span></div>
+    <div class="tile t-wide rv" style="--d:.2s"><img src="../img/masks.jpg" alt="Face masks, blue and black"><span class="lb">Face masks</span></div>
+    <div class="tile rv" style="--d:.24s"><img src="../img/paper-rolls.jpg" alt="Cashier rolls"><span class="lb">Rolls</span></div>
+  </div>
+</div></section>
+
+<div class="strip"><div class="wrap">
+  <div><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4Z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></svg><span><b>Bulk supply</b><span>Cartons for business use</span></span></div>
+  <div><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6Z"/><path d="m9 12 2 2 4-4"/></svg><span><b>Quality focused</b><span>Reliable everyday protection</span></span></div>
+  <div><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span><b>Repeat orders</b><span>Built for long-term partners</span></span></div>
+  <div><svg viewBox="0 0 24 24"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19Z"/></svg><span><b>Quote on WhatsApp</b><span>Message us your list</span></span></div>
+</div></div>
+
+<section class="section" id="categories"><div class="wrap">
+  <div class="head"><div><div class="eyebrow rv"><i>01</i>Categories</div><h2 class="x rv" style="--d:.06s">Three lines. <span class="blue">One supplier.</span></h2></div><p class="rv" style="--d:.12s">Everything a shop floor, kitchen or clinic goes through every day, from one trading partner.</p></div>
+  <div class="cats">
+    <a class="cat dark rv" href="#gloves"><div><div class="num">05 types</div><h3>Gloves</h3><p>Vinyl, nitrile, latex, poly and cotton, for professional and everyday use.</p></div><span class="go">→</span><img src="../img/nitrile-gloves.jpg" alt="" style="width:52%;right:0;bottom:0;background:#fff;border-radius:28px 0 0 0;padding:14px"></a>
+    <a class="cat rv" href="#protective" style="--d:.08s"><div><div class="num">05 lines</div><h3>Protective wear</h3><p>Masks, head &amp; beard caps, shoe covers, arm sleeves.</p></div><span class="go">→</span><img src="../img/head-cap.jpg" alt="" style="mix-blend-mode:multiply"></a>
+    <a class="cat rv" href="#rolls" style="--d:.16s"><div><div class="num">04 rolls</div><h3>Label rolls</h3><p>Cashier, price, date and weight rolls for counters and scales.</p></div><span class="go">→</span><img src="../img/paper-rolls.jpg" alt="" style="mix-blend-mode:multiply"></a>
+  </div>
+</div></section>
+
+<section class="section products" id="products"><div class="wrap">
+  <div class="head"><div><div class="eyebrow rv"><i>02</i>Catalogue</div><h2 class="x rv" style="--d:.06s">Our products</h2></div><p class="rv" style="--d:.12s">Need sizes, colours or carton quantities? Message us the list and we'll quote.</p></div>
+
+  <div class="block" id="gloves">
+    <div class="bhead rv"><h3>Gloves</h3><span>Durable, comfortable, reliable protection</span></div>
+    <div class="row5">
+      <div class="p rv"><div class="im"><img src="../img/vinyl-gloves.jpg" alt="Vinyl gloves" loading="lazy"></div><div class="cap">Vinyl<i>01</i></div></div>
+      <div class="p rv" style="--d:.05s"><div class="im"><img src="../img/nitrile-gloves.jpg" alt="Nitrile gloves" loading="lazy"></div><div class="cap">Nitrile<i>02</i></div></div>
+      <div class="p rv" style="--d:.1s"><div class="im"><img src="../img/latex-gloves.jpg" alt="Latex gloves" loading="lazy"></div><div class="cap">Latex<i>03</i></div></div>
+      <div class="p rv" style="--d:.15s"><div class="im"><img src="../img/poly-gloves.jpg" alt="Poly gloves" loading="lazy"></div><div class="cap">Poly<i>04</i></div></div>
+      <div class="p rv" style="--d:.2s"><div class="im"><img src="../img/cotton-gloves.jpg" alt="Cotton gloves" loading="lazy"></div><div class="cap">Cotton<i>05</i></div></div>
+    </div>
+  </div>
+
+  <div class="block" id="protective">
+    <div class="bhead rv"><h3>Protective wear</h3><span>Hygiene essentials for food, healthcare &amp; clean areas</span></div>
+    <div class="pro">
+      <div class="p wide rv"><div class="im"><img src="../img/masks.jpg" alt="Blue and black face masks" loading="lazy"></div><div class="cap">Face masks · Blue &amp; black<i>06</i></div></div>
+      <div class="p rv" style="--d:.05s"><div class="im"><img src="../img/head-cap.jpg" alt="Head cap" loading="lazy"></div><div class="cap">Head cap<i>07</i></div></div>
+      <div class="p rv" style="--d:.1s"><div class="im"><img src="../img/beard-cap.jpg" alt="Beard cap" loading="lazy"></div><div class="cap">Beard cap<i>08</i></div></div>
+      <div class="p rv" style="--d:.15s"><div class="im"><img src="../img/shoe-cover.jpg" alt="Shoe covers" loading="lazy"></div><div class="cap">Shoe cover<i>09</i></div></div>
+      <div class="p rv" style="--d:.2s"><div class="im"><img src="../img/arm-sleeve.jpg" alt="Arm sleeve" loading="lazy"></div><div class="cap">Arm sleeve<i>10</i></div></div>
+    </div>
+  </div>
+
+  <div class="block" id="rolls">
+    <div class="bhead rv"><h3>Barcodes / stickers</h3><span>For tills, pricing guns and scales</span></div>
+    <div class="rolls">
+      <div class="rlist rv">
+        <div><b>Cashier roll</b><span>Till &amp; POS receipts</span></div>
+        <div><b>Price roll</b><span>Pricing guns</span></div>
+        <div><b>Date roll</b><span>Production &amp; expiry</span></div>
+        <div><b>Weight roll</b><span>Scale labels</span></div>
+      </div>
+      <div class="rpics">
+        <div class="p rv" style="--d:.06s"><div class="im"><img src="../img/paper-rolls.jpg" alt="Cashier rolls" loading="lazy"></div></div>
+        <div class="p rv" style="--d:.12s"><div class="im"><img src="../img/labeller.jpg" alt="Price labelling gun and label rolls" loading="lazy"></div></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="section band" id="about"><div class="wrap">
+  <div>
+    <div class="eyebrow rv"><i style="color:#bcd4ff">03</i>About Jafka</div>
+    <blockquote class="rv" style="--d:.06s">A premier plastic trading company, committed to supplying top-tier products to a diverse range of industries.</blockquote>
+    <p class="rv" style="--d:.12s;color:#dbe7ff;font-size:17px;max-width:560px;margin-top:22px">Our focus on quality, innovation, and customer service has established us as a reliable partner for businesses. With a dedicated team and a strong ethical foundation, we continually strive to exceed expectations.</p>
+  </div>
+  <div class="vm">
+    <div class="rv" style="--d:.1s"><b>Vision</b><p>To be a trusted leader in the plastic trading industry, consistently delivering high-quality products that meet our clients' needs while promoting sustainability and innovation.</p></div>
+    <div class="rv" style="--d:.18s"><b>Mission</b><p>Exceptional value through superior service and reliable solutions — long-term partnerships, customer satisfaction, and sustainable practices in everything we do.</p></div>
+  </div>
+</div></section>
+
+<section class="section" id="contact"><div class="wrap">
+  <div class="cgrid">
+    <div class="ccard rv">
+      <div class="eyebrow"><i>04</i>Contact</div>
+      <h2 class="x">Let's get you<br>a <span class="blue">quote.</span></h2>
+      <p>Send the product, size and quantity. We'll reply with price and availability.</p>
+      <a class="btn btn-wa" href="https://wa.me/966539535690?text=Hello%20Jafka%20Trading%2C%20I%27d%20like%20a%20quote." target="_blank" rel="noopener"><svg><use href="#wa"/></svg>Chat on WhatsApp</a>
+    </div>
+    <div class="phones">
+      <a class="phone rv" style="--d:.06s" href="tel:+966539535690"><span><small>Call / WhatsApp</small><b>0539 535 690</b></span><span class="ar2">↗</span></a>
+      <a class="phone rv" style="--d:.12s" href="tel:+966575668845"><span><small>Call</small><b>0575 66 8845</b></span><span class="ar2">↗</span></a>
+      <div class="addr rv" style="--d:.18s"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span><small style="display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Address</small><b style="font-size:18px">Shara Arbaeen, Rehab</b></span></div>
+    </div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <a class="logo" href="#top"><svg><use href="#icon"/></svg><span><b>JAFKA</b><small>TRADING</small></span></a>
+  <span>© <span id="yr">2026</span> Jafka Trading · Your partner in plastics</span>
+</div></footer>
+
+<nav class="revs" aria-label="Design revisions"><a href="../">Rev 1</a><a href="../rev2/">Rev 2</a><a href="./" aria-current="page">Rev 3</a><a href="../rev4/">Rev 4</a></nav>
+<a class="wa-float" href="https://wa.me/966539535690?text=Hello%20Jafka%20Trading%2C%20I%27d%20like%20a%20quote." target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg><use href="#wa"/></svg></a>
+
+<script>
+(function(){
+  document.getElementById('yr').textContent = new Date().getFullYear();
+  var els = document.querySelectorAll('.rv');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) { els.forEach(function(e){ e.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:.1, rootMargin:'0px 0px -30px 0px'});
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+</body>
+</html>
