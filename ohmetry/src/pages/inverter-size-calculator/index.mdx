@@ -1,0 +1,68 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Inverter Size Calculator (Continuous and Surge) | Ohmetry"
+description: "Size a solar or backup inverter from running load, motor starting surge and battery voltage. Formula and worked example."
+h1: "Inverter Size Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "Inverter size"
+---
+import InverterSize from '../../components/InverterSize.tsx';
+import Related from '../../components/Related.astro';
+
+<InverterSize client:load />
+
+An inverter has two ratings that matter: how much it can supply continuously and how much it can supply for a few seconds. Most undersized inverters fail on the second one, when a pump or compressor starts and trips the unit.
+
+## Formulas
+
+<div class="formula">Continuous (W) = total running load × (1 + margin)<br/>Surge (W) = running load − motor running W + motor starting W<br/>DC current (A) = continuous W / (battery V × efficiency)</div>
+
+The margin defaults to 25 %, so the inverter doesn't run at its limit all day and has room for loads added later. The surge figure assumes one large motor starts while everything else is already running, which is the usual worst case. Enter the largest motor's running and starting watts, or zero if there is none.
+
+## Worked example
+
+A workshop has 3,000 W of loads on at once, including a 800 W pump that draws 2,400 W when it starts, on a 48 V battery.
+
+- Continuous: 3,000 × 1.25 = 3,750 W, so a 4 kW inverter is the nearest standard size up.
+- Surge: 3,000 − 800 + 2,400 = 4,600 W. The inverter's surge rating, and how long it can hold it, must exceed this.
+- DC current: 3,750 / (48 × 0.9) = 86.8 A from the battery at full load.
+
+## Motor starting current
+
+Induction motors draw several times their running current for a fraction of a second, a figure often given as locked-rotor current. Multipliers of 3 to 7 are common, and loaded compressors and well pumps sit at the high end. Read the starting watts or locked-rotor amps from the nameplate or the datasheet when you can. Soft starters and variable-frequency drives cut the starting surge a good deal.
+
+## Why battery voltage matters here
+
+The DC current rises as battery voltage falls. The same 3,750 W load draws about 87 A from a 48 V bank but about 347 A from a 12 V bank, which needs very heavy cable and high-current fuses. That is the reason larger inverters are built for 24 V and 48 V.
+
+## Choosing an inverter
+
+- **Waveform.** A pure sine wave inverter suits motors, electronics and anything sensitive. Modified sine wave units can cause heating or noise in some loads.
+- **Surge duration.** Datasheets state a surge rating for a stated time, often a few seconds. Check that the start time of your motor fits inside it.
+- **Efficiency.** Conversion efficiency is lower at light load, and the standby draw adds up for a system that runs all day.
+- **Derating.** Ratings often assume moderate temperatures. In a hot enclosure the usable output can be lower.
+
+## Common mistakes
+
+- **Adding every appliance together.** Only the loads that can run at the same time count, so a realistic duty pattern gives a smaller inverter than the sum of the nameplates.
+- **Ignoring motor starting.**
+- **Matching inverter size to the panels.** The array and the inverter are sized independently in off-grid systems.
+
+## Questions
+
+### What size inverter do I need to run a fridge?
+A fridge compressor may run at 100 to 150 W but start at several times that. Look at the nameplate or measure it, and check the surge rating.
+
+### Can I run a 3 kW load on a 3 kW inverter?
+Only without a margin, and without any surge. Choose a larger inverter or reduce the load.
+
+### Does the inverter size depend on the battery?
+The battery must be able to deliver the DC current, and the battery voltage must match the inverter's input.
+
+<Related items={[
+  { href: '/off-grid-solar-calculator/', label: 'Off-grid solar system calculator' },
+  { href: '/battery-bank-calculator/', label: 'Battery bank calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+]} />

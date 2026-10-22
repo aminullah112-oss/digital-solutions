@@ -1,0 +1,93 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Overcurrent Relay Setting Checklist With Worked Example | Ohmetry"
+description: "A step-by-step checklist for setting a phase and earth-fault overcurrent relay on a transformer feeder: data, CT check, pickup, curve, grading, high-set, testing."
+h1: "Overcurrent Relay Setting Checklist"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Relay setting checklist"
+---
+import Related from '../../components/Related.astro';
+
+This checklist covers the main steps in setting a phase and earth-fault IDMT overcurrent relay on a distribution transformer feeder, with one worked example. It is a general method. Your utility's rules, the relay manufacturer's manual and the project specification take precedence over anything here, and setting values quoted as common practice are starting points, not requirements.
+
+Use the browser's print function to get a clean copy of the checklist.
+
+## 1. Collect the data
+
+- [ ] Single-line diagram showing the relay, the CTs and the breaker.
+- [ ] Transformer rating, voltage ratio, vector group and impedance (%Z).
+- [ ] Maximum and minimum fault currents at the relay location and at the downstream busbar.
+- [ ] CT ratio, class, rated burden and secondary resistance.
+- [ ] Relay model, available curves and setting ranges and steps.
+- [ ] Upstream and downstream relay or fuse settings, and any utility requirements.
+- [ ] Maximum load, overload allowance and the starting current of any large motors.
+
+## 2. Check the CT
+
+- [ ] The primary rating is above the maximum load, and the secondary current suits the relay input.
+- [ ] The connected burden is within the CT's rated burden. See the <a href="/ct-burden-calculator/">CT burden calculator</a>.
+- [ ] The CT will not saturate before the relay has operated, using the relay manufacturer's requirement.
+
+## 3. Set the phase pickup
+
+- [ ] Pickup is above the maximum load including permitted overload. Values of 1.1 to 1.5 times full-load current are common.
+- [ ] Pickup is low enough that the minimum fault current is a clear multiple of it. A multiple of 1.5 or more is a common check.
+- [ ] The setting is a value the relay can take, rounded to its next available step.
+
+## 4. Choose the curve and TMS
+
+- [ ] The curve suits the upstream and downstream devices. See the <a href="/idmt-relay-calculator/">IDMT relay time calculator</a>.
+- [ ] The operating time at the maximum fault current is longer than the downstream device's by the grading margin. Margins of 0.3 to 0.5 s are common practice.
+- [ ] The operating time at the minimum fault current is acceptable.
+- [ ] The clearing time keeps the transformer, cables and busbars within their thermal withstand.
+
+## 5. Set the high-set (instantaneous) element
+
+- [ ] Set above the largest through-fault current, with a margin. A factor of 1.3 is common practice.
+- [ ] Set above the inrush the relay will see on energization, or use the relay's inrush restraint.
+
+## 6. Set the earth-fault protection
+
+- [ ] Pickup is based on the earthing arrangement. A resistance-earthed system limits the earth-fault current, and a solidly earthed one does not.
+- [ ] Pickup is above the residual current from normal CT error and unbalance, and low enough to see the minimum earth fault.
+- [ ] The time grading is checked against upstream and downstream earth-fault devices.
+
+## 7. Verify and document
+
+- [ ] Settings are entered in the relay and read back against the setting sheet.
+- [ ] Secondary injection confirms pickup and timing at two or three points on the curve.
+- [ ] CT ratio, polarity and the trip path are tested.
+- [ ] The setting sheet records the basis for each value, the date, the revision and the approver.
+- [ ] A coordination plot shows the relay with its neighbours.
+
+## Worked example
+
+A 1,000 kVA, 11 kV / 400 V transformer with 5 % impedance is protected on the 11 kV side by an IDMT relay on a 100/1 A CT.
+
+**Full-load current.** On the 11 kV side, 1,000,000 / (1.732 × 11,000) = 52.5 A, from the <a href="/transformer-full-load-current-calculator/">transformer full-load current calculator</a>.
+
+**Pickup.** 1.2 × 52.5 = 63 A. On a 100 A CT that is 0.63 A of relay setting. Rounded to the next available step in this example, 65 A.
+
+**Through-fault.** With an infinite-bus source, a three-phase fault on the 400 V side gives 1,443 A / 0.05 = 28.9 kA at 400 V, which appears on the 11 kV side as 52.5 / 0.05 = 1,050 A, from the <a href="/short-circuit-current-calculator/">short-circuit current calculator</a>.
+
+**Curve and TMS.** On a standard inverse curve with TMS 0.1, the operating time at 1,050 A is 0.1 × 0.14 / ((1,050 / 65)<sup>0.02</sup> − 1) = 0.245 s. This is the time the 11 kV relay takes to trip for a fault on the 400 V side. The LV protection must clear that fault at least one grading margin sooner, so with a 0.3 s margin it would need to operate in less than 0 s, which is impossible: with these settings the relay does not discriminate with an LV device on this fault. The fix is to raise the TMS until the 11 kV relay's time at 1,050 A exceeds the LV device's clearing time plus the margin, then recheck the time at the minimum fault current. For example, TMS 0.3 gives 0.73 s at 1,050 A, which leaves 0.43 s for the LV device to clear the fault with a 0.3 s margin to spare. This is the normal back-and-forth in grading, and it is why the checklist has you test both fault levels.
+
+**High-set.** 1.3 × 1,050 = 1,365 A, which is also above the inrush of 8 to 12 times full-load current (420 to 630 A), so the instantaneous element can be set at about 1,400 A without tripping on energization.
+
+**Check.** A clearing time of a fraction of a second is well inside the 2 s short-circuit duration that IEC 60076-5 uses as its basis for transformer withstand, but confirm the rating on the manufacturer's data sheet for your own unit.
+
+## Common mistakes
+
+- **Mixing primary and secondary amps.** Convert once, and state which side each number is on.
+- **Setting pickup from the nameplate kVA instead of the actual load.** The nameplate is the upper limit.
+- **Grading at one fault level.** Check at both maximum and minimum fault levels.
+- **Setting and not testing.** A wrong ratio or polarity is only found by injection or primary test.
+- **Leaving no record of why.** The next engineer to change a setting needs the basis.
+
+<Related items={[
+  { href: '/idmt-relay-calculator/', label: 'IDMT relay time calculator' },
+  { href: '/ct-burden-calculator/', label: 'CT burden calculator' },
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+]} />

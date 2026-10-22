@@ -1,0 +1,85 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "kVA to Amps Calculator (Single and 3-Phase) | Ohmetry"
+description: "Convert kVA to full-load amps for single-phase and three-phase supplies, such as transformers and generators."
+h1: "kVA to Amps Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "kVA to amps"
+---
+import KvaToAmps from '../../components/KvaToAmps.tsx';
+import Related from '../../components/Related.astro';
+
+<KvaToAmps client:load />
+
+kVA is apparent power, the rating on transformers, generators and UPS units. Converting it to amps gives the full-load current at the rated voltage. Unlike the kW conversion, no power factor is involved, because apparent power already includes it.
+
+## Formulas
+
+<div class="formula">Single-phase: I = kVA × 1000 / V<br/>Three-phase: I = kVA × 1000 / (√3 × V<sub>LL</sub>)</div>
+
+V is the voltage on the side you are calculating. A transformer has a different full-load current on its primary and secondary, so run the calculation once for each side using that side's line-to-line voltage.
+
+## Worked example
+
+A 100 kVA three-phase transformer with a 400 V secondary:
+
+I = 100,000 / (1.732 × 400) = 144.3 A.
+
+On an 11 kV primary the same transformer draws 100,000 / (1.732 × 11,000) = 5.25 A. The ratio of the two currents equals the inverse of the voltage ratio, which is a quick sanity check on any transformer calculation.
+
+Single-phase example: a 75 kVA single-phase supply at 240 V gives 75,000 / 240 = 312.5 A.
+
+## Using the result
+
+Full-load current is the starting point, not the end. Protection on a transformer primary is normally set well above full-load current to ride through magnetizing inrush, and the cable and breaker sizes depend on the installation rules in force. For a US branch circuit or feeder, see the <a href="/breaker-size-calculator/">breaker size calculator</a>. Transformer-specific protection and short-circuit calculations are covered in the protection section as it is published.
+
+## How to use the calculator
+
+Enter the kVA rating from the nameplate, the voltage on the side you care about, and the phase. The result is the full-load current on that winding. Run it twice for a transformer, once with the primary voltage and once with the secondary voltage.
+
+## Common transformer sizes
+
+Full-load current at 400 V three-phase:
+
+- **100 kVA:** 144.3 A
+- **250 kVA:** 360.8 A
+- **500 kVA:** 721.7 A
+- **1,000 kVA:** 1,443.4 A
+
+A 1,000 kVA transformer on an 11 kV primary draws 52.5 A, and the ratio of 1,443.4 to 52.5 matches the 11,000 / 400 voltage ratio.
+
+## From full-load current to fault current
+
+Full-load current is also the base for a quick estimate of the short-circuit current a transformer can deliver. Divide it by the transformer's per-unit impedance. A 100 kVA, 400 V transformer with 4% impedance has a full-load current of 144.3 A, so the secondary fault current on an infinite source is about 144.3 / 0.04 = 3,608 A. It is an upper bound, because source and cable impedance reduce it. Breakers on the secondary must have a breaking capacity above it.
+
+## Generators and UPS units
+
+A generator's kVA rating is the apparent power at its rated voltage, but the real power it can supply is the kVA times its rated power factor, typically 0.8. A 100 kVA set therefore supplies 80 kW. Loads with a worse power factor, or with high starting current, can require a larger set than the kW figure alone suggests.
+
+## Common mistakes
+
+- **Dividing by power factor.** kVA already contains it. Dividing again overstates the current.
+- **Using phase voltage in the three-phase formula.** Use the line-to-line voltage with √3.
+- **Mixing up sides.** Quote which winding the current refers to.
+
+## Questions
+
+### What is the difference between kVA and kW?
+kVA is voltage times current. kW is the part that does useful work: kW = kVA × power factor.
+
+### How do I convert kVA to amps at 480 V?
+For three-phase, divide kVA × 1000 by 831.4. For example 500 kVA gives about 601 A.
+
+### Does a generator's kVA rating tell me how many amps it can supply?
+At its rated voltage, yes, that is the rated current. A generator's usable kW is lower, because it is rated at a stated power factor, commonly 0.8.
+
+### Is kVA to amps the same for 50 Hz and 60 Hz?
+Yes. Frequency does not appear in the formula.
+
+<Related items={[
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+]} />

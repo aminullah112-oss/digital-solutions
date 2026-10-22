@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import { site, toolkitReady } from '../../data/site';
+---
+<Base
+  title={`${site.toolkitName}: Excel Workbook | Ohmetry`}
+  description="An Excel workbook from the author of Ohmetry for engineers who want electrical calculations in a spreadsheet they can keep, check and adapt."
+  breadcrumbs={[{ name: 'Toolkit', href: '/toolkit/' }]}
+  noindex={!toolkitReady}
+>
+  <h1>{site.toolkitName}</h1>
+  <p>The calculators on this site run in your browser and give you one answer at a time. The toolkit is a workbook you keep: the same kind of calculations in a spreadsheet you can open offline, check cell by cell and adapt to your own projects.</p>
+
+  <h2>Who it is for</h2>
+  <p>Electrical, solar and protection engineers who check designs in Excel, and who want to see the formula behind every number. It is written by a protection engineer with MV/HV experience under IEC and Saudi practice, and the formulas are the ones explained in the guides on this site.</p>
+
+  <h2>Why a workbook</h2>
+  <ul>
+    <li><strong>You can read every formula.</strong> Nothing is hidden behind a button.</li>
+    <li><strong>It works offline</strong>, on a site visit or in a plant with no connection.</li>
+    <li><strong>You can change it.</strong> Add your company's factors, your cable tables and your standard sizes.</li>
+    <li><strong>You can print it</strong> and attach it to a submittal.</li>
+  </ul>
+
+  <h2>Using it with the site</h2>
+  <p>The free calculators stay free. If you only need a quick answer, use them. The workbook is for repeated checks, offline work and adapting the method. Start with the guides on <a href="/voltage-drop-formula/">voltage drop</a> and the <a href="/relay-setting-checklist/">relay setting checklist</a> to see how the calculations are explained.</p>
+
+  {toolkitReady ? (
+    <>
+      <h2>Get the toolkit</h2>
+      <p><a class="button" href={site.gumroadUrl}>Get the toolkit on Gumroad</a></p>
+
+      <h2>Not ready to buy?</h2>
+      <p>Leave your email and get new calculators and corrections as they are published. No spam, and you can unsubscribe at any time.</p>
+      <form class="optin" method="post" action={site.emailFormAction}>
+        <label>Email address
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <button type="submit">Subscribe</button>
+      </form>
+      <p class="meta">See the <a href="/privacy/">privacy policy</a> for what is collected and how it is used.</p>
+    </>
+  ) : (
+    <p class="meta">This page is a draft: the product link and email form have not been configured yet (see <code>src/data/site.ts</code>). It is hidden from search engines until they are.</p>
+  )}
+</Base>
+
+<style>
+  .button, .optin button { display:inline-block; font:inherit; padding:10px 18px; border-radius:6px; border:0; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer }
+  .optin { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap }
+  .optin label { flex:1 1 240px }
+  code { background:var(--card); padding:1px 5px; border-radius:4px }
+</style>

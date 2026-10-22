@@ -1,0 +1,108 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Voltage Drop Formula: Worked Examples (Metric and AWG) | Ohmetry"
+description: "The voltage drop formulas for DC, single-phase and three-phase circuits, with worked examples in mm² and AWG, and how to size a cable for a drop limit."
+h1: "Voltage Drop Formula, With Worked Examples"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Voltage drop formula"
+---
+import Related from '../../components/Related.astro';
+
+Voltage drop is Ohm's law applied to a cable. Current flowing through the conductor's resistance leaves less voltage at the load than at the source. The formulas below cover DC, single-phase and three-phase circuits. Each example is worked by hand and can be checked with the <a href="/voltage-drop-calculator/">voltage drop calculator</a>.
+
+## The basic formula
+
+<div class="formula">ΔV = I × R<sub>cable</sub><br/>R<sub>cable</sub> = ρ × L<sub>total</sub> / A</div>
+
+I is the current in amps, ρ the resistivity of the conductor in Ω·mm²/m, L<sub>total</sub> the total conductor length the current travels, and A the cross-section in mm². What changes between circuit types is the total length and, for three-phase, the way the phase voltages combine.
+
+## Formulas by circuit type
+
+| Circuit | Voltage drop | Notes |
+|---|---|---|
+| DC or single-phase (two wires) | ΔV = 2 × I × L × ρ / A | Current goes out and returns, so the length is doubled |
+| Three-phase, balanced | ΔV = √3 × I × L × ρ / A | Gives the line-to-line drop |
+| AC with reactance | ΔV = k × I × L × (R cos φ + X sin φ) | k is 2 or √3, R and X in Ω per unit length |
+
+Percent drop is ΔV divided by the supply voltage. For three-phase, use the line-to-line voltage. For single-phase, use the voltage the load sees at the source.
+
+## Resistivity and temperature
+
+Standard values at 20 °C are 0.017241 Ω·mm²/m for copper and 0.028264 for aluminium. Both rise with temperature, about 0.39 to 0.40 % per °C, so ρ at temperature T is ρ<sub>20</sub> × (1 + 0.00393 × (T − 20)) for copper. At 70 °C copper is 0.020629, about 20 % higher. A cable running near its rated current is hot, and the hot value is the one to use for a conservative result.
+
+## Example 1: single-phase circuit
+
+A 230 V circuit carries 20 A over 30 m of 4 mm² copper at 70 °C.
+
+ΔV = 2 × 20 × 30 × 0.020629 / 4 = 6.19 V.
+Percent drop = 6.19 / 230 = 2.7 %.
+
+## Example 2: three-phase feeder
+
+A 400 V three-phase feeder carries 100 A over 50 m of 25 mm² copper at 70 °C.
+
+ΔV = 1.732 × 100 × 50 × 0.020629 / 25 = 7.15 V.
+Percent drop = 7.15 / 400 = 1.8 %.
+
+At 20 °C the same feeder drops 5.97 V, or 1.5 %. The difference is the temperature correction, and it matters when you are close to the limit.
+
+## Example 3: low-voltage DC
+
+A 12 V load draws 10 A over 10 m of 4 mm² copper.
+
+ΔV = 2 × 10 × 10 × 0.020629 / 4 = 1.03 V.
+Percent drop = 1.03 / 12 = 8.6 %.
+
+The same cable on a 230 V circuit would lose well under 1 %. A fixed number of volts is a far larger share of a low-voltage supply, which is why 12 V and 24 V systems need heavy cable and why solar and battery designers move to 48 V.
+
+## Example 4: finding the smallest cable
+
+To find the cross-section for a given limit, rearrange the formula: A = k × I × L × ρ / (V × limit).
+
+For the three-phase feeder above, with a 3 % limit:
+
+A = 1.732 × 100 × 50 × 0.020629 / (400 × 0.03) = 14.9 mm².
+
+The next standard size up is 16 mm². Check the result with the cable's current rating, which may require a larger size, and with the voltage-drop calculation itself. The <a href="/cable-size-calculator/">cable size calculator</a> does this step.
+
+## Example 5: with reactance
+
+For larger cables and inductive loads, resistance alone understates the drop. A 25 mm² cable at 70 °C has a resistance of 0.825 Ω/km. Take a reactance of 0.08 Ω/km, a typical figure for a multicore LV cable but one that should come from the data sheet, and a power factor of 0.8 (sin φ = 0.6):
+
+ΔV = 1.732 × 100 × 0.05 × (0.825 × 0.8 + 0.08 × 0.6) = 6.13 V, which is 1.5 %.
+
+This is lower than the resistive 7.15 V in Example 2, because the resistive formula assumes that all the current is in phase with the voltage drop. It is not always lower. As the cable gets bigger, resistance falls and reactance stays roughly the same, so the reactive term takes a bigger share and the full formula is needed for accuracy.
+
+## The same calculation in AWG and feet
+
+US practice often uses circular mils and feet. A common form is:
+
+<div class="formula">VD = 2 × K × I × L / CM</div>
+
+K is about 12.9 Ω·cmil/ft for copper at 75 °C and about 21.2 for aluminium, L is the one-way length in feet and CM the conductor area in circular mils. For 20 A over 100 ft on 120 V:
+
+- 12 AWG (6,530 cmil): VD = 2 × 12.9 × 20 × 100 / 6,530 = 7.9 V, or 6.6 %.
+- 10 AWG (10,380 cmil): 5.0 V, or 4.1 %.
+- 8 AWG (16,510 cmil): 3.1 V, or 2.6 %.
+
+To use the metric tools for an AWG cable, convert it with the <a href="/awg-to-mm2-converter/">AWG to mm² converter</a>. The K constants are approximations and the NEC's Chapter 9, Table 8, gives conductor resistances if you need a tabulated value.
+
+## How much drop is too much?
+
+There is no single answer. BS 7671 gives 3 % for lighting and 5 % for other circuits. The informational notes to the NEC suggest 3 % for a branch circuit and 5 % overall for feeder and branch circuit combined, and these are recommendations, not enforceable limits in the NEC itself. Equipment may need less, and motors have their own limit during starting. Your specification or the authority having jurisdiction decides.
+
+## Mistakes that change the answer
+
+- **Forgetting the return path.** Single-phase and DC circuits need the factor of 2.
+- **Using phase voltage in the √3 formula.** The percent drop is against the line-to-line voltage.
+- **Using cold resistance for a hot cable.**
+- **Ignoring reactance on large conductors.**
+- **Treating drop as a safety check.** A cable can pass the drop test and still overheat. The two checks are independent.
+
+<Related items={[
+  { href: '/voltage-drop-calculator/', label: 'Voltage drop calculator' },
+  { href: '/cable-size-calculator/', label: 'IEC cable size calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+  { href: '/awg-to-mm2-converter/', label: 'AWG to mm² converter' },
+]} />

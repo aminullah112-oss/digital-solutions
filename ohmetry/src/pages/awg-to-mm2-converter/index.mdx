@@ -1,0 +1,84 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "AWG to mm² Converter (Wire Gauge Chart) | Ohmetry"
+description: "Convert AWG wire sizes to mm² and diameter, or find the nearest AWG for a given mm² area. Formula and worked example."
+h1: "AWG to mm² Converter"
+hub: Electrical
+hubHref: /electrical/
+crumb: "AWG to mm²"
+---
+import AwgToMm2 from '../../components/AwgToMm2.tsx';
+import Related from '../../components/Related.astro';
+
+<AwgToMm2 client:load />
+
+American Wire Gauge is a logarithmic scale: each step down in gauge number increases the cross-section by about 26%, and every three steps roughly doubles it. Metric cables are specified by cross-sectional area in mm², in a different set of preferred sizes, so a conversion is always approximate in one direction.
+
+## Formula
+
+<div class="formula">d = 0.127 mm × 92<sup>(36 − n) / 39</sup><br/>A = π / 4 × d²</div>
+
+n is the gauge number. For 1/0, 2/0, 3/0 and 4/0, use n = 0, −1, −2 and −3. The diameter is that of a solid round conductor. The definition comes from the standard that fixes 4/0 at 0.46 inch and 36 at 0.005 inch.
+
+## Worked example
+
+AWG 10: d = 0.127 × 92<sup>(26/39)</sup> = 0.127 × 20.38 = 2.588 mm.
+
+A = π / 4 × 2.588² = 5.26 mm².
+
+AWG 4/0: d = 11.684 mm, A = 107.2 mm². Both agree with the widely published gauge tables.
+
+## Reading the result
+
+The calculator returns the nearest AWG to a given mm² size. That is a match by area, not a statement that the cables are interchangeable. If your design requires at least 6 mm², AWG 9 (6.63 mm²) is the nearest, but AWG 10 (5.26 mm²) is smaller than the requirement. Round to the larger conductor when the area is a minimum.
+
+Two further points matter when you compare cables:
+
+- **Stranding changes the numbers slightly.** The formula gives the solid-conductor area. A stranded cable with the same AWG number has a slightly larger overall diameter and a copper area a little under the nominal value. Manufacturers' data sheets are the authority.
+- **Area is not ampacity.** Allowable current depends on insulation temperature rating, installation method, ambient temperature and the governing code, which differ between NEC and IEC regimes. This page converts sizes only. Do not select a cable from the area alone.
+
+## Common sizes
+
+Solid-conductor values from the formula above:
+
+- **14 AWG:** 1.63 mm diameter, 2.08 mm²
+- **12 AWG:** 2.05 mm, 3.31 mm²
+- **10 AWG:** 2.59 mm, 5.26 mm²
+- **8 AWG:** 3.26 mm, 8.37 mm²
+- **6 AWG:** 4.12 mm, 13.30 mm²
+- **4 AWG:** 5.19 mm, 21.15 mm²
+- **2 AWG:** 6.54 mm, 33.63 mm²
+- **1/0 AWG:** 8.25 mm, 53.48 mm²
+
+## Metric preferred sizes
+
+IEC 60228 preferred conductor sizes include 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185 and 240 mm². AWG sizes rarely land on one of these, which is why a design moved from one system to the other usually needs a fresh calculation and not just a conversion.
+
+## Large conductors in kcmil
+
+Above 4/0, American practice quotes size in kcmil, thousands of circular mils. One kcmil is 0.5067 mm², so a 250 kcmil conductor has a nominal area of about 126.7 mm². This calculator covers AWG sizes from 4/0 up to 30 AWG.
+
+## Substituting one size for another
+
+When a spec calls for a metric cable and only AWG is on hand, or the other way round, choose the size with the same or larger area. A smaller conductor has more resistance per metre, so for the same current it loses more voltage and runs hotter. The length also matters: a short run of a slightly undersized cable may be acceptable on paper, but the voltage drop and the code limits have to be checked in each case.
+
+## Questions
+
+### What is the metric equivalent of 12 AWG?
+About 3.31 mm². The nearest common metric size is 4 mm², which is larger, while 2.5 mm² is smaller.
+
+### Is AWG 14 the same as 2.5 mm²?
+No. AWG 14 is 2.08 mm² and 2.5 mm² is between AWG 13 and 14. In practice they are treated as roughly comparable for light circuits, but the allowable current differs by code.
+
+### Why do larger AWG numbers mean thinner wire?
+The number counts the drawing steps through dies used in manufacture. More steps give thinner wire.
+
+### How do I read 4/0?
+It is spoken "four-aught" and is the largest standard AWG size before sizes are quoted in kcmil. It is 107.2 mm².
+
+<Related items={[
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/ohms-law-calculator/', label: "Ohm's law calculator" },
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+]} />
