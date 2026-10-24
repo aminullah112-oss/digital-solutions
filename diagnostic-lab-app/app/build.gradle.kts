@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.digitalsolutions.diagnosticlab"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.digitalsolutions.diagnosticlab"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-mvp"
 
