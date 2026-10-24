@@ -161,8 +161,22 @@ jobs:
             adb uninstall com.digitalsolutions.diagnosticlab.test || true
             adb install diagnostic-lab-app/app/build/outputs/apk/debug/app-debug.apk
             adb install diagnostic-lab-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-            adb shell am instrument -w -r com.digitalsolutions.diagnosticlab.test/androidx.test.runner.AndroidJUnitRunner > instrument_output.txt 2>&1 || true
+            # `|| true` here is deliberate and NOT a way to ignore failure: it only keeps this
+            # script running past a failed test so the lines below can still pull screenshots
+            # and logcat before the job ends (a late failure should never erase what earlier
+            # steps already captured). The real pass/fail verdict is recovered at the very end
+            # of this script via INSTRUMENT_EXIT — this used to just swallow it, which is why a
+            # real crash in the walkthrough test once showed as a green CI run (only 6 of ~24
+            # expected screenshots were produced, with zero visible signal that anything failed).
+            adb shell am instrument -w -r com.digitalsolutions.diagnosticlab.test/androidx.test.runner.AndroidJUnitRunner > instrument_output.txt 2>&1
+            INSTRUMENT_EXIT=$?
             cat instrument_output.txt
+            # am instrument's own exit code is unreliable (it's frequently 0 even on a test
+            # failure, since the instrumentation process itself ran fine), so cross-check the
+            # actual JUnit result line it prints instead.
+            if grep -q "FAILURES!!!" instrument_output.txt || ! grep -q "OK (1 test)" instrument_output.txt; then
+              INSTRUMENT_EXIT=1
+            fi
             mkdir -p screenshots-pulled
             # The test run itself now succeeds end to end ("OK (1 test)") and the screenshots
             # directory genuinely exists, but a plain `adb pull` as the unprivileged shell user
@@ -176,6 +190,10 @@ jobs:
             echo "::group::App + test runner logcat (diagnostic — printed directly since the logcat artifact isn't reachable from this reviewer's environment)"
             grep -iE "diagnosticlab|AndroidJUnitRunner|TestRunner|AndroidRuntime|FATAL EXCEPTION|DEBUG_REVIEW_SCREEN|Firebase|Firestore|FirebaseAuth|System\.err|okhttp|grpc|Volley|NetworkSecurityConfig|UI_DUMP|AuthDebug|AddressDebug|PERMISSION_DENIED" logcat.txt | tail -900 || true
             echo "::endgroup::"
+            # Fail the step now that every artifact has been collected — this is the whole
+            # point of capturing INSTRUMENT_EXIT above instead of the old `|| true` that
+            # silently discarded it.
+            exit $INSTRUMENT_EXIT
 
       # Copy out to /tmp BEFORE the publish step's `git clean -fdx` runs — that clean wipes
       # every untracked file in the working tree, including screenshots-pulled/, so anything
