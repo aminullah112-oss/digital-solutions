@@ -83,6 +83,8 @@ class TestInstaller(unittest.TestCase):
             for p in ("opt/tradebot/app/tradebot/live.py", "opt/tradebot/venv/bin/python",
                       "etc/tradebot/swing.json", "etc/tradebot/env", "usr/local/bin/tradebot",
                       "etc/systemd/system/tradebot@.service", "etc/systemd/system/tradebot-backup.timer",
+                      "etc/systemd/system/tradebot-panel.service", "etc/polkit-1/rules.d/50-tradebot.rules",
+                      "opt/tradebot/app/deploy/Caddyfile",
                       "opt/tradebot/app/deploy/backup.sh"):
                 self.assertTrue((r / p).exists(), p)
             self.assertEqual((r / "etc/tradebot/env").stat().st_mode & 0o777, 0o640)
@@ -103,6 +105,31 @@ class TestInstaller(unittest.TestCase):
         for f in (HERE / "config").glob("*.json"):
             c = Config.load(f)
             self.assertTrue(c.sectors, f"{f.name} has no sectors map; paper/live would refuse it")
+
+
+class TestPolkitRule(unittest.TestCase):
+    @unittest.skipUnless(__import__("shutil").which("node"), "node not installed")
+    def test_panel_may_only_start_stop_restart_bot_instances(self):
+        script = textwrap.dedent("""
+            const fs = require('fs'); let rule;
+            const polkit = {Result: {YES: 'yes', NOT_HANDLED: 'no'}, addRule: f => { rule = f; }};
+            new Function('polkit', fs.readFileSync(process.argv[1], 'utf8'))(polkit);
+            const ask = (user, unit, verb, id) => rule({id: id || 'org.freedesktop.systemd1.manage-units',
+                lookup: k => ({unit, verb})[k]}, {user});
+            console.log(JSON.stringify([
+                ask('tradebot', 'tradebot@swing.service', 'start'),
+                ask('tradebot', 'tradebot@swing_40d.service', 'restart'),
+                ask('tradebot', 'tradebot@swing.service', 'stop'),
+                ask('tradebot', 'tradebot@swing.service', 'enable'),
+                ask('tradebot', 'tradebot-panel.service', 'restart'),
+                ask('tradebot', 'ssh.service', 'stop'),
+                ask('tradebot', 'tradebot@x.service ssh.service', 'stop'),
+                ask('www-data', 'tradebot@swing.service', 'start'),
+                ask('tradebot', 'tradebot@swing.service', 'start', 'org.freedesktop.login1.reboot')]));
+        """)
+        out = run(["node", "-e", script, str(DEPLOY / "50-tradebot.rules")])
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(json.loads(out.stdout), ["yes", "yes", "yes", "no", "no", "no", "no", "no", "no"])
 
 
 class TestStatusAndShutdown(unittest.TestCase):

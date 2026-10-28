@@ -7,6 +7,7 @@
   python -m tradebot live     -c config/intraday.json        (Zerodha Kite)
   python -m tradebot reset    -c config/intraday.json        (clear a risk halt)
   python -m tradebot login                                   (daily Kite session)
+  python -m tradebot web --configs /etc/tradebot --workdir /var/lib/tradebot   (browser panel)
 """
 from __future__ import annotations
 
@@ -213,6 +214,50 @@ def cmd_login(a):
     print(f"Saved session for {d['user_id'] or 'user'} to {store.path} (valid until {d['expires']}).")
 
 
+def cmd_web(a):
+    from .web import Panel, make_server
+    host, _, port = a.bind.rpartition(":")
+    host = host.strip("[]") or "127.0.0.1"
+    loopback = host in ("127.0.0.1", "::1", "localhost")
+    if not loopback and not a.allow_remote_bind:
+        sys.exit(f"refusing to listen on {host}: put the panel behind an HTTPS reverse proxy on localhost "
+                 "(deploy/Caddyfile), or pass --allow-remote-bind if a private network provides TLS")
+    pw = os.environ.get("TRADEBOT_PANEL_PASSWORD_HASH")
+    totp = os.environ.get("TRADEBOT_PANEL_TOTP_SECRET") or None
+    if not pw:
+        sys.exit("set TRADEBOT_PANEL_PASSWORD_HASH (generate it with: python -m tradebot web-passwd)")
+    if not totp and not a.dev:
+        sys.exit("set TRADEBOT_PANEL_TOTP_SECRET: this panel can stop trading and reset halts, so it needs "
+                 "a second factor (web-passwd --totp prints one). --dev skips this for local testing only.")
+    panel = Panel(a.configs, a.workdir, pw, totp, secure_cookies=not a.dev)
+    srv = make_server(panel, host, int(port))
+    print(f"tradebot panel on http://{a.bind}  (configs {a.configs}, workdir {a.workdir})", flush=True)
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        srv.server_close()
+
+
+def cmd_web_passwd(a):
+    import getpass
+    from .web import hash_password, new_totp_secret
+    pw = getpass.getpass("panel password (12+ chars): ")
+    if len(pw) < 12:
+        sys.exit("use at least 12 characters")
+    if getpass.getpass("again: ") != pw:
+        sys.exit("passwords differ")
+    print("\nAdd to /etc/tradebot/env:\n")
+    print(f"TRADEBOT_PANEL_PASSWORD_HASH={hash_password(pw)}")
+    if a.totp:
+        secret = new_totp_secret()
+        print(f"TRADEBOT_PANEL_TOTP_SECRET={secret}")
+        print("\nAdd this to your authenticator app (manual entry, TOTP, 6 digits, 30 s):")
+        print(f"  secret: {secret}")
+        print(f"  otpauth://totp/tradebot?secret={secret}&issuer=tradebot")
+
+
 def cmd_status(cfg: Config, a):
     """Read-only view of the bot's saved state. Safe to run while the bot runs."""
     p = Path(cfg.state_file)
@@ -329,7 +374,19 @@ def main(argv=None):
     lp.add_argument("--listen", type=int, metavar="PORT",
                     help="capture the redirect on 127.0.0.1:PORT (set as the app's redirect URL)")
     lp.add_argument("--token-file", help="default: $KITE_TOKEN_FILE or state/kite_token.json")
+    wp = sub.add_parser("web", help="browser control panel (run behind an HTTPS reverse proxy)")
+    wp.add_argument("--configs", default="/etc/tradebot", help="directory of <name>.json configs")
+    wp.add_argument("--workdir", default=".", help="the bots' working dir (relative state paths resolve here)")
+    wp.add_argument("--bind", default="127.0.0.1:8080")
+    wp.add_argument("--dev", action="store_true", help="local testing: plain-HTTP cookies, TOTP optional")
+    wp.add_argument("--allow-remote-bind", action="store_true")
+    pp = sub.add_parser("web-passwd", help="generate the panel password hash (and TOTP secret)")
+    pp.add_argument("--totp", action="store_true", help="also generate a TOTP secret")
     a = ap.parse_args(argv)
+    if a.cmd == "web":
+        return cmd_web(a)
+    if a.cmd == "web-passwd":
+        return cmd_web_passwd(a)
     if a.cmd == "login":
         return cmd_login(a)
     if getattr(a, "save_data", None) and not a.download:

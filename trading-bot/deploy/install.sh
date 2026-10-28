@@ -95,10 +95,20 @@ fi
 
 say "installing systemd units and the tradebot CLI"
 mkdir -p "$ROOT/etc/systemd/system" "$ROOT/usr/local/bin"
-for u in tradebot@.service tradebot-backup.service tradebot-backup.timer; do
+for u in tradebot@.service tradebot-panel.service tradebot-backup.service tradebot-backup.timer; do
     install -m 644 "$SRC/deploy/$u" "$ROOT/etc/systemd/system/$u"
 done
 install -m 755 "$SRC/deploy/tradebot.sh" "$ROOT/usr/local/bin/tradebot"
+
+# Lets the panel start/stop/restart bot instances (and nothing else). JS rules
+# need polkit >= 0.106; without them the panel still works, minus those buttons.
+if test_mode || [[ -d /etc/polkit-1/rules.d ]]; then
+    mkdir -p "$ROOT/etc/polkit-1/rules.d"
+    install -m 644 "$SRC/deploy/50-tradebot.rules" "$ROOT/etc/polkit-1/rules.d/50-tradebot.rules"
+    say "installed polkit rule for panel start/stop"
+else
+    echo "NOTE: /etc/polkit-1/rules.d not found (old polkit); the panel's start/stop buttons won't work." >&2
+fi
 
 if test_mode; then
     say "test install complete under $ROOT (systemctl skipped)"
@@ -123,4 +133,11 @@ Installed. Nothing is running yet. Next steps:
   4. sudo systemctl enable --now tradebot@swing  # paper mode until env says live
   5. sudo tradebot status -c /etc/tradebot/swing.json
      journalctl -u tradebot@swing -f
+
+Browser panel (optional, recommended):
+  a. sudo tradebot web-passwd --totp     # paste both lines into /etc/tradebot/env
+  b. sudo apt install caddy; copy /opt/tradebot/app/deploy/Caddyfile to /etc/caddy/,
+     set your domain, sudo systemctl reload caddy
+  c. Kite developer console: redirect URL = https://<your domain>/kite/callback
+  d. sudo systemctl enable --now tradebot-panel
 NEXT

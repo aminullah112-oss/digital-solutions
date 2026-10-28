@@ -1,0 +1,11 @@
+# /etc/caddy/Caddyfile  (sudo apt install caddy)
+# 1. Point a DNS A record for your domain at this VM's static IP.
+# 2. Open ports 80 and 443 (Let's Encrypt needs 80 for the first certificate).
+# 3. Replace bot.example.com below, then: sudo systemctl reload caddy
+# Caddy obtains and renews the HTTPS certificate automatically. The panel
+# itself only listens on 127.0.0.1:8080 and is never exposed directly.
+bot.example.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:8080
+	header -Server
+}

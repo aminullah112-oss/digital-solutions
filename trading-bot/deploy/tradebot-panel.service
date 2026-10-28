@@ -1,0 +1,42 @@
+# Browser control panel. Listens on localhost only; Caddy (deploy/Caddyfile)
+# terminates HTTPS in front of it. Needs TRADEBOT_PANEL_PASSWORD_HASH and
+# TRADEBOT_PANEL_TOTP_SECRET in /etc/tradebot/env (python -m tradebot web-passwd --totp).
+[Unit]
+Description=tradebot web panel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tradebot
+Group=tradebot
+EnvironmentFile=/etc/tradebot/env
+Environment=PYTHONPATH=/opt/tradebot/app PYTHONUNBUFFERED=1
+WorkingDirectory=/var/lib/tradebot
+ExecStart=/opt/tradebot/venv/bin/python -m tradebot web --configs /etc/tradebot --workdir /var/lib/tradebot --bind 127.0.0.1:8080
+Restart=on-failure
+RestartSec=5
+
+# Backtests run as children of this service. Cap them so a heavy run can never
+# starve or OOM-kill the trading bots on a small VM.
+MemoryMax=1G
+CPUWeight=20
+Nice=10
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/tradebot
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

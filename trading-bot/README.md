@@ -27,10 +27,11 @@ tradebot/
   kite.py         Zerodha Kite Connect v3 adapter (stdlib HTTP)
   live.py         live/paper loop: broker-side stops, reconciliation, kill switch
   alerts.py       Telegram / webhook alerts and a dead-man heartbeat
+  web.py          browser control panel (stdlib only; see "Browser panel")
 config/           intraday.json, swing.json (10-day hold), swing_40d.json (same, 40-day hold),
                   swing_2r.json (10-day hold + 2R profit target);
                   starting points, not recommendations
-deploy/           systemd units, installer, operator CLI, backups (see "Deployment")
+deploy/           systemd units, installer, operator CLI, backups, panel + HTTPS (see "Deployment")
 tests/            lookahead, risk maths, fill rules, live order flow, deployment scripts
 ```
 
@@ -188,7 +189,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 102 tests
+python -m unittest discover -s tests        # 127 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic
@@ -272,8 +273,47 @@ journalctl -u tradebot@swing -f
 | `tradebot` CLI | `/usr/local/bin/tradebot ...` runs any subcommand as the service user with the service's environment (`login`, `status`, `reset`, `backtest`) |
 | `tradebot-backup.timer` | daily 16:05 IST snapshot of `/var/lib/tradebot` to `/var/backups/tradebot`, kept 30 days. The Kite token is excluded |
 | logs | journald (`journalctl -u tradebot@swing`) plus `state/*/bot.log`, rotated at 10 MB × 5 |
+| `tradebot-panel.service` | the browser panel (see below), on `127.0.0.1:8080` behind Caddy. Memory-capped and at lower CPU priority, so a backtest can't starve the bots |
 | upgrades | re-run `install.sh`. Your configs and env are never overwritten, the previous code is kept in `/opt/tradebot/app.old`, and running instances aren't touched. Restart them when ready |
 
 Also: keep the clock NTP-synced (`timedatectl set-ntp true`; the installer warns if it isn't), since bar timing depends on it. Point `TRADEBOT_HEARTBEAT_URL` at a dead-man service. One `STOP` file in `/var/lib/tradebot` stops every instance.
 
 Verified here: shellcheck on all scripts, a full install into a temporary prefix with a real venv, the upgrade path, the CLI wrapper (including a secret containing `$`, backticks and `$(…)` that must not execute), backups, `status`, and SIGTERM shutdown (`tests/test_deploy.py`). **Not** verified here: systemd actually running the units, because this container has no init system; `systemd-analyze verify` parsed them without syntax errors. Do a first `systemctl start` in paper mode and watch `journalctl` before trusting it.
+
+## Browser panel
+
+Everything day-to-day happens in a browser on your phone or laptop; nothing is installed on them. The bot itself still runs on the server, because it must run 24/7, Kite requires a whitelisted static IP for orders, and the API secret can't live in a web page.
+
+| page | what you do there |
+|---|---|
+| Dashboard | Kite session status and a **Log in to Kite** button; mode (paper/live); each bot's service state, positions, unresolved orders, P&L and warnings (halts, stops needing a check, positions without a confirmed stop); the **kill switch** |
+| Bot page | positions with stop IDs and flags, unresolved orders, recent trades, the log tail, **Stop bot** / start / restart, **Reset halt** |
+| Backtests | pick configs, choose data (download fresh from yfinance and save it, a saved dataset, or synthetic), run, and read the comparison and full reports as tables. One run at a time |
+
+**Daily Kite login in the browser.** Set the Kite app's redirect URL to `https://<your domain>/kite/callback`. Tap *Log in to Kite*, sign in on Zerodha's page, and you land back on the dashboard with the session saved. Running bots pick it up on their next cycle. (`tradebot login` on the server still works as a fallback: paste the redirect URL.)
+
+**What the panel can't do, on purpose:** switch paper ↔ live, change configs or risk limits, or place orders. Those live in `/etc/tradebot` on the server. A stolen panel login can at worst stop trading or run backtests; it can't start trading with your money.
+
+**Security.**
+- **Sign-in:** password (scrypt hash) **plus a 6-digit authenticator (TOTP) code**. The panel refuses to start without TOTP, except with `--dev` for local testing. Five failed attempts lock that IP out for 15 minutes.
+- **Re-confirmation:** clearing the kill switch, start/restart and reset ask for the password and code again. Stopping and the kill switch don't, so they're instant.
+- **Sessions:** server-side and revocable, with `HttpOnly`/`Secure`/`SameSite=Lax` cookies and a 12-hour lifetime.
+- **Forms:** a per-session CSRF token plus an `Origin` check on every POST.
+- **Network:** it listens on localhost only. Caddy provides HTTPS with automatic Let's Encrypt certificates.
+- **Pages:** strict Content-Security-Policy, no JavaScript at all, no caching, no framing, and same-origin referrers only (the Kite callback URL carries a `request_token`, which is never logged either).
+- **Service control:** start/stop goes through polkit and only works for `tradebot@*` units (`deploy/50-tradebot.rules`, needs polkit ≥ 0.106: Ubuntu 24.04 / Debian 12).
+- **The real limit:** the panel runs on the same server as the bot. Anyone who gains *code execution* on that server can read the day's Kite token, whatever the panel's buttons allow. That's why it's small (standard library only), loopback-only, and behind two factors. Keep the VM patched, and allow only ports 22, 80 and 443.
+
+Setup, after `install.sh`:
+
+```bash
+sudo tradebot web-passwd --totp            # paste both printed lines into /etc/tradebot/env;
+                                           # add the secret to your authenticator app
+sudo apt install caddy
+sudo cp /opt/tradebot/app/deploy/Caddyfile /etc/caddy/Caddyfile   # set your domain in it
+sudo systemctl reload caddy
+# Kite developer console: redirect URL = https://<your domain>/kite/callback
+sudo systemctl enable --now tradebot-panel
+```
+
+Tested here: 20 panel tests against the real HTTP server, covering sign-in and TOTP, lockout, forged/expired sessions, CSRF and `Origin: null`, escaping of hostile bot data, headers, every action, the Kite callback, and a full backtest run. The polkit rule is tested against allowed and forbidden units. Desktop and phone layouts were checked in a real browser: no console errors, no horizontal overflow. **Not** tested here: Caddy and Let's Encrypt, polkit on a live system, and the Kite redirect against a real Zerodha app.
