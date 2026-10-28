@@ -40,6 +40,9 @@ jafka-trading/          One-page site for Jafka Trading (plastics/disposables
                        rev4/ (blue/yellow price-tag concept) are two more.
                        All revisions reuse ../img/ and share a Rev 1-4
                        switcher for review.
+trading-bot/            Python intraday + swing trading bot (NSE / Zerodha
+                       Kite): strategies, portfolio risk manager, backtester,
+                       paper and live engines. See trading-bot/README.md.
 ```
 
 ## Local development
