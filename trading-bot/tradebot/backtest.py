@@ -52,7 +52,9 @@ class Backtester:
         self.cfg = cfg
         self.strat = strategy
 
-    def run(self, data: dict[str, pd.DataFrame]) -> BacktestResult:
+    def run(self, data: dict[str, pd.DataFrame], start=None, end=None) -> BacktestResult:
+        """Trade only within [start, end). Indicators still see the full history
+        before start, so an out-of-sample window doesn't lose its warmup."""
         cfg, strat = self.cfg, self.strat
         risk = RiskManager(cfg)
         slip, cost = cfg.costs.slippage_pct, cfg.costs.cost_pct
@@ -66,6 +68,10 @@ class Backtester:
             d = pd.Series(df.index.date, index=df.index)
             last_of_day[s] = (d != d.shift(-1)).to_numpy()
         timeline = sorted(set().union(*(df.index for df in frames.values())))
+        if start is not None:
+            timeline = [t for t in timeline if t >= start]
+        if end is not None:
+            timeline = [t for t in timeline if t < end]
         pos_of = {s: {ts: i for i, ts in enumerate(df.index)} for s, df in frames.items()}
 
         cash = cfg.initial_capital
@@ -185,7 +191,8 @@ class Backtester:
                                                  psig.stop, None, ts)
                     turnover = df["turnover"].iat[i]
                     qty, why = risk.size(sig, eq, committed,
-                                         None if np.isnan(turnover) else float(turnover))
+                                         None if np.isnan(turnover) else float(turnover),
+                                         float(df["volume"].iat[i]))
                     if qty:
                         pending[sym] = (sig, qty, ts)
                     else:

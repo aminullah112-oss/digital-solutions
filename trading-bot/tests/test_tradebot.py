@@ -267,5 +267,215 @@ class TestLiveEngine(unittest.TestCase):
         self.assertEqual(self.broker.orders[eng.positions["A"].broker_stop_id]["status"], "OPEN")
 
 
+class TestPortfolioLimits(unittest.TestCase):
+    def test_open_risk_budget_caps_new_trades(self):
+        c = cfg(risk=dict(max_position_pct=100, max_open_risk_pct=1.0, max_open_positions=10))
+        rm = RiskManager(c)
+        t0 = pd.Timestamp("2024-01-01")
+        # one position already risking 0.8% (800 of 100k)
+        pos = {"B": Position("B", 1, 160, 100, 95, 95, None, t0)}
+        qty, _ = rm.size(Signal("A", 1, 100.0, 95.0), 100_000, pos)
+        self.assertEqual(qty, 40)                        # only 200 of budget left
+        # a position whose stop is at breakeven no longer uses budget
+        pos["B"].stop = 100
+        self.assertEqual(rm.size(Signal("A", 1, 100.0, 95.0), 100_000, pos)[0], 100)
+
+    def test_volume_participation_cap(self):
+        c = cfg(risk=dict(max_position_pct=100, max_volume_pct=1.0))
+        qty, _ = RiskManager(c).size(Signal("A", 1, 100.0, 95.0), 100_000, {}, None, 3_000)
+        self.assertEqual(qty, 30)
+
+    def test_oos_window_keeps_indicator_warmup(self):
+        c = Config(mode="swing", strategy="donchian")
+        c.risk.min_avg_turnover = 0
+        data = {f"S{k}": synthetic(days=1200, seed=k) for k in range(6)}
+        start = data["S0"].index[1000]          # 200-bar window < 210-bar warmup
+        res = Backtester(c, make_strategy("donchian")).run(data, start=start)
+        self.assertTrue(res.trades, "window should trade using prior history for indicators")
+        self.assertTrue(all(t.entry_time >= start for t in res.trades))
+        self.assertGreaterEqual(res.equity.index[0], start)
+
+    def test_evaluation_report_runs_and_flags(self):
+        from tradebot.evaluate import evaluate, to_markdown
+        c = Config(mode="swing", strategy="donchian")
+        c.risk.min_avg_turnover = 0
+        data = {f"S{k}": synthetic(days=900, seed=k) for k in range(4)}
+        rep = evaluate(c, make_strategy("donchian"), data, 0.7, 3)
+        self.assertEqual(set(rep["periods"]), {"full", "in_sample", "out_of_sample"})
+        self.assertEqual(len(rep["folds"]), 3)
+        self.assertIn(2.0, rep["cost_sensitivity"].index)
+        self.assertTrue(rep["flags"])            # too few trades on this little data
+        self.assertIn("NOT APPROVED", to_markdown(rep, "x"))
+
+
+class FakeKite:
+    """Wraps KiteBroker with a scripted _req so order paths can be tested offline."""
+
+    def __new__(cls, script):
+        from tradebot.kite import KiteBroker
+        b = KiteBroker(TZ, "MIS", api_key="k", access_token="t")
+        b.calls = []
+
+        def _req(method, path, params=None, raw=False):
+            b.calls.append((method, path, params))
+            return script(b, method, path, params)
+        b._req = _req
+        return b
+
+
+class TestKiteOrderSafety(unittest.TestCase):
+    def setUp(self):
+        import tradebot.kite as k
+        self._sleep = k.time.sleep
+        k.time.sleep = lambda s: None
+
+    def tearDown(self):
+        import tradebot.kite as k
+        k.time.sleep = self._sleep
+
+    def test_post_is_never_retried_on_network_error(self):
+        import urllib.error
+        import urllib.request
+        from tradebot.kite import AmbiguousRequest, KiteBroker
+        b = KiteBroker(TZ, "MIS", api_key="k", access_token="t")
+        n = [0]
+        orig = urllib.request.urlopen
+
+        def boom(*a, **kw):
+            n[0] += 1
+            raise urllib.error.URLError("timed out")
+        urllib.request.urlopen = boom
+        try:
+            with self.assertRaises(AmbiguousRequest):
+                b._req("POST", "/orders/regular", {"x": 1})
+            self.assertEqual(n[0], 1)
+            n[0] = 0
+            with self.assertRaises(Exception):
+                b._req("GET", "/orders")
+            self.assertEqual(n[0], 3)            # reads are retried
+        finally:
+            urllib.request.urlopen = orig
+
+    def test_timed_out_order_is_found_by_tag_not_resent(self):
+        from tradebot.kite import AmbiguousRequest
+
+        def script(b, method, path, params):
+            if method == "POST":
+                b.sent_tag = params["tag"]
+                raise AmbiguousRequest("timeout")
+            if path == "/orders":
+                return [{"tag": "other", "order_id": "1"}, {"tag": b.sent_tag, "order_id": "42"}]
+        b = FakeKite(script)
+        oid = b.place_stop("INFY", -1, 10, 1500.0)
+        self.assertEqual(oid, "42")
+        self.assertEqual(sum(1 for m, *_ in b.calls if m == "POST"), 1)
+
+    def test_unfound_order_raises_order_unknown(self):
+        from tradebot.broker import OrderUnknown
+        from tradebot.kite import AmbiguousRequest
+
+        def script(b, method, path, params):
+            if method == "POST":
+                raise AmbiguousRequest("timeout")
+            return []
+        with self.assertRaises(OrderUnknown):
+            FakeKite(script).market("INFY", 1, 10)
+
+    def test_partial_market_fill_is_reported(self):
+        def script(b, method, path, params):
+            if method == "POST":
+                return {"order_id": "7"}
+            return [{"status": "CANCELLED", "filled_quantity": 40, "average_price": 101.5,
+                     "status_message": "partially filled, rest cancelled"}]
+        fill = FakeKite(script).market("INFY", 1, 100)
+        self.assertEqual((fill.price, fill.qty), (101.5, 40))
+
+    def test_unique_tags(self):
+        b = FakeKite(lambda *a: None)
+        tags = {b._new_tag("stop") for _ in range(500)}
+        self.assertEqual(len(tags), 500)
+        self.assertTrue(all(len(t) <= 20 for t in tags))
+
+
+class FlakyPaper(PaperBroker):
+    """Paper broker with injectable failures."""
+    fill_frac = 1.0
+    fail_stop = False
+
+    def market(self, symbol, side, qty, tag=""):
+        return super().market(symbol, side, max(1, int(qty * self.fill_frac)) if tag == "entry" else qty, tag)
+
+    def place_stop(self, *a, **kw):
+        if self.fail_stop:
+            from tradebot.broker import BrokerError
+            raise BrokerError("stop rejected")
+        return super().place_stop(*a, **kw)
+
+
+class TestLiveFailurePaths(TestLiveEngine):
+    def setUp(self):
+        super().setUp()
+        self.broker = FlakyPaper(self.feed, 0.0)
+
+    def test_partial_entry_is_tracked_and_protected_for_filled_qty(self):
+        self.broker.fill_frac = 0.5
+        eng = self.engine()
+        self.tick(eng, 3)
+        p = eng.positions["A"]
+        self.assertEqual(self.broker.net_positions(), {"A": p.qty})
+        self.assertEqual(self.broker.orders[p.broker_stop_id]["qty"], p.qty)
+
+    def test_rejected_stop_closes_position_immediately(self):
+        self.broker.fail_stop = True
+        eng = self.engine()
+        self.tick(eng, 3)
+        self.assertEqual(eng.positions, {})
+        self.assertEqual(self.broker.net_positions(), {})
+
+    def test_mismatch_blocks_entries_and_survives_restart(self):
+        eng = self.engine()
+        self.tick(eng, 3)
+        self.broker.pos["A"] += 5               # someone traded the symbol by hand
+        self.tick(eng, 4)
+        self.assertIn("reconcile mismatch", eng.risk.halted())
+        self.assertEqual(eng.risk.must_flatten(), "")   # block never auto-exits
+        eng2 = LiveEngine(self.c, OneShot(at=2), self.broker, now=lambda: self.clock[0])
+        self.assertIn("reconcile mismatch", eng2.risk.halted())
+        eng2.risk.reset(eng2.equity())
+        self.assertEqual(eng2.risk.halted(), "")
+
+    def test_restart_finds_unprotected_position_and_arms_stop(self):
+        eng = self.engine()
+        self.tick(eng, 3)
+        p = eng.positions["A"]
+        self.broker.orders[p.broker_stop_id]["status"] = "CANCELLED"
+        p.broker_stop_id = None
+        eng.save()
+        eng2 = LiveEngine(self.c, OneShot(at=2), self.broker, now=lambda: self.clock[0])
+        self.tick(eng2, 4)
+        sid = eng2.positions["A"].broker_stop_id
+        self.assertIsNotNone(sid)
+        self.assertEqual(self.broker.orders[sid]["status"], "OPEN")
+
+    def test_kill_switch_outside_hours_waits_for_open(self):
+        eng = self.engine()
+        self.tick(eng, 3)
+        Path(self.c.kill_switch_file).touch()
+        self.clock[0] = self.df.index[3] + pd.Timedelta(hours=20)   # night
+        eng.step()
+        self.assertIn("A", eng.positions)        # no orders sent while closed
+        self.assertIn("kill switch", eng.risk.halted())
+        self.clock[0] = self.df.index[4] + pd.Timedelta(hours=10)   # next session
+        with self.assertRaises(SystemExit):
+            eng.step()
+        self.assertEqual(self.broker.net_positions(), {})
+
+    def test_second_engine_on_same_state_refuses_to_start(self):
+        eng = self.engine()
+        eng.acquire_lock()
+        with self.assertRaises(SystemExit):
+            self.engine().acquire_lock()
+
+
 if __name__ == "__main__":
     unittest.main()

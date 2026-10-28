@@ -6,12 +6,23 @@ from __future__ import annotations
 
 import itertools
 from abc import ABC, abstractmethod
+from typing import NamedTuple
 
 import pandas as pd
 
 
 class BrokerError(RuntimeError):
     pass
+
+
+class OrderUnknown(BrokerError):
+    """An order request timed out and the order can't be found in the order book.
+    It may still exist. The engine blocks new entries until a human checks."""
+
+
+class Fill(NamedTuple):
+    price: float
+    qty: int      # may be less than requested (partial fill); never more
 
 
 class Broker(ABC):
@@ -22,8 +33,9 @@ class Broker(ABC):
     def ltp(self, symbol: str) -> float: ...
 
     @abstractmethod
-    def market(self, symbol: str, side: int, qty: int, tag: str = "") -> float:
-        """Place a market order and block until filled. Returns average fill price."""
+    def market(self, symbol: str, side: int, qty: int, tag: str = "") -> Fill:
+        """Place a market order and block until it is terminal. Returns what actually
+        filled, including a partial fill. Raises only if nothing filled."""
 
     @abstractmethod
     def place_stop(self, symbol: str, side: int, qty: int, trigger: float, tag: str = "") -> str: ...
@@ -90,7 +102,7 @@ class PaperBroker(Broker):
         self.pos[symbol] = self.pos.get(symbol, 0) + side * qty
         if self.pos[symbol] == 0:
             del self.pos[symbol]
-        return px
+        return Fill(px, qty)
 
     def place_stop(self, symbol, side, qty, trigger, tag=""):
         oid = f"P{next(self._ids)}"

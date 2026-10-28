@@ -8,6 +8,11 @@ Order of defence:
   4. Loss streak: halve size after N losses in a row, stop for the day after M.
   5. Daily loss limit: no new entries for the rest of the day (intraday: flatten).
   6. Max drawdown from peak: flatten everything and halt until a human resets it.
+  7. Entry block: broker state disagrees with the bot's. No new entries, no
+     automatic exits (acting on uncertain state can double-exit); a human checks
+     the account and runs `reset`.
+
+All of this state is persisted by the live engine, so a restart does not clear it.
 """
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ class RiskState:
     loss_streak: int = 0
     day_halted: str = ""        # reason, cleared on a new day
     hard_halted: str = ""       # reason, cleared only by reset()
+    entry_block: str = ""       # reason, cleared only by reset(); blocks entries, never flattens
 
 
 class RiskManager:
@@ -63,16 +69,21 @@ class RiskManager:
         if s.loss_streak >= self.r.loss_streak_halt and not s.day_halted:
             s.day_halted = f"{s.loss_streak} losses in a row"
 
+    def block_entries(self, why: str) -> None:
+        if not self.state.entry_block:
+            self.state.entry_block = why
+
     def reset(self, equity: float) -> None:
         """Manual reset after a hard halt. Re-bases the peak at current equity."""
         self.state.hard_halted = ""
+        self.state.entry_block = ""
         self.state.day_halted = ""
         self.state.loss_streak = 0
         self.state.peak_equity = equity
 
     # ---------------------------------------------------------------- queries
     def halted(self) -> str:
-        return self.state.hard_halted or self.state.day_halted
+        return self.state.hard_halted or self.state.entry_block or self.state.day_halted
 
     def must_flatten(self) -> str:
         """Reasons that require closing open positions right now."""
@@ -85,8 +96,14 @@ class RiskManager:
     def risk_multiplier(self) -> float:
         return 0.5 if self.state.loss_streak >= self.r.loss_streak_reduce else 1.0
 
+    @staticmethod
+    def open_risk(positions: dict[str, Position]) -> float:
+        """Money lost if every open position hit its current stop (0 once a stop is
+        at or past breakeven). Gaps can make the real loss larger."""
+        return sum(p.qty * max(0.0, p.side * (p.entry - p.stop)) for p in positions.values())
+
     def size(self, sig: Signal, equity: float, positions: dict[str, Position],
-             avg_turnover: float | None = None) -> tuple[int, str]:
+             avg_turnover: float | None = None, bar_volume: float | None = None) -> tuple[int, str]:
         """Return (qty, "") to trade, or (0, reason) to reject."""
         r = self.r
         if why := self.halted():
@@ -120,8 +137,12 @@ class RiskManager:
         gross = sum(p.notional for p in positions.values())
         room = equity * r.max_gross_exposure_pct / 100 - gross
         qty = min(qty, math.floor(max(room, 0) / px))
+        if bar_volume is not None and r.max_volume_pct:
+            qty = min(qty, math.floor(bar_volume * r.max_volume_pct / 100))
+        budget = equity * r.max_open_risk_pct / 100 - self.open_risk(positions)
+        qty = min(qty, math.floor(max(budget, 0) / risk_ps))
         if qty < 1:
-            return 0, "size rounds to zero (equity too small for this stop/caps)"
+            return 0, "size rounds to zero (caps, open-risk budget or volume limit)"
         return qty, ""
 
     def to_dict(self) -> dict:

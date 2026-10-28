@@ -29,6 +29,32 @@ def normalize(df: pd.DataFrame, tz: str) -> pd.DataFrame:
     return df.dropna()
 
 
+def audit(df: pd.DataFrame, mode: str) -> list[str]:
+    """Data problems that silently corrupt a backtest."""
+    w = []
+    if len(df) < 2:
+        return ["fewer than 2 bars"]
+    c = df["close"]
+    day_close = c.groupby(df.index.date).last()
+    day_open = df["open"].groupby(df.index.date).first()
+    gap = (day_open.shift(-1) / day_close - 1).dropna()
+    big = gap[gap.abs() > 0.25]
+    if len(big):
+        w.append(f"{len(big)} overnight moves > 25% (first {big.index[0]}): unadjusted split/bonus?")
+    gaps = pd.to_datetime(pd.Series(sorted(set(df.index.date)))).diff().dt.days.dropna()
+    long_gaps = gaps[gaps > 6]
+    if len(long_gaps):
+        w.append(f"{len(long_gaps)} gaps of more than 6 calendar days between bars (missing data?)")
+    if (df["volume"] <= 0).mean() > 0.02:
+        w.append(f"{100 * (df['volume'] <= 0).mean():.1f}% of bars have zero volume")
+    if mode == "intraday":
+        per_day = df.groupby(df.index.date).size()
+        short = per_day[per_day < 0.8 * per_day.median()]
+        if len(short):
+            w.append(f"{len(short)} sessions with <80% of the usual bar count")
+    return w
+
+
 def load_csv(path: str | Path, tz: str) -> pd.DataFrame:
     return normalize(pd.read_csv(path), tz)
 

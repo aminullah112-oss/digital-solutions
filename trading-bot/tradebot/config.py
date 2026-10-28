@@ -37,6 +37,8 @@ class Risk:
     max_position_pct: float = 20.0         # notional cap per position, % of equity
     max_gross_exposure_pct: float = 100.0  # sum of open notionals; 100 = no leverage
     max_open_positions: int = 5
+    max_open_risk_pct: float = 3.0         # sum of (entry - stop) * qty over open positions
+    max_volume_pct: float = 1.0            # qty <= this % of the signal bar's volume
     daily_loss_limit_pct: float = 2.0      # stop trading for the day past this
     max_drawdown_pct: float = 15.0         # hard halt from equity peak; manual reset
     loss_streak_reduce: int = 3            # halve risk after this many losses in a row
@@ -95,6 +97,8 @@ class Config:
         r = self.risk
         if not 0 < r.risk_per_trade_pct <= 2:
             raise ValueError("risk_per_trade_pct must be in (0, 2]; above 2% per trade is gambling")
+        if r.max_open_risk_pct < r.risk_per_trade_pct:
+            raise ValueError("max_open_risk_pct must be >= risk_per_trade_pct")
         if r.daily_loss_limit_pct < r.risk_per_trade_pct:
             raise ValueError("daily_loss_limit_pct must be >= risk_per_trade_pct")
         if r.max_gross_exposure_pct > 100 and self.mode == "swing":

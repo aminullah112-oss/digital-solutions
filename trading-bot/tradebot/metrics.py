@@ -13,6 +13,43 @@ def max_drawdown(equity: pd.Series) -> float:
     return float(100 * (1 - equity / equity.cummax()).max())
 
 
+def longest_underwater_days(equity: pd.Series) -> int:
+    """Longest stretch, in calendar days, spent below a previous equity peak."""
+    if equity.empty:
+        return 0
+    peak_t, worst = equity.index[0], 0
+    peak = equity.iloc[0]
+    for t, v in equity.items():
+        if v >= peak:
+            peak, peak_t = v, t
+        else:
+            worst = max(worst, (t - peak_t).days)
+    return worst
+
+
+def exposure_pct(res: BacktestResult) -> float:
+    """Share of the test period with at least one position open."""
+    if not res.trades or res.equity.empty:
+        return 0.0
+    spans = sorted((t.entry_time, t.exit_time) for t in res.trades)
+    total, (cs, ce) = pd.Timedelta(0), spans[0]
+    for s, e in spans[1:]:
+        if s <= ce:
+            ce = max(ce, e)
+        else:
+            total += ce - cs
+            cs, ce = s, e
+    total += ce - cs
+    period = res.equity.index[-1] - res.equity.index[0]
+    return round(100 * total / period, 1) if period > pd.Timedelta(0) else 0.0
+
+
+def bootstrap_ci(x: np.ndarray, runs: int = 5000, seed: int = 3) -> tuple[float, float]:
+    rng = np.random.default_rng(seed)
+    means = rng.choice(x, size=(runs, len(x)), replace=True).mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
 def summarize(res: BacktestResult) -> dict:
     eq = res.equity
     trades = res.trades
@@ -46,6 +83,8 @@ def summarize(res: BacktestResult) -> dict:
         out["avg_loss"] = round(float(losses.mean()), 2) if len(losses) else 0.0
         out["profit_factor"] = round(float(wins.sum() / -losses.sum()), 2) if losses.sum() < 0 else float("inf")
         out["expectancy_r"] = round(float(r.mean()), 3)
+        lo, hi = bootstrap_ci(r)
+        out["expectancy_r_ci95"] = [round(lo, 3), round(hi, 3)]
         out["worst_trade_r"] = round(float(r.min()), 2)
         out["best_trade_r"] = round(float(r.max()), 2)
         out["avg_bars_held"] = round(float(np.mean([t.bars_held for t in trades])), 1)
@@ -57,6 +96,10 @@ def summarize(res: BacktestResult) -> dict:
         reasons = pd.Series([t.exit_reason.split(":")[0] for t in trades]).value_counts()
         out["exit_reasons"] = reasons.to_dict()
         out["total_costs_note"] = "pnl is net of costs and slippage"
+        notional = sum(t.qty * t.entry for t in trades)
+        out["exposure_pct"] = exposure_pct(res)
+        out["annual_turnover_x"] = round(notional / float(eq.mean()) / years, 1)
+    out["longest_underwater_days"] = longest_underwater_days(eq)
     out["risk_halts"] = len(res.halts)
     return out
 
@@ -112,6 +155,9 @@ def verdict(stats: dict, mc: dict | None) -> list[str]:
         flags.append(f"Only {n} trades: too few to tell skill from luck (aim for 100+).")
     if stats.get("expectancy_r", 0) <= 0.05:
         flags.append("Expectancy <= 0.05R after costs: no demonstrable edge.")
+    ci = stats.get("expectancy_r_ci95")
+    if ci and ci[0] <= 0:
+        flags.append(f"95% CI for expectancy {ci} includes zero: edge not distinguishable from luck.")
     if stats.get("profit_factor", 0) < 1.2:
         flags.append("Profit factor < 1.2: thin edge, likely to vanish live.")
     if stats.get("sharpe", 0) > 3:

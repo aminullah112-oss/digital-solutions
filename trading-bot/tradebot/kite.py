@@ -4,9 +4,10 @@ Needs KITE_API_KEY and KITE_ACCESS_TOKEN in the environment. The access token
 expires daily; generate it each morning through Kite's login flow. Historical
 candles require the Kite Connect historical-data subscription.
 
-This adapter has NOT been exercised against a live account by its author. Run it
-with --paper (Kite data, simulated fills) until you have verified every order
-path against Kite's sandbox or with 1-share orders.
+This adapter has NOT been exercised against a live account by its author.
+Zerodha has no Kite Connect sandbox, so "paper" means real Kite market data with
+fills simulated locally (`paper --feed kite`). After that, verify every order
+path with 1-share live orders.
 """
 from __future__ import annotations
 
@@ -22,11 +23,15 @@ from datetime import timedelta
 
 import pandas as pd
 
-from .broker import Broker, BrokerError
+from .broker import Broker, BrokerError, Fill, OrderUnknown
 from .data import normalize
 
 ROOT = "https://api.kite.trade"
 TERMINAL = {"COMPLETE", "CANCELLED", "REJECTED"}
+
+
+class AmbiguousRequest(BrokerError):
+    """The request may or may not have taken effect at the broker."""
 
 
 class KiteBroker(Broker):
@@ -45,6 +50,9 @@ class KiteBroker(Broker):
 
     # ------------------------------------------------------------------ http
     def _req(self, method: str, path: str, params: dict | None = None, raw: bool = False):
+        """GETs are retried on network errors and 429s. Order-changing requests are
+        never blindly retried: a timeout may mean the broker already acted, and a
+        retried POST would place a second order. Those raise AmbiguousRequest."""
         url = ROOT + path
         body = None
         if params and method == "GET":
@@ -55,6 +63,7 @@ class KiteBroker(Broker):
             "X-Kite-Version": "3",
             "Authorization": f"token {self.api_key}:{self.token}",
         })
+        safe = method == "GET"
         for attempt in range(3):
             try:
                 with urllib.request.urlopen(req, timeout=15) as r:
@@ -62,11 +71,16 @@ class KiteBroker(Broker):
                 break
             except urllib.error.HTTPError as e:
                 msg = e.read().decode(errors="replace")
+                # 429 means the request was refused, so retrying is safe for any method.
                 if e.code == 429 and attempt < 2:
                     time.sleep(1 + attempt)
                     continue
+                if e.code >= 500 and not safe:
+                    raise AmbiguousRequest(f"{method} {path} -> {e.code}: {msg}") from e
                 raise BrokerError(f"{method} {path} -> {e.code}: {msg}") from e
-            except urllib.error.URLError as e:
+            except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+                if not safe:
+                    raise AmbiguousRequest(f"{method} {path}: {e}") from e
                 if attempt < 2:
                     time.sleep(1 + attempt)
                     continue
@@ -113,25 +127,51 @@ class KiteBroker(Broker):
         return float(self._req("GET", "/quote/ltp", {"i": key})[key]["last_price"])
 
     # ---------------------------------------------------------------- orders
-    def _place(self, **p) -> str:
-        p.update(exchange=self.exchange, product=self.product, validity="DAY")
-        return self._req("POST", "/orders/regular", p)["order_id"]
+    def _new_tag(self, kind: str) -> str:
+        # Unique per order (Kite tags are <= 20 chars), so an order whose POST timed
+        # out can be found in the order book instead of being placed twice.
+        self._seq = (getattr(self, "_seq", 0) + 1) % 1000
+        return f"tb{kind[:4]}{int(time.time()) % 10**8}{self._seq:03d}"[:20]
+
+    def _place(self, kind: str, **p) -> str:
+        tag = self._new_tag(kind)
+        p.update(exchange=self.exchange, product=self.product, validity="DAY", tag=tag)
+        try:
+            return self._req("POST", "/orders/regular", p)["order_id"]
+        except AmbiguousRequest:
+            for _ in range(5):
+                time.sleep(1)
+                try:
+                    for o in self._req("GET", "/orders"):
+                        if o.get("tag") == tag:
+                            return o["order_id"]
+                except BrokerError:
+                    pass
+            raise OrderUnknown(f"order {tag} outcome unknown after timeout; check the order book")
 
     def _history(self, order_id):
         return self._req("GET", f"/orders/{order_id}")[-1]
 
-    def market(self, symbol, side, qty, tag=""):
-        oid = self._place(tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
-                          order_type="MARKET", quantity=qty, tag=tag[:20])
+    def market(self, symbol, side, qty, tag="entry"):
+        oid = self._place(tag, tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
+                          order_type="MARKET", quantity=qty)
         deadline = time.time() + 30
-        while time.time() < deadline:
-            h = self._history(oid)
-            if h["status"] == "COMPLETE":
-                return float(h["average_price"])
-            if h["status"] in ("REJECTED", "CANCELLED"):
-                raise BrokerError(f"market order {oid} {h['status']}: {h.get('status_message')}")
+        h = self._history(oid)
+        while h["status"] not in TERMINAL and time.time() < deadline:
             time.sleep(0.5)
-        raise BrokerError(f"market order {oid} not filled within 30s; check the order book manually")
+            h = self._history(oid)
+        if h["status"] not in TERMINAL:
+            # Don't leave a live market order behind; take whatever filled.
+            try:
+                self._req("DELETE", f"/orders/regular/{oid}")
+            except BrokerError:
+                pass
+            time.sleep(1)
+            h = self._history(oid)
+        filled = int(h.get("filled_quantity") or 0)
+        if filled <= 0:
+            raise BrokerError(f"market order {oid} {h['status']} with no fill: {h.get('status_message')}")
+        return Fill(float(h["average_price"]), min(filled, qty))
 
     def _stop_params(self, side, trigger):
         trigger = round(trigger, 1) if trigger >= 1 else round(trigger, 2)
@@ -141,9 +181,9 @@ class KiteBroker(Broker):
             p["price"] = round(trigger * (1 + side * self.stop_buf), 1)
         return p
 
-    def place_stop(self, symbol, side, qty, trigger, tag=""):
-        return self._place(tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
-                           quantity=qty, tag=tag[:20], **self._stop_params(side, trigger))
+    def place_stop(self, symbol, side, qty, trigger, tag="stop"):
+        return self._place(tag, tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
+                           quantity=qty, **self._stop_params(side, trigger))
 
     def modify_stop(self, order_id, trigger):
         side = 1 if self._history(order_id)["transaction_type"] == "BUY" else -1

@@ -17,8 +17,11 @@ from pathlib import Path
 
 from .backtest import Backtester
 from .config import Config
-from .data import download_yfinance, load_dir, synthetic
-from .metrics import format_report, monte_carlo_drawdown, summarize, trades_frame, verdict
+import pandas as pd
+
+from .data import audit, download_yfinance, load_csv, load_dir, synthetic
+from .evaluate import evaluate, to_markdown
+from .metrics import trades_frame
 from .strategies import make_strategy
 
 
@@ -30,47 +33,43 @@ def _setup_logging(cfg: Config):
     )
 
 
-def cmd_backtest(cfg: Config, a):
+def _load_data(cfg: Config, a):
     tz = cfg.session.timezone
     if a.synthetic:
         intr = cfg.mode == "intraday"
-        data = {s: synthetic(days=a.days or (120 if intr else 1000), intraday=intr, seed=k, tz=tz)
-                for k, s in enumerate(cfg.symbols)}
         print("NOTE: synthetic data tests the plumbing only. Results say nothing about real markets.\n")
-    elif a.download:
+        return {s: synthetic(days=a.days or (120 if intr else 1000), intraday=intr, seed=k, tz=tz)
+                for k, s in enumerate(cfg.symbols)}
+    if a.download:
         period = f"{a.days or (59 if cfg.mode == 'intraday' else 3650)}d"
         data = {s: download_yfinance(s + a.suffix, cfg.interval, period, tz) for s in cfg.symbols}
     else:
         data = load_dir(a.data, cfg.symbols, tz)
+    for s, df in data.items():
+        for w in audit(df, cfg.mode):
+            print(f"DATA WARNING {s}: {w}")
+    return data
 
+
+def cmd_backtest(cfg: Config, a):
+    data = _load_data(cfg, a)
     strat = make_strategy(cfg.strategy, cfg.strategy_params, cfg.session.open)
-    if a.split:
-        first = min(df.index[0] for df in data.values())
-        last = max(df.index[-1] for df in data.values())
-        cut = first + (last - first) * a.split
-        parts = {"IN-SAMPLE": {s: df[df.index < cut] for s, df in data.items()},
-                 "OUT-OF-SAMPLE": {s: df[df.index >= cut] for s, df in data.items()}}
-    else:
-        parts = {"FULL": data}
-
-    for label, d in parts.items():
-        res = Backtester(cfg, strat).run(d)
-        stats = summarize(res)
-        mc = monte_carlo_drawdown(res)
-        print(f"\n### {label}")
-        print(format_report(stats, mc, res.rejections))
-        flags = verdict(stats, mc)
-        if flags:
-            print("RED FLAGS:")
-            for f in flags:
-                print("  -", f)
-        if a.out:
-            out = Path(a.out)
-            out.mkdir(parents=True, exist_ok=True)
-            tag = label.lower()
-            trades_frame(res).to_csv(out / f"trades_{tag}.csv", index=False)
-            res.equity.to_csv(out / f"equity_{tag}.csv", header=["equity"])
-            (out / f"stats_{tag}.json").write_text(json.dumps({**stats, "monte_carlo": mc}, indent=2, default=str))
+    bench = None
+    if a.benchmark:
+        b = load_csv(a.benchmark, cfg.session.timezone)["close"]
+        bench = b.groupby(b.index.date).last()
+        bench.index = pd.to_datetime(bench.index)
+    rep = evaluate(cfg, strat, data, a.split, a.folds, bench)
+    md = to_markdown(rep, f"{cfg.strategy} ({cfg.mode}) on {len(data)} symbols")
+    print(md)
+    if a.out:
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "report.md").write_text(md)
+        res = Backtester(cfg, strat).run(data)
+        trades_frame(res).to_csv(out / "trades.csv", index=False)
+        res.equity.to_csv(out / "equity.csv", header=["equity"])
+        print(f"wrote {out}/report.md, trades.csv, equity.csv")
 
 
 def _engine(cfg: Config, broker):
@@ -136,8 +135,10 @@ def main(argv=None):
             g.add_argument("--download", action="store_true", help="fetch from yfinance")
             g.add_argument("--synthetic", action="store_true", help="random data, plumbing test only")
             p.add_argument("--days", type=int)
-            p.add_argument("--split", type=float, help="in-sample fraction, e.g. 0.7")
-            p.add_argument("--out", help="write trades/equity/stats here")
+            p.add_argument("--split", type=float, default=0.7, help="in-sample fraction (0 = none)")
+            p.add_argument("--folds", type=int, default=4, help="consecutive periods for the consistency check")
+            p.add_argument("--benchmark", help="CSV of a benchmark index (e.g. NIFTY 50); default: equal-weight universe")
+            p.add_argument("--out", help="write report.md, trades.csv, equity.csv here")
         if name in ("paper", "live"):
             p.add_argument("--poll", type=int, default=20, help="seconds between cycles")
         if name == "paper":
