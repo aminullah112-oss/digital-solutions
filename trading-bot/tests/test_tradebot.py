@@ -178,6 +178,29 @@ class TestBacktestFills(unittest.TestCase):
         res = Backtester(c, OneShot(max_bars=2)).run({"A": bars(flat)})
         self.assertEqual(res.trades[0].bars_held, 2)    # the tighter limit wins
 
+    def test_target_exit_pays_slippage(self):
+        c = cfg(risk=dict(max_position_pct=100))
+        c.costs.slippage_pct = 0.001
+        rows = [(100, 101, 99, 100, 1e6)] * 3 + [(100, 115, 99, 101, 1e6)]
+        res = Backtester(c, OneShot(target=110.0)).run({"A": bars(rows)})
+        t = res.trades[0]
+        self.assertEqual(t.exit_reason, "target")
+        self.assertAlmostEqual(t.exit, 110 * 0.999)
+
+    def test_swing_2r_config_sets_target(self):
+        root = Path(__file__).resolve().parents[1]
+        c = Config.load(root / "config/swing_2r.json")
+        base = Config.load(root / "config/swing.json")
+        self.assertEqual(c.strategy_params["target_r"], 2.0)
+        self.assertEqual(c.max_hold_bars, base.max_hold_bars)
+        self.assertNotEqual(c.state_file, base.state_file)
+        s = make_strategy(c.strategy, c.strategy_params)
+        df = s.prepare(synthetic(days=800, seed=2))
+        sigs = [x for x in (s.signal("X", df, i, False) for i in range(s.warmup, len(df))) if x]
+        self.assertTrue(sigs)
+        for x in sigs:
+            self.assertAlmostEqual(x.target - x.ref_price, 2.0 * (x.ref_price - x.stop))
+
     def test_entry_cancelled_if_open_gaps_below_stop(self):
         res = self.run_bt([
             (100, 101, 99, 100, 1e6), (100, 101, 99, 100, 1e6),

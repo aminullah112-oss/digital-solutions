@@ -6,7 +6,8 @@ Fill rules are deliberately pessimistic:
     max_gap_slip_r of extra risk.
   * If a bar touches both stop and target, the stop is assumed to fill first.
   * A stop that gaps fills at the (worse) open, not at the stop price.
-  * Costs and slippage are charged on both sides.
+  * Costs and slippage are charged on both sides, including target exits
+    (live exits at the target with a market order, not a resting limit).
 """
 from __future__ import annotations
 
@@ -141,7 +142,7 @@ class Backtester:
                     if not just_entered and s * (o - p.stop) <= 0:
                         exit_px, why = o * (1 - s * slip), "stop (gap)"
                     elif not just_entered and p.target is not None and s * (o - p.target) >= 0:
-                        exit_px, why = o, "target (gap)"
+                        exit_px, why = o * (1 - s * slip), "target (gap)"
                     else:
                         hit_stop = (l <= p.stop) if s > 0 else (h >= p.stop)
                         hit_tgt = p.target is not None and ((h >= p.target) if s > 0 else (l <= p.target))
@@ -149,7 +150,9 @@ class Backtester:
                             exit_px = p.stop * (1 - s * slip)
                             why = "trailing stop" if p.stop != p.initial_stop else "stop"
                         elif hit_tgt:
-                            exit_px, why = p.target, "target"
+                            # Live sends a market order once price reaches the target, so it
+                            # pays slippage like any other exit.
+                            exit_px, why = p.target * (1 - s * slip), "target"
                     if exit_px is None:
                         p.bars_held += 1
                         p.best_price = max(p.best_price, h) if s > 0 else min(p.best_price, l)

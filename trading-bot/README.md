@@ -26,7 +26,8 @@ tradebot/
   broker.py       Broker interface, PaperBroker, yfinance feed
   kite.py         Zerodha Kite Connect v3 adapter (stdlib HTTP)
   live.py         live/paper loop: broker-side stops, reconciliation, kill switch
-config/           intraday.json, swing.json (10-day hold), swing_40d.json (same, 40-day hold);
+config/           intraday.json, swing.json (10-day hold), swing_40d.json (same, 40-day hold),
+                  swing_2r.json (10-day hold + 2R profit target);
                   starting points, not recommendations
 tests/            lookahead, risk maths, fill rules, live order flow
 ```
@@ -105,7 +106,7 @@ python -m tradebot backtest -c config/swing.json --data data/ --benchmark data/N
 
 # 2b. Freeze the data once, then compare holding periods on identical bars and windows
 python -m tradebot backtest -c config/swing.json --download --save-data data/nse_daily
-python -m tradebot compare -c config/swing.json -c config/swing_40d.json \
+python -m tradebot compare -c config/swing.json -c config/swing_40d.json -c config/swing_2r.json \
     --data data/nse_daily --out results/hold_compare
 
 # 3. Paper trade for at least 4-6 weeks. Zerodha has no Kite Connect sandbox, so
