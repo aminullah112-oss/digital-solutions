@@ -1329,6 +1329,45 @@ class TestOrderLifecycle(TestLiveEngine):
         self.assertIn("UNKNOWN", eng.risk.halted())          # persisted: escalate
 
 
+class TestControlChannel(TestLiveEngine):
+    def _cfg_file(self):
+        f = Path(self.tmp.name) / "cfg.json"
+        f.write_text(json.dumps(self.c.to_dict(), default=str))
+        return str(f)
+
+    def test_reset_while_engine_runs_is_not_lost(self):
+        import contextlib
+        import io
+        from tradebot.__main__ import main
+        eng = self.engine()
+        eng.acquire_lock()                                # engine "running": holds the lock
+        self.tick(eng, 3)
+        eng.risk.block_entries("reconcile mismatch: test")
+        eng.save()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            main(["reset", "-c", self._cfg_file()])
+        self.assertIn("queued", out.getvalue())
+        self.tick(eng, 4)                                 # next cycle applies it, then saves
+        self.assertEqual(eng.risk.halted(), "")
+        state = json.loads(Path(self.c.state_file).read_text())
+        self.assertEqual(state["risk"]["entry_block"], "")   # and it survived the save
+        self.assertFalse(Path(self.c.state_file).with_name("control.json").exists())
+
+    def test_reset_with_engine_stopped_edits_state_directly(self):
+        import contextlib
+        import io
+        from tradebot.__main__ import main
+        eng = self.engine()
+        self.tick(eng, 3)
+        eng.risk.block_entries("reconcile mismatch: test")
+        eng.save()
+        with contextlib.redirect_stdout(io.StringIO()):
+            main(["reset", "-c", self._cfg_file()])
+        state = json.loads(Path(self.c.state_file).read_text())
+        self.assertEqual(state["risk"]["entry_block"], "")
+        self.assertTrue(state["rebaseline"])
+
+
 class TestKiteGtt(unittest.TestCase):
     def setUp(self):
         import tradebot.kite as k

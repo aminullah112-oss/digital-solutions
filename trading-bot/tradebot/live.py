@@ -40,6 +40,53 @@ from .strategies import Strategy
 
 log = logging.getLogger("tradebot")
 
+
+def control_path(state_file) -> Path:
+    """Requests to a running engine (from the CLI or the web panel) go here; the
+    engine applies them at the start of its next cycle. Writing state directly
+    doesn't work while it runs: it saves its in-memory state every cycle."""
+    return Path(state_file).with_name("control.json")
+
+
+def engine_running(state_file) -> bool:
+    """True if an engine currently holds the lock for this state file."""
+    import fcntl
+    lock = Path(state_file).with_suffix(".lock")
+    if not lock.exists():
+        return False
+    with open(lock, "a") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return True
+        fcntl.flock(f, fcntl.LOCK_UN)
+    return False
+
+
+def request_control(state_file, **request) -> None:
+    p = control_path(state_file)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    current = json.loads(p.read_text()) if p.exists() else {}
+    current.update(request)
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(current))
+    os.replace(tmp, p)
+
+
+def reset_state(engine_like, by: str) -> list[str]:
+    """Operator reset, shared by the engine (in memory) and offline edits.
+    `engine_like` has .risk, .rebaseline, .pending and .equity()."""
+    notes = [f"current halt: {engine_like.risk.halted() or 'none'}"]
+    engine_like.risk.reset(engine_like.equity())
+    engine_like.rebaseline = True             # re-capture shares the bot doesn't own
+    for r in engine_like.pending.values():
+        if r.get("kind") == "stop" and r.get("escalated"):
+            # The operator has checked the order book (and cancelled any stray stop).
+            r["confirmed_absent"] = True
+            notes.append(f"stop {r['tag']} for {r['symbol']} marked absent; a fresh one will be placed")
+    notes.append(f"risk state reset by {by}; peak re-based to {engine_like.equity():,.2f}")
+    return notes
+
 BAR_MINUTES = {"minute": 1, "3minute": 3, "5minute": 5, "10minute": 10, "15minute": 15,
                "30minute": 30, "60minute": 60}
 
@@ -650,7 +697,24 @@ class LiveEngine:
             log.info("broker session OK again; resuming", extra={"notify": True})
         return True
 
+    def _apply_control(self):
+        p = control_path(self.state_path)
+        if not p.exists():
+            return
+        try:
+            req = json.loads(p.read_text())
+        except (OSError, ValueError) as e:
+            log.error("ignoring unreadable control file %s: %s", p, e)
+            p.unlink(missing_ok=True)
+            return
+        p.unlink(missing_ok=True)
+        if req.get("reset"):
+            for line in reset_state(self, req["reset"].get("by", "operator")):
+                log.warning(line, extra={"notify": True})
+            self.save()
+
     def _step(self):
+        self._apply_control()
         now = self.now()
         s = self.cfg.session
         # From the reminder time to the close on weekdays, a dead session is alerted

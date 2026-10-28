@@ -254,24 +254,41 @@ def cmd_status(cfg: Config, a):
 
 
 def cmd_reset(cfg: Config, a):
+    from .live import engine_running, request_control
     p = Path(cfg.state_file)
     if not p.exists():
         sys.exit("no state file")
-    s = json.loads(p.read_text())
-    eq = cfg.initial_capital + s.get("realized", 0.0)
+    if engine_running(p):
+        # A running engine would overwrite a direct edit on its next save.
+        request_control(p, reset={"by": "cli", "at": str(pd.Timestamp.now(tz="UTC"))})
+        print("reset queued; the running bot applies it on its next cycle (watch the log/alerts)")
+        return
+    _offline_reset(cfg, p, "cli")
+
+
+def _offline_reset(cfg: Config, p: Path, by: str) -> list[str]:
+    from .live import reset_state
     from .risk import RiskManager
-    rm = RiskManager(cfg, s.get("risk"))
-    print("current halt:", rm.halted() or "none")
-    rm.reset(eq)
-    s["risk"] = rm.to_dict()
-    s["rebaseline"] = True      # re-capture shares the bot doesn't own on the next cycle
-    for r in s.get("pending", {}).values():
-        if r.get("kind") == "stop" and r.get("escalated"):
-            # The operator has checked the order book (and cancelled any stray stop).
-            r["confirmed_absent"] = True
-            print(f"stop {r['tag']} for {r['symbol']} marked absent; the bot will place a fresh one")
-    p.write_text(json.dumps(s, indent=2, default=float))
-    print(f"risk state reset; peak re-based to {eq:,.2f}")
+
+    class _State:
+        def __init__(self, s):
+            self.s, self.risk = s, RiskManager(cfg, s.get("risk"))
+            self.pending = s.get("pending", {})
+            self.rebaseline = s.get("rebaseline", True)
+
+        def equity(self):
+            return cfg.initial_capital + self.s.get("realized", 0.0)
+
+    s = json.loads(p.read_text())
+    st = _State(s)
+    notes = reset_state(st, by)
+    s["risk"], s["rebaseline"], s["pending"] = st.risk.to_dict(), st.rebaseline, st.pending
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(s, indent=2, default=float))
+    os.replace(tmp, p)
+    for n in notes:
+        print(n)
+    return notes
 
 
 def main(argv=None):
