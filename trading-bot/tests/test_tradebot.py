@@ -318,6 +318,29 @@ class TestPortfolioLimits(unittest.TestCase):
         self.assertIn("NOT APPROVED", to_markdown(rep, "x"))
 
 
+class TestCompareCommand(unittest.TestCase):
+    def test_compare_runs_configs_on_identical_data(self):
+        import contextlib
+        import io
+        from tradebot.__main__ import main
+        with tempfile.TemporaryDirectory() as d:
+            paths = []
+            for name, hold in (("short", 10), ("long", 40)):
+                raw = {"mode": "swing", "strategy": "trend_pullback", "symbols": ["A", "B"],
+                       "interval": "day", "max_hold_bars": hold, "risk": {"min_avg_turnover": 0}}
+                f = Path(d) / f"{name}.json"
+                f.write_text(json.dumps(raw))
+                paths.append(str(f))
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                main(["compare", "-c", paths[0], "-c", paths[1], "--synthetic", "--days", "700",
+                      "--folds", "2", "--out", d])
+            md = (Path(d) / "compare.md").read_text()
+            self.assertIn("| metric | short | long |", md)
+            self.assertIn("benchmark_return_pct", md)
+            self.assertTrue((Path(d) / "report_short.md").exists())
+
+
 class FakeKite:
     """Wraps KiteBroker with a scripted _req so order paths can be tested offline."""
 

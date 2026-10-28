@@ -2,6 +2,7 @@
 
   python -m tradebot backtest -c config/swing.json --data data/
   python -m tradebot backtest -c config/intraday.json --synthetic
+  python -m tradebot compare  -c config/swing.json -c config/swing_40d.json --data data/
   python -m tradebot paper    -c config/intraday.json --feed yfinance
   python -m tradebot live     -c config/intraday.json        (Zerodha Kite)
   python -m tradebot reset    -c config/intraday.json        (clear a risk halt)
@@ -43,6 +44,13 @@ def _load_data(cfg: Config, a):
     if a.download:
         period = f"{a.days or (59 if cfg.mode == 'intraday' else 3650)}d"
         data = {s: download_yfinance(s + a.suffix, cfg.interval, period, tz) for s in cfg.symbols}
+        if a.save_data:
+            # Freeze the download so every later run (and every reviewer) uses identical bars.
+            d = Path(a.save_data)
+            d.mkdir(parents=True, exist_ok=True)
+            for s, df in data.items():
+                df.to_csv(d / f"{s}.csv", index_label="datetime")
+            print(f"saved {len(data)} files to {d}; rerun with --data {d}")
     else:
         data = load_dir(a.data, cfg.symbols, tz)
     for s, df in data.items():
@@ -70,6 +78,56 @@ def cmd_backtest(cfg: Config, a):
         trades_frame(res).to_csv(out / "trades.csv", index=False)
         res.equity.to_csv(out / "equity.csv", header=["equity"])
         print(f"wrote {out}/report.md, trades.csv, equity.csv")
+
+
+COMPARE_ROWS = ["trades", "total_return_pct", "cagr_pct", "max_drawdown_pct", "longest_underwater_days",
+                "win_rate_pct", "profit_factor", "expectancy_r", "expectancy_r_ci95", "avg_bars_held",
+                "exposure_pct", "annual_turnover_x"]
+
+
+def cmd_compare(cfgs: list[Config], names: list[str], a):
+    """Evaluate several configs on the same data and the same windows."""
+    keys = {(c.mode, c.interval, tuple(c.symbols), c.session.timezone) for c in cfgs}
+    if len(keys) > 1:
+        sys.exit("compare needs configs with the same mode, interval, symbols and timezone")
+    data = _load_data(cfgs[0], a)
+    reps = {}
+    for name, c in zip(names, cfgs):
+        strat = make_strategy(c.strategy, c.strategy_params, c.session.open)
+        reps[name] = evaluate(c, strat, data, a.split, a.folds)
+    period = "out_of_sample" if a.split else "full"
+    table = pd.DataFrame({n: {k: r["periods"][period]["stats"].get(k) for k in COMPARE_ROWS} for n, r in reps.items()})
+    table.loc["benchmark_return_pct"] = [r["periods"][period]["benchmark"].get("total_return_pct") for r in reps.values()]
+    for m in (1.0, 2.0):
+        table.loc[f"expectancy_r_at_{m:g}x_costs"] = [r["cost_sensitivity"].loc[m, "expectancy_r"] for r in reps.values()]
+    table.loc["periods_positive"] = [
+        f"{int((r['folds']['expectancy_r'] > 0).sum())}/{len(r['folds'])}" if not r["folds"].empty else "-"
+        for r in reps.values()]
+    table.loc["red_flags"] = [len(r["flags"]) for r in reps.values()]
+    table.index.name = "metric"
+    lines = [f"# Comparison ({period.replace('_', '-')}, identical data and windows)\n", _md(table), ""]
+    for n, r in reps.items():
+        lines.append(f"## {n}: {'NOT APPROVED' if r['flags'] else 'no red flags'}\n")
+        lines += [f"- {f}" for f in r["flags"]] or ["- none"]
+        lines.append("")
+    lines.append("Pick between these on the in-sample period or on reasoning, not on this table: "
+                 "choosing the winner here turns the out-of-sample period into another in-sample one.")
+    md = "\n".join(lines) + "\n"
+    print(md)
+    if a.out:
+        out = Path(a.out)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "compare.md").write_text(md)
+        for n, r in reps.items():
+            (out / f"report_{n}.md").write_text(to_markdown(r, n))
+        print(f"wrote {out}/compare.md and one full report per config")
+
+
+def _md(df: pd.DataFrame) -> str:
+    cols = [df.index.name or ""] + list(df.columns)
+    rows = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
+    rows += ["| " + " | ".join(map(str, [k, *(df.at[k, c] for c in df.columns)])) + " |" for k in df.index]
+    return "\n".join(rows)
 
 
 def _engine(cfg: Config, broker):
@@ -125,16 +183,21 @@ def cmd_reset(cfg: Config, a):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tradebot")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("backtest", "paper", "live", "reset"):
+    for name in ("backtest", "compare", "paper", "live", "reset"):
         p = sub.add_parser(name)
-        p.add_argument("-c", "--config", required=True)
+        if name == "compare":
+            p.add_argument("-c", "--config", action="append", required=True,
+                           help="repeat for each config, e.g. -c config/swing.json -c config/swing_40d.json")
+        else:
+            p.add_argument("-c", "--config", required=True)
         p.add_argument("--suffix", default=".NS", help="yfinance symbol suffix (.NS for NSE, '' for US)")
-        if name == "backtest":
+        if name in ("backtest", "compare"):
             g = p.add_mutually_exclusive_group(required=True)
             g.add_argument("--data", help="directory with <SYMBOL>.csv files")
             g.add_argument("--download", action="store_true", help="fetch from yfinance")
             g.add_argument("--synthetic", action="store_true", help="random data, plumbing test only")
             p.add_argument("--days", type=int)
+            p.add_argument("--save-data", help="with --download: write the CSVs here for reproducible reruns")
             p.add_argument("--split", type=float, default=0.7, help="in-sample fraction (0 = none)")
             p.add_argument("--folds", type=int, default=4, help="consecutive periods for the consistency check")
             p.add_argument("--benchmark", help="CSV of a benchmark index (e.g. NIFTY 50); default: equal-weight universe")
@@ -146,6 +209,10 @@ def main(argv=None):
         if name == "live":
             p.add_argument("--stop-type", choices=["SL-M", "SL"], default="SL-M")
     a = ap.parse_args(argv)
+    if getattr(a, "save_data", None) and not a.download:
+        ap.error("--save-data only applies with --download")
+    if a.cmd == "compare":
+        return cmd_compare([Config.load(c) for c in a.config], [Path(c).stem for c in a.config], a)
     cfg = Config.load(a.config)
     {"backtest": cmd_backtest, "paper": cmd_paper, "live": cmd_live, "reset": cmd_reset}[a.cmd](cfg, a)
 
