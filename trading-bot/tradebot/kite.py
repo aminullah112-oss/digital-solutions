@@ -359,13 +359,33 @@ class KiteBroker(Broker):
                    "price": self._tick(trigger * (1 + side * self.gtt_buf))}]
         return {"type": "single", "condition": json.dumps(cond), "orders": json.dumps(orders)}
 
+    @staticmethod
+    def _gtt_id(g: dict) -> str | None:
+        # Kite responses have used trigger_id in detail responses and id in some
+        # list payloads; normalize both without guessing from order parameters.
+        value = g.get("trigger_id", g.get("id"))
+        return str(value) if value is not None else None
+
+    def _gtt_inventory(self) -> set[str]:
+        rows = self._req("GET", "/gtt/triggers")
+        return {gid for row in rows if (gid := self._gtt_id(row)) is not None}
+
     def place_stop(self, symbol, side, qty, trigger, tag):
         if self._use_gtt:
+            # GTTs have no client tag. Snapshot IDs before submission so an
+            # ambiguous POST can only resolve to a newly appeared trigger, never
+            # an older stop with identical symbol/price/quantity parameters.
+            before = self._gtt_inventory()
             try:
                 d = self._req("POST", "/gtt/triggers", self._gtt_params(symbol, side, qty, trigger))
-                return f"gtt:{d['trigger_id']}"
+                gid = d.get("trigger_id", d.get("id"))
+                if gid is None:
+                    raise OrderUnknown(f"GTT stop for {symbol}: success response lacked trigger ID",
+                                       metadata={"gtt_before_ids": sorted(before)})
+                return f"gtt:{gid}"
             except AmbiguousRequest as e:
-                raise OrderUnknown(f"GTT stop for {symbol}: outcome unknown ({e})") from e
+                raise OrderUnknown(f"GTT stop for {symbol}: outcome unknown ({e})",
+                                   metadata={"gtt_before_ids": sorted(before)}) from e
         return self._place(tag, tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
                            quantity=qty, **self._stop_params(side, trigger))
 
@@ -382,8 +402,14 @@ class KiteBroker(Broker):
             res = ((g.get("orders") or [{}])[0].get("result") or {}).get("order_result") or {}
             child = res.get("order_id")
             if not child:
-                return OrderState("OPEN"), None          # fired; order not visible yet
-            return self._state(self._history(child)), child
+                # The trigger has fired; it is no longer an active resting stop.
+                # Its child order may be delayed in the order book. Never label
+                # this OPEN/protected until the child or position change is visible.
+                return OrderState("UNKNOWN"), None
+            try:
+                return self._state(self._history(child)), child
+            except BrokerError:
+                return OrderState("UNKNOWN"), child
         if st == "rejected":
             return OrderState("REJECTED"), None
         return OrderState("CANCELLED"), None             # deleted / cancelled / disabled / expired
@@ -422,7 +448,9 @@ class KiteBroker(Broker):
         st, child = self._gtt_state(gid)
         if child:
             return self._cancel_regular(child)
-        if st.final:
+        if st.final or st.status == "UNKNOWN":
+            # In particular, a triggered GTT with an invisible child is unresolved;
+            # do not pretend the trigger can be cancelled or send an opposing exit.
             return st
         try:
             self._req("DELETE", f"/gtt/triggers/{gid}")
@@ -454,18 +482,32 @@ class KiteBroker(Broker):
         hit = self._find_regular(tag)
         if hit or not (hint and hint.get("kind") == "stop" and self._use_gtt):
             return hit
-        # GTTs carry no tag: match the trigger we tried to create.
+        # GTTs carry no tag. Only consider IDs absent from the pre-submit snapshot;
+        # matching an older GTT by symbol/price/quantity can adopt the wrong stop.
+        before = hint.get("gtt_before_ids")
+        if before is None:
+            return None  # no safe identity evidence (e.g. legacy pending state)
+        before = {str(x) for x in before}
         want = (hint["symbol"], self._tick(hint["trigger"]), int(hint["qty"]),
                 "BUY" if hint["side"] > 0 else "SELL")
-        for g in reversed(self._req("GET", "/gtt/triggers")):
+        candidates = []
+        for g in self._req("GET", "/gtt/triggers"):
+            gid = self._gtt_id(g)
+            if gid is None or gid in before or g.get("status") not in ("active", "triggered"):
+                continue
             o = (g.get("orders") or [{}])[0]
-            got = (g.get("condition", {}).get("tradingsymbol"),
-                   self._tick((g.get("condition", {}).get("trigger_values") or [0])[0]),
+            cond = g.get("condition", {})
+            values = cond.get("trigger_values") or [0]
+            got = (cond.get("tradingsymbol"), self._tick(values[0]),
                    int(o.get("quantity", 0)), o.get("transaction_type"))
-            if got == want and g.get("status") in ("active", "triggered"):
-                oid = f"gtt:{g['id']}"
-                return oid, self.order_status(oid)
-        return None
+            if got == want:
+                candidates.append(gid)
+        # Concurrent submissions or stale list data make identity ambiguous. Leave
+        # unresolved and require operator reconciliation rather than guessing.
+        if len(candidates) != 1:
+            return None
+        oid = f"gtt:{candidates[0]}"
+        return oid, self.order_status(oid)
 
     def net_positions(self):
         """Account-wide net quantity per symbol for this product. Includes shares the

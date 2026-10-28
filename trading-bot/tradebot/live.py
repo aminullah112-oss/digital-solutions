@@ -199,7 +199,8 @@ class LiveEngine:
             return "ok"
         except OrderUnknown as e:
             p.broker_stop_id, p.stop_tag, p.stop_qty = None, tag, p.qty
-            self._remember(tag, "stop", p.symbol, -p.side, p.qty, trigger=p.stop)
+            self._remember(tag, "stop", p.symbol, -p.side, p.qty, trigger=p.stop,
+                           **e.metadata)
             log.error("%s: stop placement outcome unknown (%s); resolving before any other order", p.symbol, e)
             return "pending"
         except BrokerError as e:
@@ -423,9 +424,20 @@ class LiveEngine:
 
     def _resolve_live(self, tag, r, oid, st, p, now):
         """A tagged order turned up and can still fill."""
+        if st.status == "UNKNOWN":
+            # A GTT can be triggered while its child limit order is not yet visible.
+            # UNKNOWN is not equivalent to an active protective order.
+            msg = (f"{r['symbol']}: order {tag} exists but its live state is UNKNOWN; "
+                   "keeping it unresolved and blocking new entries")
+            log.critical(msg, extra={"notify": True})
+            self.risk.block_entries(msg)
+            if p and r["kind"] == "stop":
+                p.stop_uncertain = True
+            return
         if r["kind"] == "stop":
             if p and p.stop_tag == tag and not p.broker_stop_id:
                 p.broker_stop_id, p.stop_tag = oid, None
+                p.stop_uncertain = False
                 del self.pending[tag]
                 log.warning("%s: stop %s resolved as live (%s); protected", p.symbol, tag, oid)
                 return
@@ -489,6 +501,13 @@ class LiveEngine:
             return                                   # the resolver owns this position for now
         if p.broker_stop_id:
             st = self._status(p.broker_stop_id)
+            if st.status == "UNKNOWN":
+                p.stop_uncertain = True
+                msg = f"{sym}: protective stop {p.broker_stop_id} state UNKNOWN; new entries blocked"
+                log.critical(msg, extra={"notify": True})
+                self.risk.block_entries(msg)
+                return
+            p.stop_uncertain = False
             if st.final and st.filled:
                 self._fill_against(p, st.filled, st.avg, "trailing stop" if p.stop != p.initial_stop else "stop")
                 if sym not in self.positions:
@@ -543,7 +562,8 @@ class LiveEngine:
             self.exit(sym, "stop lost")
 
     def unprotected(self) -> list[str]:
-        return [s for s, p in self.positions.items() if not p.broker_stop_id]
+        return [s for s, p in self.positions.items()
+                if not p.broker_stop_id or p.stop_uncertain]
 
     def entries_paused(self) -> str:
         """Self-clearing reasons not to take new risk (unlike risk halts)."""

@@ -82,6 +82,8 @@ Live-only safeguards. Each row has a deterministic test.
 | Entry/exit request times out | recorded by tag, never retried blindly; resolved from the order book, or from the broker's position change if the order book lags. Market orders don't rest, so if the position hasn't moved after 120s the order didn't happen and is retried |
 | Entry fills but the order shows up late (or never) | adopted and stopped as soon as the tag or the position change proves it; no new entries meanwhile |
 | Stop placement times out | the stop may be resting unseen, so the bot **never** presumes it absent. No second stop and no exit for those shares. If the position drops, the stop fired and is booked. Otherwise, after 120s: CRITICAL alert, entries blocked, and you check Kite and run `reset`, which then lets the bot re-arm once |
+| Ambiguous GTT creation | GTT IDs are snapshotted before submission; recovery considers only newly appearing matching IDs. If identity is missing or ambiguous, it remains unresolved rather than adopting an older matching trigger |
+| GTT has triggered but child order isn't visible | state is `UNKNOWN`, not `OPEN`; the position is treated as protection-uncertain, new entries are blocked, and a CRITICAL alert is sent |
 | Late duplicate/stray stop appears | cancelled (confirmed) |
 | Cancel request unanswered (stop may still fill) | exit deferred while the stop stays live; retried until the broker confirms the cancel, so there's no market sell racing a live stop |
 | Stop fills while being cancelled | booked as a stop exit; no market order sent |
@@ -186,7 +188,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 96 tests
+python -m unittest discover -s tests        # 101 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic
@@ -241,7 +243,7 @@ Not addressed, and it matters: **survivorship bias.** The universe is today's sy
 - **yfinance intraday history is only 60 days.** That's too short to validate an intraday strategy. Use Kite historical data (paid add-on) or another vendor, and get 1–2 years.
 - **Data must be split/bonus adjusted.** An unadjusted split looks like a 50% gap and will trigger stops in the backtest.
 - **Not modelled:** circuit limits in backtests (live, a stop that can't fill is detected and exited at market once the price trades), auction sessions, F&O. Holidays need `session.holidays` filled in.
-- **Kite specifics still unverified:** GTT field names and states, `filled_quantity` on cancelled orders, whether same-day CNC buys appear in both holdings and day positions (a double count would block entries, not trade), and order-book visibility timing. Check each with 1-share live orders before trusting it.
+- **Kite specifics still unverified:** GTT field names and states, `filled_quantity` on cancelled orders, whether same-day CNC buys appear in both holdings and day positions (a double count would block entries, not trade), and order-book visibility timing. The adapter now fails closed on ambiguous GTT identity/state, but check each behavior with controlled live tests before trusting it.
 - **Overfitting.** Changing parameters until the backtest looks good is the most common way to lose money with a bot. Pick parameters on in-sample data, look at out-of-sample once, and stop tweaking.
 - **Kite adapter is unverified.** It follows the Kite Connect v3 REST docs but hasn't been run against a live account. There is no Kite Connect sandbox. Paper trade with `--feed kite`, then place 1-share live orders to check every path (entry, stop placement, stop modify, cancel, target exit, EOD flatten) before trusting it. Kite has restricted SL-M on some segments; if your stops are rejected, use `--stop-type SL` (stop-limit with a 0.5% buffer).
 - **Regulation (verify with your broker).** SEBI's retail algo framework (rolled out 2025–26) puts API orders under broker-side controls: static-IP whitelisting, order-rate thresholds above which an algo must be registered and tagged with an exchange algo ID, and daily re-login. Zerodha currently documents a static-IP requirement for API order placement and a 10 orders/second per-account limit. Staying under the rate limit doesn't by itself mean every requirement is met. Treat compliance as a go-live gate and confirm your exact setup with Zerodha.

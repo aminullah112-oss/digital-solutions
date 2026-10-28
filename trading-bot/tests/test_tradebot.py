@@ -1269,6 +1269,37 @@ class TestOrderLifecycle(TestLiveEngine):
         self.assertEqual(calls, [])
         self.assertEqual(eng.positions, {})
 
+    def test_unknown_stop_state_blocks_entries_and_is_not_marked_protected(self):
+        eng = self.engine()
+        self.at(eng, 3)
+        p = eng.positions["A"]
+        stop_id = p.broker_stop_id
+        from tradebot.broker import OrderState
+        original = self.broker.order_status
+        self.broker.order_status = lambda oid: (OrderState("UNKNOWN") if oid == stop_id else original(oid))
+        eng.reconcile()
+        self.assertTrue(p.stop_uncertain)
+        self.assertIn("A", eng.unprotected())
+        self.assertTrue(eng.entries_paused())
+        self.assertIn("UNKNOWN", eng.risk.halted())
+
+    def test_pending_stop_with_unknown_state_is_not_adopted_as_protection(self):
+        from tradebot.broker import OrderState
+        eng = self.engine()
+        self.at(eng, 3)
+        p = eng.positions["A"]
+        p.broker_stop_id = None
+        p.stop_tag = "tbs-unknown"
+        eng._remember("tbs-unknown", "stop", "A", -1, p.qty, trigger=p.stop,
+                      gtt_before_ids=["1"])
+        eng._resolve_live("tbs-unknown", eng.pending["tbs-unknown"], "gtt:2",
+                          OrderState("UNKNOWN"), p, eng.now())
+        self.assertIsNone(p.broker_stop_id)
+        self.assertEqual(p.stop_tag, "tbs-unknown")
+        self.assertTrue(p.stop_uncertain)
+        self.assertIn("tbs-unknown", eng.pending)
+        self.assertTrue(eng.risk.halted())
+
 
 class TestKiteGtt(unittest.TestCase):
     def setUp(self):
@@ -1280,6 +1311,8 @@ class TestKiteGtt(unittest.TestCase):
         sent = {}
 
         def script(b, method, path, params):
+            if path == "/gtt/triggers" and method == "GET":
+                return []
             if path.startswith("/quote/ltp"):
                 return {"NSE:INFY": {"last_price": 1600.0}}
             if method == "POST" and path == "/gtt/triggers":
@@ -1319,32 +1352,83 @@ class TestKiteGtt(unittest.TestCase):
             b.product = "CNC"
             return b.order_status("gtt:7")
         self.assertEqual(gtt("active").status, "OPEN")
-        self.assertEqual(gtt("triggered").status, "OPEN")            # fired, order not visible yet
+        self.assertEqual(gtt("triggered").status, "UNKNOWN")         # fired; child not visible yet
         self.assertEqual(gtt("triggered", "c1", "OPEN").status, "OPEN")
         st = gtt("triggered", "c1", "COMPLETE", 10)
         self.assertEqual((st.status, st.filled, st.avg), ("COMPLETE", 10, 1490.0))
         self.assertEqual(gtt("deleted").status, "CANCELLED")
         self.assertEqual(gtt("rejected").status, "REJECTED")
 
-    def test_gtt_found_by_hint_when_creation_timed_out(self):
-
+    def test_gtt_found_by_hint_only_when_new_since_snapshot(self):
         def script(b, method, path, params):
             if path == "/orders":
                 return []
             if path == "/gtt/triggers" and method == "GET":
-                return [{"id": 3, "status": "active",
-                         "condition": {"tradingsymbol": "INFY", "trigger_values": [1500.0]},
-                         "orders": [{"quantity": 10, "transaction_type": "SELL"}]}]
+                # ID 2 is a pre-existing, parameter-identical GTT; it must not be
+                # adopted as the result of the ambiguous new submission.
+                return [
+                    {"id": 2, "status": "active",
+                     "condition": {"tradingsymbol": "INFY", "trigger_values": [1500.0]},
+                     "orders": [{"quantity": 10, "transaction_type": "SELL"}]},
+                    {"id": 3, "status": "active",
+                     "condition": {"tradingsymbol": "INFY", "trigger_values": [1500.0]},
+                     "orders": [{"quantity": 10, "transaction_type": "SELL"}]},
+                ]
             if path == "/gtt/triggers/3":
                 return {"status": "active", "orders": [{}]}
         b = FakeKite(script)
         b.product = "CNC"
-        hit = b.find_by_tag("tbs1", hint={"kind": "stop", "symbol": "INFY", "side": -1,
-                                          "qty": 10, "trigger": 1500.0})
+        hint = {"kind": "stop", "symbol": "INFY", "side": -1, "qty": 10,
+                "trigger": 1500.0, "gtt_before_ids": ["1", "2"]}
+        hit = b.find_by_tag("tbs1", hint=hint)
         self.assertEqual(hit[0], "gtt:3")
         self.assertEqual(hit[1].status, "OPEN")
-        self.assertIsNone(b.find_by_tag("tbs2", hint={"kind": "stop", "symbol": "INFY", "side": -1,
-                                                       "qty": 11, "trigger": 1500.0}))
+        self.assertIsNone(b.find_by_tag("tbs2", hint={**hint, "qty": 11}))
+
+    def test_ambiguous_gtt_submission_carries_pre_submit_inventory(self):
+        from tradebot.kite import AmbiguousRequest
+
+        def script(b, method, path, params):
+            if path == "/gtt/triggers" and method == "GET":
+                return [{"id": 11, "status": "active"}]
+            if path.startswith("/quote/ltp"):
+                return {"NSE:INFY": {"last_price": 1600.0}}
+            if path == "/gtt/triggers" and method == "POST":
+                raise AmbiguousRequest("simulated timeout after POST")
+        b = FakeKite(script)
+        b.product = "CNC"
+        with self.assertRaises(OrderUnknown) as caught:
+            b.place_stop("INFY", -1, 10, 1500.0, tag="tbs1")
+        self.assertEqual(caught.exception.metadata["gtt_before_ids"], ["11"])
+
+    def test_triggered_gtt_without_child_is_not_cancelled_or_claimed_active(self):
+        calls = []
+        def script(b, method, path, params):
+            calls.append((method, path))
+            if path == "/gtt/triggers/7":
+                return {"status": "triggered", "orders": [{"result": None}]}
+            if path == "/gtt/triggers" and method == "GET":
+                return []
+        b = FakeKite(script)
+        b.product = "CNC"
+        self.assertEqual(b.order_status("gtt:7").status, "UNKNOWN")
+        self.assertEqual(b.cancel("gtt:7").status, "UNKNOWN")
+        self.assertFalse(any(method == "DELETE" for method, _ in calls))
+
+    def test_gtt_identity_ambiguous_if_multiple_new_matches(self):
+        def script(b, method, path, params):
+            if path == "/orders":
+                return []
+            if path == "/gtt/triggers" and method == "GET":
+                return [{"id": i, "status": "active",
+                         "condition": {"tradingsymbol": "INFY", "trigger_values": [1500.0]},
+                         "orders": [{"quantity": 10, "transaction_type": "SELL"}]}
+                        for i in (3, 4)]
+        b = FakeKite(script)
+        b.product = "CNC"
+        hint = {"kind": "stop", "symbol": "INFY", "side": -1, "qty": 10,
+                "trigger": 1500.0, "gtt_before_ids": ["1", "2"]}
+        self.assertIsNone(b.find_by_tag("tbs1", hint=hint))
 
 
 class TestAlertLanes(unittest.TestCase):

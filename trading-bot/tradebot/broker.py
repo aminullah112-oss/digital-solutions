@@ -37,8 +37,15 @@ class TokenExpired(Exception):
 
 
 class OrderUnknown(BrokerError):
-    """An order request timed out and its outcome is unknown. The order may exist
-    now or appear later; the engine resolves it by tag."""
+    """An order request timed out and its outcome is unknown.
+
+    ``metadata`` carries durable reconciliation evidence gathered before submission
+    (for example, the set of existing GTT IDs). It must be JSON-serializable because
+    the live engine persists it across restarts.
+    """
+    def __init__(self, message: str, metadata: dict | None = None):
+        super().__init__(message)
+        self.metadata = metadata or {}
 
 
 class Fill(NamedTuple):
