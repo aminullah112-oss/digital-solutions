@@ -1,4 +1,5 @@
 import json
+import logging
 import math
 import os
 import tempfile
@@ -531,6 +532,236 @@ class TestLiveFailurePaths(TestLiveEngine):
         eng.acquire_lock()
         with self.assertRaises(SystemExit):
             self.engine().acquire_lock()
+
+
+class TestAlerts(unittest.TestCase):
+    def handler(self, senders=None, **kw):
+        from tradebot.alerts import AlertHandler
+        self.got = []
+        h = AlertHandler(senders if senders is not None else [self.got.append], "t",
+                         background=False, **kw)
+        lg = logging.getLogger("tradebot.test_alerts")
+        lg.setLevel(logging.DEBUG)
+        lg.addHandler(h)
+        self.addCleanup(lg.removeHandler, h)
+        return lg, h
+
+    def test_errors_and_notify_records_are_sent_info_is_not(self):
+        lg, _ = self.handler()
+        lg.info("routine")
+        lg.info("OPENED LONG A", extra={"notify": True})
+        lg.error("could not place stop")
+        self.assertEqual(len(self.got), 2)
+        self.assertIn("OPENED LONG A", self.got[0])
+        self.assertTrue(self.got[1].startswith("[t] ERROR"))
+
+    def test_duplicates_suppressed(self):
+        lg, _ = self.handler(dedupe_seconds=300)
+        for _ in range(5):
+            lg.error("token expired")
+        lg.error("something else")
+        self.assertEqual(len(self.got), 2)
+
+    def test_failing_channel_never_raises(self):
+        def broken(text):
+            raise OSError("network down")
+        lg, h = self.handler([broken, lambda t: self.got.append(t)])
+        lg.critical("POSITION UNPROTECTED")      # must not raise into the trading loop
+        self.assertEqual(h.failures, 1)
+        self.assertEqual(len(self.got), 1)       # the working channel still delivered
+
+    def test_background_delivery(self):
+        from tradebot.alerts import AlertHandler
+        got = []
+        h = AlertHandler([got.append], "t")
+        lg = logging.getLogger("tradebot.test_alerts_bg")
+        lg.addHandler(h)
+        self.addCleanup(lg.removeHandler, h)
+        lg.error("halted")
+        h.flush()
+        self.assertEqual(len(got), 1)
+
+    def test_channels_from_env(self):
+        from tradebot.alerts import install, senders_from_env
+        self.assertEqual(senders_from_env({}), [])
+        self.assertEqual(len(senders_from_env({"TRADEBOT_TELEGRAM_TOKEN": "x", "TRADEBOT_TELEGRAM_CHAT": "1",
+                                               "TRADEBOT_WEBHOOK_URL": "https://h"})), 2)
+        self.assertEqual(len(senders_from_env({"TRADEBOT_TELEGRAM_TOKEN": "x"})), 0)  # needs both
+        h, hb = install("t", env={})
+        self.assertIsNone(h)
+        hb.beat()                                # no URL: no-op, no error
+
+    def test_engine_alerts_on_halt_and_trades(self):
+        got = []
+        from tradebot.alerts import AlertHandler
+        h = AlertHandler([got.append], "t", background=False)
+        lg = logging.getLogger("tradebot")
+        lg.addHandler(h)
+        old = lg.level
+        lg.setLevel(logging.INFO)
+        self.addCleanup(lg.setLevel, old)
+        self.addCleanup(lg.removeHandler, h)
+        with tempfile.TemporaryDirectory() as d:
+            c = cfg(symbols=["A"], interval="day", state_file=str(Path(d) / "s.json"),
+                    kill_switch_file=str(Path(d) / "STOP"), risk=dict(max_position_pct=100))
+            df = bars([(100, 101, 99, 100, 1e6)] * 6, freq="B")
+            feed = FakeFeed(df)
+            broker = PaperBroker(feed, 0.0)
+            clock = [None]
+            eng = LiveEngine(c, OneShot(at=2), broker, now=lambda: clock[0])
+            feed.n, clock[0] = 4, df.index[3] + pd.Timedelta(hours=10)
+            eng.step()
+            broker.pos["A"] += 1                 # manual trade -> mismatch -> halt
+            feed.n, clock[0] = 5, df.index[4] + pd.Timedelta(hours=10)
+            eng.step()
+        self.assertTrue(any("OPENED" in m for m in got))
+        self.assertTrue(any("TRADING HALTED" in m for m in got))
+
+
+class EveryN(Strategy):
+    """Long signal every n bars when flat; stop 3% below, optional 2R target."""
+    name = "every_n"
+    mode = "swing"
+    defaults = dict(n=4, target=True, breakeven_r=1.0)
+
+    @property
+    def warmup(self):
+        return 1
+
+    def prepare(self, df):
+        return df
+
+    def signal(self, symbol, df, i, allow_short):
+        if i % self.p["n"]:
+            return None
+        c = df["close"].iat[i]
+        return Signal(symbol, 1, c, c * 0.97, c * 1.06 if self.p["target"] else None, 6)
+
+
+class TestFaultInjection(unittest.TestCase):
+    def test_parse_faults(self):
+        from tradebot.broker import parse_faults
+        self.assertEqual(parse_faults("reject=0.1, partial=0.2"), {"reject": 0.1, "partial": 0.2})
+        self.assertEqual(parse_faults(None), {})
+        with self.assertRaises(ValueError):
+            parse_faults("explode=0.1")
+        with self.assertRaises(ValueError):
+            parse_faults("reject=2")
+
+    def soak(self, faults, seed, bars_n=300, symbols=("A", "B", "C")):
+        """Run the engine over many sessions with faults; check invariants every cycle."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        c = cfg(symbols=list(symbols), interval="day", state_file=str(Path(tmp.name) / "s.json"),
+                kill_switch_file=str(Path(tmp.name) / "STOP"),
+                risk=dict(max_position_pct=30, max_open_risk_pct=3, loss_streak_halt=10**6,
+                          daily_loss_limit_pct=50, max_drawdown_pct=90))
+        frames = {s: synthetic(days=bars_n, seed=seed * 10 + k) for k, s in enumerate(symbols)}
+
+        class Feed:
+            n = 1
+
+            def bars(self, s, interval, lookback):
+                return frames[s].iloc[: self.n]
+
+            def ltp(self, s):
+                return float(frames[s]["close"].iat[self.n - 1])
+        feed = Feed()
+        broker = PaperBroker(feed, 0.0005, faults=faults, seed=seed)
+        clock = [None]
+        eng = LiveEngine(c, EveryN(), broker, now=lambda: clock[0])
+        idx = frames[symbols[0]].index
+        for n in range(3, bars_n):
+            feed.n = n + 1
+            for hour in (10, 14):            # two polls per session
+                clock[0] = idx[n] + pd.Timedelta(hours=hour)
+                eng.step()
+                self.check(eng, broker)
+        return eng, broker
+
+    def check(self, eng, broker):
+        held = dict(broker.pos)
+        bad = set()
+        for sym, p in eng.positions.items():
+            o = broker.orders.get(p.broker_stop_id or "")
+            if not (o is not None and o["status"] == "OPEN" and o["qty"] == p.qty):
+                bad.add(sym)
+        # A stop can fail AND its fallback exit can fail in the same cycle. That's
+        # tolerated for one cycle only: the next cycle must re-protect or close it.
+        persistent = bad & getattr(self, "_bad_prev", set())
+        if persistent and not eng.risk.halted():
+            self.fail(f"{persistent} unprotected for two cycles in a row")
+        self._bad_prev = bad
+        self.max_unprotected_streak = max(getattr(self, "max_unprotected_streak", 0), len(persistent))
+        expected = {s: p.side * p.qty for s, p in eng.positions.items()}
+        if held != expected:
+            self.assertTrue(eng.risk.halted(), f"broker {held} != bot {expected} and no halt")
+
+    def test_soak_unambiguous_faults_never_leave_a_position_unprotected(self):
+        # Every one of these is detectable, so the bot must recover without halting.
+        faults = dict(reject=0.15, partial=0.3, stop_reject=0.15, stop_cancel=0.1)
+        for seed in (1, 2, 3):
+            eng, broker = self.soak(faults, seed)
+            kinds = {k for k, _ in broker.injected}
+            self.assertEqual(kinds, set(faults), f"seed {seed}: not every fault fired")
+            self.assertEqual(eng.risk.halted(), "", f"seed {seed}: unexpected halt")
+            self.assertEqual(dict(broker.pos), {s: p.side * p.qty for s, p in eng.positions.items()})
+            self.assertGreater(len(Path(eng.trades_path).read_text().splitlines()), 20)
+
+    def test_soak_with_timeouts_keeps_invariants(self):
+        faults = dict(reject=0.1, partial=0.2, timeout=0.05, stop_reject=0.1, stop_cancel=0.05)
+        for seed in (4, 5):
+            eng, broker = self.soak(faults, seed)
+            self.assertIn("timeout", {k for k, _ in broker.injected})
+
+    def engine_with(self, faults):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        c = cfg(symbols=["A"], interval="day", state_file=str(Path(tmp.name) / "s.json"),
+                kill_switch_file=str(Path(tmp.name) / "STOP"), risk=dict(max_position_pct=100))
+        df = bars([(100, 101, 99, 100, 1e6)] * 8, freq="B")
+        feed = FakeFeed(df)
+        broker = PaperBroker(feed, 0.0)
+        clock = [None]
+        eng = LiveEngine(c, OneShot(at=2, max_bars=1), broker, now=lambda: clock[0])
+
+        def tick(n):
+            feed.n, clock[0] = n + 1, df.index[n] + pd.Timedelta(hours=10)
+            eng.step()
+        broker.faults = faults
+        return eng, broker, tick
+
+    def test_entry_timeout_that_filled_is_adopted_and_protected(self):
+        eng, broker, tick = self.engine_with({})
+        orig = broker.market
+
+        def market(sym, side, qty, tag=""):
+            orig(sym, side, qty, tag)
+            from tradebot.broker import OrderUnknown
+            raise OrderUnknown("timeout after fill")
+        broker.market = market
+        tick(3)
+        p = eng.positions["A"]
+        self.assertEqual(broker.pos["A"], p.qty)
+        self.assertEqual(broker.orders[p.broker_stop_id]["status"], "OPEN")
+        self.assertIn("outcome unknown", eng.risk.halted())   # still flagged for a human
+
+    def test_exit_timeout_that_filled_leaves_no_stray_stop(self):
+        eng, broker, tick = self.engine_with({})
+        tick(3)                                  # enter; max_bars=1 -> time stop next bar
+        orig = broker.market
+
+        def market(sym, side, qty, tag=""):
+            r = orig(sym, side, qty, tag)
+            if tag == "exit":
+                from tradebot.broker import OrderUnknown
+                raise OrderUnknown("timeout after fill")
+            return r
+        broker.market = market
+        tick(5)                                  # first bar after entry -> time stop -> exit
+        self.assertEqual(eng.positions, {})
+        self.assertEqual(broker.pos, {})
+        self.assertEqual([o for o in broker.orders.values() if o["status"] == "OPEN"], [])
 
 
 if __name__ == "__main__":

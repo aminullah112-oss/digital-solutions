@@ -26,6 +26,7 @@ tradebot/
   broker.py       Broker interface, PaperBroker, yfinance feed
   kite.py         Zerodha Kite Connect v3 adapter (stdlib HTTP)
   live.py         live/paper loop: broker-side stops, reconciliation, kill switch
+  alerts.py       Telegram / webhook alerts and a dead-man heartbeat
 config/           intraday.json, swing.json (10-day hold), swing_40d.json (same, 40-day hold),
                   swing_2r.json (10-day hold + 2R profit target);
                   starting points, not recommendations
@@ -74,6 +75,9 @@ Live-only safeguards (each failure path below has a test):
 | failure | handling |
 |---|---|
 | Order request times out | never retried blindly. Every order carries a unique tag; the bot looks it up in the order book. If it can't find it: `OrderUnknown`, entries blocked |
+| Entry times out but actually filled | broker position checked; the new shares are adopted and stopped, entries stay blocked for review |
+| Exit times out but actually filled | broker position checked before re-arming, so no stray stop is left to open a reverse position |
+| Stop re-arm and fallback exit both fail | logged CRITICAL (alerted), other positions still reconciled, retried next cycle; no new entries while any position lacks a stop |
 | Entry partly fills | position tracked and stopped for the filled quantity only |
 | Market order not complete in 30s | cancelled; whatever filled is tracked |
 | Stop rejected after entry | position closed at market immediately |
@@ -88,12 +92,48 @@ Live-only safeguards (each failure path below has a test):
 The stop order's status, not the bot's memory, decides whether a stop exit happened. Every cycle starts with reconciliation, before any new entry. Signals from stale bars are ignored. Daily-loss checks use realised plus open P&L. Don't trade the bot's symbols by hand in the same product (MIS/CNC); the reconcile check will treat that as a mismatch.
 - Risk maths uses **bot-scoped equity** (`initial_capital` + realised + open P&L), so the bot never sizes off money in the account that you didn't allocate to it.
 
+## Alerts
+
+Without alerts, "POSITION UNPROTECTED" only reaches a log file. Set any of these
+environment variables (never in the config file) before `paper` or `live`:
+
+| variable | effect |
+|---|---|
+| `TRADEBOT_TELEGRAM_TOKEN` + `TRADEBOT_TELEGRAM_CHAT` | Telegram messages via a bot you create with @BotFather |
+| `TRADEBOT_WEBHOOK_URL` | POST `{"text": ...}`: Slack/Discord-style hooks, or an ntfy.sh topic for phone push |
+| `TRADEBOT_HEARTBEAT_URL` | pinged after every clean cycle (at most once a minute) |
+
+You're alerted on every ERROR/CRITICAL log line, every trade opened or closed, every new halt or entry block, and bot start/stop. Identical messages are suppressed for 5 minutes, so an expired Kite token doesn't send 200 messages. Alerts go out on a background thread; a failing channel is logged and never interrupts trading.
+
+The heartbeat covers what self-reporting can't: a killed process, a frozen loop, or a dead VM. Point it at a dead-man service (e.g. healthchecks.io, with its period set to a few minutes). The service alerts you when the pings **stop**. Pings are sent only after a cycle completes, so a bot stuck on repeated errors also stops pinging.
+
+## Fault injection (paper)
+
+Zerodha has no sandbox, so the paper broker can inject the failures a real broker produces. That way, paper weeks also exercise the recovery code:
+
+```bash
+python -m tradebot paper -c config/swing.json --feed kite \
+    --faults reject=0.05,partial=0.1,timeout=0.02,stop_reject=0.05,stop_cancel=0.02 --fault-seed 1
+```
+
+| fault | what the paper broker does |
+|---|---|
+| `reject` | market order rejected, nothing fills |
+| `partial` | market order fills 30–90% of the quantity |
+| `timeout` | the order **is** placed or filled, but the call raises `OrderUnknown` (the nastiest real case) |
+| `stop_reject` | stop order rejected |
+| `stop_cancel` | an open stop turns up cancelled (expiry, broker-side cancel) |
+
+Each injected fault is logged as `[fault injected]`. The test suite runs the engine over 300 sessions × 3 symbols with heavy fault rates. After every cycle it checks two things: every position has a live stop for its exact quantity at the broker (a single cycle's gap is allowed if both the stop and the fallback exit failed), and the bot's positions match the broker's, or the bot has blocked entries and said why. Across three seeds, 749 detectable faults over 440 trades left no position unprotected for two cycles and caused no halts. A `timeout` correctly blocks entries until `reset`.
+
+Use a separate `state_file` (or delete `state/`) when you switch from a fault-injected paper run to a clean one.
+
 ## Workflow
 
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 36 tests
+python -m unittest discover -s tests        # 49 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic

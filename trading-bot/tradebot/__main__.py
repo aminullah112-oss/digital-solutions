@@ -135,6 +135,12 @@ def _engine(cfg: Config, broker):
     return LiveEngine(cfg, make_strategy(cfg.strategy, cfg.strategy_params, cfg.session.open), broker)
 
 
+def _run(cfg: Config, broker, a, label: str):
+    from .alerts import install
+    alerts, hb = install(f"tradebot {label} {cfg.mode}/{cfg.strategy}")
+    _engine(cfg, broker).run(a.poll, heartbeat=hb, alerts=alerts)
+
+
 def cmd_paper(cfg: Config, a):
     from .broker import PaperBroker, YFinanceFeed
     _setup_logging(cfg)
@@ -145,8 +151,12 @@ def cmd_paper(cfg: Config, a):
         feed = YFinanceFeed(cfg.session.timezone, a.suffix)
     state_file = Path(cfg.state_file)
     saved = json.loads(state_file.read_text()).get("broker") if state_file.exists() else None
-    broker = PaperBroker(feed, cfg.costs.slippage_pct, saved)
-    _engine(cfg, broker).run(a.poll)
+    from .broker import parse_faults
+    faults = parse_faults(a.faults)
+    broker = PaperBroker(feed, cfg.costs.slippage_pct, saved, faults=faults, seed=a.fault_seed)
+    if faults:
+        logging.getLogger("tradebot").warning("paper fault injection ON: %s", faults)
+    _run(cfg, broker, a, "PAPER")
 
 
 def cmd_live(cfg: Config, a):
@@ -162,7 +172,7 @@ def cmd_live(cfg: Config, a):
         "LIVE: capital %.0f, risk/trade %.2f%%, daily stop %.1f%%, max DD %.1f%%, symbols %s",
         cfg.initial_capital, cfg.risk.risk_per_trade_pct, cfg.risk.daily_loss_limit_pct,
         cfg.risk.max_drawdown_pct, cfg.symbols)
-    _engine(cfg, broker).run(a.poll)
+    _run(cfg, broker, a, "LIVE")
 
 
 def cmd_reset(cfg: Config, a):
@@ -206,6 +216,9 @@ def main(argv=None):
             p.add_argument("--poll", type=int, default=20, help="seconds between cycles")
         if name == "paper":
             p.add_argument("--feed", choices=["yfinance", "kite"], default="yfinance")
+            p.add_argument("--faults", help="inject failures, e.g. reject=0.05,partial=0.1,timeout=0.02,"
+                                            "stop_reject=0.05,stop_cancel=0.02")
+            p.add_argument("--fault-seed", type=int, help="make an injected-fault run repeatable")
         if name == "live":
             p.add_argument("--stop-type", choices=["SL-M", "SL"], default="SL-M")
     a = ap.parse_args(argv)

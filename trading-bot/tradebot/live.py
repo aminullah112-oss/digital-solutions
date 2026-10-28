@@ -130,7 +130,8 @@ class LiveEngine:
                 w.writerow(list(asdict(t)))
             w.writerow(list(asdict(t).values()))
         log.info("CLOSED %s %s qty=%d @ %.2f pnl=%.2f (%.2fR) [%s]",
-                 "LONG" if p.side > 0 else "SHORT", p.symbol, p.qty, px, pnl, t.r_multiple, why)
+                 "LONG" if p.side > 0 else "SHORT", p.symbol, p.qty, px, pnl, t.r_multiple, why,
+                 extra={"notify": True})
 
     # ------------------------------------------------------------ order flows
     def _arm_stop(self, p: Position) -> bool:
@@ -157,6 +158,12 @@ class LiveEngine:
         except BrokerError as e:
             if isinstance(e, OrderUnknown):
                 self.risk.block_entries(f"{sym}: exit order outcome unknown")
+                held = self._held(sym)
+                if held == 0:
+                    # The exit went through. Re-arming a stop now would leave a stray
+                    # order that could open a reverse position.
+                    self._record(p, self.broker.ltp(sym), why + " (confirmed via positions)")
+                    return
             # Stop is already cancelled; don't leave the position naked.
             if not self._arm_stop(p):
                 log.critical("%s: exit failed AND stop re-arm failed - POSITION UNPROTECTED", sym)
@@ -171,6 +178,13 @@ class LiveEngine:
             raise BrokerError(f"{sym}: partial exit")
         self._record(p, fill.price, why)
 
+    def _held(self, sym: str) -> int | None:
+        """Broker's net quantity for sym, or None if it can't be read."""
+        try:
+            return self.broker.net_positions().get(sym, 0)
+        except BrokerError:
+            return None
+
     def flatten_all(self, why: str):
         for sym in list(self.positions):
             try:
@@ -184,7 +198,20 @@ class LiveEngine:
         if qty * sig.ref_price > notional_cap:
             log.error("sanity check: %s order value %.0f > cap %.0f; skipped", sym, qty * sig.ref_price, notional_cap)
             return
-        fill = self.broker.market(sym, side, qty, tag="entry")
+        before = self._held(sym) or 0
+        try:
+            fill = self.broker.market(sym, side, qty, tag="entry")
+        except OrderUnknown:
+            # The entry may have filled. If the broker shows new shares, take
+            # ownership and protect them rather than leave them stopless.
+            self.risk.block_entries(f"{sym}: entry order outcome unknown")
+            held = self._held(sym)
+            got = (held - before) * side if held is not None else 0
+            if got <= 0:
+                raise
+            log.critical("%s: entry timed out but %d filled; adopting and protecting it", sym, got)
+            from .broker import Fill
+            fill = Fill(self.broker.ltp(sym), min(got, qty))
         if fill.qty < qty:
             log.warning("%s entry partially filled: %d of %d", sym, fill.qty, qty)
         p = Position(sym, side, fill.qty, fill.price, sig.stop, sig.stop, sig.target, self.now(),
@@ -202,26 +229,19 @@ class LiveEngine:
             return
         log.info("OPENED %s %s qty=%d @ %.2f stop=%.2f target=%s [%s]",
                  "LONG" if side > 0 else "SHORT", sym, p.qty, fill.price, sig.stop,
-                 f"{sig.target:.2f}" if sig.target else "-", sig.reason)
+                 f"{sig.target:.2f}" if sig.target else "-", sig.reason, extra={"notify": True})
 
     # ---------------------------------------------------------------- cycle
     def reconcile(self):
         """Make the bot's view match the broker's before anything else happens.
         Anything it can't explain blocks new entries until a human runs `reset`."""
         for sym, p in list(self.positions.items()):
-            if not p.broker_stop_id:
-                log.warning("%s has no protective stop; arming at %.2f", sym, p.stop)
-                if not self._arm_stop(p):
-                    self.exit(sym, "stop lost")
-                continue
-            st, avg = self.broker.order_status(p.broker_stop_id)
-            if st == "COMPLETE":
-                self._record(p, avg, "trailing stop" if p.stop != p.initial_stop else "stop")
-            elif st in ("CANCELLED", "REJECTED"):
-                # e.g. a DAY stop that expired overnight, or a broker-side cancel
-                log.warning("stop for %s is %s; re-placing at %.2f", sym, st, p.stop)
-                if not self._arm_stop(p):
-                    self.exit(sym, "stop lost")
+            try:
+                self._protect(sym, p)
+            except BrokerError as e:
+                # Couldn't re-arm AND couldn't exit. Keep going so every other position
+                # is still checked; this one is retried next cycle.
+                log.critical("%s UNPROTECTED: stop and exit both failed (%s); retrying next cycle", sym, e)
         try:
             held = self.broker.net_positions()
         except BrokerError as e:
@@ -241,6 +261,24 @@ class LiveEngine:
             msg = f"{sym}: broker qty {held.get(sym, 0)}, bot expects {expect}"
             log.error("reconcile mismatch, entries blocked: %s", msg)
             self.risk.block_entries(f"reconcile mismatch: {msg}")
+
+    def _protect(self, sym: str, p: Position):
+        if not p.broker_stop_id:
+            log.warning("%s has no protective stop; arming at %.2f", sym, p.stop)
+            if not self._arm_stop(p):
+                self.exit(sym, "stop lost")
+            return
+        st, avg = self.broker.order_status(p.broker_stop_id)
+        if st == "COMPLETE":
+            self._record(p, avg, "trailing stop" if p.stop != p.initial_stop else "stop")
+        elif st in ("CANCELLED", "REJECTED"):
+            # e.g. a DAY stop that expired overnight, or a broker-side cancel
+            log.warning("stop for %s is %s; re-placing at %.2f", sym, st, p.stop)
+            if not self._arm_stop(p):
+                self.exit(sym, "stop lost")
+
+    def unprotected(self) -> list[str]:
+        return [s for s, p in self.positions.items() if not p.broker_stop_id]
 
     def _kill_switch(self, now) -> bool:
         if not Path(self.cfg.kill_switch_file).exists():
@@ -263,7 +301,20 @@ class LiveEngine:
             return True
         raise SystemExit(0)
 
+    def _note_halt(self):
+        h = self.risk.halted()
+        if h and h != getattr(self, "_last_halt", ""):
+            log.critical("TRADING HALTED: %s", h)
+        self._last_halt = h
+
     def step(self):
+        self._last_halt = getattr(self, "_last_halt", self.risk.halted())
+        try:
+            self._step()
+        finally:
+            self._note_halt()
+
+    def _step(self):
         now = self.now()
         if self._kill_switch(now):
             return
@@ -337,6 +388,8 @@ class LiveEngine:
 
         if self.risk.halted():
             return
+        if self.unprotected():
+            return      # no new risk while any position lacks a stop; self-clears once re-armed
         if self.cfg.mode == "intraday" and now.time() >= self.cfg.session.t("last_entry"):
             return
         sig = self.strat.signal(sym, df, i, self.cfg.allow_short)
@@ -369,15 +422,24 @@ class LiveEngine:
         self._lock.write(str(os.getpid()))
         self._lock.flush()
 
-    def run(self, poll_seconds: int = 20):
+    def run(self, poll_seconds: int = 20, heartbeat=None, alerts=None):
         self.acquire_lock()
         log.info("starting %s/%s on %s (%s)", self.cfg.mode, self.strat.name,
-                 ",".join(self.cfg.symbols), type(self.broker).__name__)
-        while True:
-            try:
-                self.step()
-            except SystemExit:
-                raise
-            except Exception:
-                log.exception("cycle failed; positions keep their broker-side stops")
-            time.sleep(poll_seconds)
+                 ",".join(self.cfg.symbols), type(self.broker).__name__, extra={"notify": True})
+        try:
+            while True:
+                try:
+                    self.step()
+                    if heartbeat:
+                        heartbeat.beat()       # only after a clean cycle: a stuck bot stops pinging
+                except SystemExit:
+                    raise
+                except Exception:
+                    log.exception("cycle failed; positions keep their broker-side stops")
+                time.sleep(poll_seconds)
+        except BaseException as e:
+            log.critical("bot stopping: %s", e if str(e) else type(e).__name__)
+            raise
+        finally:
+            if alerts:
+                alerts.flush()
