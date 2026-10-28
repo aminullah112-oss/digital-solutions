@@ -30,7 +30,8 @@ tradebot/
 config/           intraday.json, swing.json (10-day hold), swing_40d.json (same, 40-day hold),
                   swing_2r.json (10-day hold + 2R profit target);
                   starting points, not recommendations
-tests/            lookahead, risk maths, fill rules, live order flow
+deploy/           systemd units, installer, operator CLI, backups (see "Deployment")
+tests/            lookahead, risk maths, fill rules, live order flow, deployment scripts
 ```
 
 ## Strategies
@@ -58,6 +59,8 @@ Strategies propose trades. `RiskManager` decides whether to take them and at wha
 | Concurrent positions | 4 / 6 | |
 | Open-risk budget | 1.5% / 3% | sum of (entry − stop) × qty over open and pending positions. Six swing trades at 0.75% would otherwise put 4.5% at risk at once. A stop moved to breakeven frees its budget |
 | Volume participation | ≤ 2% / ≤ 1% of the signal bar's volume | keeps size small relative to liquidity, so the slippage assumption holds |
+| Sector caps | ≤ 2 positions and ≤ 1% / 1.5% open risk per sector | uses the config's `sectors` map. The six financials (5 banks + Bajaj Finance) count as one sector |
+| Correlated-risk budget | ≤ 1% / 1.5% | new trade's risk + Σ max(0, ρ) × each open same-direction position's risk. ρ comes from 60-day daily returns using only days before the signal. Unknown ρ (thin history) counts as 0.5 |
 | Stop width | ≤ 2% / ≤ 10% | wider stops are rejected, not shrunk |
 | Reward:risk | ≥ 1.5 **after costs** | only for strategies with a target |
 | Liquidity | price ≥ ₹50, avg daily turnover ≥ ₹50cr / ₹20cr | |
@@ -115,6 +118,15 @@ environment variables (never in the config file) before `paper` or `live`:
 You're alerted on every ERROR/CRITICAL log line, every trade opened or closed, every new halt or entry block, and bot start/stop. Identical messages are suppressed for 5 minutes, so an expired Kite token doesn't send 200 messages. Alerts go out on a background thread; a failing channel is logged and never interrupts trading.
 
 The heartbeat covers what self-reporting can't: a killed process, a frozen loop, or a dead VM. Point it at a dead-man service (e.g. healthchecks.io, with its period set to a few minutes). The service alerts you when the pings **stop**. Pings are sent only after a cycle completes, so a bot stuck on repeated errors also stops pinging.
+
+## Concentration limits
+
+Five bank longs aren't five independent bets; on a bad day for financials they're one bet at five times the size. Two checks catch that:
+
+- **Sector caps** use the `sectors` map in each config (`symbol -> sector`). Paper and live refuse to start without one. Config loading fails if any traded symbol is missing from it, so a typo can't silently bypass the cap. Backtests without a map just print a note.
+- **Correlated-risk budget** catches co-movement that sector labels miss, such as Reliance with the index, or IT with the rupee. A candidate correlated 0.9 with an open position gets sized as if 90% of that position's risk were already its own. Short positions get no hedge credit for long candidates, because correlations converge in sell-offs.
+
+Both reduce size first, and reject only when the budget is used up. The rejection reason names the cap that bound (`size zero: sector financials risk budget exhausted`), so the backtest report shows how often each one fires. In live trading, daily closes for the correlation come from one history call per symbol per day. If that fails, ρ = 0.5 is assumed, and the warning is logged.
 
 ## Daily Kite login
 
@@ -174,7 +186,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 82 tests
+python -m unittest discover -s tests        # 96 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic
@@ -203,6 +215,7 @@ python -m tradebot live -c config/intraday.json
 
 touch STOP                                          # emergency flatten
 python -m tradebot reset -c config/intraday.json    # clear a halt/entry block after checking the account
+python -m tradebot status -c config/intraday.json   # positions, unresolved orders, halts, last trades (read-only)
 ```
 
 ## Evaluation report
@@ -232,4 +245,33 @@ Not addressed, and it matters: **survivorship bias.** The universe is today's sy
 - **Overfitting.** Changing parameters until the backtest looks good is the most common way to lose money with a bot. Pick parameters on in-sample data, look at out-of-sample once, and stop tweaking.
 - **Kite adapter is unverified.** It follows the Kite Connect v3 REST docs but hasn't been run against a live account. There is no Kite Connect sandbox. Paper trade with `--feed kite`, then place 1-share live orders to check every path (entry, stop placement, stop modify, cancel, target exit, EOD flatten) before trusting it. Kite has restricted SL-M on some segments; if your stops are rejected, use `--stop-type SL` (stop-limit with a 0.5% buffer).
 - **Regulation (verify with your broker).** SEBI's retail algo framework (rolled out 2025–26) puts API orders under broker-side controls: static-IP whitelisting, order-rate thresholds above which an algo must be registered and tagged with an exchange algo ID, and daily re-login. Zerodha currently documents a static-IP requirement for API order placement and a 10 orders/second per-account limit. Staying under the rate limit doesn't by itself mean every requirement is met. Treat compliance as a go-live gate and confirm your exact setup with Zerodha.
-- **Run it on an always-on machine** (a small cloud VM with a static IP, which you'll need for SEBI anyway) under a supervisor like `systemd` with `Restart=on-failure`. Watch `state/*/bot.log` and `trades.csv`.
+- **Run it on an always-on machine**; see "Deployment".
+
+## Deployment
+
+A small Linux VM in Mumbai (AWS `ap-south-1`, GCP `asia-south1`, or similar) with a **static public IP** is enough: 1 vCPU and 1–2 GB RAM. Zerodha requires a whitelisted static IP for API order placement. Register it in the Kite developer console.
+
+```bash
+git clone <this repo> && cd digital-solutions/trading-bot
+sudo ./deploy/install.sh                 # user, venv, /etc/tradebot, systemd units
+sudoedit /etc/tradebot/env               # alerts, Kite keys, TRADEBOT_MODE=paper
+sudoedit /etc/tradebot/swing.json        # symbols, sectors, holidays, capital
+sudo tradebot login                      # each trading morning
+sudo systemctl enable --now tradebot@swing
+sudo tradebot status -c /etc/tradebot/swing.json
+journalctl -u tradebot@swing -f
+```
+
+| piece | what it does |
+|---|---|
+| `tradebot@.service` | one instance per config (`tradebot@swing` → `/etc/tradebot/swing.json`). Mode and flags come from `/etc/tradebot/env`. Runs as an unprivileged `tradebot` user that can only write `/var/lib/tradebot`. Restarts on crash (state and pending orders reload; broker-side stops keep working in between) but **not** after a clean exit (kill switch, `systemctl stop`). Gives up after 5 crashes in 15 minutes, because a crash loop needs a human |
+| `SIGTERM` handling | `systemctl stop/restart` lets the bot finish its current cycle and save state. It never stops between cancelling a stop and sending the exit |
+| `/etc/tradebot/env` | secrets and mode, `640 root:tradebot`. Read by systemd and by the `tradebot` CLI as plain `KEY=value` lines, never executed as shell |
+| `tradebot` CLI | `/usr/local/bin/tradebot ...` runs any subcommand as the service user with the service's environment (`login`, `status`, `reset`, `backtest`) |
+| `tradebot-backup.timer` | daily 16:05 IST snapshot of `/var/lib/tradebot` to `/var/backups/tradebot`, kept 30 days. The Kite token is excluded |
+| logs | journald (`journalctl -u tradebot@swing`) plus `state/*/bot.log`, rotated at 10 MB × 5 |
+| upgrades | re-run `install.sh`. Your configs and env are never overwritten, the previous code is kept in `/opt/tradebot/app.old`, and running instances aren't touched. Restart them when ready |
+
+Also: keep the clock NTP-synced (`timedatectl set-ntp true`; the installer warns if it isn't), since bar timing depends on it. Point `TRADEBOT_HEARTBEAT_URL` at a dead-man service. One `STOP` file in `/var/lib/tradebot` stops every instance.
+
+Verified here: shellcheck on all scripts, a full install into a temporary prefix with a real venv, the upgrade path, the CLI wrapper (including a secret containing `$`, backticks and `$(…)` that must not execute), backups, `status`, and SIGTERM shutdown (`tests/test_deploy.py`). **Not** verified here: systemd actually running the units, because this container has no init system; `systemd-analyze verify` parsed them without syntax errors. Do a first `systemctl start` in paper mode and watch `journalctl` before trusting it.

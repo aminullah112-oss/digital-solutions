@@ -35,7 +35,7 @@ from .backtest import add_turnover
 from .broker import Broker, BrokerError, Fill, OrderState, OrderUnknown, TokenExpired
 from .config import Config
 from .models import Position, Trade
-from .risk import RiskManager
+from .risk import Correlations, RiskManager
 from .strategies import Strategy
 
 log = logging.getLogger("tradebot")
@@ -710,11 +710,36 @@ class LiveEngine:
             return
         tv = bar.turnover
         qty, why = self.risk.size(sig, self.equity(), self.positions,
-                                  None if np.isnan(tv) else float(tv), float(bar.volume))
+                                  None if np.isnan(tv) else float(tv), float(bar.volume),
+                                  corr=lambda a, b: self._corr(a, b, now))
         if not qty:
             log.info("%s %s rejected: %s", sym, sig.reason, why)
             return
         self.enter(sig, qty)
+
+    def _daily(self, sym: str, now) -> pd.Series | None:
+        """Daily closes for sym, fetched at most once per day per symbol."""
+        cache = self.__dict__.setdefault("_daily_cache", {})
+        hit = cache.get(sym)
+        if hit and hit[0] == now.date():
+            return hit[1]
+        try:
+            days = int(self.cfg.risk.corr_lookback * 1.6) + 15      # trading days -> calendar
+            closes = Correlations.daily_closes(self.broker.history(sym, "day", days))
+        except BrokerError as e:
+            log.warning("%s: no daily history for correlations (%s); assuming rho=%.2f",
+                        sym, e, self.cfg.risk.corr_unknown)
+            closes = None
+        cache[sym] = (now.date(), closes)
+        return closes
+
+    def _corr(self, a: str, b: str, now) -> float | None:
+        if a == b:
+            return 1.0
+        ca, cb = self._daily(a, now), self._daily(b, now)
+        if ca is None or cb is None:
+            return None
+        return Correlations({a: ca, b: cb}, self.cfg.risk.corr_lookback).corr(a, b, now)
 
     def acquire_lock(self):
         """One engine per state file. Two processes managing the same positions
@@ -730,12 +755,23 @@ class LiveEngine:
         self._lock.write(str(os.getpid()))
         self._lock.flush()
 
-    def run(self, poll_seconds: int = 20, heartbeat=None, alerts=None):
+    def request_stop(self, signum=None, frame=None):
+        """SIGTERM/SIGINT: finish the current cycle (never stop between cancelling a
+        stop and sending its exit), save state, then exit."""
+        self._stop_requested = True
+
+    def run(self, poll_seconds: int = 20, heartbeat=None, alerts=None, max_cycles: int | None = None):
+        import signal
         self.acquire_lock()
+        self._stop_requested = False
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(sig, self.request_stop)
         log.info("starting %s/%s on %s (%s)", self.cfg.mode, self.strat.name,
                  ",".join(self.cfg.symbols), type(self.broker).__name__, extra={"notify": True})
+        cycles = 0
+        reason = "stop requested (SIGTERM/SIGINT)"
         try:
-            while True:
+            while not self._stop_requested:
                 try:
                     self.step()
                     if heartbeat:
@@ -744,7 +780,15 @@ class LiveEngine:
                     raise
                 except Exception:
                     log.exception("cycle failed; positions keep their broker-side stops")
-                time.sleep(poll_seconds)
+                cycles += 1
+                if max_cycles is not None and cycles >= max_cycles:
+                    reason = "max cycles reached"
+                    break
+                end = time.monotonic() + poll_seconds
+                while not self._stop_requested and time.monotonic() < end:
+                    time.sleep(min(1.0, poll_seconds))
+            self.save()
+            log.warning("bot stopping: %s; broker-side stops stay active", reason, extra={"notify": True})
         except BaseException as e:
             log.critical("bot stopping: %s", e if str(e) else type(e).__name__)
             raise

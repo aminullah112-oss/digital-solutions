@@ -1371,5 +1371,123 @@ class TestAlertLanes(unittest.TestCase):
         self.assertTrue(any("lower-priority alerts dropped" in t for t in got))
 
 
+class TestConcentration(unittest.TestCase):
+    T0 = pd.Timestamp("2024-01-01")
+
+    def rm(self, **risk):
+        c = cfg(symbols=["A", "B", "C", "D"], risk=dict(max_position_pct=100, max_open_risk_pct=10,
+                                                       max_open_positions=10, **risk))
+        c.sectors = {"A": "banks", "B": "banks", "C": "banks", "D": "it"}
+        return RiskManager(c)
+
+    def pos(self, sym, qty=100, side=1, entry=100.0, stop=95.0):
+        return Position(sym, side, qty, entry, stop, stop, None, self.T0)
+
+    def test_sectors_must_cover_every_symbol(self):
+        with self.assertRaises(ValueError):
+            Config.from_dict({"symbols": ["A", "B"], "sectors": {"A": "banks"}})
+        Config.from_dict({"symbols": ["A"], "sectors": {"A": "banks"}})
+
+    def test_sector_position_cap(self):
+        rm = self.rm(max_sector_positions=2, max_sector_risk_pct=10, max_correlated_risk_pct=10)
+        held = {"A": self.pos("A"), "B": self.pos("B")}
+        qty, why = rm.size(Signal("C", 1, 100.0, 95.0), 100_000, held)
+        self.assertEqual(qty, 0)
+        self.assertIn("sector banks", why)
+        self.assertEqual(rm.size(Signal("D", 1, 100.0, 95.0), 100_000, held)[0], 100)  # other sector fine
+
+    def test_sector_risk_budget_shrinks_size(self):
+        rm = self.rm(max_sector_positions=5, max_sector_risk_pct=0.8, max_correlated_risk_pct=10)
+        held = {"A": self.pos("A", qty=60)}                 # 300 at risk in banks
+        qty, _ = rm.size(Signal("B", 1, 100.0, 95.0), 100_000, held)
+        self.assertEqual(qty, 100)                          # 800 - 300 = 500 left -> 100 shares
+        held["A"].qty = 100                                 # 500 at risk
+        qty, why = rm.size(Signal("B", 1, 100.0, 95.0), 100_000, held)
+        self.assertEqual(qty, 60)
+        held["A"].qty = 160                                 # 800: budget used up
+        qty, why = rm.size(Signal("B", 1, 100.0, 95.0), 100_000, held)
+        self.assertEqual(qty, 0)
+        self.assertIn("sector banks risk budget", why)
+
+    def test_correlated_risk_budget(self):
+        rm = self.rm(risk_per_trade_pct=1.0, max_sector_positions=5, max_sector_risk_pct=10,
+                     max_correlated_risk_pct=1.0)
+        held = {"D": self.pos("D")}                         # 500 at risk, different sector
+        rho = {("A", "D"): 0.9}
+        f = lambda a, b: rho.get((a, b), rho.get((b, a)))
+        qty, why = rm.size(Signal("A", 1, 100.0, 95.0), 100_000, held, corr=f)
+        self.assertEqual(qty, 110)                          # (1000 - 0.9*500) / 5, below the 200 per-trade size
+        rho[("A", "D")] = 0.0
+        self.assertEqual(rm.size(Signal("A", 1, 100.0, 95.0), 100_000, held, corr=f)[0], 200)
+        rho[("A", "D")] = -0.8                              # negative rho: no extra room beyond the cap
+        self.assertEqual(rm.size(Signal("A", 1, 100.0, 95.0), 100_000, held, corr=f)[0], 200)
+        rho[("A", "D")] = 1.0
+        held["D"].qty = 200                                 # 1000 fully correlated risk already on
+        qty, why = rm.size(Signal("A", 1, 100.0, 95.0), 100_000, held, corr=f)
+        self.assertEqual(qty, 0)
+        self.assertIn("correlated-risk budget", why)
+
+    def test_opposite_side_gets_no_hedge_credit_and_unknown_rho_is_conservative(self):
+        rm = self.rm(max_sector_positions=5, max_sector_risk_pct=10, max_correlated_risk_pct=1.0,
+                     corr_unknown=0.5)
+        short = {"D": self.pos("D", side=-1, entry=100, stop=105)}
+        load = rm.correlated_load(Signal("A", 1, 100.0, 95.0), short, lambda a, b: 1.0)
+        self.assertEqual(load, 0.0)                         # a short doesn't add to a long's risk...
+        qty, _ = rm.size(Signal("A", 1, 100.0, 95.0), 100_000, short, corr=lambda a, b: -1.0)
+        self.assertEqual(qty, 100)                          # ...and doesn't buy extra size either
+        held = {"D": self.pos("D")}
+        self.assertEqual(rm.correlated_load(Signal("A", 1, 100.0, 95.0), held, lambda a, b: None), 250.0)
+
+    def test_correlations_use_only_prior_days(self):
+        from tradebot.risk import Correlations
+        a = synthetic(days=120, seed=1)
+        b = a.copy()
+        b["close"] = a["close"] * 2                         # perfectly correlated
+        idx = a.index
+        cr = Correlations.from_frames({"A": a, "B": b}, lookback=60)
+        self.assertAlmostEqual(cr.corr("A", "B", idx[100]), 1.0)
+        b2 = b.copy()
+        b2.loc[idx[100]:, "close"] *= np.linspace(1, 3, len(idx) - 100)   # change the future only
+        cr2 = Correlations.from_frames({"A": a, "B": b2}, lookback=60)
+        self.assertAlmostEqual(cr2.corr("A", "B", idx[100]), 1.0)          # unchanged at asof
+        self.assertIsNone(Correlations.from_frames({"A": a, "B": b}).corr("A", "B", idx[10]))  # too little history
+
+    def test_backtest_respects_sector_cap(self):
+        c = Config(mode="swing", strategy="donchian", symbols=["A", "B", "C"])
+        c.risk.min_avg_turnover = 0
+        c.risk.max_sector_positions = 1
+        c.sectors = {"A": "x", "B": "x", "C": "y"}
+        res = Backtester(c, make_strategy("donchian")).run(
+            {s: synthetic(days=1200, seed=k) for k, s in enumerate("ABC")})
+        x = sorted((t.entry_time, t.exit_time) for t in res.trades if t.symbol in "AB")
+        self.assertTrue(x)
+        for (s1, e1), (s2, e2) in zip(x, x[1:]):
+            self.assertLessEqual(e1, s2, "two sector-x positions overlapped")
+
+    def test_live_correlation_uses_history_not_order_simulation(self):
+        with tempfile.TemporaryDirectory() as d:
+            c = cfg(symbols=["A", "B"], interval="day", state_file=str(Path(d) / "s.json"),
+                    kill_switch_file=str(Path(d) / "STOP"))
+            df = synthetic(days=150, seed=3)
+            feed = FakeFeed(df)
+            feed.n = len(df)
+            broker = PaperBroker(feed, 0.0)
+            eng = LiveEngine(c, OneShot(), broker, now=lambda: df.index[-1] + pd.Timedelta(hours=10))
+            rho = eng._corr("A", "B", df.index[-1])
+            self.assertAlmostEqual(rho, 1.0)                # same feed for both in this fake
+            self.assertEqual(broker._last_bars, {})         # paper stop simulation untouched
+
+    def test_paper_and_live_refuse_without_sectors(self):
+        from tradebot.__main__ import main
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            f.write_text(json.dumps({"mode": "swing", "strategy": "donchian", "symbols": ["A"],
+                                     "interval": "day", "state_file": str(Path(d) / "s.json")}))
+            for cmd in ("paper", "live"):
+                with self.assertRaises(SystemExit) as e:
+                    main([cmd, "-c", str(f)])
+                self.assertIn("sectors", str(e.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

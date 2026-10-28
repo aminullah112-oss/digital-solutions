@@ -99,6 +99,11 @@ class Broker(ABC):
         """(ok, detail). Brokers with expiring sessions override this."""
         return True, ""
 
+    def history(self, symbol: str, interval: str, lookback_days: int) -> pd.DataFrame:
+        """Bars for analysis only (e.g. daily closes for correlations). Unlike
+        bars(), must not affect order simulation."""
+        return self.bars(symbol, interval, lookback_days)
+
     def to_dict(self) -> dict:
         return {}
 
@@ -185,6 +190,9 @@ class PaperBroker(Broker):
         self._last_bars[symbol] = df
         self._check_stops(symbol)
         return df
+
+    def history(self, symbol, interval, lookback_days):
+        return self.feed.bars(symbol, interval, lookback_days)
 
     def ltp(self, symbol):
         if hasattr(self.feed, "ltp"):

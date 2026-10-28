@@ -20,7 +20,7 @@ import pandas as pd
 
 from .config import Config
 from .models import Position, Signal, Trade
-from .risk import RiskManager
+from .risk import Correlations, RiskManager
 from .strategies import Strategy
 
 
@@ -63,6 +63,7 @@ class Backtester:
         last_entry, flatten_at = cfg.session.t("last_entry"), cfg.session.t("flatten_at")
 
         frames = {s: add_turnover(strat.prepare(df), cfg.mode) for s, df in data.items()}
+        corrs = Correlations.from_frames(data, cfg.risk.corr_lookback)
         # Precompute "last bar of its day" so intraday positions never carry overnight.
         last_of_day = {}
         for s, df in frames.items():
@@ -195,7 +196,8 @@ class Backtester:
                     turnover = df["turnover"].iat[i]
                     qty, why = risk.size(sig, eq, committed,
                                          None if np.isnan(turnover) else float(turnover),
-                                         float(df["volume"].iat[i]))
+                                         float(df["volume"].iat[i]),
+                                         corr=lambda a, b: corrs.corr(a, b, ts))
                     if qty:
                         pending[sym] = (sig, qty, ts)
                     else:

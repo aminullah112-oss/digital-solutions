@@ -28,10 +28,13 @@ from .strategies import make_strategy
 
 
 def _setup_logging(cfg: Config):
+    from logging.handlers import RotatingFileHandler
     Path(cfg.state_file).parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
-        handlers=[logging.StreamHandler(), logging.FileHandler(Path(cfg.state_file).with_name("bot.log"))],
+        handlers=[logging.StreamHandler(),                     # -> journald under systemd
+                  RotatingFileHandler(Path(cfg.state_file).with_name("bot.log"),
+                                      maxBytes=10_000_000, backupCount=5)],
     )
 
 
@@ -61,6 +64,8 @@ def _load_data(cfg: Config, a):
 
 
 def cmd_backtest(cfg: Config, a):
+    if not cfg.sectors:
+        print("NOTE: no 'sectors' map in config; sector caps are off for this backtest.\n")
     data = _load_data(cfg, a)
     strat = make_strategy(cfg.strategy, cfg.strategy_params, cfg.session.open)
     bench = None
@@ -131,6 +136,12 @@ def _md(df: pd.DataFrame) -> str:
     return "\n".join(rows)
 
 
+def _require_sectors(cfg: Config):
+    if not cfg.sectors:
+        sys.exit("paper/live need a 'sectors' map in the config (symbol -> sector) so the "
+                 "sector caps apply; see config/swing.json")
+
+
 def _engine(cfg: Config, broker):
     from .live import LiveEngine
     return LiveEngine(cfg, make_strategy(cfg.strategy, cfg.strategy_params, cfg.session.open), broker)
@@ -144,6 +155,7 @@ def _run(cfg: Config, broker, a, label: str):
 
 def cmd_paper(cfg: Config, a):
     from .broker import PaperBroker, YFinanceFeed
+    _require_sectors(cfg)
     _setup_logging(cfg)
     if a.feed == "kite":
         from .kite import KiteBroker
@@ -162,6 +174,7 @@ def cmd_paper(cfg: Config, a):
 
 def cmd_live(cfg: Config, a):
     from .kite import KiteBroker
+    _require_sectors(cfg)
     if os.environ.get("TRADEBOT_LIVE") != "I_ACCEPT_THE_RISK":
         sys.exit("Live trading is locked. Paper trade first, then set TRADEBOT_LIVE=I_ACCEPT_THE_RISK.")
     if cfg.mode == "swing" and cfg.allow_short:
@@ -200,6 +213,46 @@ def cmd_login(a):
     print(f"Saved session for {d['user_id'] or 'user'} to {store.path} (valid until {d['expires']}).")
 
 
+def cmd_status(cfg: Config, a):
+    """Read-only view of the bot's saved state. Safe to run while the bot runs."""
+    p = Path(cfg.state_file)
+    if not p.exists():
+        sys.exit(f"no state yet at {p}")
+    s = json.loads(p.read_text())
+    risk = s.get("risk", {})
+    age = pd.Timestamp.now(tz=cfg.session.timezone) - pd.Timestamp(s.get("saved_at"))
+    print(f"{cfg.mode}/{cfg.strategy}  state saved {s.get('saved_at')} ({age.total_seconds() / 60:.0f} min ago)")
+    print(f"capital {cfg.initial_capital:,.0f}  realised P&L {s.get('realized', 0):+,.2f}")
+    halts = [(k, risk.get(k)) for k in ("hard_halted", "entry_block", "day_halted") if risk.get(k)]
+    print("halts: " + ("; ".join(f"{k}={v}" for k, v in halts) if halts else "none")
+          + f"  | loss streak {risk.get('loss_streak', 0)}  | peak equity {risk.get('peak_equity', 0):,.0f}")
+    pos = s.get("positions", [])
+    print(f"\npositions ({len(pos)}):")
+    for d in pos:
+        flags = [f for f, on in (("STOP UNCONFIRMED", d.get("stop_tag")), ("EXIT PENDING", d.get("exit_tag")),
+                                 (f"exit wanted: {d.get('exit_wanted')}", d.get("exit_wanted")),
+                                 ("NO STOP", not d.get("broker_stop_id") and not d.get("stop_tag"))) if on]
+        print(f"  {'LONG' if d['side'] > 0 else 'SHORT':5} {d['symbol']:<12} qty {d['qty']:>6}  entry {d['entry']:>9.2f}"
+              f"  stop {d['stop']:>9.2f}  target {d['target'] or '-':>9}  held {d.get('bars_held', 0)} bars"
+              f"  stop id {d.get('broker_stop_id') or '-'}  {' '.join(flags)}")
+    pend = s.get("pending", {})
+    print(f"\nunresolved orders ({len(pend)}):")
+    for r in pend.values():
+        state = "ESCALATED: check Kite" if r.get("escalated") else ("presumed absent" if r.get("absent") else "resolving")
+        print(f"  {r['kind']:<5} {r['symbol']:<12} qty {r['qty']}  tag {r['tag']}  since {r['created']}  [{state}]")
+    if s.get("external"):
+        print(f"\nexternal holdings (never traded): {s['external']}")
+    tp = p.with_name("trades.csv")
+    if tp.exists():
+        rows = tp.read_text().strip().splitlines()
+        print(f"\nlast trades ({len(rows) - 1} total):")
+        for r in rows[-5:] if len(rows) > 1 else []:
+            if not r.startswith("symbol,"):
+                print("  " + r)
+    if Path(cfg.kill_switch_file).exists():
+        print(f"\nKILL SWITCH FILE PRESENT: {cfg.kill_switch_file}")
+
+
 def cmd_reset(cfg: Config, a):
     p = Path(cfg.state_file)
     if not p.exists():
@@ -224,7 +277,7 @@ def cmd_reset(cfg: Config, a):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="tradebot")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("backtest", "compare", "paper", "live", "reset"):
+    for name in ("backtest", "compare", "paper", "live", "reset", "status"):
         p = sub.add_parser(name)
         if name == "compare":
             p.add_argument("-c", "--config", action="append", required=True,
@@ -267,7 +320,8 @@ def main(argv=None):
     if a.cmd == "compare":
         return cmd_compare([Config.load(c) for c in a.config], [Path(c).stem for c in a.config], a)
     cfg = Config.load(a.config)
-    {"backtest": cmd_backtest, "paper": cmd_paper, "live": cmd_live, "reset": cmd_reset}[a.cmd](cfg, a)
+    {"backtest": cmd_backtest, "paper": cmd_paper, "live": cmd_live, "reset": cmd_reset,
+     "status": cmd_status}[a.cmd](cfg, a)
 
 
 if __name__ == "__main__":

@@ -54,6 +54,14 @@ class Risk:
     min_price: float = 20.0
     min_avg_turnover: float = 5e7          # 20-bar average close*volume (₹5 crore)
     max_gap_slip_r: float = 0.5            # cancel entry if the fill adds > this much R
+    # Concentration. Sector caps use Config.sectors; the correlated-risk budget
+    # weights each open same-direction position's risk by its correlation with the
+    # candidate (60-day daily returns, data before the signal date only).
+    max_sector_positions: int = 2
+    max_sector_risk_pct: float = 1.5       # open risk to stops within one sector
+    max_correlated_risk_pct: float = 1.5   # candidate risk + sum(max(0, rho) * open risk)
+    corr_lookback: int = 60                # trading days
+    corr_unknown: float = 0.5              # rho assumed when there's too little history
 
 
 @dataclass
@@ -73,6 +81,9 @@ class Config:
     risk: Risk = field(default_factory=Risk)
     state_file: str = "state/bot_state.json"
     kill_switch_file: str = "STOP"
+    # symbol -> sector label. Required for paper/live; every symbol must be listed
+    # so a missing entry can't silently bypass the sector caps.
+    sectors: dict = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path) -> "Config":
@@ -108,6 +119,15 @@ class Config:
         r = self.risk
         if not 0 < r.risk_per_trade_pct <= 2:
             raise ValueError("risk_per_trade_pct must be in (0, 2]; above 2% per trade is gambling")
+        for name in ("max_sector_risk_pct", "max_correlated_risk_pct"):
+            if getattr(r, name) < r.risk_per_trade_pct:
+                raise ValueError(f"{name} must be >= risk_per_trade_pct")
+        if not 0 <= r.corr_unknown <= 1:
+            raise ValueError("corr_unknown must be in [0, 1]")
+        if self.sectors:
+            missing = [s for s in self.symbols if s not in self.sectors]
+            if missing:
+                raise ValueError(f"symbols missing from sectors: {missing}")
         if r.max_open_risk_pct < r.risk_per_trade_pct:
             raise ValueError("max_open_risk_pct must be >= risk_per_trade_pct")
         if r.daily_loss_limit_pct < r.risk_per_trade_pct:

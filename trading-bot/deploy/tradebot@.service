@@ -1,0 +1,45 @@
+# One instance per config: `systemctl start tradebot@swing` runs /etc/tradebot/swing.json.
+# Mode (paper|live) and extra flags come from /etc/tradebot/env.
+[Unit]
+Description=tradebot %i
+Documentation=file:///opt/tradebot/app/README.md
+After=network-online.target time-sync.target
+Wants=network-online.target time-sync.target
+# A crash loop is a problem a human should look at, not something to retry forever.
+StartLimitIntervalSec=900
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=tradebot
+Group=tradebot
+EnvironmentFile=/etc/tradebot/env
+Environment=PYTHONPATH=/opt/tradebot/app PYTHONUNBUFFERED=1
+WorkingDirectory=/var/lib/tradebot
+ExecStart=/opt/tradebot/venv/bin/python -m tradebot ${TRADEBOT_MODE} -c /etc/tradebot/%i.json $TRADEBOT_ARGS
+# Crashes restart (state, pending orders and halts reload; broker-side stops keep
+# working meanwhile). A clean exit (kill switch, SIGTERM) is NOT restarted.
+Restart=on-failure
+RestartSec=30
+# SIGTERM lets the bot finish its current cycle and save state before exiting.
+KillSignal=SIGTERM
+TimeoutStopSec=90
+
+# Hardening: the bot needs network and its own state directory, nothing else.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/tradebot
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
