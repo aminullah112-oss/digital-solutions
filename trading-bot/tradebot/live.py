@@ -188,7 +188,7 @@ class LiveEngine:
         if fill.qty < qty:
             log.warning("%s entry partially filled: %d of %d", sym, fill.qty, qty)
         p = Position(sym, side, fill.qty, fill.price, sig.stop, sig.stop, sig.target, self.now(),
-                     sig.max_bars, sig.reason)
+                     self.cfg.hold_limit(sig.max_bars), sig.reason)
         self.positions[sym] = p
         self.last_px[sym] = fill.price
         if side * (fill.price - sig.stop) <= 0 or \

@@ -168,6 +168,16 @@ class TestBacktestFills(unittest.TestCase):
         ], target=110.0)
         self.assertEqual(res.trades[0].exit_reason, "stop")
 
+    def test_max_hold_bars_caps_strategy_time_stop(self):
+        flat = [(100, 101, 99, 100, 1e6)] * 12
+        c = cfg(max_hold_bars=3, risk=dict(max_position_pct=100))
+        res = Backtester(c, OneShot(max_bars=40)).run({"A": bars(flat)})
+        self.assertEqual(res.trades[0].exit_reason, "time stop")
+        self.assertEqual(res.trades[0].bars_held, 3)
+        c.max_hold_bars = 5
+        res = Backtester(c, OneShot(max_bars=2)).run({"A": bars(flat)})
+        self.assertEqual(res.trades[0].bars_held, 2)    # the tighter limit wins
+
     def test_entry_cancelled_if_open_gaps_below_stop(self):
         res = self.run_bt([
             (100, 101, 99, 100, 1e6), (100, 101, 99, 100, 1e6),

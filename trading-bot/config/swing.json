@@ -1,7 +1,8 @@
 {
   "mode": "swing",
   "strategy": "trend_pullback",
-  "strategy_params": {"stop_atr": 2.5, "trail_atr": 3.0, "max_bars": 40},
+  "strategy_params": {"stop_atr": 2.5, "trail_atr": 3.0},
+  "max_hold_bars": 10,
   "symbols": ["RELIANCE", "HDFCBANK", "ICICIBANK", "INFY", "TCS", "SBIN", "AXISBANK", "LT",
               "BHARTIARTL", "ITC", "KOTAKBANK", "HINDUNILVR", "BAJFINANCE", "MARUTI", "SUNPHARMA"],
   "interval": "day",

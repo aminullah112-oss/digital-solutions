@@ -58,6 +58,9 @@ class Config:
     symbols: list = field(default_factory=list)
     interval: str = "5minute"
     allow_short: bool = False
+    # Hard cap on bars held, applied on top of any strategy's own time stop.
+    # For swing with daily bars, 10 = ten trading days (about two calendar weeks).
+    max_hold_bars: int | None = None
     initial_capital: float = 500_000.0
     session: Session = field(default_factory=Session)
     costs: Costs = field(default_factory=Costs)
@@ -94,6 +97,8 @@ class Config:
     def validate(self) -> None:
         if self.mode not in ("intraday", "swing"):
             raise ValueError("mode must be 'intraday' or 'swing'")
+        if self.max_hold_bars is not None and self.max_hold_bars < 1:
+            raise ValueError("max_hold_bars must be >= 1")
         r = self.risk
         if not 0 < r.risk_per_trade_pct <= 2:
             raise ValueError("risk_per_trade_pct must be in (0, 2]; above 2% per trade is gambling")
@@ -103,6 +108,10 @@ class Config:
             raise ValueError("daily_loss_limit_pct must be >= risk_per_trade_pct")
         if r.max_gross_exposure_pct > 100 and self.mode == "swing":
             raise ValueError("leverage on swing positions is not allowed by this bot")
+
+    def hold_limit(self, strategy_max: int | None) -> int | None:
+        caps = [b for b in (strategy_max, self.max_hold_bars) if b]
+        return min(caps) if caps else None
 
     def to_dict(self) -> dict:
         return asdict(self)

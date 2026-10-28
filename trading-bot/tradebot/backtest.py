@@ -129,7 +129,7 @@ class Backtester:
                         ec = qty * fill * cost
                         cash -= sig.side * qty * fill + ec
                         positions[sym] = Position(sym, sig.side, qty, fill, sig.stop, sig.stop,
-                                                  sig.target, ts, sig.max_bars, sig.reason,
+                                                  sig.target, ts, cfg.hold_limit(sig.max_bars), sig.reason,
                                                   entry_cost=ec)
                         just_entered = True
 

@@ -36,8 +36,10 @@ tests/            lookahead, risk maths, fill rules, live order flow
 |---|---|---|---|
 | `orb` | intraday 5m | first close beyond the 15-min opening range, on the VWAP side, volume ≥ 1.2× avg; skips ranges < 0.3% or > 2% | stop at range mid or 1.5 ATR (tighter), 2R target, breakeven at 1R, flat by 15:15 |
 | `vwap_pullback` | intraday 5m | EMA9>EMA21, above VWAP, ADX>20, pullback touches VWAP/EMA21, bullish close back over EMA9 | stop under the pullback low, 2R target, breakeven at 1R |
-| `trend_pullback` | swing daily | close>SMA200, EMA20>EMA50, ADX>18, RSI(5) dipped <35, close > prior high | 2.5 ATR / swing-low stop, 3 ATR chandelier trail, breakeven at 1R, 40-bar time stop |
+| `trend_pullback` | swing daily | close>SMA200, EMA20>EMA50, ADX>18, RSI(5) dipped <35, close > prior high | 2.5 ATR / swing-low stop, 3 ATR chandelier trail, breakeven at 1R, time stop at `max_hold_bars` (10 in `swing.json`) |
 | `donchian` | swing daily | 55-day closing high, above SMA200, volume ≥ 1.5× avg | 2 ATR stop, then the tighter of the 20-day low and a 3 ATR chandelier |
+
+`max_hold_bars` (top-level config) caps every strategy's holding period in bars; the tighter of it and the strategy's own `max_bars` wins. With daily bars, 10 means ten trading days. A cap that short makes the time stop the main exit for trend-following trails; consider a profit target (`target_r`) alongside it.
 
 Shorts only exist for intraday. You can't carry a cash-equity short overnight in India, so `live` refuses `allow_short` in swing mode.
 
