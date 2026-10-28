@@ -107,6 +107,23 @@ You're alerted on every ERROR/CRITICAL log line, every trade opened or closed, e
 
 The heartbeat covers what self-reporting can't: a killed process, a frozen loop, or a dead VM. Point it at a dead-man service (e.g. healthchecks.io, with its period set to a few minutes). The service alerts you when the pings **stop**. Pings are sent only after a cycle completes, so a bot stuck on repeated errors also stops pinging.
 
+## Daily Kite login
+
+Kite access tokens expire at **06:00 IST** every day. Zerodha requires a human
+login (password + 2FA), so the bot deliberately does **not** automate that step:
+scripted password/TOTP login breaks Zerodha's terms and SEBI's daily-login
+expectation, and would put API access on your trading account at risk.
+Everything around the login is automated:
+
+1. From 08:45 on weekdays (`session.login_reminder`), the bot checks the session. If it's missing or expired, you get one alert with the login link.
+2. Open the link, log in, and Kite redirects you to your app's redirect URL with a `request_token`.
+3. Run `python -m tradebot login` on the bot's machine and paste the redirect URL. It exchanges the token (using `KITE_API_SECRET` locally to compute the checksum; the secret is never sent) and writes `state/kite_token.json` with mode 600.
+4. The running bot notices the new file on its next cycle, alerts "resuming", and carries on. No restart.
+
+Alternatively, set the app's redirect URL to `http://127.0.0.1:8765/` in the Kite developer console and run `tradebot login --listen 8765`. The redirect is then captured automatically when you log in from a browser on the same machine, or through `ssh -L 8765:127.0.0.1:8765 vm`.
+
+While there's no valid session (missing, expired, or rejected by Kite with `TokenException`), the bot touches nothing at the broker. That avoids starting an exit it can't finish. Stops already at the exchange keep working. Trailing, targets and the intraday 15:15 flatten are paused, and the alert says how many positions are open. Zerodha auto-squares MIS positions near the close regardless. The token file lives under `state/`, which is git-ignored. Keep `KITE_API_SECRET` in the environment only.
+
 ## Fault injection (paper)
 
 Zerodha has no sandbox, so the paper broker can inject the failures a real broker produces. That way, paper weeks also exercise the recovery code:
@@ -133,7 +150,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 49 tests
+python -m unittest discover -s tests        # 63 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic
@@ -152,10 +169,11 @@ python -m tradebot compare -c config/swing.json -c config/swing_40d.json -c conf
 # 3. Paper trade for at least 4-6 weeks. Zerodha has no Kite Connect sandbox, so
 #    paper = real market data (delayed yfinance, or Kite with --feed kite) + fills
 #    simulated locally by PaperBroker
-python -m tradebot paper -c config/intraday.json --feed kite
+python -m tradebot paper -c config/intraday.json --feed kite    # needs `tradebot login` too
 
 # 4. Live, small, only if 2 and 3 agree
-export KITE_API_KEY=... KITE_ACCESS_TOKEN=...      # token expires daily
+export KITE_API_KEY=... KITE_API_SECRET=...
+python -m tradebot login                            # every morning; see "Daily Kite login"
 export TRADEBOT_LIVE=I_ACCEPT_THE_RISK
 python -m tradebot live -c config/intraday.json
 

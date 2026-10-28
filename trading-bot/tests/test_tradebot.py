@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -762,6 +763,228 @@ class TestFaultInjection(unittest.TestCase):
         self.assertEqual(eng.positions, {})
         self.assertEqual(broker.pos, {})
         self.assertEqual([o for o in broker.orders.values() if o["status"] == "OPEN"], [])
+
+
+class TestKiteSession(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "tok.json"
+
+    def test_checksum_and_login_url(self):
+        import hashlib
+        from tradebot.kite import checksum, login_url
+        self.assertEqual(checksum("k", "rt", "sec"), hashlib.sha256(b"krtsec").hexdigest())
+        self.assertEqual(login_url("abc"), "https://kite.zerodha.com/connect/login?v=3&api_key=abc")
+
+    def test_token_expires_at_six_next_morning(self):
+        from tradebot.kite import token_expiry
+        ist = lambda s: pd.Timestamp(s, tz="Asia/Kolkata")
+        self.assertEqual(token_expiry(ist("2026-10-28 08:10")), ist("2026-10-29 06:00"))
+        self.assertEqual(token_expiry(ist("2026-10-28 03:00")), ist("2026-10-28 06:00"))
+        self.assertEqual(token_expiry(ist("2026-10-28 06:00")), ist("2026-10-29 06:00"))
+        self.assertEqual(token_expiry(pd.Timestamp("2026-10-28 02:40", tz="UTC")), ist("2026-10-29 06:00"))
+
+    def test_parse_request_token(self):
+        from tradebot.kite import parse_request_token
+        url = "https://my.app/cb?action=login&type=login&status=success&request_token=AbC123"
+        self.assertEqual(parse_request_token(url), "AbC123")
+        self.assertEqual(parse_request_token("  AbC123\n"), "AbC123")
+        with self.assertRaises(ValueError):
+            parse_request_token("https://my.app/cb?status=cancelled&request_token=x")
+        with self.assertRaises(ValueError):
+            parse_request_token("not a token")
+
+    def test_store_is_private_and_reloads_on_change(self):
+        from tradebot.kite import TokenStore
+        st = TokenStore(self.path)
+        self.assertIsNone(st.load())
+        st.save("t1", "AB1234", pd.Timestamp("2026-10-28 08:00", tz="Asia/Kolkata"))
+        self.assertEqual(os.stat(self.path).st_mode & 0o777, 0o600)
+        self.assertEqual(st.load()["access_token"], "t1")
+        other = TokenStore(self.path)          # e.g. `tradebot login` in another process
+        os.utime(self.path, ns=(1, 1))
+        other.save("t2", "AB1234", pd.Timestamp("2026-10-29 08:00", tz="Asia/Kolkata"))
+        self.assertEqual(st.load()["access_token"], "t2")
+
+    def broker(self):
+        from tradebot.kite import KiteBroker, TokenStore
+        return KiteBroker(TZ, "MIS", api_key="k", token_store=TokenStore(self.path))
+
+    def test_auth_status_lifecycle(self):
+        import io
+        import urllib.error
+        import urllib.request
+        from tradebot.broker import TokenExpired
+        b = self.broker()
+        ok, why = b.auth_status()
+        self.assertFalse(ok)
+        self.assertIn("no Kite access token", why)
+        with self.assertRaises(TokenExpired):
+            b._req("GET", "/user/profile")                  # never sends 'token k:None'
+        b.store.save("t1", "u", pd.Timestamp("2026-10-28 08:00", tz="Asia/Kolkata"))
+        self.assertTrue(b.auth_status(pd.Timestamp("2026-10-28 15:00", tz=TZ))[0])
+        self.assertFalse(b.auth_status(pd.Timestamp("2026-10-29 06:01", tz=TZ))[0])
+
+        sent = []
+
+        def fake(req, timeout=None):
+            sent.append(req.get_header("Authorization"))
+            raise urllib.error.HTTPError(req.full_url, 403, "Forbidden", {},
+                                         io.BytesIO(b'{"status":"error","error_type":"TokenException"}'))
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = fake
+        try:
+            with self.assertRaises(TokenExpired):
+                b._req("GET", "/portfolio/positions")
+        finally:
+            urllib.request.urlopen = orig
+        self.assertEqual(sent, ["token k:t1"])
+        self.assertIn("rejected", b.auth_status(pd.Timestamp("2026-10-28 15:00", tz=TZ))[1])
+        os.utime(self.path, ns=(1, 1))
+        b.store.save("t2", "u", pd.Timestamp("2026-10-28 15:05", tz="Asia/Kolkata"))
+        self.assertTrue(b.auth_status(pd.Timestamp("2026-10-28 15:06", tz=TZ))[0])   # new token clears it
+
+    def test_exchange_sends_checksum(self):
+        import io
+        import urllib.parse
+        import urllib.request
+        from tradebot.kite import checksum, exchange_request_token
+        seen = {}
+
+        class R(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+        def fake(req, timeout=None):
+            seen.update(urllib.parse.parse_qs(req.data.decode()))
+            seen["url"] = req.full_url
+            return R(b'{"status":"success","data":{"access_token":"AT","user_id":"AB1234"}}')
+        orig = urllib.request.urlopen
+        urllib.request.urlopen = fake
+        try:
+            d = exchange_request_token("k", "sec", "rt")
+        finally:
+            urllib.request.urlopen = orig
+        self.assertEqual(d["access_token"], "AT")
+        self.assertEqual(seen["url"], "https://api.kite.trade/session/token")
+        self.assertEqual(seen["checksum"], [checksum("k", "rt", "sec")])
+        self.assertNotIn("api_secret", seen)                 # the secret itself never leaves
+
+    def test_capture_redirect(self):
+        import socket
+        import threading
+        import urllib.request
+        from tradebot.kite import capture_redirect
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        out = {}
+        t = threading.Thread(target=lambda: out.update(tok=capture_redirect(port, timeout=10)))
+        t.start()
+        for _ in range(50):
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/?status=success&request_token=XYZ",
+                                       timeout=2).read()
+                break
+            except OSError:
+                time.sleep(0.1)
+        t.join(5)
+        self.assertEqual(out.get("tok"), "XYZ")
+
+    def test_login_command_writes_token(self):
+        import tradebot.kite as k
+        from tradebot.__main__ import main
+        orig = k.exchange_request_token
+        k.exchange_request_token = lambda key, sec, rt: {"access_token": f"AT-{rt}", "user_id": "AB1234"}
+        env = {"KITE_API_KEY": "k", "KITE_API_SECRET": "s"}
+        old = {x: os.environ.get(x) for x in env}
+        os.environ.update(env)
+        try:
+            import contextlib
+            import io
+            with contextlib.redirect_stdout(io.StringIO()) as buf:
+                main(["login", "--request-token", "https://cb?status=success&request_token=RT9",
+                      "--token-file", str(self.path)])
+        finally:
+            k.exchange_request_token = orig
+            for x, v in old.items():
+                os.environ.pop(x) if v is None else os.environ.__setitem__(x, v)
+        self.assertEqual(json.loads(self.path.read_text())["access_token"], "AT-RT9")
+        self.assertNotIn("AT-RT9", buf.getvalue())           # token never printed
+
+
+class SessionPaper(PaperBroker):
+    """Paper broker whose session can be switched off; counts broker calls."""
+    session_ok = True
+    calls = 0
+
+    def auth_status(self, now=None):
+        return (True, "") if self.session_ok else (False, "Kite access token expired at 06:00")
+
+    def bars(self, *a, **kw):
+        type(self).calls += 1
+        if not self.session_ok:
+            from tradebot.broker import TokenExpired
+            raise TokenExpired("Kite session invalid")
+        return super().bars(*a, **kw)
+
+
+class TestEngineSessionHandling(TestLiveEngine):
+    def setUp(self):
+        super().setUp()
+        SessionPaper.calls = 0
+        self.broker = SessionPaper(self.feed, 0.0)
+        self.got = []
+        from tradebot.alerts import AlertHandler
+        h = AlertHandler([self.got.append], "t", background=False)
+        lg = logging.getLogger("tradebot")
+        old = lg.level
+        lg.setLevel(logging.INFO)
+        lg.addHandler(h)
+        self.addCleanup(lg.setLevel, old)
+        self.addCleanup(lg.removeHandler, h)
+
+    def test_expired_session_pauses_alerts_once_and_resumes(self):
+        eng = self.engine()
+        self.broker.session_ok = False
+        day = self.df.index[3]
+        for hhmm in ("08:50", "09:20", "10:00", "11:00"):      # pre-open reminder + session
+            self.feed.n = 4
+            self.clock[0] = day + pd.Timedelta(hours=int(hhmm[:2]), minutes=int(hhmm[3:]))
+            eng.step()
+        self.assertEqual(SessionPaper.calls, 0)                # broker never touched
+        alerts = [m for m in self.got if "BROKER LOGIN NEEDED" in m]
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(eng.positions, {})
+        self.broker.session_ok = True                          # user ran `tradebot login`
+        self.clock[0] = day + pd.Timedelta(hours=11, minutes=30)
+        eng.step()
+        self.assertIn("A", eng.positions)
+        self.assertTrue(any("resuming" in m for m in self.got))
+
+    def test_token_rejected_mid_cycle_does_not_crash(self):
+        eng = self.engine()
+        self.tick(eng, 3)
+        self.assertIn("A", eng.positions)
+        self.broker.auth_status = lambda now=None: (True, "")  # clock says fine...
+        self.broker.session_ok = False                          # ...but Kite rejects it
+        self.tick(eng, 4)                                       # must not raise
+        self.assertTrue(any("BROKER LOGIN NEEDED" in m for m in self.got))
+        self.assertIn("1 open position", [m for m in self.got if "LOGIN" in m][0])
+
+    def test_no_reminder_on_weekends_or_overnight(self):
+        eng = self.engine()
+        self.broker.session_ok = False
+        sat = pd.Timestamp("2024-01-06 10:00", tz=TZ)
+        night = pd.Timestamp("2024-01-08 22:00", tz=TZ)
+        for t in (sat, night):
+            self.clock[0] = t
+            eng.step()
+        self.assertFalse(any("LOGIN" in m for m in self.got))
 
 
 if __name__ == "__main__":

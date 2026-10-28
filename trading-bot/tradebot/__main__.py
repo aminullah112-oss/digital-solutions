@@ -6,6 +6,7 @@
   python -m tradebot paper    -c config/intraday.json --feed yfinance
   python -m tradebot live     -c config/intraday.json        (Zerodha Kite)
   python -m tradebot reset    -c config/intraday.json        (clear a risk halt)
+  python -m tradebot login                                   (daily Kite session)
 """
 from __future__ import annotations
 
@@ -175,6 +176,29 @@ def cmd_live(cfg: Config, a):
     _run(cfg, broker, a, "LIVE")
 
 
+def cmd_login(a):
+    """Daily Kite login. You log in on Kite's page (password + 2FA, by hand, as
+    Zerodha requires); this exchanges the resulting request_token for an access
+    token and saves it. A running bot picks it up on its next cycle."""
+    from .kite import TokenStore, capture_redirect, exchange_request_token, login_url, parse_request_token
+    key, secret = os.environ.get("KITE_API_KEY"), os.environ.get("KITE_API_SECRET")
+    if not key or not secret:
+        sys.exit("set KITE_API_KEY and KITE_API_SECRET")
+    if a.request_token:
+        rt = parse_request_token(a.request_token)
+    else:
+        print("1. Open this link and log in to Kite:\n\n   " + login_url(key) + "\n")
+        if a.listen:
+            print(f"2. Waiting for Kite to redirect to http://127.0.0.1:{a.listen}/ ...")
+            rt = capture_redirect(a.listen)
+        else:
+            rt = parse_request_token(input("2. Paste the URL Kite redirected you to (or the request_token): "))
+    data = exchange_request_token(key, secret, rt)
+    store = TokenStore(a.token_file)
+    d = store.save(data["access_token"], data.get("user_id", ""), pd.Timestamp.now(tz="Asia/Kolkata"))
+    print(f"Saved session for {d['user_id'] or 'user'} to {store.path} (valid until {d['expires']}).")
+
+
 def cmd_reset(cfg: Config, a):
     p = Path(cfg.state_file)
     if not p.exists():
@@ -221,7 +245,14 @@ def main(argv=None):
             p.add_argument("--fault-seed", type=int, help="make an injected-fault run repeatable")
         if name == "live":
             p.add_argument("--stop-type", choices=["SL-M", "SL"], default="SL-M")
+    lp = sub.add_parser("login", help="daily Kite login: exchange request_token for an access token")
+    lp.add_argument("--request-token", help="request_token or the full redirect URL (skips the prompt)")
+    lp.add_argument("--listen", type=int, metavar="PORT",
+                    help="capture the redirect on 127.0.0.1:PORT (set as the app's redirect URL)")
+    lp.add_argument("--token-file", help="default: $KITE_TOKEN_FILE or state/kite_token.json")
     a = ap.parse_args(argv)
+    if a.cmd == "login":
+        return cmd_login(a)
     if getattr(a, "save_data", None) and not a.download:
         ap.error("--save-data only applies with --download")
     if a.cmd == "compare":

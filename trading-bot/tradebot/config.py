@@ -15,6 +15,9 @@ class Session:
     # Intraday: no new entries after this, and everything is flat by flatten_at.
     last_entry: str = "14:45"
     flatten_at: str = "15:15"
+    # Weekdays from this time until the close, the bot checks the broker session
+    # and alerts if a login is needed.
+    login_reminder: str = "08:45"
 
     def t(self, name: str) -> time:
         h, m = getattr(self, name).split(":")

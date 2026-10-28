@@ -19,6 +19,11 @@ class BrokerError(RuntimeError):
     pass
 
 
+class TokenExpired(Exception):
+    """Broker session is missing, expired or rejected. Deliberately NOT a
+    BrokerError: it must stop the whole cycle, not be retried per symbol."""
+
+
 class OrderUnknown(BrokerError):
     """An order request timed out and the order can't be found in the order book.
     It may still exist. The engine blocks new entries until a human checks."""
@@ -57,6 +62,10 @@ class Broker(ABC):
 
     @abstractmethod
     def net_positions(self) -> dict[str, int]: ...
+
+    def auth_status(self, now=None) -> tuple[bool, str]:
+        """(ok, detail). Brokers with expiring sessions override this."""
+        return True, ""
 
     def to_dict(self) -> dict:
         return {}
@@ -129,6 +138,10 @@ class PaperBroker(Broker):
             log.warning("[fault injected] %s on %s", kind, symbol)
             return True
         return False
+
+    def auth_status(self, now=None):
+        # Paper on Kite data still needs a live Kite session for the data.
+        return self.feed.auth_status(now) if hasattr(self.feed, "auth_status") else (True, "")
 
     def bars(self, symbol, interval, lookback_days):
         df = self.feed.bars(symbol, interval, lookback_days)

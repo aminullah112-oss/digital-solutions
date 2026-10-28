@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from .backtest import add_turnover
-from .broker import Broker, BrokerError, OrderUnknown
+from .broker import Broker, BrokerError, OrderUnknown, TokenExpired
 from .config import Config
 from .models import Position, Trade
 from .risk import RiskManager
@@ -311,11 +311,44 @@ class LiveEngine:
         self._last_halt = getattr(self, "_last_halt", self.risk.halted())
         try:
             self._step()
+        except TokenExpired as e:
+            self._auth_wait(str(e), self.now())
         finally:
             self._note_halt()
 
+    def _auth_wait(self, detail: str, now) -> None:
+        """No valid broker session: do nothing that touches the broker. Alert once
+        per day per reason. Orders already at the broker (stops) keep working."""
+        key = (str(now.date()), detail)
+        if getattr(self, "_auth_alerted", None) != key:
+            self._auth_alerted = key
+            note = (f" {len(self.positions)} open position(s); their broker-side stops stay active, "
+                    "but trailing, targets and the intraday flatten are paused") if self.positions else ""
+            hint = ""
+            if hasattr(self.broker, "api_key"):
+                from .kite import login_url
+                hint = f" Log in: {login_url(self.broker.api_key)} then run `python -m tradebot login`."
+            log.critical("BROKER LOGIN NEEDED: %s.%s%s", detail, hint, note)
+        self._auth_waiting = True
+
+    def _check_auth(self, now) -> bool:
+        ok, detail = self.broker.auth_status(now)
+        if not ok:
+            self._auth_wait(detail, now)
+            return False
+        if getattr(self, "_auth_waiting", False):
+            self._auth_waiting = False
+            log.info("broker session OK again; resuming", extra={"notify": True})
+        return True
+
     def _step(self):
         now = self.now()
+        s = self.cfg.session
+        # From the reminder time to the close on weekdays, a dead session is alerted
+        # before the open and blocks the cycle, so no order flow starts half-way.
+        if now.weekday() < 5 and s.t("login_reminder") <= now.time() < s.t("close"):
+            if not self._check_auth(now):
+                return
         if self._kill_switch(now):
             return
         if not self.market_open(now):
