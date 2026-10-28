@@ -1,6 +1,5 @@
 import json
 import logging
-import math
 import os
 import tempfile
 import time
@@ -16,6 +15,7 @@ from tradebot.broker import PaperBroker
 from tradebot.config import Config
 from tradebot.data import synthetic
 from tradebot.live import LiveEngine
+from tradebot.broker import OrderUnknown
 from tradebot.models import Position, Signal, Trade
 from tradebot.risk import RiskManager
 from tradebot.strategies import STRATEGIES, Strategy, make_strategy
@@ -422,10 +422,12 @@ class TestKiteOrderSafety(unittest.TestCase):
                 b.sent_tag = params["tag"]
                 raise AmbiguousRequest("timeout")
             if path == "/orders":
-                return [{"tag": "other", "order_id": "1"}, {"tag": b.sent_tag, "order_id": "42"}]
+                return [{"tag": "other", "order_id": "1", "status": "OPEN"},
+                        {"tag": b.sent_tag, "order_id": "42", "status": "TRIGGER PENDING"}]
         b = FakeKite(script)
-        oid = b.place_stop("INFY", -1, 10, 1500.0)
+        oid = b.place_stop("INFY", -1, 10, 1500.0, tag="tbs000000000001")
         self.assertEqual(oid, "42")
+        self.assertEqual(b.sent_tag, "tbs000000000001")      # the engine's tag, used as-is
         self.assertEqual(sum(1 for m, *_ in b.calls if m == "POST"), 1)
 
     def test_unfound_order_raises_order_unknown(self):
@@ -437,7 +439,7 @@ class TestKiteOrderSafety(unittest.TestCase):
                 raise AmbiguousRequest("timeout")
             return []
         with self.assertRaises(OrderUnknown):
-            FakeKite(script).market("INFY", 1, 10)
+            FakeKite(script).market("INFY", 1, 10, tag="tbe1")
 
     def test_partial_market_fill_is_reported(self):
         def script(b, method, path, params):
@@ -445,13 +447,13 @@ class TestKiteOrderSafety(unittest.TestCase):
                 return {"order_id": "7"}
             return [{"status": "CANCELLED", "filled_quantity": 40, "average_price": 101.5,
                      "status_message": "partially filled, rest cancelled"}]
-        fill = FakeKite(script).market("INFY", 1, 100)
+        fill = FakeKite(script).market("INFY", 1, 100, tag="tbe1")
         self.assertEqual((fill.price, fill.qty), (101.5, 40))
 
-    def test_unique_tags(self):
-        b = FakeKite(lambda *a: None)
-        tags = {b._new_tag("stop") for _ in range(500)}
-        self.assertEqual(len(tags), 500)
+    def test_engine_tags_unique_and_short(self):
+        eng = LiveEngine.__new__(LiveEngine)
+        tags = {eng._tag(k) for k in ("entry", "stop", "exit") * 30}
+        self.assertEqual(len(tags), 90)
         self.assertTrue(all(len(t) <= 20 for t in tags))
 
 
@@ -649,7 +651,8 @@ class TestFaultInjection(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_faults("reject=2")
 
-    def soak(self, faults, seed, bars_n=300, symbols=("A", "B", "C")):
+    def soak(self, faults, seed, bars_n=300, symbols=("A", "B", "C"), polls=((10, 0), (14, 0)),
+             resolve_seconds=None):
         """Run the engine over many sessions with faults; check invariants every cycle."""
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -669,34 +672,69 @@ class TestFaultInjection(unittest.TestCase):
                 return float(frames[s]["close"].iat[self.n - 1])
         feed = Feed()
         broker = PaperBroker(feed, 0.0005, faults=faults, seed=seed)
+
+        class Crit(logging.Handler):
+            def __init__(self):
+                super().__init__()
+                self.records = []
+
+            def emit(self, rec):
+                if rec.levelno >= logging.CRITICAL:
+                    self.records.append(rec)
+        self._crit = Crit()
+        lg = logging.getLogger("tradebot")
+        lg.addHandler(self._crit)
+        self.addCleanup(lg.removeHandler, self._crit)
         clock = [None]
         eng = LiveEngine(c, EveryN(), broker, now=lambda: clock[0])
+        if resolve_seconds:
+            # The soak polls in bursts hours apart, so a real-time resolution window
+            # would expire between bursts. Escalation has its own deterministic test.
+            eng.RESOLVE_SECONDS = resolve_seconds
         idx = frames[symbols[0]].index
         for n in range(3, bars_n):
             feed.n = n + 1
-            for hour in (10, 14):            # two polls per session
-                clock[0] = idx[n] + pd.Timedelta(hours=hour)
+            for hour, sec in polls:
+                clock[0] = idx[n] + pd.Timedelta(hours=hour, seconds=sec)
                 eng.step()
                 self.check(eng, broker)
         return eng, broker
 
     def check(self, eng, broker):
         held = dict(broker.pos)
+        for sym, q in held.items():                       # the one thing that must never happen
+            self.assertGreaterEqual(q, 0, f"{sym} oversold to {q}: a double sell")
+        live = {t: r for t, r in eng.pending.items() if not r["absent"]}
+        self._ages = {t: getattr(self, "_ages", {}).get(t, 0) + 1 for t in live}
+        stuck = [t for t, n in self._ages.items() if n > 4]
+        self.assertFalse(stuck, f"orders unresolved for >4 cycles: {stuck}")
+        in_flux = {r["symbol"] for r in live.values()}
+        # A stop that filled after the bot's checks this cycle is booked next cycle.
+        in_flux |= {s for s, p in eng.positions.items()
+                    if broker.orders.get(p.broker_stop_id or "", {}).get("status") == "COMPLETE"}
         bad = set()
         for sym, p in eng.positions.items():
+            if sym in in_flux:
+                continue
             o = broker.orders.get(p.broker_stop_id or "")
             if not (o is not None and o["status"] == "OPEN" and o["qty"] == p.qty):
                 bad.add(sym)
-        # A stop can fail AND its fallback exit can fail in the same cycle. That's
-        # tolerated for one cycle only: the next cycle must re-protect or close it.
-        persistent = bad & getattr(self, "_bad_prev", set())
-        if persistent and not eng.risk.halted():
-            self.fail(f"{persistent} unprotected for two cycles in a row")
-        self._bad_prev = bad
-        self.max_unprotected_streak = max(getattr(self, "max_unprotected_streak", 0), len(persistent))
+        # With random rejections a stop AND the exit can both fail in a cycle. Then the
+        # position must be retried every cycle, block new entries, and be fixed within
+        # 3 cycles. Every unprotected cycle must have been alerted at CRITICAL level.
+        streak = getattr(self, "_streak", {})
+        self._streak = {s: streak.get(s, 0) + 1 for s in bad}
+        worst = max(self._streak.values(), default=0)
+        self.max_unprotected_streak = max(getattr(self, "max_unprotected_streak", 0), worst)
+        self.assertLessEqual(worst, 3, f"unprotected for >3 cycles: {self._streak}")
+        if bad:
+            self.assertTrue(eng.entries_paused(), "entries not paused while unprotected")
+            self.assertTrue(self._crit.records, "unprotected position without a CRITICAL alert")
+        self._crit.records.clear()
         expected = {s: p.side * p.qty for s, p in eng.positions.items()}
-        if held != expected:
-            self.assertTrue(eng.risk.halted(), f"broker {held} != bot {expected} and no halt")
+        for sym in set(held) | set(expected):
+            if sym not in in_flux and held.get(sym, 0) != expected.get(sym, 0):
+                self.assertTrue(eng.risk.halted(), f"broker {held} != bot {expected} and no halt")
 
     def test_soak_unambiguous_faults_never_leave_a_position_unprotected(self):
         # Every one of these is detectable, so the bot must recover without halting.
@@ -709,11 +747,18 @@ class TestFaultInjection(unittest.TestCase):
             self.assertEqual(dict(broker.pos), {s: p.side * p.qty for s, p in eng.positions.items()})
             self.assertGreater(len(Path(eng.trades_path).read_text().splitlines()), 20)
 
-    def test_soak_with_timeouts_keeps_invariants(self):
-        faults = dict(reject=0.1, partial=0.2, timeout=0.05, stop_reject=0.1, stop_cancel=0.05)
+    def test_soak_with_ambiguity_resolves_everything_without_a_human(self):
+        # Timeouts, late order-book visibility and unanswered cancels are all
+        # attributable by tag, so with polling every 30s none should need a reset.
+        faults = dict(reject=0.1, partial=0.2, timeout=0.05, late=0.05, stop_reject=0.1,
+                      stop_cancel=0.05, cancel_unconfirmed=0.1)
+        polls = tuple((h, s) for h in (10, 14) for s in range(0, 181, 30))   # every 30s for 3 min
         for seed in (4, 5):
-            eng, broker = self.soak(faults, seed)
-            self.assertIn("timeout", {k for k, _ in broker.injected})
+            eng, broker = self.soak(faults, seed, bars_n=200, polls=polls, resolve_seconds=3 * 86400)
+            kinds = {k for k, _ in broker.injected}
+            self.assertTrue({"timeout", "late", "cancel_unconfirmed"} <= kinds, kinds)
+            self.assertEqual(eng.risk.halted(), "", f"seed {seed}")
+            self.assertEqual(dict(broker.pos), {s: p.side * p.qty for s, p in eng.positions.items()})
 
     def engine_with(self, faults):
         tmp = tempfile.TemporaryDirectory()
@@ -742,10 +787,15 @@ class TestFaultInjection(unittest.TestCase):
             raise OrderUnknown("timeout after fill")
         broker.market = market
         tick(3)
+        self.assertNotIn("A", eng.positions)          # outcome unknown: recorded, not guessed
+        self.assertEqual(len(eng.pending), 1)
+        self.assertTrue(eng.entries_paused())
+        tick(4)                                        # resolved by tag -> adopted + protected
         p = eng.positions["A"]
         self.assertEqual(broker.pos["A"], p.qty)
         self.assertEqual(broker.orders[p.broker_stop_id]["status"], "OPEN")
-        self.assertIn("outcome unknown", eng.risk.halted())   # still flagged for a human
+        self.assertEqual(eng.pending, {})
+        self.assertEqual(eng.risk.halted(), "")        # attributable, so no human needed
 
     def test_exit_timeout_that_filled_leaves_no_stray_stop(self):
         eng, broker, tick = self.engine_with({})
@@ -985,6 +1035,340 @@ class TestEngineSessionHandling(TestLiveEngine):
             self.clock[0] = t
             eng.step()
         self.assertFalse(any("LOGIN" in m for m in self.got))
+
+
+class TestOrderLifecycle(TestLiveEngine):
+    """Deterministic versions of the review's release-blocking scenarios."""
+
+    def at(self, eng, n, minutes=0):
+        """Cycle during session n (bars < n closed), `minutes` after 10:00."""
+        self.feed.n = n + 1
+        self.clock[0] = self.df.index[n] + pd.Timedelta(hours=10, minutes=minutes)
+        eng.step()
+
+    def open_stops(self):
+        return [k for k, o in self.broker.orders.items() if o["kind"] == "stop" and o["status"] == "OPEN"]
+
+    def markets(self):
+        return [o for o in self.broker.orders.values() if o["kind"] == "market"]
+
+    def make_ambiguous(self, method, hidden=0, only_tag_prefix=None):
+        """Next call to broker.<method> really happens but raises OrderUnknown."""
+        orig = getattr(self.broker, method)
+
+        def wrapped(*a, **kw):
+            tag = kw.get("tag", "")
+            if only_tag_prefix and not tag.startswith(only_tag_prefix):
+                return orig(*a, **kw)
+            setattr(self.broker, method, orig)        # one-shot
+            orig(*a, **kw)
+            oid = list(self.broker.orders)[-1]
+            self.broker.orders[oid]["hidden"] = hidden
+            raise OrderUnknown("timeout after the broker accepted it")
+        setattr(self.broker, method, wrapped)
+
+    # ---- 1. ambiguous stop placement
+    def test_ambiguous_stop_found_later_is_adopted_without_any_exit(self):
+        eng = self.engine()
+        self.make_ambiguous("place_stop", hidden=1)
+        self.at(eng, 3)                                   # entry fills, stop placement ambiguous
+        p = eng.positions["A"]
+        self.assertIsNone(p.broker_stop_id)
+        self.assertIsNotNone(p.stop_tag)
+        n_markets = len(self.markets())
+        self.at(eng, 3, minutes=1)                        # still invisible: wait, send nothing
+        self.assertEqual(len(self.markets()), n_markets)
+        self.at(eng, 3, minutes=2)                        # visible -> adopted
+        self.assertEqual(p.broker_stop_id, self.open_stops()[0])
+        self.assertEqual(len(self.open_stops()), 1)
+        self.assertEqual(len(self.markets()), n_markets)  # never exited
+        self.assertEqual(eng.pending, {})
+
+    def test_unconfirmable_stop_escalates_and_never_sells_twice(self):
+        eng = self.engine()
+        self.make_ambiguous("place_stop", hidden=10**6)  # live at the broker, invisible to us
+        self.at(eng, 3)
+        hidden = [k for k, o in self.broker.orders.items() if o["hidden"]][0]
+        n = len(self.markets())
+        for m in (1, 3, 5, 30):
+            self.at(eng, 3, minutes=m)
+        self.assertEqual(len(self.markets()), n)         # nothing sent that could double up
+        self.assertEqual(len(self.open_stops()), 1)      # only the hidden one
+        self.assertIn("can't confirm whether protective stop", eng.risk.halted())
+        # Operator checks Kite, finds nothing, runs `tradebot reset`.
+        self.broker.orders[hidden]["status"] = "CANCELLED"
+        eng.save()
+        from tradebot.__main__ import main
+        import contextlib, io
+        with contextlib.redirect_stdout(io.StringIO()):
+            main(["reset", "-c", self._cfg_file()])
+        eng2 = self.engine()
+        self.at(eng2, 3, minutes=31)
+        p = eng2.positions["A"]
+        self.assertIsNotNone(p.broker_stop_id)           # re-armed exactly once
+        self.assertEqual(self.open_stops(), [p.broker_stop_id])
+        self.assertEqual(self.broker.pos, {"A": p.qty})
+
+    def test_hidden_stop_that_fires_is_booked_from_positions_not_doubled(self):
+        eng = self.engine()
+        self.make_ambiguous("place_stop", hidden=10**6)
+        self.at(eng, 3)
+        n = len(self.markets())
+        self.broker.ltp = lambda sym: 94.0               # through 95: the hidden stop fires
+        for m in (1, 3, 5):
+            self.at(eng, 3, minutes=m)
+        self.assertEqual(self.broker.pos, {})            # sold once, by the stop
+        self.assertEqual(eng.positions, {})              # bot booked it from the position change
+        self.assertEqual(len(self.markets()), n)         # and never sent its own exit
+        self.assertIn("(inferred)", Path(eng.trades_path).read_text().splitlines()[-1])
+
+    def _cfg_file(self):
+        f = Path(self.tmp.name) / "cfg.json"
+        f.write_text(json.dumps(self.c.to_dict(), default=str))
+        return str(f)
+
+    # ---- 2. cancellation races
+    def test_exit_waits_while_stop_cancel_is_unconfirmed(self):
+        eng = self.engine()
+        self.at(eng, 3)
+        p = eng.positions["A"]
+        self.broker.faults = {"cancel_unconfirmed": 1.0}
+        n = len(self.markets())
+        eng.exit("A", "manual")
+        self.assertEqual(len(self.markets()), n)          # no market order while stop may fill
+        self.assertEqual(self.broker.orders[p.broker_stop_id]["status"], "OPEN")
+        self.assertEqual(p.exit_wanted, "manual")
+        self.broker.faults = {}
+        self.at(eng, 3, minutes=1)                        # cancel confirmed -> exit goes out
+        self.assertNotIn("A", eng.positions)
+        self.assertEqual(self.broker.pos, {})
+        self.assertEqual(len(self.markets()), n + 1)
+
+    def test_stop_filling_during_cancel_is_booked_not_doubled(self):
+        eng = self.engine()
+        self.at(eng, 3)
+        orig_cancel = self.broker.cancel
+
+        def racing_cancel(oid):                           # stop fills just before cancel lands
+            o = self.broker.orders[oid]
+            o.update(status="COMPLETE", filled=o["qty"], avg_price=94.0)
+            self.broker._apply("A", -o["qty"])
+            return orig_cancel(oid)
+        self.broker.cancel = racing_cancel
+        n = len(self.markets())
+        self.assertTrue(eng.exit("A", "target"))
+        self.assertEqual(len(self.markets()), n)          # no second sell
+        self.assertEqual(self.broker.pos, {})
+        last = Path(eng.trades_path).read_text().splitlines()[-1]
+        self.assertIn("stop", last)
+
+    def test_kite_cancel_reports_open_until_broker_confirms(self):
+        from tradebot.kite import AmbiguousRequest
+        states = iter(["TRIGGER PENDING", "TRIGGER PENDING", "TRIGGER PENDING", "CANCELLED"])
+
+        def script(b, method, path, params):
+            if method == "DELETE":
+                raise AmbiguousRequest("timeout")
+            return [{"status": next(states, "CANCELLED"), "filled_quantity": 0}]
+        import tradebot.kite as k
+        sl, k.time.sleep = k.time.sleep, lambda s: None
+        try:
+            st = FakeKite(script).cancel("99")
+        finally:
+            k.time.sleep = sl
+        self.assertEqual(st.status, "CANCELLED")          # only after seeing it
+
+        def never(b, method, path, params):
+            if method == "DELETE":
+                raise AmbiguousRequest("timeout")
+            return [{"status": "TRIGGER PENDING", "filled_quantity": 0}]
+        k.time.sleep = lambda s: None
+        try:
+            st = FakeKite(never).cancel("99")
+        finally:
+            k.time.sleep = sl
+        self.assertFalse(st.final)                        # still live: caller must not exit
+
+    # ---- 3. delayed entry fill
+    def test_entry_fill_that_appears_late_is_adopted_and_protected(self):
+        eng = self.engine()
+        self.make_ambiguous("market", hidden=2, only_tag_prefix="tbe")
+        self.at(eng, 3)
+        self.assertEqual(eng.positions, {})
+        self.assertEqual(self.broker.pos["A"], 100)       # the broker has the shares...
+        self.at(eng, 3, minutes=1)                        # ...but the order isn't visible yet
+        self.assertEqual(eng.positions, {})
+        self.assertTrue(eng.entries_paused())
+        self.assertEqual(eng.risk.halted(), "")           # in flux, not a mismatch
+        self.at(eng, 3, minutes=2)
+        self.at(eng, 3, minutes=3)                        # visible -> adopted
+        p = eng.positions["A"]
+        self.assertEqual(p.qty, 100)
+        self.assertEqual(self.open_stops(), [p.broker_stop_id])
+        self.assertEqual(eng.pending, {})
+
+    def test_invisible_entry_is_adopted_from_position_change(self):
+        eng = self.engine()
+        self.make_ambiguous("market", hidden=10**6, only_tag_prefix="tbe")
+        self.at(eng, 3)
+        self.assertEqual(eng.positions, {})
+        self.at(eng, 3, minutes=3)                        # past deadline: positions show +100
+        p = eng.positions["A"]
+        self.assertEqual(p.qty, 100)
+        self.assertEqual(self.open_stops(), [p.broker_stop_id])
+        self.assertEqual(eng.risk.halted(), "")
+        oid = [k for k, o in self.broker.orders.items() if o["hidden"]][0]
+        self.broker.orders[oid]["hidden"] = 0             # order book catches up: confirms, no double
+        self.at(eng, 3, minutes=4)
+        self.assertEqual(eng.positions["A"].qty, 100)
+        self.assertEqual(eng.pending, {})
+        self.assertEqual(eng.risk.halted(), "")
+
+    # ---- 4. stop not executing (circuit / GTT limit skipped)
+    def test_price_through_open_stop_twice_triggers_market_exit(self):
+        eng = self.engine()
+        self.at(eng, 3)
+        stop_id = eng.positions["A"].broker_stop_id
+        self.broker._check_stops = lambda sym: None       # stop "stuck" (e.g. lower circuit)
+        self.broker.ltp = lambda sym: 90.0                # well through the 95 stop
+        self.at(eng, 3, minutes=1)
+        self.assertIn("A", eng.positions)                 # one observation isn't enough
+        self.at(eng, 3, minutes=2)
+        self.assertNotIn("A", eng.positions)
+        self.assertEqual(self.broker.orders[stop_id]["status"], "CANCELLED")   # confirmed first
+        self.assertEqual(self.broker.pos, {})
+
+    # ---- 5. holdings the bot didn't buy
+    def test_external_holdings_are_baselined_and_never_touched(self):
+        self.broker.pos["A"] = 50                         # bought by hand before the bot started
+        eng = self.engine()
+        self.at(eng, 3)
+        self.assertEqual(eng.external, {"A": 50})
+        self.assertEqual(eng.risk.halted(), "")
+        q = eng.positions["A"].qty
+        self.assertEqual(self.broker.pos["A"], 50 + q)
+        self.at(eng, 4)
+        self.assertEqual(eng.risk.halted(), "")
+        eng.exit("A", "manual")
+        self.assertEqual(self.broker.pos, {"A": 50})      # only the bot's shares sold
+        self.broker.pos["A"] = 70                         # user trades by hand mid-run
+        self.at(eng, 4, minutes=1)
+        self.assertIn("reconcile mismatch", eng.risk.halted())
+        eng.risk.reset(eng.equity())
+        eng.rebaseline = True
+        self.at(eng, 4, minutes=2)
+        self.assertEqual(eng.external, {"A": 70})
+
+    # ---- 6. holidays
+    def test_no_broker_activity_on_exchange_holiday(self):
+        self.c.session.holidays = [str(self.df.index[3].date())]
+        eng = self.engine()
+        calls = []
+        self.broker.bars = lambda *a, **kw: calls.append(a)
+        self.at(eng, 3)
+        self.assertEqual(calls, [])
+        self.assertEqual(eng.positions, {})
+
+
+class TestKiteGtt(unittest.TestCase):
+    def setUp(self):
+        import tradebot.kite as k
+        self._sleep, k.time.sleep = k.time.sleep, lambda s: None
+        self.addCleanup(setattr, k.time, "sleep", self._sleep)
+
+    def test_cnc_stop_is_a_gtt_with_limit_beyond_trigger(self):
+        sent = {}
+
+        def script(b, method, path, params):
+            if path.startswith("/quote/ltp"):
+                return {"NSE:INFY": {"last_price": 1600.0}}
+            if method == "POST" and path == "/gtt/triggers":
+                sent.update(params)
+                return {"trigger_id": 555}
+        b = FakeKite(script)
+        b.product = "CNC"
+        oid = b.place_stop("INFY", -1, 10, 1500.0, tag="tbs1")
+        self.assertEqual(oid, "gtt:555")
+        cond, orders = json.loads(sent["condition"]), json.loads(sent["orders"])
+        self.assertEqual(cond["trigger_values"], [1500.0])
+        self.assertEqual(orders[0]["order_type"], "LIMIT")
+        self.assertEqual(orders[0]["transaction_type"], "SELL")
+        self.assertEqual(orders[0]["product"], "CNC")
+        self.assertEqual(orders[0]["price"], 1455.0)      # 3% below the trigger
+
+    def test_mis_stop_is_a_regular_slm(self):
+        sent = {}
+
+        def script(b, method, path, params):
+            if method == "POST":
+                sent.update(path=path, **params)
+                return {"order_id": "1"}
+        self.assertEqual(FakeKite(script).place_stop("INFY", -1, 10, 1500.0, tag="tbs1"), "1")
+        self.assertEqual(sent["path"], "/orders/regular")
+        self.assertEqual(sent["order_type"], "SL-M")
+
+    def test_gtt_states(self):
+        def gtt(status, child=None, child_status=None, filled=0):
+            def script(b, method, path, params):
+                if path.startswith("/gtt/triggers/"):
+                    res = {"order_result": {"order_id": child}} if child else None
+                    return {"status": status, "orders": [{"result": res}]}
+                if path == f"/orders/{child}":
+                    return [{"status": child_status, "filled_quantity": filled, "average_price": 1490.0}]
+            b = FakeKite(script)
+            b.product = "CNC"
+            return b.order_status("gtt:7")
+        self.assertEqual(gtt("active").status, "OPEN")
+        self.assertEqual(gtt("triggered").status, "OPEN")            # fired, order not visible yet
+        self.assertEqual(gtt("triggered", "c1", "OPEN").status, "OPEN")
+        st = gtt("triggered", "c1", "COMPLETE", 10)
+        self.assertEqual((st.status, st.filled, st.avg), ("COMPLETE", 10, 1490.0))
+        self.assertEqual(gtt("deleted").status, "CANCELLED")
+        self.assertEqual(gtt("rejected").status, "REJECTED")
+
+    def test_gtt_found_by_hint_when_creation_timed_out(self):
+
+        def script(b, method, path, params):
+            if path == "/orders":
+                return []
+            if path == "/gtt/triggers" and method == "GET":
+                return [{"id": 3, "status": "active",
+                         "condition": {"tradingsymbol": "INFY", "trigger_values": [1500.0]},
+                         "orders": [{"quantity": 10, "transaction_type": "SELL"}]}]
+            if path == "/gtt/triggers/3":
+                return {"status": "active", "orders": [{}]}
+        b = FakeKite(script)
+        b.product = "CNC"
+        hit = b.find_by_tag("tbs1", hint={"kind": "stop", "symbol": "INFY", "side": -1,
+                                          "qty": 10, "trigger": 1500.0})
+        self.assertEqual(hit[0], "gtt:3")
+        self.assertEqual(hit[1].status, "OPEN")
+        self.assertIsNone(b.find_by_tag("tbs2", hint={"kind": "stop", "symbol": "INFY", "side": -1,
+                                                       "qty": 11, "trigger": 1500.0}))
+
+
+class TestAlertLanes(unittest.TestCase):
+    def test_critical_never_dropped_and_drops_are_reported(self):
+        from tradebot.alerts import AlertHandler
+        import threading
+        gate = threading.Event()
+        got = []
+
+        def slow(text):
+            gate.wait(5)
+            got.append(text)
+        h = AlertHandler([slow], "t", dedupe_seconds=0)
+        lg = logging.getLogger("tradebot.test_lanes")
+        lg.addHandler(h)
+        self.addCleanup(lg.removeHandler, h)
+        for i in range(260):                              # overflow the 200-slot lane
+            lg.error("err %d", i)
+        lg.critical("POSITION UNPROTECTED")
+        gate.set()
+        h.flush(10)
+        time.sleep(0.2)
+        self.assertTrue(any("POSITION UNPROTECTED" in t for t in got))
+        self.assertTrue(any("lower-priority alerts dropped" in t for t in got))
 
 
 if __name__ == "__main__":

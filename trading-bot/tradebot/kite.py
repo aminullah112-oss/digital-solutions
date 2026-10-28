@@ -28,11 +28,10 @@ from datetime import timedelta
 
 import pandas as pd
 
-from .broker import Broker, BrokerError, Fill, OrderUnknown, TokenExpired
+from .broker import TERMINAL, Broker, BrokerError, Fill, OrderState, OrderUnknown, TokenExpired
 from .data import normalize
 
 ROOT = "https://api.kite.trade"
-TERMINAL = {"COMPLETE", "CANCELLED", "REJECTED"}
 
 
 class AmbiguousRequest(BrokerError):
@@ -157,7 +156,8 @@ class KiteBroker(Broker):
     def __init__(self, tz: str, product: str, exchange: str = "NSE",
                  stop_order_type: str = "SL-M", stop_limit_buffer_pct: float = 0.5,
                  api_key: str | None = None, access_token: str | None = None,
-                 token_store: TokenStore | None = None):
+                 token_store: TokenStore | None = None,
+                 gtt_for_cnc: bool = True, gtt_limit_buffer_pct: float = 3.0):
         self.api_key = api_key or os.environ.get("KITE_API_KEY")
         if not self.api_key:
             raise BrokerError("set KITE_API_KEY")
@@ -170,6 +170,10 @@ class KiteBroker(Broker):
             raise BrokerError("product must be MIS (intraday) or CNC (delivery)")
         self.tz, self.product, self.exchange = tz, product, exchange
         self.stop_type, self.stop_buf = stop_order_type, stop_limit_buffer_pct / 100
+        # CNC (swing) stops are GTTs: they stay at Zerodha across sessions and fire
+        # even if the bot is down or its token has expired. MIS stops are SL-M DAY
+        # orders, which is fine because MIS positions never carry overnight.
+        self.gtt_for_cnc, self.gtt_buf = gtt_for_cnc, gtt_limit_buffer_pct / 100
         self._tokens: dict[str, int] | None = None
 
     # ------------------------------------------------------------------ auth
@@ -276,32 +280,42 @@ class KiteBroker(Broker):
         return float(self._req("GET", "/quote/ltp", {"i": key})[key]["last_price"])
 
     # ---------------------------------------------------------------- orders
-    def _new_tag(self, kind: str) -> str:
-        # Unique per order (Kite tags are <= 20 chars), so an order whose POST timed
-        # out can be found in the order book instead of being placed twice.
-        self._seq = (getattr(self, "_seq", 0) + 1) % 1000
-        return f"tb{kind[:4]}{int(time.time()) % 10**8}{self._seq:03d}"[:20]
+    # Every request below follows the lifecycle contract in broker.py: the engine
+    # supplies the tag, ambiguity raises OrderUnknown, and cancel() never reports
+    # an order dead without seeing a terminal state.
 
-    def _place(self, kind: str, **p) -> str:
-        tag = self._new_tag(kind)
-        p.update(exchange=self.exchange, product=self.product, validity="DAY", tag=tag)
+    @staticmethod
+    def _tick(x: float) -> float:
+        # NSE equity ticks are 0.05 (0.01 for some low-priced names); a multiple
+        # of 0.05 is valid for both.
+        return round(round(x / 0.05) * 0.05, 2)
+
+    def _place(self, tag: str, **p) -> str:
+        p.update(exchange=self.exchange, product=self.product, validity="DAY", tag=tag[:20])
         try:
             return self._req("POST", "/orders/regular", p)["order_id"]
-        except AmbiguousRequest:
-            for _ in range(5):
+        except AmbiguousRequest as e:
+            for _ in range(3):              # quick look; the engine keeps resolving after this
                 time.sleep(1)
                 try:
-                    for o in self._req("GET", "/orders"):
-                        if o.get("tag") == tag:
-                            return o["order_id"]
+                    hit = self._find_regular(tag)
                 except BrokerError:
-                    pass
-            raise OrderUnknown(f"order {tag} outcome unknown after timeout; check the order book")
+                    continue
+                if hit:
+                    return hit[0]
+            raise OrderUnknown(f"order {tag}: outcome unknown ({e})") from e
 
     def _history(self, order_id):
         return self._req("GET", f"/orders/{order_id}")[-1]
 
-    def market(self, symbol, side, qty, tag="entry"):
+    @staticmethod
+    def _state(h: dict) -> OrderState:
+        st = h.get("status", "")
+        st = st if st in TERMINAL else "OPEN"
+        avg = h.get("average_price")
+        return OrderState(st, int(h.get("filled_quantity") or 0), float(avg) if avg else None)
+
+    def market(self, symbol, side, qty, tag):
         oid = self._place(tag, tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
                           order_type="MARKET", quantity=qty)
         deadline = time.time() + 30
@@ -310,53 +324,152 @@ class KiteBroker(Broker):
             time.sleep(0.5)
             h = self._history(oid)
         if h["status"] not in TERMINAL:
-            # Don't leave a live market order behind; take whatever filled.
-            try:
-                self._req("DELETE", f"/orders/regular/{oid}")
-            except BrokerError:
-                pass
-            time.sleep(1)
+            # Don't leave a live market order behind. If the cancel can't be
+            # confirmed, the outcome is unknown and the engine resolves it by tag.
+            st = self._cancel_regular(oid)
+            if not st.final:
+                raise OrderUnknown(f"market order {oid} ({tag}) still working after 30s")
             h = self._history(oid)
-        filled = int(h.get("filled_quantity") or 0)
-        if filled <= 0:
+        st = self._state(h)
+        if st.filled <= 0:
             raise BrokerError(f"market order {oid} {h['status']} with no fill: {h.get('status_message')}")
-        return Fill(float(h["average_price"]), min(filled, qty))
+        return Fill(st.avg, min(st.filled, qty))
+
+    # --- protective stops: SL-M (DAY) for MIS, GTT (survives overnight) for CNC
+    @property
+    def _use_gtt(self) -> bool:
+        return self.product == "CNC" and self.gtt_for_cnc
 
     def _stop_params(self, side, trigger):
-        trigger = round(trigger, 1) if trigger >= 1 else round(trigger, 2)
-        p = dict(order_type=self.stop_type, trigger_price=trigger)
+        p = dict(order_type=self.stop_type, trigger_price=self._tick(trigger))
         if self.stop_type == "SL":
             # Stop-limit with a generous buffer; a pure limit could be skipped in a fast market.
-            p["price"] = round(trigger * (1 + side * self.stop_buf), 1)
+            p["price"] = self._tick(trigger * (1 + side * self.stop_buf))
         return p
 
-    def place_stop(self, symbol, side, qty, trigger, tag="stop"):
+    def _gtt_params(self, symbol, side, qty, trigger) -> dict:
+        # A GTT fires a LIMIT order when LTP crosses the trigger. The limit sits
+        # gtt_buf beyond the trigger so it fills on normal moves; a gap past the
+        # limit leaves it resting, which the engine's price-through-stop check catches.
+        cond = {"exchange": self.exchange, "tradingsymbol": symbol,
+                "trigger_values": [self._tick(trigger)], "last_price": self.ltp(symbol)}
+        orders = [{"exchange": self.exchange, "tradingsymbol": symbol,
+                   "transaction_type": "BUY" if side > 0 else "SELL", "quantity": qty,
+                   "order_type": "LIMIT", "product": "CNC",
+                   "price": self._tick(trigger * (1 + side * self.gtt_buf))}]
+        return {"type": "single", "condition": json.dumps(cond), "orders": json.dumps(orders)}
+
+    def place_stop(self, symbol, side, qty, trigger, tag):
+        if self._use_gtt:
+            try:
+                d = self._req("POST", "/gtt/triggers", self._gtt_params(symbol, side, qty, trigger))
+                return f"gtt:{d['trigger_id']}"
+            except AmbiguousRequest as e:
+                raise OrderUnknown(f"GTT stop for {symbol}: outcome unknown ({e})") from e
         return self._place(tag, tradingsymbol=symbol, transaction_type="BUY" if side > 0 else "SELL",
                            quantity=qty, **self._stop_params(side, trigger))
 
+    def _gtt(self, gid: str) -> dict:
+        return self._req("GET", f"/gtt/triggers/{gid}")
+
+    def _gtt_state(self, gid: str) -> tuple[OrderState, str | None]:
+        """State of a GTT stop, and the id of the order it fired (if any)."""
+        g = self._gtt(gid)
+        st = g.get("status")
+        if st == "active":
+            return OrderState("OPEN"), None
+        if st == "triggered":
+            res = ((g.get("orders") or [{}])[0].get("result") or {}).get("order_result") or {}
+            child = res.get("order_id")
+            if not child:
+                return OrderState("OPEN"), None          # fired; order not visible yet
+            return self._state(self._history(child)), child
+        if st == "rejected":
+            return OrderState("REJECTED"), None
+        return OrderState("CANCELLED"), None             # deleted / cancelled / disabled / expired
+
     def modify_stop(self, order_id, trigger):
+        if order_id.startswith("gtt:"):
+            gid = order_id[4:]
+            g = self._gtt(gid)
+            o = (g.get("orders") or [{}])[0]
+            side = 1 if o.get("transaction_type") == "BUY" else -1
+            sym = g["condition"]["tradingsymbol"]
+            self._req("PUT", f"/gtt/triggers/{gid}", self._gtt_params(sym, side, int(o["quantity"]), trigger))
+            return
         side = 1 if self._history(order_id)["transaction_type"] == "BUY" else -1
         self._req("PUT", f"/orders/regular/{order_id}", self._stop_params(side, trigger))
 
-    def cancel(self, order_id):
+    def _cancel_regular(self, order_id) -> OrderState:
         h = self._history(order_id)
         if h["status"] in TERMINAL:
-            return False
+            return self._state(h)
         try:
             self._req("DELETE", f"/orders/regular/{order_id}")
         except BrokerError:
-            return self._history(order_id)["status"] == "CANCELLED"
-        return True
+            pass                                  # maybe it went through; look before deciding
+        for _ in range(10):
+            h = self._history(order_id)
+            if h["status"] in TERMINAL:
+                return self._state(h)
+            time.sleep(0.5)
+        return self._state(h)                     # still OPEN: may yet fill
+
+    def cancel(self, order_id):
+        if not order_id.startswith("gtt:"):
+            return self._cancel_regular(order_id)
+        gid = order_id[4:]
+        st, child = self._gtt_state(gid)
+        if child:
+            return self._cancel_regular(child)
+        if st.final:
+            return st
+        try:
+            self._req("DELETE", f"/gtt/triggers/{gid}")
+        except BrokerError:
+            pass
+        for _ in range(10):
+            st, child = self._gtt_state(gid)
+            if child:                             # fired while we were cancelling
+                return self._cancel_regular(child)
+            if st.final:
+                return st
+            time.sleep(0.5)
+        return OrderState("UNKNOWN")
 
     def order_status(self, order_id):
-        h = self._history(order_id)
-        st = h["status"]
-        st = st if st in TERMINAL else "OPEN"
-        return st, float(h["average_price"]) if h.get("average_price") else None
+        if order_id.startswith("gtt:"):
+            return self._gtt_state(order_id[4:])[0]
+        return self._state(self._history(order_id))
+
+    def _find_regular(self, tag: str):
+        hits = [o for o in self._req("GET", "/orders")
+                if o.get("tag") == tag or tag in (o.get("tags") or [])]
+        if not hits:
+            return None
+        o = hits[-1]
+        return o["order_id"], self._state(o)
+
+    def find_by_tag(self, tag, hint: dict | None = None):
+        hit = self._find_regular(tag)
+        if hit or not (hint and hint.get("kind") == "stop" and self._use_gtt):
+            return hit
+        # GTTs carry no tag: match the trigger we tried to create.
+        want = (hint["symbol"], self._tick(hint["trigger"]), int(hint["qty"]),
+                "BUY" if hint["side"] > 0 else "SELL")
+        for g in reversed(self._req("GET", "/gtt/triggers")):
+            o = (g.get("orders") or [{}])[0]
+            got = (g.get("condition", {}).get("tradingsymbol"),
+                   self._tick((g.get("condition", {}).get("trigger_values") or [0])[0]),
+                   int(o.get("quantity", 0)), o.get("transaction_type"))
+            if got == want and g.get("status") in ("active", "triggered"):
+                oid = f"gtt:{g['id']}"
+                return oid, self.order_status(oid)
+        return None
 
     def net_positions(self):
-        """Advisory: the engine uses this only to warn about mismatches. The stop
-        order's status is the source of truth for whether a position closed."""
+        """Account-wide net quantity per symbol for this product. Includes shares the
+        bot didn't buy; the engine subtracts its recorded external baseline."""
         out: dict[str, int] = {}
         if self.product == "CNC":
             # Delivery buys from earlier sessions live in holdings, not positions.

@@ -1,23 +1,22 @@
 """Live / paper trading loop.
 
 Same Strategy and RiskManager as the backtester. Differences that matter:
-  * Every position gets a broker-side stop order immediately after the entry
-    fills. If the stop can't be placed, the position is closed at market. The
-    bot never holds an unprotected position on purpose.
-  * The stop order's status is the source of truth for stop exits, so a crashed
-    bot still has its stops working at the broker.
-  * A stop the bot didn't cancel (e.g. a DAY order that expired overnight) is
-    re-placed on the next cycle.
-  * Order requests that time out are never blindly retried (no duplicate
-    orders); partial fills are tracked and protected for the quantity filled.
-  * Every cycle starts by reconciling against the broker. A position without a
-    stop gets one (or is closed); any quantity mismatch blocks new entries until
-    a human runs `reset`.
+  * Every position gets a broker-side stop immediately after the entry fills
+    (GTT for CNC, so it survives overnight and token expiry; SL-M for MIS).
+  * Every order carries an engine-chosen tag. Ambiguous outcomes are recorded in
+    `pending` and resolved by tag (or by the broker's position change) on later
+    cycles; nothing that could double up is sent meanwhile. A resting stop is
+    never presumed absent by the bot: that needs an operator `reset`.
+  * Cancels count only when the broker reports a final state, so an exit never
+    races a stop that might still fill.
+  * Every cycle starts by reconciling against the broker. Shares the bot can't
+    attribute to its own orders (beyond the recorded external baseline) block
+    entries until a human runs `reset`; the bot never touches them.
   * Creating the kill-switch file blocks entries, flattens at the next moment the
     market is open, then exits.
-  * State (positions, risk counters and halts) is written atomically after every
-    cycle, so a restart doesn't clear a halt. A lock file prevents two engines
-    running on the same state.
+  * State (positions, pending orders, risk counters and halts) is written
+    atomically after every cycle. A lock file prevents two engines running on
+    the same state.
 """
 from __future__ import annotations
 
@@ -33,7 +32,7 @@ import numpy as np
 import pandas as pd
 
 from .backtest import add_turnover
-from .broker import Broker, BrokerError, OrderUnknown, TokenExpired
+from .broker import Broker, BrokerError, Fill, OrderState, OrderUnknown, TokenExpired
 from .config import Config
 from .models import Position, Trade
 from .risk import RiskManager
@@ -59,6 +58,9 @@ class LiveEngine:
         self.last_px: dict[str, float] = {}
         self.realized = 0.0
         self.risk = RiskManager(cfg)
+        self.pending: dict[str, dict] = {}      # tag -> unresolved order record
+        self.external: dict[str, int] = {}      # shares in the account the bot doesn't own
+        self.rebaseline = True                  # capture `external` on first reconcile
         self._load()
 
     # ------------------------------------------------------------ persistence
@@ -69,6 +71,9 @@ class LiveEngine:
         self.realized = s.get("realized", 0.0)
         self.last_bar = s.get("last_bar", {})
         self.risk = RiskManager(self.cfg, s.get("risk"))
+        self.pending = s.get("pending", {})
+        self.external = s.get("external", {})
+        self.rebaseline = s.get("rebaseline", "external" not in s)
         for d in s.get("positions", []):
             d["entry_time"] = pd.Timestamp(d["entry_time"])
             p = Position(**d)
@@ -84,7 +89,8 @@ class LiveEngine:
             d["entry_time"] = str(p.entry_time)
             positions.append(d)
         s = {"realized": self.realized, "last_bar": self.last_bar, "risk": self.risk.to_dict(),
-             "positions": positions, "broker": self.broker.to_dict(), "saved_at": str(self.now())}
+             "positions": positions, "pending": self.pending, "external": self.external,
+             "rebaseline": self.rebaseline, "broker": self.broker.to_dict(), "saved_at": str(self.now())}
         tmp = self.state_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(s, indent=2, default=float))
         os.replace(tmp, self.state_path)
@@ -98,7 +104,10 @@ class LiveEngine:
 
     def market_open(self, now: pd.Timestamp) -> bool:
         s = self.cfg.session
-        return now.weekday() < 5 and s.t("open") <= now.time() < s.t("close")
+        return self.trading_day(now) and s.t("open") <= now.time() < s.t("close")
+
+    def trading_day(self, now: pd.Timestamp) -> bool:
+        return now.weekday() < 5 and str(now.date()) not in self.cfg.session.holidays
 
     def _closed_bars(self, df: pd.DataFrame, now: pd.Timestamp) -> pd.DataFrame:
         """Drop the still-forming bar so signals are only judged on closed bars,
@@ -134,63 +143,117 @@ class LiveEngine:
                  extra={"notify": True})
 
     # ------------------------------------------------------------ order flows
-    def _arm_stop(self, p: Position) -> bool:
+    # Rules (see broker.py for the broker side of the contract):
+    #  1. Every order carries a tag the engine chose. If a request's outcome is
+    #     unknown, the tag goes into self.pending and is resolved on later cycles;
+    #     nothing that could double up (another exit, another stop) is sent for that
+    #     position until it resolves or RESOLVE_SECONDS pass with no trace of it.
+    #  2. A protective order is only treated as dead after the broker reports a
+    #     final state. "Cancel requested" is not "cancelled".
+    #  3. Shares the bot can attribute to its own tagged orders are adopted and
+    #     protected. Shares it can't attribute are never touched: entries are
+    #     blocked and a human is alerted.
+    RESOLVE_SECONDS = 120
+    FALLBACK_EXITS = ("stop lost", "no stop")   # exits that only exist because a stop failed
+    STUCK_STOP_PCT = 0.5     # price this far through an OPEN stop for 2 cycles = not executing
+
+    def _tag(self, kind: str) -> str:
+        self._seq = (getattr(self, "_seq", 0) + 1) % 100
+        return f"tb{kind[0]}{int(time.time() * 1000) % 10**12:012d}{self._seq:02d}"
+
+    def _remember(self, tag: str, kind: str, sym: str, side: int, qty: int, **extra):
+        now = self.now()
+        self.pending[tag] = dict(tag=tag, kind=kind, symbol=sym, side=side, qty=qty,
+                                 created=str(now), deadline=str(now + pd.Timedelta(seconds=self.RESOLVE_SECONDS)),
+                                 absent=False, **extra)
+
+    def _status(self, oid: str) -> OrderState:
         try:
-            p.broker_stop_id = self.broker.place_stop(p.symbol, -p.side, p.qty, p.stop, tag="stop")
-            return True
+            return self.broker.order_status(oid)
+        except BrokerError as e:
+            log.warning("status of %s unavailable: %s", oid, e)
+            return OrderState("UNKNOWN")
+
+    def _cancel(self, oid: str) -> OrderState:
+        try:
+            return self.broker.cancel(oid)
+        except BrokerError as e:
+            log.warning("cancel of %s unconfirmed: %s", oid, e)
+            return OrderState("UNKNOWN")
+
+    def _fill_against(self, p: Position, qty: int, px: float, why: str):
+        """Book `qty` shares of p as closed at px (all of it, or a partial)."""
+        if qty >= p.qty:
+            self._record(p, px, why)
+        else:
+            self._record(replace(p, qty=qty), px, why + " (partial)", keep=True)
+            p.qty -= qty
+
+    def _arm_stop(self, p: Position) -> str:
+        """Place p's protective stop. Returns 'ok', 'pending' (outcome unknown, being
+        resolved) or 'failed' (definitely not placed)."""
+        tag = self._tag("stop")
+        try:
+            p.broker_stop_id = self.broker.place_stop(p.symbol, -p.side, p.qty, p.stop, tag=tag)
+            p.stop_tag, p.stop_qty = None, p.qty
+            return "ok"
+        except OrderUnknown as e:
+            p.broker_stop_id, p.stop_tag, p.stop_qty = None, tag, p.qty
+            self._remember(tag, "stop", p.symbol, -p.side, p.qty, trigger=p.stop)
+            log.error("%s: stop placement outcome unknown (%s); resolving before any other order", p.symbol, e)
+            return "pending"
         except BrokerError as e:
             p.broker_stop_id = None
-            if isinstance(e, OrderUnknown):
-                self.risk.block_entries(f"{p.symbol}: stop placement outcome unknown")
             log.error("could not place stop for %s: %s", p.symbol, e)
-            return False
+            return "failed"
 
-    def exit(self, sym: str, why: str):
+    def exit(self, sym: str, why: str) -> bool:
+        """Close sym at market. Returns True once fully closed. Defers (returns
+        False, keeps p.exit_wanted) whenever acting now could double up."""
         p = self.positions[sym]
-        if p.broker_stop_id and not self.broker.cancel(p.broker_stop_id):
-            st, avg = self.broker.order_status(p.broker_stop_id)
-            if st == "COMPLETE":
-                self._record(p, avg, "stop")
-                return
-        p.broker_stop_id = None
+        if p.exit_tag or p.stop_tag:
+            p.exit_wanted = why
+            return False
+        if p.broker_stop_id:
+            st = self._cancel(p.broker_stop_id)
+            if st.filled and st.final:
+                self._fill_against(p, st.filled, st.avg, "stop")
+                if sym not in self.positions:
+                    return True
+            if not st.final:
+                p.exit_wanted = why
+                log.warning("%s: stop cancel not confirmed (%s); exit deferred, stop still live", sym, st.status)
+                return False
+            p.broker_stop_id = None
+        tag = self._tag("exit")
         try:
-            fill = self.broker.market(sym, -p.side, p.qty, tag="exit")
-        except BrokerError as e:
-            if isinstance(e, OrderUnknown):
-                self.risk.block_entries(f"{sym}: exit order outcome unknown")
-                held = self._held(sym)
-                if held == 0:
-                    # The exit went through. Re-arming a stop now would leave a stray
-                    # order that could open a reverse position.
-                    self._record(p, self.broker.ltp(sym), why + " (confirmed via positions)")
-                    return
-            # Stop is already cancelled; don't leave the position naked.
-            if not self._arm_stop(p):
-                log.critical("%s: exit failed AND stop re-arm failed - POSITION UNPROTECTED", sym)
-            raise
-        if fill.qty < p.qty:
-            # Partial exit: book what filled, keep protecting the rest.
-            self._record(replace(p, qty=fill.qty), fill.price, why + " (partial)", keep=True)
-            p.qty -= fill.qty
-            log.critical("%s: exit filled %d of %d; %d remain", sym, fill.qty, fill.qty + p.qty, p.qty)
-            if not self._arm_stop(p):
-                log.critical("%s: remainder UNPROTECTED", sym)
-            raise BrokerError(f"{sym}: partial exit")
-        self._record(p, fill.price, why)
-
-    def _held(self, sym: str) -> int | None:
-        """Broker's net quantity for sym, or None if it can't be read."""
-        try:
-            return self.broker.net_positions().get(sym, 0)
+            fill = self.broker.market(sym, -p.side, p.qty, tag=tag)
+        except OrderUnknown as e:
+            p.exit_tag, p.exit_wanted = tag, why
+            self._remember(tag, "exit", sym, -p.side, p.qty, why=why)
+            log.critical("%s: exit outcome unknown (%s); resolving by tag before anything else", sym, e)
+            return False
         except BrokerError:
-            return None
+            # Definitely rejected: nothing sold. Re-protect, retry the exit next cycle.
+            p.exit_wanted = why
+            if self._arm_stop(p) == "failed":
+                log.critical("%s: exit rejected AND stop re-arm failed - POSITION UNPROTECTED", sym)
+            raise
+        p.exit_wanted = ""
+        self._fill_against(p, fill.qty, fill.price, why)
+        if sym in self.positions:
+            p.exit_wanted = why
+            log.critical("%s: exit filled %d; %d remain, re-protecting", sym, fill.qty, p.qty)
+            self._arm_stop(p)
+            return False
+        return True
 
     def flatten_all(self, why: str):
         for sym in list(self.positions):
             try:
                 self.exit(sym, why)
             except BrokerError as e:
-                log.error("FAILED to flatten %s: %s - CLOSE IT MANUALLY", sym, e)
+                log.error("FAILED to flatten %s: %s - retrying next cycle", sym, e)
 
     def enter(self, sig, qty: int):
         sym, side = sig.symbol, sig.side
@@ -198,87 +261,299 @@ class LiveEngine:
         if qty * sig.ref_price > notional_cap:
             log.error("sanity check: %s order value %.0f > cap %.0f; skipped", sym, qty * sig.ref_price, notional_cap)
             return
-        before = self._held(sym) or 0
+        plan = dict(ref=sig.ref_price, stop=sig.stop, target=sig.target,
+                    max_bars=self.cfg.hold_limit(sig.max_bars), reason=sig.reason)
+        tag = self._tag("entry")
         try:
-            fill = self.broker.market(sym, side, qty, tag="entry")
-        except OrderUnknown:
-            # The entry may have filled. If the broker shows new shares, take
-            # ownership and protect them rather than leave them stopless.
-            self.risk.block_entries(f"{sym}: entry order outcome unknown")
-            held = self._held(sym)
-            got = (held - before) * side if held is not None else 0
-            if got <= 0:
-                raise
-            log.critical("%s: entry timed out but %d filled; adopting and protecting it", sym, got)
-            from .broker import Fill
-            fill = Fill(self.broker.ltp(sym), min(got, qty))
-        if fill.qty < qty:
-            log.warning("%s entry partially filled: %d of %d", sym, fill.qty, qty)
-        p = Position(sym, side, fill.qty, fill.price, sig.stop, sig.stop, sig.target, self.now(),
-                     self.cfg.hold_limit(sig.max_bars), sig.reason)
+            fill = self.broker.market(sym, side, qty, tag=tag)
+        except OrderUnknown as e:
+            self._remember(tag, "entry", sym, side, qty, plan=plan)
+            log.critical("%s: entry outcome unknown (%s); will adopt and protect it if it filled", sym, e)
+            return
+        self._open(sym, side, fill, plan)
+
+    def _open(self, sym: str, side: int, fill, plan: dict, adopted: bool = False):
+        if fill.qty <= 0:
+            return
+        p = Position(sym, side, fill.qty, fill.price, plan["stop"], plan["stop"], plan["target"],
+                     self.now(), plan["max_bars"], plan["reason"])
         self.positions[sym] = p
         self.last_px[sym] = fill.price
-        if side * (fill.price - sig.stop) <= 0 or \
-                side * (fill.price - sig.ref_price) > self.cfg.risk.max_gap_slip_r * sig.risk_per_share:
+        R = abs(plan["ref"] - plan["stop"])
+        if side * (fill.price - plan["stop"]) <= 0 or side * (fill.price - plan["ref"]) > self.cfg.risk.max_gap_slip_r * R:
             log.warning("%s filled at %.2f, too far past plan (ref %.2f stop %.2f); exiting",
-                        sym, fill.price, sig.ref_price, sig.stop)
+                        sym, fill.price, plan["ref"], plan["stop"])
             self.exit(sym, "entry abort")
             return
-        if not self._arm_stop(p):
+        if self._arm_stop(p) == "failed":
             self.exit(sym, "no stop")
             return
-        log.info("OPENED %s %s qty=%d @ %.2f stop=%.2f target=%s [%s]",
-                 "LONG" if side > 0 else "SHORT", sym, p.qty, fill.price, sig.stop,
-                 f"{sig.target:.2f}" if sig.target else "-", sig.reason, extra={"notify": True})
+        log.info("%s %s %s qty=%d @ %.2f stop=%.2f target=%s [%s]", "ADOPTED" if adopted else "OPENED",
+                 "LONG" if side > 0 else "SHORT", sym, p.qty, fill.price, p.stop,
+                 f"{p.target:.2f}" if p.target else "-", p.reason, extra={"notify": True})
+
+    # ---------------------------------------------------------- resolution
+    def _resolve_pending(self):
+        now = self.now()
+        for tag, r in list(self.pending.items()):
+            try:
+                self._resolve_one(tag, r, now)
+            except BrokerError as e:
+                # One record's follow-up (e.g. exiting an adopted fill) failing must not
+                # stop the rest of reconciliation; _protect retries next cycle.
+                log.error("resolving %s (%s %s): %s", tag, r["kind"], r["symbol"], e)
+
+    def _resolve_one(self, tag: str, r: dict, now):
+        try:
+            hit = self.broker.find_by_tag(tag, hint=r)
+        except BrokerError as e:
+            log.warning("lookup of %s failed: %s", tag, e)
+            return
+        sym, p = r["symbol"], self.positions.get(r["symbol"])
+        if hit is None and r["kind"] == "stop":
+            # A stop RESTS at the broker, so "not visible yet" never proves it isn't
+            # there. Placing another stop or exiting could sell the same shares
+            # twice. Only a human (after checking the order book) can rule it out.
+            if self._infer_from_positions(r):
+                # Shares left the account with this stop outstanding: it fired.
+                if r["inferred"] >= r["qty"]:
+                    del self.pending[tag]
+                return
+            if r.get("confirmed_absent"):
+                del self.pending[tag]
+                if p and p.stop_tag == tag:
+                    p.stop_tag = None            # _protect re-arms
+                log.warning("%s: stop %s confirmed absent by operator; re-arming", sym, tag)
+            elif now >= pd.Timestamp(r["deadline"]) and not r.get("escalated"):
+                r["escalated"] = True
+                msg = (f"{sym}: can't confirm whether protective stop {tag} exists. Not placing another "
+                       f"or exiting (could sell twice). Check the Kite order book/GTTs, cancel any stray "
+                       f"stop, then run `tradebot reset`")
+                log.critical(msg)
+                self.risk.block_entries(msg)
+            return
+        if hit is None:
+            if not r["absent"] and now >= pd.Timestamp(r["deadline"]):
+                # Market orders don't rest: if the position hasn't moved by now, the
+                # order didn't happen and retrying is safe.
+                r["absent"] = True
+                if p and r["kind"] == "exit" and p.exit_tag == tag:
+                    p.exit_tag = None            # _protect re-arms, exit retried
+                if self._infer_from_positions(r):
+                    return
+                log.error("%s order %s (%s) not found after %ds and positions show no fill; "
+                          "treating as not placed, still watching today", sym, tag, r["kind"], self.RESOLVE_SECONDS)
+            elif r["absent"] and now.date() > pd.Timestamp(r["created"]).date():
+                del self.pending[tag]
+            return
+        oid, st = hit
+        if not st.final:
+            self._resolve_live(tag, r, oid, st, p, now)
+            return
+        del self.pending[tag]
+        if r.get("inferred") is not None:
+            # Already booked from the position change; the order book now confirms it.
+            if st.filled != r["inferred"]:
+                msg = f"{sym}: order {tag} filled {st.filled} but {r['inferred']} was inferred"
+                log.critical(msg)
+                self.risk.block_entries(msg)
+            return
+        if r["kind"] == "entry":
+            if st.filled:
+                if p:
+                    log.critical("%s: late entry fill of %d but a position already exists; entries blocked", sym, st.filled)
+                    self.risk.block_entries(f"{sym}: late entry fill alongside an existing position")
+                else:
+                    log.critical("%s: entry %s resolved: %d filled @ %.2f; adopting", sym, tag, st.filled, st.avg)
+                    self._open(sym, r["side"], Fill(st.avg, st.filled), r["plan"], adopted=True)
+        elif r["kind"] == "exit" and p:
+            if p.exit_tag == tag:
+                p.exit_tag = None
+            if st.filled:
+                self._fill_against(p, st.filled, st.avg, r["why"] + " (resolved)")
+        elif r["kind"] == "stop" and p:
+            if p.stop_tag == tag:
+                p.stop_tag = None
+            if st.filled:
+                self._fill_against(p, st.filled, st.avg, "stop (resolved)")
+                q = self.positions.get(sym)
+                if q and q.broker_stop_id:
+                    # A replacement stop now covers more shares than we hold. Pull it
+                    # and let _protect re-arm the right quantity.
+                    c = self._cancel(q.broker_stop_id)
+                    if c.final:
+                        q.broker_stop_id = None
+                    else:
+                        self.risk.block_entries(f"{sym}: oversized replacement stop could not be cancelled")
+
+    def _held(self, sym: str) -> int | None:
+        """Broker net quantity for sym excluding shares the bot doesn't own, or None."""
+        try:
+            return self.broker.net_positions().get(sym, 0) - self.external.get(sym, 0)
+        except BrokerError:
+            return None
+
+    def _infer_from_positions(self, r: dict) -> bool:
+        """An order didn't show up in the order book in time. If the broker's
+        position moved in that order's direction, the order happened: book it from
+        the position change (at LTP) instead of acting as if it didn't."""
+        sym = r["symbol"]
+        if r.get("inferred") is not None:
+            return False                     # already booked once
+        held = self._held(sym)
+        if held is None:
+            return False
+        p = self.positions.get(sym)
+        moved = (held - self._bot_qty(sym)) * r["side"]   # shares moved in the order's direction
+        if moved <= 0:
+            return False
+        moved = min(moved, r["qty"])
+        try:
+            px = self.broker.ltp(sym)
+        except BrokerError:
+            px = p.entry if p else r.get("plan", {}).get("ref", 0.0)
+        r["inferred"] = moved
+        log.critical("%s: %s order %s not visible but positions moved by %d; booking it (price approx. LTP %.2f)",
+                     sym, r["kind"], r["tag"], moved, px)
+        if r["kind"] == "entry" and not p:
+            self._open(sym, r["side"], Fill(px, moved), r["plan"], adopted=True)
+        elif r["kind"] in ("exit", "stop") and p:
+            self._fill_against(p, moved, px, (r.get("why") or "stop") + " (inferred)")
+        return True
+
+    def _resolve_live(self, tag, r, oid, st, p, now):
+        """A tagged order turned up and can still fill."""
+        if r["kind"] == "stop":
+            if p and p.stop_tag == tag and not p.broker_stop_id:
+                p.broker_stop_id, p.stop_tag = oid, None
+                del self.pending[tag]
+                log.warning("%s: stop %s resolved as live (%s); protected", p.symbol, tag, oid)
+                return
+            # Duplicate (we already placed a replacement) or stray (no position): cancel it.
+            c = self._cancel(oid)
+            if c.final:
+                del self.pending[tag]
+                if c.filled and p:
+                    self._fill_against(p, c.filled, c.avg, "stop (duplicate)")
+            log.warning("%s: duplicate/stray stop %s cancel -> %s", r["symbol"], oid, c.status)
+        elif now >= pd.Timestamp(r["deadline"]) and not r.get("cancel_sent"):
+            r["cancel_sent"] = True              # a market order still working after 2 minutes
+            log.error("%s: %s order %s still working; cancelling", r["symbol"], r["kind"], oid)
+            self._cancel(oid)
 
     # ---------------------------------------------------------------- cycle
     def reconcile(self):
-        """Make the bot's view match the broker's before anything else happens.
-        Anything it can't explain blocks new entries until a human runs `reset`."""
+        """Make the bot's view match the broker's before anything else happens."""
+        self._resolve_pending()
         for sym, p in list(self.positions.items()):
             try:
                 self._protect(sym, p)
             except BrokerError as e:
-                # Couldn't re-arm AND couldn't exit. Keep going so every other position
-                # is still checked; this one is retried next cycle.
+                # Keep going so every other position is still checked; retried next cycle.
                 log.critical("%s UNPROTECTED: stop and exit both failed (%s); retrying next cycle", sym, e)
         try:
             held = self.broker.net_positions()
         except BrokerError as e:
             self.risk.block_entries(f"could not read broker positions: {e}")
             return
+        in_flux = {r["symbol"] for r in self.pending.values() if not r["absent"]}
+        if self.rebaseline and not in_flux:
+            self.external = {s: held.get(s, 0) - (self._bot_qty(s)) for s in self.cfg.symbols}
+            self.external = {s: q for s, q in self.external.items() if q}
+            self.rebaseline = False
+            log.warning("external holdings baseline set: %s (bot never trades these shares)",
+                        self.external or "none", extra={"notify": True})
         for sym in self.cfg.symbols:
-            expect = self.positions[sym].side * self.positions[sym].qty if sym in self.positions else 0
+            if sym in in_flux:
+                continue
+            expect = self._bot_qty(sym) + self.external.get(sym, 0)
             if held.get(sym, 0) == expect:
                 continue
             p = self.positions.get(sym)
             if p and p.broker_stop_id:
-                st, avg = self.broker.order_status(p.broker_stop_id)
-                if st == "COMPLETE":          # stop filled between the two reads
-                    self._record(p, avg, "stop")
-                    if held.get(sym, 0) == 0:
+                st = self._status(p.broker_stop_id)
+                if st.final and st.filled:          # stop filled between the two reads
+                    self._fill_against(p, st.filled, st.avg, "stop")
+                    if held.get(sym, 0) == self._bot_qty(sym) + self.external.get(sym, 0):
                         continue
-            msg = f"{sym}: broker qty {held.get(sym, 0)}, bot expects {expect}"
+            msg = f"{sym}: broker qty {held.get(sym, 0)}, bot {self._bot_qty(sym)} + external {self.external.get(sym, 0)}"
             log.error("reconcile mismatch, entries blocked: %s", msg)
             self.risk.block_entries(f"reconcile mismatch: {msg}")
 
+    def _bot_qty(self, sym: str) -> int:
+        p = self.positions.get(sym)
+        return p.side * p.qty if p else 0
+
     def _protect(self, sym: str, p: Position):
-        if not p.broker_stop_id:
-            log.warning("%s has no protective stop; arming at %.2f", sym, p.stop)
-            if not self._arm_stop(p):
-                self.exit(sym, "stop lost")
+        if p.exit_tag or p.stop_tag:
+            return                                   # the resolver owns this position for now
+        if p.broker_stop_id:
+            st = self._status(p.broker_stop_id)
+            if st.final and st.filled:
+                self._fill_against(p, st.filled, st.avg, "trailing stop" if p.stop != p.initial_stop else "stop")
+                if sym not in self.positions:
+                    return
+                p.broker_stop_id = None              # partly filled, rest cancelled
+            elif st.final:
+                # e.g. a DAY stop that expired, or a broker-side cancel/rejection
+                log.warning("stop for %s is %s; re-placing at %.2f", sym, st.status, p.stop)
+                p.broker_stop_id = None
+            elif st.status == "OPEN":
+                if p.stop_qty and p.stop_qty != p.qty:
+                    # Position changed size (partial exit/fill) but the stop didn't. An
+                    # oversized stop could sell shares we don't hold: resize it.
+                    c = self._cancel(p.broker_stop_id)
+                    if c.final and c.filled:
+                        self._fill_against(p, c.filled, c.avg, "stop")
+                    if not c.final:
+                        log.error("%s: stop covers %d but position is %d; cancel unconfirmed, retrying",
+                                  sym, p.stop_qty, p.qty)
+                        return
+                    p.broker_stop_id = None
+                    if sym in self.positions:
+                        self._arm_stop(p)
+                    return
+                if p.exit_wanted:
+                    self.exit(sym, p.exit_wanted)
+                    return
+                ltp = self.broker.ltp(sym)
+                self.last_px[sym] = ltp
+                through = p.side * (p.stop - ltp) > p.stop * self.STUCK_STOP_PCT / 100
+                p.through = p.through + 1 if through else 0
+                if p.through >= 2:
+                    log.critical("%s: price %.2f is through stop %.2f but the stop hasn't filled "
+                                 "(circuit, or GTT limit skipped); exiting at market", sym, ltp, p.stop)
+                    self.exit(sym, "stop not filling")
+                return
+            else:
+                return                               # UNKNOWN: don't act on a guess
+        if p.exit_wanted and p.exit_wanted not in self.FALLBACK_EXITS:
+            self.exit(sym, p.exit_wanted)
             return
-        st, avg = self.broker.order_status(p.broker_stop_id)
-        if st == "COMPLETE":
-            self._record(p, avg, "trailing stop" if p.stop != p.initial_stop else "stop")
-        elif st in ("CANCELLED", "REJECTED"):
-            # e.g. a DAY stop that expired overnight, or a broker-side cancel
-            log.warning("stop for %s is %s; re-placing at %.2f", sym, st, p.stop)
-            if not self._arm_stop(p):
-                self.exit(sym, "stop lost")
+        ltp = self.broker.ltp(sym)
+        self.last_px[sym] = ltp
+        if p.side * (ltp - p.stop) <= 0:
+            self.exit(sym, "price through stop")
+            return
+        # Protection first: if the stop goes in, the fallback exit is no longer needed.
+        r = self._arm_stop(p)
+        if r == "ok" and p.exit_wanted in self.FALLBACK_EXITS:
+            p.exit_wanted = ""
+        elif r == "failed":
+            self.exit(sym, "stop lost")
 
     def unprotected(self) -> list[str]:
         return [s for s, p in self.positions.items() if not p.broker_stop_id]
+
+    def entries_paused(self) -> str:
+        """Self-clearing reasons not to take new risk (unlike risk halts)."""
+        if self.unprotected():
+            return f"unprotected: {self.unprotected()}"
+        if any(p.stop_qty and p.stop_qty != p.qty for p in self.positions.values()):
+            return "stop being resized"
+        if any(not r["absent"] for r in self.pending.values()):
+            return "unresolved orders"
+        return ""
 
     def _kill_switch(self, now) -> bool:
         if not Path(self.cfg.kill_switch_file).exists():
@@ -346,7 +621,7 @@ class LiveEngine:
         s = self.cfg.session
         # From the reminder time to the close on weekdays, a dead session is alerted
         # before the open and blocks the cycle, so no order flow starts half-way.
-        if now.weekday() < 5 and s.t("login_reminder") <= now.time() < s.t("close"):
+        if self.trading_day(now) and s.t("login_reminder") <= now.time() < s.t("close"):
             if not self._check_auth(now):
                 return
         if self._kill_switch(now):
@@ -409,7 +684,7 @@ class LiveEngine:
                 self.exit(sym, "time stop")
                 return
             new_stop = self.strat.update_stop(p, df, i)
-            if new_stop != p.stop and p.broker_stop_id:
+            if new_stop != p.stop and p.broker_stop_id and not (p.exit_tag or p.stop_tag or p.exit_wanted):
                 ltp = self.last_px.get(sym, bar.close)
                 if p.side * (ltp - new_stop) <= 0:
                     self.exit(sym, "trailing stop (through)")
@@ -421,8 +696,8 @@ class LiveEngine:
 
         if self.risk.halted():
             return
-        if self.unprotected():
-            return      # no new risk while any position lacks a stop; self-clears once re-armed
+        if self.entries_paused() or any(r["symbol"] == sym for r in self.pending.values()):
+            return      # no new risk while anything is unprotected or unresolved; self-clears
         if self.cfg.mode == "intraday" and now.time() >= self.cfg.session.t("last_entry"):
             return
         sig = self.strat.signal(sym, df, i, self.cfg.allow_short)

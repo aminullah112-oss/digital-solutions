@@ -70,26 +70,35 @@ Strategies propose trades. `RiskManager` decides whether to take them and at wha
 
 Sizing includes costs: the per-share risk used for quantity is `|entry − stop| + 2 × price × (cost_pct + slippage_pct)`, not just the stop distance (`risk.py`, tested in `test_costs_reduce_size`). A stop is an order, not a loss cap. Gaps, circuit locks and failed orders can make a loss bigger than planned; the Monte Carlo and "stop (gap)" counts in the report show how often.
 
-Live-only safeguards (each failure path below has a test):
+Live-only safeguards. Each row has a deterministic test.
+
+**Order lifecycle.** The engine tags every order itself. Any request whose outcome is unknown is recorded in a persistent `pending` registry and resolved by tag on later cycles. Until it resolves, the bot sends nothing that could double up for that position. A cancel only counts once the broker reports a final state.
 
 | failure | handling |
 |---|---|
-| Order request times out | never retried blindly. Every order carries a unique tag; the bot looks it up in the order book. If it can't find it: `OrderUnknown`, entries blocked |
-| Entry times out but actually filled | broker position checked; the new shares are adopted and stopped, entries stay blocked for review |
-| Exit times out but actually filled | broker position checked before re-arming, so no stray stop is left to open a reverse position |
-| Stop re-arm and fallback exit both fail | logged CRITICAL (alerted), other positions still reconciled, retried next cycle; no new entries while any position lacks a stop |
-| Entry partly fills | position tracked and stopped for the filled quantity only |
-| Market order not complete in 30s | cancelled; whatever filled is tracked |
-| Stop rejected after entry | position closed at market immediately |
-| Exit fails after its stop was cancelled | stop re-armed; logged CRITICAL if that fails too |
-| Exit partly fills | filled part booked, remainder re-protected |
-| Stop expires (DAY order) or broker cancels it | re-placed next cycle |
+| Entry/exit request times out | recorded by tag, never retried blindly; resolved from the order book, or from the broker's position change if the order book lags. Market orders don't rest, so if the position hasn't moved after 120s the order didn't happen and is retried |
+| Entry fills but the order shows up late (or never) | adopted and stopped as soon as the tag or the position change proves it; no new entries meanwhile |
+| Stop placement times out | the stop may be resting unseen, so the bot **never** presumes it absent. No second stop and no exit for those shares. If the position drops, the stop fired and is booked. Otherwise, after 120s: CRITICAL alert, entries blocked, and you check Kite and run `reset`, which then lets the bot re-arm once |
+| Late duplicate/stray stop appears | cancelled (confirmed) |
+| Cancel request unanswered (stop may still fill) | exit deferred while the stop stays live; retried until the broker confirms the cancel, so there's no market sell racing a live stop |
+| Stop fills while being cancelled | booked as a stop exit; no market order sent |
+| Position shrinks (partial exit/fill) | oversized stop cancelled and re-armed at the new quantity; entries paused until done |
+| Price through an OPEN stop for 2 cycles (circuit, or GTT limit skipped on a gap) | stop cancelled (confirmed), then market exit |
+| Stop re-arm and fallback exit both fail | CRITICAL alert every cycle; re-protection tried before re-exiting; other positions still reconciled; entries paused |
+| Entry/exit partly fills | filled part tracked and booked; remainder protected |
+| Stop expires or broker cancels it | re-placed next cycle (MIS); CNC uses GTT, which doesn't expire daily |
 | Restart finds a position with no stop | stop armed before anything else, or position closed |
-| Broker qty ≠ bot qty (manual trade, missed fill, duplicate) | entries blocked until `reset` |
+| Broker qty ≠ bot qty + recorded external holdings | entries blocked until `reset`; unexplained shares are never touched |
 | Two bot processes on the same state | second one refuses to start (file lock) |
-| Process crashes | broker-side stops keep working; state reloads; halts and blocks persist |
+| Process crashes | broker-side stops keep working; state, pending orders, halts and blocks reload |
 
-The stop order's status, not the bot's memory, decides whether a stop exit happened. Every cycle starts with reconciliation, before any new entry. Signals from stale bars are ignored. Daily-loss checks use realised plus open P&L. Don't trade the bot's symbols by hand in the same product (MIS/CNC); the reconcile check will treat that as a mismatch.
+**Overnight protection (swing/CNC).** Protective stops for CNC positions are Kite **GTT** orders. They stay at Zerodha across sessions and fire even if the bot is down or its token expired before the open. MIS stops are SL-M DAY orders, which is fine because MIS never carries overnight. Neither protects against a gap: a GTT fires a LIMIT order 3% beyond the trigger, so an open that gaps further leaves it resting. The bot detects that (price through an open stop) and exits at market. `live --no-gtt` falls back to DAY stops re-placed each morning; then the gap between the open and the first cycle is unprotected.
+
+**Holdings the bot didn't buy.** On first start (and after `reset`), the bot records any existing quantity of its symbols as *external*. It never sells those shares, and any later change it can't attribute to its own tagged orders blocks entries. A dedicated Zerodha account (or no manual positions in the bot's symbols) is still the cleanest setup.
+
+**Holidays.** Fill `session.holidays` with the year's NSE trading holidays (`"YYYY-MM-DD"`) from the NSE circular. On those dates the bot makes no broker calls and sends no login reminder. It doesn't ship a list, because a wrong date there is worse than an empty one.
+
+The order's status at the broker, not the bot's memory, decides whether a stop exit happened. Every cycle starts with reconciliation, before any new entry. Signals from stale bars are ignored. Daily-loss checks use realised plus open P&L.
 - Risk maths uses **bot-scoped equity** (`initial_capital` + realised + open P&L), so the bot never sizes off money in the account that you didn't allocate to it.
 
 ## Alerts
@@ -130,7 +139,8 @@ Zerodha has no sandbox, so the paper broker can inject the failures a real broke
 
 ```bash
 python -m tradebot paper -c config/swing.json --feed kite \
-    --faults reject=0.05,partial=0.1,timeout=0.02,stop_reject=0.05,stop_cancel=0.02 --fault-seed 1
+    --faults reject=0.05,partial=0.1,timeout=0.02,late=0.02,stop_reject=0.05,stop_cancel=0.02,cancel_unconfirmed=0.05 \
+    --fault-seed 1
 ```
 
 | fault | what the paper broker does |
@@ -138,10 +148,24 @@ python -m tradebot paper -c config/swing.json --feed kite \
 | `reject` | market order rejected, nothing fills |
 | `partial` | market order fills 30–90% of the quantity |
 | `timeout` | the order **is** placed or filled, but the call raises `OrderUnknown` (the nastiest real case) |
+| `late` | like `timeout`, and the order stays invisible in the order book for 3 more lookups |
 | `stop_reject` | stop order rejected |
 | `stop_cancel` | an open stop turns up cancelled (expiry, broker-side cancel) |
+| `cancel_unconfirmed` | a cancel request goes unanswered; the order stays live and can still fill |
 
-Each injected fault is logged as `[fault injected]`. The test suite runs the engine over 300 sessions × 3 symbols with heavy fault rates. After every cycle it checks two things: every position has a live stop for its exact quantity at the broker (a single cycle's gap is allowed if both the stop and the fallback exit failed), and the bot's positions match the broker's, or the bot has blocked entries and said why. Across three seeds, 749 detectable faults over 440 trades left no position unprotected for two cycles and caused no halts. A `timeout` correctly blocks entries until `reset`.
+Each injected fault is logged as `[fault injected]`. The soak test runs the engine over hundreds of sessions × 3 symbols with heavy rates of every fault, polling every 30s. After **every cycle** it checks:
+
+- the account is never oversold (a double sell);
+- every position has a live stop for its exact size, or has been unprotected for at most 3 cycles with entries paused and a CRITICAL alert each cycle;
+- broker and bot quantities match, except for symbols with an order still resolving, which must resolve within 4 cycles.
+
+Across 20 seeds: 6,846 injected faults over 2,064 trades, no invariant failures, no halts needing a human, and a worst unprotected streak of 2 cycles. The soak found three engine bugs, all fixed:
+
+- an ambiguous stop presumed absent could be followed by an exit while the stop was still live (a double sell);
+- a stale stop wasn't resized after a late partial exit;
+- one failed follow-up action aborted the rest of reconciliation.
+
+Escalations, unexplained holdings and holidays have their own deterministic tests.
 
 Use a separate `state_file` (or delete `state/`) when you switch from a fault-injected paper run to a clean one.
 
@@ -150,7 +174,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 63 tests
+python -m unittest discover -s tests        # 82 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic
@@ -203,7 +227,8 @@ Not addressed, and it matters: **survivorship bias.** The universe is today's sy
 - **Costs dominate intraday.** At ~0.08% per side all-in, a 0.3% stop on 5-minute bars gives up about half its R to costs. On synthetic data the R:R-after-costs gate rejects most ORB signals for this reason. Expect the same on real data for low-volatility names. Prefer liquid, higher-ATR stocks, or use 15-minute bars.
 - **yfinance intraday history is only 60 days.** That's too short to validate an intraday strategy. Use Kite historical data (paid add-on) or another vendor, and get 1–2 years.
 - **Data must be split/bonus adjusted.** An unadjusted split looks like a 50% gap and will trigger stops in the backtest.
-- **Not modelled:** market holidays (the bot just sees no new bars), circuit limits (a stop may not fill in an upper/lower circuit), auction sessions, F&O.
+- **Not modelled:** circuit limits in backtests (live, a stop that can't fill is detected and exited at market once the price trades), auction sessions, F&O. Holidays need `session.holidays` filled in.
+- **Kite specifics still unverified:** GTT field names and states, `filled_quantity` on cancelled orders, whether same-day CNC buys appear in both holdings and day positions (a double count would block entries, not trade), and order-book visibility timing. Check each with 1-share live orders before trusting it.
 - **Overfitting.** Changing parameters until the backtest looks good is the most common way to lose money with a bot. Pick parameters on in-sample data, look at out-of-sample once, and stop tweaking.
 - **Kite adapter is unverified.** It follows the Kite Connect v3 REST docs but hasn't been run against a live account. There is no Kite Connect sandbox. Paper trade with `--feed kite`, then place 1-share live orders to check every path (entry, stop placement, stop modify, cancel, target exit, EOD flatten) before trusting it. Kite has restricted SL-M on some segments; if your stops are rejected, use `--stop-type SL` (stop-limit with a 0.5% buffer).
 - **Regulation (verify with your broker).** SEBI's retail algo framework (rolled out 2025–26) puts API orders under broker-side controls: static-IP whitelisting, order-rate thresholds above which an algo must be registered and tagged with an exchange algo ID, and daily re-login. Zerodha currently documents a static-IP requirement for API order placement and a 10 orders/second per-account limit. Staying under the rate limit doesn't by itself mean every requirement is met. Treat compliance as a go-live gate and confirm your exact setup with Zerodha.

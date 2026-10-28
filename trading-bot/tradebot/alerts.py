@@ -11,7 +11,9 @@ Channels (each enabled by its environment variables; secrets never go in config)
 What gets sent: every log record at ERROR or above, plus records logged with
 extra={"notify": True} (trade opens/closes, halts). Sending happens on a
 background thread; a slow or failing channel never blocks or breaks trading.
-Identical messages within `dedupe_seconds` are suppressed.
+Identical messages within `dedupe_seconds` are suppressed. CRITICAL alerts go
+through an unbounded lane and are never dropped; if the bounded lane for the
+rest overflows, the next message sent says how many were lost.
 """
 from __future__ import annotations
 
@@ -66,9 +68,13 @@ class AlertHandler(logging.Handler):
         self._recent: dict[str, float] = {}
         self.sent: list[str] = []          # what was handed to senders (for tests/inspection)
         self.failures = 0
+        self.dropped = 0
         self._q: queue.Queue | None = None
+        self._urgent: queue.Queue | None = None
+        self._wake = threading.Event()
         if background:
             self._q = queue.Queue(maxsize=200)
+            self._urgent = queue.Queue()       # unbounded: CRITICAL is never dropped
             threading.Thread(target=self._worker, daemon=True, name="tradebot-alerts").start()
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -90,13 +96,20 @@ class AlertHandler(logging.Handler):
         text = f"[{self.prefix}] {record.levelname}: {msg}"
         if self._q is None:
             self._send(text)
+        elif record.levelno >= logging.CRITICAL:
+            self._urgent.put(text)
+            self._wake.set()
         else:
             try:
                 self._q.put_nowait(text)
+                self._wake.set()
             except queue.Full:
-                self.failures += 1
+                self.dropped += 1
 
     def _send(self, text: str) -> None:
+        if self.dropped:
+            n, self.dropped = self.dropped, 0
+            text += f"\n(+{n} lower-priority alerts dropped: queue full; check bot.log)"
         self.sent.append(text)
         for s in self.senders:
             try:
@@ -105,16 +118,29 @@ class AlertHandler(logging.Handler):
                 self.failures += 1
                 log.warning("alert channel failed: %s", e)
 
+    def _next(self):
+        for q in (self._urgent, self._q):        # urgent first
+            try:
+                return q.get_nowait()
+            except queue.Empty:
+                pass
+        return None
+
     def _worker(self):
         while True:
-            self._send(self._q.get())
+            text = self._next()
+            if text is None:
+                self._wake.wait(1)
+                self._wake.clear()
+                continue
+            self._send(text)
 
     def flush(self, timeout: float = 5) -> None:
         """Wait briefly for queued alerts to go out (used on shutdown)."""
         if self._q is None:
             return
         end = time.monotonic() + timeout
-        while not self._q.empty() and time.monotonic() < end:
+        while (not self._q.empty() or not self._urgent.empty()) and time.monotonic() < end:
             time.sleep(0.05)
 
 

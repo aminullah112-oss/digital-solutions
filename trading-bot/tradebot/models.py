@@ -37,6 +37,11 @@ class Position:
     best_price: float = 0.0    # highest high (long) / lowest low (short) since entry
     entry_cost: float = 0.0
     broker_stop_id: str | None = None
+    stop_qty: int = 0              # quantity the live stop covers; resized when qty changes
+    stop_tag: str | None = None    # stop placement whose outcome is being resolved
+    exit_tag: str | None = None    # exit order whose outcome is being resolved
+    exit_wanted: str = ""          # exit reason, retried until it completes
+    through: int = 0               # cycles price has been through an OPEN stop
 
     def __post_init__(self):
         if not self.best_price:

@@ -168,7 +168,8 @@ def cmd_live(cfg: Config, a):
         sys.exit("Cash equities can't be held short overnight in India; set allow_short=false for swing.")
     _setup_logging(cfg)
     product = "MIS" if cfg.mode == "intraday" else "CNC"
-    broker = KiteBroker(cfg.session.timezone, product, stop_order_type=a.stop_type)
+    broker = KiteBroker(cfg.session.timezone, product, stop_order_type=a.stop_type,
+                        gtt_for_cnc=not a.no_gtt)
     logging.getLogger("tradebot").warning(
         "LIVE: capital %.0f, risk/trade %.2f%%, daily stop %.1f%%, max DD %.1f%%, symbols %s",
         cfg.initial_capital, cfg.risk.risk_per_trade_pct, cfg.risk.daily_loss_limit_pct,
@@ -210,6 +211,12 @@ def cmd_reset(cfg: Config, a):
     print("current halt:", rm.halted() or "none")
     rm.reset(eq)
     s["risk"] = rm.to_dict()
+    s["rebaseline"] = True      # re-capture shares the bot doesn't own on the next cycle
+    for r in s.get("pending", {}).values():
+        if r.get("kind") == "stop" and r.get("escalated"):
+            # The operator has checked the order book (and cancelled any stray stop).
+            r["confirmed_absent"] = True
+            print(f"stop {r['tag']} for {r['symbol']} marked absent; the bot will place a fresh one")
     p.write_text(json.dumps(s, indent=2, default=float))
     print(f"risk state reset; peak re-based to {eq:,.2f}")
 
@@ -245,6 +252,8 @@ def main(argv=None):
             p.add_argument("--fault-seed", type=int, help="make an injected-fault run repeatable")
         if name == "live":
             p.add_argument("--stop-type", choices=["SL-M", "SL"], default="SL-M")
+            p.add_argument("--no-gtt", action="store_true",
+                           help="swing: use DAY stops re-placed each morning instead of GTT")
     lp = sub.add_parser("login", help="daily Kite login: exchange request_token for an access token")
     lp.add_argument("--request-token", help="request_token or the full redirect URL (skips the prompt)")
     lp.add_argument("--listen", type=int, metavar="PORT",
