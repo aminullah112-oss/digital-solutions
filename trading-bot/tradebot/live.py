@@ -387,6 +387,20 @@ class LiveEngine:
                     else:
                         self.risk.block_entries(f"{sym}: oversized replacement stop could not be cancelled")
 
+    def _escalate_unknown(self, what: str, since: str, now) -> None:
+        """UNKNOWN covers both a GTT that fired with its child order not yet visible
+        and a single failed status read. Pause entries at once (self-clearing via
+        unprotected()); escalate to a persistent block and CRITICAL alert only when
+        it outlasts RESOLVE_SECONDS, so one network blip doesn't need an operator."""
+        age = (now - pd.Timestamp(since)).total_seconds()
+        if age < self.RESOLVE_SECONDS:
+            log.warning("%s for %.0fs; entries paused while it resolves", what, age)
+            return
+        msg = f"{what} for {age:.0f}s; new entries blocked, check Kite"
+        if not self.risk.state.entry_block:
+            log.critical(msg, extra={"notify": True})
+        self.risk.block_entries(msg)
+
     def _held(self, sym: str) -> int | None:
         """Broker net quantity for sym excluding shares the bot doesn't own, or None."""
         try:
@@ -427,12 +441,11 @@ class LiveEngine:
         if st.status == "UNKNOWN":
             # A GTT can be triggered while its child limit order is not yet visible.
             # UNKNOWN is not equivalent to an active protective order.
-            msg = (f"{r['symbol']}: order {tag} exists but its live state is UNKNOWN; "
-                   "keeping it unresolved and blocking new entries")
-            log.critical(msg, extra={"notify": True})
-            self.risk.block_entries(msg)
             if p and r["kind"] == "stop":
                 p.stop_uncertain = True
+            r.setdefault("unknown_since", str(now))
+            self._escalate_unknown(f"{r['symbol']}: order {tag} exists but its live state is UNKNOWN",
+                                   r["unknown_since"], now)
             return
         if r["kind"] == "stop":
             if p and p.stop_tag == tag and not p.broker_stop_id:
@@ -502,12 +515,13 @@ class LiveEngine:
         if p.broker_stop_id:
             st = self._status(p.broker_stop_id)
             if st.status == "UNKNOWN":
-                p.stop_uncertain = True
-                msg = f"{sym}: protective stop {p.broker_stop_id} state UNKNOWN; new entries blocked"
-                log.critical(msg, extra={"notify": True})
-                self.risk.block_entries(msg)
+                now = self.now()
+                p.stop_uncertain = True                  # pauses entries; clears on the next good read
+                p.uncertain_since = p.uncertain_since or str(now)
+                self._escalate_unknown(f"{sym}: protective stop {p.broker_stop_id} state UNKNOWN",
+                                       p.uncertain_since, now)
                 return
-            p.stop_uncertain = False
+            p.stop_uncertain, p.uncertain_since = False, ""
             if st.final and st.filled:
                 self._fill_against(p, st.filled, st.avg, "trailing stop" if p.stop != p.initial_stop else "stop")
                 if sym not in self.positions:

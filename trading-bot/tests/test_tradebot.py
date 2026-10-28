@@ -1281,7 +1281,30 @@ class TestOrderLifecycle(TestLiveEngine):
         self.assertTrue(p.stop_uncertain)
         self.assertIn("A", eng.unprotected())
         self.assertTrue(eng.entries_paused())
+        self.assertEqual(eng.risk.halted(), "")              # not yet: could be a blip
+        self.clock[0] += pd.Timedelta(seconds=eng.RESOLVE_SECONDS)
+        eng.reconcile()                                       # still UNKNOWN past the window
         self.assertIn("UNKNOWN", eng.risk.halted())
+
+    def test_one_failed_status_read_does_not_hard_halt(self):
+        from tradebot.broker import BrokerError
+        eng = self.engine()
+        self.at(eng, 3)
+        p = eng.positions["A"]
+        original = self.broker.order_status
+        flaky = {"n": 1}
+
+        def status(oid):
+            if oid == p.broker_stop_id and flaky["n"]:
+                flaky["n"] -= 1
+                raise BrokerError("read timed out")       # one transient network error
+            return original(oid)
+        self.broker.order_status = status
+        self.at(eng, 3, minutes=1)
+        self.assertTrue(eng.entries_paused())             # cautious during the blip...
+        self.at(eng, 3, minutes=2)
+        self.assertFalse(p.stop_uncertain)                # ...recovers on the next good read
+        self.assertEqual(eng.risk.halted(), "")           # and needs no operator reset
 
     def test_pending_stop_with_unknown_state_is_not_adopted_as_protection(self):
         from tradebot.broker import OrderState
@@ -1298,7 +1321,12 @@ class TestOrderLifecycle(TestLiveEngine):
         self.assertEqual(p.stop_tag, "tbs-unknown")
         self.assertTrue(p.stop_uncertain)
         self.assertIn("tbs-unknown", eng.pending)
-        self.assertTrue(eng.risk.halted())
+        self.assertTrue(eng.entries_paused())
+        self.assertEqual(eng.risk.halted(), "")
+        later = eng.now() + pd.Timedelta(seconds=eng.RESOLVE_SECONDS)
+        eng._resolve_live("tbs-unknown", eng.pending["tbs-unknown"], "gtt:2",
+                          OrderState("UNKNOWN"), p, later)
+        self.assertIn("UNKNOWN", eng.risk.halted())          # persisted: escalate
 
 
 class TestKiteGtt(unittest.TestCase):

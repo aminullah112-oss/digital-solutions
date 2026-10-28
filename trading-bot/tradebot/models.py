@@ -43,6 +43,7 @@ class Position:
     exit_wanted: str = ""          # exit reason, retried until it completes
     through: int = 0               # cycles price has been through an OPEN stop
     stop_uncertain: bool = False   # broker cannot confirm that the stop is active
+    uncertain_since: str = ""      # when that started; escalates after RESOLVE_SECONDS
 
     def __post_init__(self):
         if not self.best_price:

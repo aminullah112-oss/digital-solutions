@@ -83,7 +83,7 @@ Live-only safeguards. Each row has a deterministic test.
 | Entry fills but the order shows up late (or never) | adopted and stopped as soon as the tag or the position change proves it; no new entries meanwhile |
 | Stop placement times out | the stop may be resting unseen, so the bot **never** presumes it absent. No second stop and no exit for those shares. If the position drops, the stop fired and is booked. Otherwise, after 120s: CRITICAL alert, entries blocked, and you check Kite and run `reset`, which then lets the bot re-arm once |
 | Ambiguous GTT creation | GTT IDs are snapshotted before submission; recovery considers only newly appearing matching IDs. If identity is missing or ambiguous, it remains unresolved rather than adopting an older matching trigger |
-| GTT has triggered but child order isn't visible | state is `UNKNOWN`, not `OPEN`; the position is treated as protection-uncertain, new entries are blocked, and a CRITICAL alert is sent |
+| GTT has triggered but child order isn't visible (or a status read fails) | state is `UNKNOWN`, never treated as protection: no cancel, no opposing exit, and new entries pause at once. If it's still `UNKNOWN` after 120s: persistent entry block and CRITICAL alert. A one-off failed read clears on the next good one without needing `reset` |
 | Late duplicate/stray stop appears | cancelled (confirmed) |
 | Cancel request unanswered (stop may still fill) | exit deferred while the stop stays live; retried until the broker confirms the cancel, so there's no market sell racing a live stop |
 | Stop fills while being cancelled | booked as a stop exit; no market order sent |
@@ -188,7 +188,7 @@ Use a separate `state_file` (or delete `state/`) when you switch from a fault-in
 ```bash
 cd trading-bot
 pip install -r requirements.txt
-python -m unittest discover -s tests        # 101 tests
+python -m unittest discover -s tests        # 102 tests
 
 # 1. Plumbing check (random data, results meaningless)
 python -m tradebot backtest -c config/swing.json --synthetic

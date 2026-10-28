@@ -31,3 +31,16 @@
 - The exact GTT response schema, child-order visibility timing, cancellation behavior, and holdings/positions interaction still require controlled broker verification.
 - No real NSE historical-data comparison has been performed here. Strategy profitability remains ungraded.
 - Do not enable live automated trading based solely on these test results.
+
+## Merge notes (applied on top of 56bbb21)
+
+- Applied unchanged as its own commit; only the README test-count line conflicted.
+- One follow-up change: `UNKNOWN` also results from a single failed status read, so
+  the immediate persistent block turned any network blip into a manual-reset halt.
+  Now an `UNKNOWN` stop pauses entries at once (self-clearing via `unprotected()`)
+  and escalates to the persistent block plus CRITICAL alert only if it lasts longer
+  than `RESOLVE_SECONDS` (120s). The review's two engine tests were updated to
+  assert both stages; a new test covers the transient case.
+- Merged suite: 102 tests pass; 20-seed fault soak unchanged (the paper broker
+  doesn't produce triggered-without-child GTTs, so those paths rely on the unit tests).
+
