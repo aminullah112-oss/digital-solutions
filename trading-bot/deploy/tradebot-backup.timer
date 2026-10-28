@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily tradebot state backup (after the NSE close)
+
+[Timer]
+# 16:05 IST = 10:35 UTC. Persistent: runs at boot if the machine was off at that time.
+OnCalendar=*-*-* 10:35:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=tradebot state backup
+
+[Service]
+Type=oneshot
+User=tradebot
+Group=tradebot
+ExecStart=/opt/tradebot/app/deploy/backup.sh /var/lib/tradebot /var/backups/tradebot 30
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/backups/tradebot
+ReadOnlyPaths=/var/lib/tradebot
+UMask=0077

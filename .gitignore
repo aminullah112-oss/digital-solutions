@@ -16,3 +16,9 @@ sheetmetal-pipeline/output/
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# trading-bot: runtime state, logs, backtest outputs, local market data, kill switch
+trading-bot/state/
+trading-bot/results/
+trading-bot/data/
+trading-bot/STOP

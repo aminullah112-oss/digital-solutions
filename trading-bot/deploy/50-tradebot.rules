@@ -1,0 +1,17 @@
+// /etc/polkit-1/rules.d/50-tradebot.rules
+// Lets the `tradebot` user (the web panel) start/stop/restart ONLY the bot
+// instances tradebot@<name>.service. Nothing else: not enable/disable, not the
+// panel itself, not any other unit. Needs polkit >= 0.106 (JavaScript rules):
+// Ubuntu 24.04, Debian 12 and later.
+polkit.addRule(function (action, subject) {
+    if (action.id !== "org.freedesktop.systemd1.manage-units" || subject.user !== "tradebot") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    var unit = action.lookup("unit");
+    var verb = action.lookup("verb");
+    if (unit && /^tradebot@[a-z0-9][a-z0-9_-]*\.service$/.test(unit) &&
+        (verb === "start" || verb === "stop" || verb === "restart")) {
+        return polkit.Result.YES;
+    }
+    return polkit.Result.NOT_HANDLED;
+});
