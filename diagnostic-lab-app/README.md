@@ -69,13 +69,12 @@ Clean-ish layering in a single Gradle module (kept as one module deliberately �
 ```
 domain/       Pure Kotlin: enums, status state machines, ID generation, OTP simulation,
               UI-facing data classes. No Android imports.
-data/local/   Room: entities, DAOs, AppDatabase. This is the only "backend" today.
 data/repository/  One repository per bounded area (Auth, Patient, Catalog, Booking,
-              Report, MedicalRecord, Complaint, Phlebotomist, Admin, Notification).
-              BookingRepository is the orchestrator for the whole booking → collection →
-              lab → report chain-of-custody (spec section 16) — every status change goes
-              through it so the status-machine rules in domain/util can't be bypassed.
-data/seed/    DemoDataSeeder — realistic fake data, clearly marked isDemoData = true.
+              Report, MedicalRecord, Complaint, Phlebotomist, Admin, Notification),
+              backed by Firestore. BookingRepository is the orchestrator for the whole
+              booking → collection → lab → report chain-of-custody (spec section 16) —
+              every status change goes through it so the status-machine rules in
+              domain/util can't be bypassed.
 di/           AppContainer: a hand-wired dependency graph (see below), plus
               LocalAppContainer, a CompositionLocal that hands it to Compose screens.
 notification/ Local Android notifications (no push server yet) + per-app locale plumbing.
@@ -85,27 +84,20 @@ presentation/ Compose UI by feature (patient/*, phlebotomist/, lab/, admin/, aut
               on the signed-in user's role.
 ```
 
-**Why no Hilt/Dagger, no nested navigation graphs, no server-backed Retrofit calls**: this
-was built in a sandbox with no network access to Google's/Maven's repositories, so an
-annotation-processor-heavy dependency graph (Hilt) couldn't be pulled down or even verified
-to compile here. Room's KSP compiler is unavoidable (Room requires it) and is the one place
-this still depends on a working Maven Central connection at build time — everything else
-was kept deliberately low on build-tool surface area so the risk of an un-verifiable build
-error is concentrated in as few places as possible. `AppContainer` is a plain constructor
-graph; swapping it for Hilt later is mechanical (add `@Inject` constructors, delete the
-container). Retrofit is declared as a dependency and the repository interfaces are already
-shaped for a remote implementation, but no `LocalXRepository` has a real HTTP counterpart
-yet — that's the actual next step toward a production backend.
+**Why no Hilt/Dagger, no nested navigation graphs**: this was built in a sandbox with no
+network access to Google's/Maven's repositories, so an annotation-processor-heavy
+dependency graph (Hilt) couldn't be pulled down or even verified to compile here.
+`AppContainer` is a plain constructor graph; swapping it for Hilt later is mechanical
+(add `@Inject` constructors, delete the container).
 
 ### Database
 
-20 Room entities covering every table the spec calls for: `users`, `patients` (family
-members are just additional patient rows linked via `accountOwnerUserId` + `relation`),
-`addresses`, `laboratories`, `investigations`, `laboratory_investigations` (per-lab
-pricing), `phlebotomists`, `bookings`, `booking_items`, `payments`,
-`phlebotomist_assignments`, `samples`, `sample_tracking_events` (the chain-of-custody
-audit trail), `reports`, `medical_records`, `fever_records`, `notifications`,
-`complaints`, `audit_logs`.
+Firestore, not a local database — there used to be a parallel Room schema here
+(entities/DAOs/AppDatabase under `data/local/`), but it was never wired into any
+repository and has since been deleted as dead code. Collections include `patients`
+(family members are additional patient rows linked via `accountOwnerUserId` +
+`relation`), `bookings`, and `laboratories` (with a per-lab `packages` subcollection for
+bundled fixed-price test panels) — see `firestore.rules` for the full access model.
 
 ### Status machines
 
@@ -141,25 +133,13 @@ method from a push-received handler instead of from the repository directly.
   notes. Every voice-enabled field has a normal keyboard as the default input — voice is
   never mandatory, per spec.
 
-## Demo data
-
-`DemoDataSeeder` runs once on first launch (skips if data already exists) and creates:
-5 laboratories, 20 investigations (CBC, CRP, Dengue NS1, LFT/KFT, HbA1c, Thyroid Profile,
-Vitamin D/B12, COVID-19 RT-PCR, etc.), per-lab pricing links, 5 phlebotomists, 10 patient
-accounts + 5 linked family members, and 20 bookings spread across every status in the
-chain-of-custody (including delivered reports) with their tracking-event history. Lab
-names are invented (Sunrise Diagnostics, Apex Pathlabs, ...) rather than real companies.
-Entities that support it carry `isDemoData = true`; delete rows with that flag (or drop
-the database) before shipping to production.
-
 ## Tests
 
-`app/src/test/` has JVM unit tests (no Robolectric/Room needed) for the parts of the app
-where a silent logic bug would be worst: `IdGeneratorTest`, `BookingStatusMachineTest`,
-`AssignmentStatusMachineTest`, `OtpServiceTest`, `PaymentGatewayTest`. Repository- and
-ViewModel-level tests would be the natural next addition — the repositories take DAO
-interfaces as constructor parameters specifically so they can be swapped for
-Robolectric's in-memory Room database or hand-written fakes in a test.
+`app/src/test/` has JVM unit tests for the parts of the app where a silent logic bug
+would be worst: `IdGeneratorTest`, `BookingStatusMachineTest`, `AssignmentStatusMachineTest`,
+`OtpServiceTest`, `PaymentGatewayTest`. Repository- and ViewModel-level tests would be the
+natural next addition — the repositories take Firestore-backed implementations as
+constructor parameters, so they can be swapped for hand-written fakes in a test.
 
 ## Known gaps / next steps, in priority order
 
@@ -167,9 +147,5 @@ Robolectric's in-memory Room database or hand-written fakes in a test.
    real device catch that this review didn't (see "Not run" above).
 2. Extract the remaining screens' strings into `strings.xml` + `values-ta` (Home, Login,
    OTP, and Settings are already done as the reference pattern).
-3. Wire a real backend: turn the repository interfaces' local implementations into
-   Retrofit-backed ones, keep Room as an offline cache.
-4. Real payment gateway integration behind `PaymentGateway`.
-5. FCM for real push notifications; SMS/WhatsApp for OTP and status updates.
-6. Maps SDK for live phlebotomist tracking (needs an API key + billing).
-7. Repository/ViewModel test coverage beyond the status-machine/util layer.
+3. FCM for real push notifications; SMS/WhatsApp for OTP and status updates.
+4. Repository/ViewModel test coverage beyond the status-machine/util layer.

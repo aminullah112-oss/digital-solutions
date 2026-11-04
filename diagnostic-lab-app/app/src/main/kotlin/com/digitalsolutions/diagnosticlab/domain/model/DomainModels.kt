@@ -3,9 +3,8 @@ package com.digitalsolutions.diagnosticlab.domain.model
 import java.time.LocalDate
 
 /**
- * UI/ViewModel-facing models. Screens and ViewModels only ever see these, never the Room
- * @Entity classes — that keeps the persistence layer swappable for a real REST backend
- * later without touching a single Composable (see README "Architecture").
+ * UI/ViewModel-facing models. Screens and ViewModels only ever see these, never raw
+ * Firestore document data — see README "Architecture".
  */
 
 data class Session(

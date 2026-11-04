@@ -21,10 +21,7 @@ import kotlinx.coroutines.launch
  * graph is both simpler to reason about and safer to build for a one-module MVP this size.
  * A single instance lives on [com.digitalsolutions.diagnosticlab.DiagnosticLabApp].
  *
- * Everything here is backed by Firestore now, not the local Room database — see
- * data/local/AppDatabase.kt and data/seed/DemoDataSeeder.kt, which still exist but are no
- * longer wired into any repository (kept for now rather than deleted outright, since ripping
- * out ~15 files is its own separate, carefully-reviewed change).
+ * Everything here is backed by Firestore — there is no local Room database.
  */
 class AppContainer(context: Context) {
 
