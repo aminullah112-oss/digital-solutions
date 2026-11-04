@@ -1,0 +1,74 @@
+# Crawl behaviour. Defaults are deliberately conservative: one request at a
+# time, 1 s between requests, robots.txt always honoured.
+
+crawler:
+  user_agent: "OhmetrySEOEngine/0.1 (site-owner SEO audit; +https://ohmetry.com/)"
+  delay_seconds: 1.0
+  timeout_seconds: 20
+  retries: 2
+  max_redirects: 10
+  max_pages: 2000
+  max_depth: 10
+  max_body_bytes: 5000000
+  # URLs with more query parameters than this are treated as crawl traps.
+  max_query_params: 2
+  # Path segments repeating more than this many times are treated as traps
+  # (e.g. /a/b/a/b/a/b/).
+  max_repeated_segments: 3
+  # Links with rel=nofollow are recorded in the link graph but not crawled.
+  follow_nofollow: false
+  # Regexes matched against the full normalised URL. Matching URLs are
+  # recorded as links but never fetched.
+  exclude_patterns:
+    - '/wp-admin/'
+    - '/wp-login\.php'
+    - '/(cart|checkout|my-account|account|login|logout|register)(/|$)'
+    - '[?&](sort|orderby|filter|sessionid|replytocom)='
+  # Query parameters stripped during URL normalisation.
+  strip_query_params:
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_term
+    - utm_content
+    - gclid
+    - fbclid
+    - msclkid
+  # File extensions never fetched as pages.
+  skip_extensions:
+    - .pdf
+    - .jpg
+    - .jpeg
+    - .png
+    - .gif
+    - .webp
+    - .svg
+    - .ico
+    - .zip
+    - .css
+    - .js
+    - .xml
+    - .txt
+    - .mp4
+    - .woff
+    - .woff2
+
+audit:
+  # Character counts are proxies. Google truncates titles/snippets by pixel
+  # width, not characters, so these flag candidates for review, not defects.
+  title_min_chars: 15
+  title_max_chars: 60
+  meta_description_min_chars: 50
+  meta_description_max_chars: 160
+  # Diagnostic only. Never used as a quality verdict on its own.
+  low_word_count: 150
+  # Jaccard similarity of 5-word shingles (main content, nav/footer removed).
+  near_duplicate_threshold: 0.90
+  generic_anchors:
+    - click here
+    - here
+    - read more
+    - more
+    - learn more
+    - this page
+    - link

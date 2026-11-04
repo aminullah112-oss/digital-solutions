@@ -1,0 +1,35 @@
+# Priority score for recommendations. This is an internal triage tool. It is
+# NOT a model of Google's ranking factors.
+#
+#   priority = w_impact     * impact            (1-5, from issue severity)
+#            + w_relevance  * relevance         (1-5, business relevance of the issue type)
+#            + w_confidence * confidence        (1-5, how directly the evidence proves the problem)
+#            + w_reach      * reach             (1-5, from share of valuable pages affected)
+#            + w_effort     * (6 - effort)      (effort 1-5, lower effort scores higher)
+#            + w_risk       * (6 - risk)        (risk 1-5, lower risk scores higher)
+#
+# Every component is written to the action plan so a high score can't hide
+# weak evidence.
+
+weights:
+  impact: 3.0
+  relevance: 2.0
+  confidence: 2.0
+  reach: 2.0
+  effort: 1.0
+  risk: 1.0
+
+severity_impact:
+  critical: 5
+  high: 4
+  medium: 3
+  low: 2
+  info: 1
+
+# Reach: share of audited indexable pages affected -> 1-5
+reach_bands:
+  - [0.50, 5]
+  - [0.20, 4]
+  - [0.05, 3]
+  - [0.01, 2]
+  - [0.00, 1]

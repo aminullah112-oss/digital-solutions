@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ohmetry-seo-engine"
+version = "0.1.0"
+description = "Read-only SEO audit, monitoring and reporting engine for ohmetry.com"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31,<3",
+    "beautifulsoup4>=4.12,<5",
+    "lxml>=5.0",
+    "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+# Search Console / GA4 API access (service account or OAuth credentials)
+google = ["google-auth>=2.29,<3"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+ohmetry-seo = "ohmetry_seo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

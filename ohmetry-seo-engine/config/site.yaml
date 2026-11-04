@@ -1,0 +1,26 @@
+# Site identity and integration settings.
+# Secrets never go here; they come from environment variables (see .env.example).
+
+site:
+  name: Ohmetry
+  start_url: https://ohmetry.com/
+  # Hosts treated as "internal". The audit also checks that the non-preferred
+  # variants (http://, www/apex) redirect to start_url's host.
+  allowed_hosts:
+    - ohmetry.com
+    - www.ohmetry.com
+  # Extra sitemap URLs. Sitemap: lines in robots.txt and /sitemap.xml are
+  # always tried, so this can stay empty.
+  sitemaps: []
+
+search_console:
+  # "sc-domain:ohmetry.com" for a Domain property, or "https://ohmetry.com/"
+  # for a URL-prefix property. Must match the property exactly.
+  site_url: "sc-domain:ohmetry.com"
+
+ga4:
+  property_id: ""  # numeric GA4 property ID, e.g. "123456789"
+
+pagespeed:
+  # Max URLs tested per run (each URL = 2 API calls: mobile + desktop).
+  max_urls: 10
