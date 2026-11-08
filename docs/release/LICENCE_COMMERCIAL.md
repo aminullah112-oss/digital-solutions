@@ -1,6 +1,6 @@
 # Commercial Licence (draft)
 
-**Document OHM-DC-2000-DOC-02  Revision A6, Issue P2.  Generated 2026-11-08 18:00 UTC.**
+**Document OHM-DC-2000-DOC-02  Revision A6, Issue P2.  Generated 2026-11-08 20:00 UTC.**
 
 > DRAFT LICENCE. PREPARED WITHOUT LEGAL REVIEW. NOT CLAIMED TO BE LEGALLY ENFORCEABLE IN ANY JURISDICTION. A QUALIFIED LEGAL PROFESSIONAL MUST REVIEW AND ADAPT THIS TEXT BEFORE IT IS USED WITH ANY CUSTOMER.
 
@@ -12,7 +12,7 @@ This text is a starting point for the owner and a legal professional. Items in [
 
 ## 1. Parties and product
 
-Licensor: Ohmetry [legal entity, registered address and jurisdiction to be confirmed]. Licensee: the individual or organisation named on the order. Product: the OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) package, revision A6, in the tier stated on the order.
+Licensor: Ohmetry (ohmetry.com) [legal entity, registered address and jurisdiction to be confirmed by the owner and the legal professional]. Licensee: the individual or organisation named on the order. Product: the OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) package, revision A6, in the tier stated on the order.
 
 ## 2. Definitions
 
@@ -75,7 +75,7 @@ The Package names standards, manufacturers and software but does not reproduce s
 
 ## 11. Updates and support
 
-Updates and support are provided only as stated in the order for the tier: [update period, support channel and response expectations to be completed]. Ohmetry may release corrections. No update obligation exists beyond the stated entitlement.
+Updates and support are provided only as stated in the order for the tier: support channel: email hello@ohmetry.com; [update period and response expectations to be completed]. Ohmetry may release corrections. No update obligation exists beyond the stated entitlement.
 
 ## 12. Warranty disclaimer
 
@@ -99,7 +99,7 @@ The licence may not be transferred or assigned without Ohmetry's written consent
 
 ## 17. General
 
-[Entire agreement, severability, notices and amendment terms to be completed by the legal professional.] Contact for licence matters: [to be confirmed by the owner].
+[Entire agreement, severability, notices and amendment terms to be completed by the legal professional.] Contact for licence matters: hello@ohmetry.com.
 
 ## Acceptance
 

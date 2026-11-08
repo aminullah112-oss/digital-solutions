@@ -97,7 +97,9 @@ def test_customer_readme_covers_every_required_topic(root, tmp_path):
     for status in ("UNVERIFIED_PLACEHOLDER", "PRELIMINARY_ASSUMPTION", "MANUFACTURER_VERIFIED", "NOT CALCULATED", "REJECTED: SOURCE MISSING"):
         assert status in t
     assert "NOT CONSTRUCTION-READY" in t and "3,150 kVA" not in t.replace("3150", "3,150 kVA") or "3150" in t
-    assert "[support contact to be confirmed by the owner" in t              # no contact is invented
+    assert "hello@ohmetry.com" in t and "support contact to be confirmed" not in t          # the contact is the one the owner supplied
+    assert set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.]+", t)) == {"hello@ohmetry.com"}             # no other address, personal or invented
+    assert "SAMPLE PROJECT" in t and "not a real project" in t
     assert t.count("| 20_MASTER_EQUIPMENT_SCHEDULE") == 1
 
 

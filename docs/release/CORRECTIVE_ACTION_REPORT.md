@@ -1,6 +1,6 @@
 # Corrective action report: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
 
-**Document OHM-DC-2000-DOC-07  Issue P2. Package revision A6. Generated 2026-11-08 18:00 UTC. Package version 0.1.0.dev0.**
+**Document OHM-DC-2000-DOC-07  Issue P2. Package revision A6. Generated 2026-11-08 20:00 UTC. Package version 0.1.0.dev0.**
 
 > FOR INDEPENDENT ENGINEERING REVIEW. THE PACKAGE IS PRELIMINARY. IT IS NOT CONSTRUCTION-READY AND NOT VERIFIED. NOTHING IN IT HAS BEEN APPROVED.
 
@@ -46,7 +46,7 @@ Agreement: ALL MATCH. The transformer-limited figure is the utility contribution
 
 WARNING rose from 2 to 3 because the generator kW check now judges the combined contingency (84.0 % of 3,200 kW, above the 80 % target, below the 100 % limit). NOT VERIFIED rose because checks were added (`cable_derating_basis`, `generator_contingency_basis`, `equipment_options`) and two scope checks read NOT APPLICABLE. Nothing was upgraded and no WARNING was converted to a PASS.
 
-Tests: 282 passed, 0 failed, 0 skipped (2026-11-08 18:00 UTC; output/QA_RESULTS.md).
+Tests: 282 passed, 0 failed, 0 skipped (2026-11-08 20:00 UTC; output/QA_RESULTS.md).
 
 ## Item 1. Generator N+1 (combined contingency)
 

@@ -1,6 +1,6 @@
 # OHM-DC-2000: power system sizing summary (Stage 3)
 
-Revision A6. Generated 2026-11-08 18:00 UTC. Release state DEVELOPMENT.
+Revision A6. Generated 2026-11-08 20:00 UTC. Release state DEVELOPMENT.
 
 **PRELIMINARY. Not construction-ready and not verified. Every rating, derating factor and efficiency here is an illustrative assumption for the sample project at ideal conditions, except the loading policy, which is a preliminary Ohmetry design policy and not an IEC acceptance limit. Manufacturer data is outstanding. Engineering verification is required.**
 

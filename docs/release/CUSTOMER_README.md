@@ -1,12 +1,12 @@
 # Customer README
 
-**Document OHM-DC-2000-DOC-01  Revision A6, Issue P2.  Generated 2026-11-08 18:00 UTC.**
+**Document OHM-DC-2000-DOC-01  Revision A6, Issue P2.  Generated 2026-11-08 20:00 UTC.**
 
 > PRELIMINARY EDUCATIONAL AND REFERENCE PACKAGE. NOT CONSTRUCTION-READY. NOT VERIFIED.
 
 ## 1. What this package is
 
-The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A6, version 0.1.0.dev0, generated 2026-11-08 18:00 UTC.
+The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a SAMPLE PROJECT published by Ohmetry (ohmetry.com) for engineers working on data-centre projects, as a learning and reference example. It is not a real project and not a design for any site. It is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A6, version 0.1.0.dev0, generated 2026-11-08 20:00 UTC.
 
 It shows how a data centre electrical design is built up: design basis, load estimate, redundancy architecture, equipment sizing, distribution, short-circuit levels, protection data, earthing and documentation. Every calculation states its inputs and their status.
 
@@ -194,7 +194,7 @@ Every result, drawing and specification here requires review and approval by a s
 
 ## 17. Reporting issues
 
-Report an issue with: the document or workbook name and revision, the input values, what you expected and what you saw. Contact details: [support contact to be confirmed by the owner before distribution]. Support scope and update rights depend on the licence tier (see the licence).
+Report an issue with: the document or workbook name and revision, the input values, what you expected and what you saw. Contact: hello@ohmetry.com (ohmetry.com). Support scope and update rights depend on the licence tier (see the licence).
 
 ## 18. Licence and disclaimer
 

@@ -1,6 +1,6 @@
 # Workbook static lint (Excel compatibility)
 
-Generated 2026-11-08 18:00 UTC. 20 workbooks, 1,697 formulas, 26 distinct functions.
+Generated 2026-11-08 20:00 UTC. 20 workbooks, 1,697 formulas, 26 distinct functions.
 
 **Microsoft Excel was not available when this package was built.** The workbook tests recalculate with LibreOffice only. This lint is a static read of the formulas for things Excel rejects (text literals over 255 characters, functions newer than Excel 2016, external links, unbalanced brackets, references to missing sheets). **It is not a substitute for opening the workbooks in Excel** and a clean result does not show that the formulas are right or that Excel and LibreOffice agree.
 
