@@ -68,7 +68,7 @@ def outstanding_items(root: Path, cfg: ProjectConfig) -> list[dict]:
     for cat, item, action, prio in [
         ("Independent review", "No calculation, workbook, drawing or document has been independently reviewed", "Complete this review and record findings in the findings log", "High"),
         ("Engine", "The Python engine and its tests have not been code-reviewed by anyone other than the author", "Review the engine against the methodology documents; rerun the test suite", "High"),
-        ("Workbooks", "Workbook formulas have been tested against Python in LibreOffice only, not audited by a person", "Formula audit of every workbook; open in Microsoft Excel and confirm results", "High"),
+        ("Workbooks", "Workbook formulas have been tested against Python in LibreOffice only. Microsoft Excel was not available, so the workbooks have never been opened in Excel; only a static lint of Excel limits was run. No person has audited the formulas", "Formula audit of every workbook; open every workbook in Microsoft Excel and confirm results agree with LibreOffice and Python; read WORKBOOK_LINT.md", "High"),
         ("Methodology", "Standard-based methods (IEC 60909, IEEE 80, IEC 62305-2 area, adiabatic equation) are implemented from general knowledge, not checked against the current standards", "Check each equation, constant and its applicability against the current edition", "High"),
         ("Design basis", "400/230 V at 60 Hz is an owner decision, flagged as unusual, and not verified", "Confirm the voltage system with the utility and the project", "Medium"),
         ("Specifications", "The ten specification templates have not been reviewed for technical content", "Review requirements, standards lists, test lists and placeholders", "Medium"),
@@ -147,7 +147,7 @@ CHECKLIST: list[tuple[str, list[tuple[str, str]]]] = [
         ("Audit formulas in each workbook: no hard-coded critical values, correct references, correct units.", "workbooks/ (all 20)"),
         ("Enter a datasheet value without a source: confirm it is rejected. Enter with a source: confirm the calculation updates and the status becomes SUPPLIED. Add a reviewer: confirm VERIFIED.", "INPUTS sheets"),
         ("Confirm the overall status can only be PASS when the calculation passes and all inputs are verified (try it).", "RESULTS sheets"),
-        ("Open in Microsoft Excel (the tests recalculated with LibreOffice only) and confirm results agree.", "All workbooks"),
+        ("Open in Microsoft Excel (the tests recalculated with LibreOffice only; Excel was not available to the authors, so this has never been done) and confirm results agree. Read WORKBOOK_LINT.md for the static lint.", "All workbooks, WORKBOOK_LINT.md"),
         ("Check the five input-register workbooks (14, 16, 17, 18, 19) do not produce a result without data and do not claim compliance.", "14, 16, 17, 18, 19")]),
     ("I. Python engine", [
         ("Review the code against the methodology documents; check units, boundary conditions and error handling.", "engine/src/ohmetry_dc"),
@@ -229,7 +229,7 @@ The Ohmetry {c.name} ({c.code}): a preliminary educational and reference package
 2. In `04_engine` (the repository root): install the dependencies in `requirements.txt` (pydantic, PyYAML, openpyxl, reportlab, python-docx, pytest).
 3. Run `PYTHONPATH=src python -m pytest -q`. All tests should pass. Note any that do not.
 4. Run `PYTHONPATH=src python -m ohmetry_dc validate-config` and compare with `11_qa/QA_RESULTS.md` and the CHECK_STATUS sheet of workbook 01.
-5. Run `generate-workbooks`, `generate-reports`, `generate-drawings`, `generate-training`, `generate-documents` and compare the outputs with the supplied files (timestamps will differ).
+5. Run `generate-workbooks`, `lint-workbooks`, `generate-reports`, `generate-drawings`, `generate-training`, `generate-documents` and compare the outputs with the supplied files (timestamps will differ).
 
 ## 5. Suggested order of review
 Design basis, then the methodology documents, then the engine code for each calculation, then the workbooks against the engine, then registers, drawing, specifications, training and customer documents. Use the checklist; it does not limit your review.

@@ -22,7 +22,7 @@
 | Design-target exception mechanism (EX-001 transformer, ceiling 91.0 %); exceptions never turn WARNING into PASS | `validation/exceptions.py`, `config/design_exceptions.yaml` | 4 | Done |
 | Generator kW check with rated power factor placeholder; PRP basis unconfirmed check | `validation/checks.py` | 4 | Done. NOT VERIFIED until manufacturer data |
 | Distribution framework: cable resistance, three-phase voltage drop, design currents, required ratings for cables, busduct, LV and MV switchgear | `calculations/distribution.py`, `config/distribution.yaml` | 4 | Done. Ratings NOT VERIFIED |
-| Manufacturer-data register (56 entries, live values, Markdown and CSV) with completeness check | `config/manufacturer_data_register.yaml`, `build-manufacturer-register` | 4 | Done |
+| Manufacturer-data register (83 entries, live values, Markdown and CSV) with completeness check | `config/manufacturer_data_register.yaml`, `build-manufacturer-register` | 4 | Done |
 | QA results report | `qa-report` | 4 | Done |
 | Short-circuit method (IEC 60909): MV and LV, utility, generators, transformer-limited bound, peak and thermal | `calculations/short_circuit.py` | 5 | Method done and tested. NOT CALCULATED for the project: utility, transformer and generator data pending |
 | Equipment short-circuit rating, cable thermal withstand and protection-device breaking capacity checks | `validation/checks.py` | 5 | Done. Ratings NOT VERIFIED |

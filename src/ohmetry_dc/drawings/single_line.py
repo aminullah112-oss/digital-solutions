@@ -109,7 +109,7 @@ def _path(cfg: ProjectConfig, p: str, cx: int) -> list[str]:
     o += _bus(ux + 55, 930, 230, f"IT distribution {p}", f"IT-DIST-{p}")
     # mechanical feeder (far right)
     mx = cx + 295
-    o += [_line(mx, 448, mx, 640)] + [_t(mx + 8, 560, f"CAB-MECH-{p}", 11, "start", fill=MUTE)] + _box(mx - 62, 640, 124, 66, f"MECH {p}", "Cooling plant", "load model")
+    o += [_line(mx, 448, mx, 640)] + [_t(mx + 8, 560, f"CAB-MECH-{p}", 11, "start", fill=MUTE)] + _box(mx - 62, 640, 124, 66, f"MECH-{p}", "Cooling plant", "load model")
     return o
 
 

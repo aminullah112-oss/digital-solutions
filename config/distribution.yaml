@@ -37,10 +37,10 @@ feeders:
 - tag: CAB-GEN-A
   description: Generator output cables to the path A generator switchgear (one generator)
   from_tag: GEN-A1
-  to_tag: GEN-SWG-A
+  to_tag: GENBUS-A
   equipment_tags:
   - GEN-A1
-  - GEN-SWG-A
+  - GENBUS-A
   voltage_ref: electrical_system.lv_line_voltage
   reactance_ref: cable_data.lv_reactance_ohm_per_km
   design_current_basis: generator_rated
@@ -92,10 +92,10 @@ feeders:
 - tag: CAB-UPS-OUT-A
   description: UPS output cables from the path A UPS to the path A critical distribution
   from_tag: UPS-A1
-  to_tag: CRIT-DIST-A
+  to_tag: IT-DIST-A
   equipment_tags:
   - UPS-A1
-  - CRIT-DIST-A
+  - IT-DIST-A
   voltage_ref: electrical_system.lv_line_voltage
   reactance_ref: cable_data.lv_reactance_ohm_per_km
   design_current_basis: ups_output_path_out
@@ -119,10 +119,10 @@ feeders:
 - tag: CAB-MECH-A
   description: Feeder from the LV main switchboard A to the mechanical and cooling motor control centre A
   from_tag: LV-MSB-A
-  to_tag: MCC-A
+  to_tag: MECH-A
   equipment_tags:
   - LV-MSB-A
-  - MCC-A
+  - MECH-A
   voltage_ref: electrical_system.lv_line_voltage
   reactance_ref: cable_data.lv_reactance_ohm_per_km
   design_current_basis: mechanical_path_out

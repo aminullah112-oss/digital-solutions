@@ -348,12 +348,31 @@ def cmd_qa(args) -> int:
     counts = {k: sum(1 for c in cases if c[2] == k) for k in ("PASS", "FAIL", "SKIP")}
     stamp = _stamp(args) or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     L = ["# QA test results", "", f"Run {stamp}. Package version {__version__}. **{counts['PASS']} passed, {counts['FAIL']} failed, {counts['SKIP']} skipped.**", "",
-         "A passing test shows the code behaves as specified. It does not show the engineering is correct: that needs an independent review.", "", "| Module | Test | Result |", "|---|---|---|"]
+         "A passing test shows the code behaves as specified. It does not show the engineering is correct: that needs an independent review.", "",
+         "**Excel:** Microsoft Excel was not available. The workbook tests recalculate with LibreOffice only. `lint-workbooks` (WORKBOOK_LINT.md) is a static check of Excel limits and is not a substitute for opening the workbooks in Excel.", "", "| Module | Test | Result |", "|---|---|---|"]
     L += [f"| {m.replace('tests.', '')} | {n} | {r} |" for m, n, r in cases]
     out = Path(args.output) / "QA_RESULTS.md"
     out.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"Wrote {out}: {counts}")
     return code
+
+
+def cmd_lint(args) -> int:
+    """Static lint of the generated workbooks for Excel compatibility (Excel itself is not available in the build environment)."""
+    from ohmetry_dc.validation.workbook_lint import lint_directory, to_markdown
+
+    rep = lint_directory(Path(args.workbooks))
+    if rep.workbooks == 0:
+        print(f"No workbooks found in {args.workbooks}. Run generate-workbooks first.")
+        return EXIT_FAIL
+    stamp = _stamp(args) or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    out = Path(args.output) / "WORKBOOK_LINT.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(to_markdown(rep, stamp), encoding="utf-8")
+    print(f"Wrote {out}: {rep.workbooks} workbooks, {rep.formulas:,} formulas, {len(rep.errors)} finding(s). This is a static check, not a substitute for opening the workbooks in Excel.")
+    for e in rep.errors[:20]:
+        print(f"  {e.workbook} {e.sheet}!{e.cell} {e.code}: {e.message}")
+    return EXIT_FAIL if rep.errors else EXIT_OK
 
 
 def cmd_tests(args) -> int:
@@ -411,6 +430,10 @@ def main(argv: list[str] | None = None) -> int:
     vf.add_argument("--date", default=None, help="ISO date of the review (default: today)")
     vf.add_argument("--register", default="config/manufacturer_data_register.yaml")
     vf.set_defaults(func=cmd_verify)
+    ln = sub.add_parser("lint-workbooks", help="Static lint of the generated workbooks for Excel compatibility (Excel is not available here; LibreOffice is the only recalculation engine used)")
+    ln.add_argument("--workbooks", default="workbooks/generated")
+    ln.add_argument("--output", default="output")
+    ln.set_defaults(func=cmd_lint)
     tr = sub.add_parser("generate-training", help="Generate the training suite (modules, exercises, answer key, question bank, certificate template)")
     tr.add_argument("--training", default="training")
     tr.set_defaults(func=cmd_training)

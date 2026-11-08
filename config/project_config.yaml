@@ -9,7 +9,7 @@ project:
   name: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
   product_code: OHM-DC-2000
   edition: Professional Edition + Engineering Learning Suite
-  revision: A5
+  revision: A6
   release_state: DEVELOPMENT
   current_stage: 5
 sections:

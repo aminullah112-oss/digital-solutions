@@ -394,8 +394,8 @@ def check_manufacturer_register(cfg: ProjectConfig, register_path=None) -> Check
         return CheckResult("manufacturer_register", title, S.FAIL, f"{len(bad)} register defect(s): " + "; ".join(bad[:8]), {"defects": bad}, "Fix the register.")
     return CheckResult("manufacturer_register", title, S.NOT_VERIFIED if unverified else S.PASS,
                        f"The register covers every manufacturer-data item and placeholder ({len(rows)} entries). {len(unverified)} are NOT VERIFIED: "
-                       f"{sum(1 for r in rows if r.data_state == 'PENDING')} pending, {sum(1 for r in rows if r.data_state.startswith('PLACEHOLDER'))} placeholders, "
-                       f"{sum(1 for r in rows if r.data_state.startswith('DATA SUPPLIED'))} supplied and awaiting review. Placeholders are not validated equipment data.",
+                       f"{sum(1 for r in rows if r.data_class == 'MISSING')} missing (no value), {sum(1 for r in rows if r.data_class == 'UNVERIFIED_PLACEHOLDER')} unverified placeholders, "
+                       f"{sum(1 for r in rows if r.data_state.startswith('SUPPLIED'))} supplied and awaiting review. Placeholders are not validated equipment data.",
                        {"entries": len(rows), "unverified": len(unverified)}, "Obtain the data sheets listed in the register.")
 
 

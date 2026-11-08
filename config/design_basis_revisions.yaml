@@ -243,3 +243,17 @@ revisions:
   check_status_changes: {}
   reviewer: null
   review_status: NOT REVIEWED
+- revision: A6
+  date: '2026-11-08'
+  description: 'A6. Corrective actions after the A5 independent review (items 5 to
+    12): architecture concept symbols on the single-line diagram (independence of
+    utility A and B not claimed), distribution derating and parallel-run status, short-circuit
+    and earthing wording and scope, reviewer attestation records, standards register
+    and specification schedules, document control and QA, release package. No load,
+    demand or equipment concept change; no sizing change.'
+  changed_parameters: {}
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes: {}
+  reviewer: null
+  review_status: NOT REVIEWED
