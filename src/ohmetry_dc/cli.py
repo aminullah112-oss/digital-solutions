@@ -306,6 +306,10 @@ def cmd_documents(args) -> int:
     n_files = len(list((root / "src").rglob("*.py"))) + 200
     (rel / "REVIEW_GUIDE.md").write_text(review.guide_markdown(cfg, stamp, n_files), encoding="utf-8")
     review.findings_workbook(rel / "REVIEW_FINDINGS_LOG.xlsx", stamp)
+    from ohmetry_dc.documents import corrective
+
+    (rel / "CORRECTIVE_ACTION_REPORT.md").write_text(corrective.markdown(cfg, root, stamp), encoding="utf-8")
+    docx_tools.to_pdf(corrective.docx(cfg, root, rel / "CORRECTIVE_ACTION_REPORT.docx", stamp), rel)
     for _ in range(2):                        # the index lists itself, so build it twice
         rows = register.build_register(root, cfg)
         (rel / "MASTER_INDEX.md").write_text(register.index_markdown(rows, cfg, stamp), encoding="utf-8")
@@ -373,6 +377,28 @@ def cmd_lint(args) -> int:
     for e in rep.errors[:20]:
         print(f"  {e.workbook} {e.sheet}!{e.cell} {e.code}: {e.message}")
     return EXIT_FAIL if rep.errors else EXIT_OK
+
+
+def cmd_regenerate(args) -> int:
+    """Regenerate every deliverable in one deterministic order, so no file is left from another revision (the release gate).
+
+    The documents are generated twice on purpose: once so the tests see fresh documents, and once after the QA run so the corrective-action report, the master index and the review package carry the QA result.
+    Nothing is committed, pushed or approved by this command.
+    """
+    base = ["--config", args.config, "--loads", args.loads] + (["--generated", args.generated] if args.generated else [])
+    steps = [["build-assumptions-register"], ["validate-config"], ["run-calculations"], ["sizing-summary"], ["build-manufacturer-register"], ["generate-workbooks"], ["lint-workbooks"], ["generate-reports"],
+             ["generate-drawings"], ["generate-training"], ["generate-documents"]]
+    if not args.skip_qa:
+        steps.append(["qa-report"])
+    steps += [["generate-documents"], ["build-review-package", "--dist", args.dist], ["build-package", "--dist", args.dist]]
+    for st in steps:
+        print(f"== {' '.join(st)}")
+        code = main(base + st)
+        if code != EXIT_OK:
+            print(f"regenerate-all stopped: '{st[0]}' returned {code}.")
+            return code
+    print("regenerate-all complete. The release state is unchanged (DEVELOPMENT); nothing was committed, pushed or approved.")
+    return EXIT_OK
 
 
 def cmd_tests(args) -> int:
@@ -452,6 +478,10 @@ def main(argv: list[str] | None = None) -> int:
     qa = sub.add_parser("qa-report", help="Run the tests and write QA_RESULTS.md")
     qa.add_argument("--output", default="output")
     qa.set_defaults(func=cmd_qa)
+    ra = sub.add_parser("regenerate-all", help="Regenerate every deliverable in order (release gate): registers, results, workbooks and lint, report, drawing, training, documents, QA, review and customer packages")
+    ra.add_argument("--dist", default="dist")
+    ra.add_argument("--skip-qa", action="store_true", help="Do not run the test suite (QA_RESULTS.md is left as it is)")
+    ra.set_defaults(func=cmd_regenerate)
     t = sub.add_parser("run-tests", help="Run the automated tests")
     t.set_defaults(func=cmd_tests)
     for name in NOT_IMPLEMENTED:

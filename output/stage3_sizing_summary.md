@@ -1,6 +1,6 @@
 # OHM-DC-2000: power system sizing summary (Stage 3)
 
-Revision A2. Generated 2026-11-05 05:31 UTC. Release state DEVELOPMENT.
+Revision A6. Generated 2026-11-08 12:00 UTC. Release state DEVELOPMENT.
 
 **PRELIMINARY. Not construction-ready and not verified. Every rating, derating factor and efficiency here is an illustrative assumption for the sample project at ideal conditions, except the loading policy, which is a preliminary Ohmetry design policy and not an IEC acceptance limit. Manufacturer data is outstanding. Engineering verification is required.**
 
@@ -159,6 +159,9 @@ Missing: battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_
 - `battery.end_of_life_capacity_factor`: End-of-life capacity factor
 - `battery.temperature_correction_factor`: Temperature correction factor
 - `battery.constant_power_discharge_data`: Constant-power discharge data reference
+- `short_circuit.transformer_x_r_ratio`: Transformer X/R ratio
+- `short_circuit.generator_subtransient_reactance_pct`: Generator subtransient reactance x''d
+- `short_circuit.generator_x_r_ratio`: Generator X/R ratio
 
 ## Verification required before any use
 

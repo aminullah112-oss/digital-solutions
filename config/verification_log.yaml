@@ -1,0 +1,3 @@
+# Append-only log of verification attestations (record-verification). Names are self-declared and NOT authenticated.
+schema_version: 1
+records: []

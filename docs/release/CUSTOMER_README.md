@@ -1,12 +1,12 @@
 # Customer README
 
-**Document OHM-DC-2000-DOC-01  Revision A5, Issue P1.  Generated 2026-11-05 07:50 UTC.**
+**Document OHM-DC-2000-DOC-01  Revision A6, Issue P2.  Generated 2026-11-08 12:00 UTC.**
 
 > PRELIMINARY EDUCATIONAL AND REFERENCE PACKAGE. NOT CONSTRUCTION-READY. NOT VERIFIED.
 
 ## 1. What this package is
 
-The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A5, version 0.1.0.dev0, generated 2026-11-05 07:50 UTC.
+The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A6, version 0.1.0.dev0, generated 2026-11-08 12:00 UTC.
 
 It shows how a data centre electrical design is built up: design basis, load estimate, redundancy architecture, equipment sizing, distribution, short-circuit levels, protection data, earthing and documentation. Every calculation states its inputs and their status.
 
@@ -62,7 +62,7 @@ The 400/230 V at 60 Hz pairing is the project owner's decision and was not indep
 
 ## 5. Supported software
 
-- Workbooks: Microsoft Excel 2016 or later, or LibreOffice Calc 7 or later. They use ordinary formulas (no macros).
+- Workbooks: they use ordinary formulas (no macros) and are intended for Microsoft Excel 2016 or later or LibreOffice Calc 7 or later. IMPORTANT: they were recalculated and tested with LibreOffice only. Microsoft Excel was not available to the authors, so the workbooks have not been opened in Excel. A static lint checks Excel limits (see WORKBOOK_LINT.md) but cannot show that Excel gives the same results. Check results in Excel before relying on them.
 - Reports, drawings and specifications are provided as PDF and DOCX; a PDF reader and a word processor are enough.
 - Engine (if included): Python 3.11 or later with pydantic, PyYAML, openpyxl and reportlab. LibreOffice is used to recalculate workbooks in the test suite.
 

@@ -15,6 +15,7 @@ from openpyxl.styles import Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from ohmetry_dc import __version__
+from ohmetry_dc.documents import ISSUE
 from ohmetry_dc.models import ProjectConfig
 from ohmetry_dc.models.attestation import is_complete
 from ohmetry_dc.reporting.manufacturer_register import build_rows, load_register_meta
@@ -77,6 +78,17 @@ def outstanding_items(root: Path, cfg: ProjectConfig) -> list[dict]:
         ("Drawing", "The single-line diagram is a concept drawing generated from the configuration", "Review the architecture shown; decide path independence, transfer scheme and tag convention", "Medium"),
         ("Scope", "No cooling, fire protection, structural, lightning, IT distribution or controls design is included", "State the scope boundary in any project use", "Low")]:
         add("Package", cat, item, action, "OPEN", prio)
+    from ohmetry_dc.models.architecture import ARCHITECTURE_FUNCTIONS
+
+    for a_ in ARCHITECTURE_FUNCTIONS:                                       # the single-line diagram's concept symbols, one item each (same list as the drawing and workbook 03)
+        add(f"Architecture {a_.id}", "Architecture", f"{a_.function}: {a_.status}. Shown as: {a_.shown_as}", a_.needed, "OPEN" if a_.status != "PRELIMINARY ASSUMPTION" else "UNCONFIRMED", "High" if a_.status != "PRELIMINARY ASSUMPTION" else "Medium")
+    for src, cat, item, action, prio in [
+        ("Package A6", "Review scope", "Items 1 to 4 of the A5 independent review are not covered: their text was not available when this package was rebuilt, and the repository that implemented them was lost before it was pushed", "The reviewer or owner supplies the text of items 1 to 4; check each against the code and add what is missing", "High"),
+        ("Package A6", "Verification", "A reviewer name is a self-declared attestation: identity, credentials and independence are not authenticated by anything in the package", "The project owner decides how reviewers are identified and how independence is established", "Medium"),
+        ("Package A6", "Workbooks", "The workbooks have never been opened in Microsoft Excel (not available). The static lint is clean but only checks Excel limits", "Open all 20 workbooks in Excel; compare results with LibreOffice and Python; read WORKBOOK_LINT.md", "High"),
+        ("Package A6", "Standards", "Standard titles and their relevance in the register come from the authors' general knowledge; no edition, clause or applicability has been checked", "A reviewer checks each entry against the standard and records the edition", "Medium"),
+        ("Package A6", "Distribution", "Every cable, busduct and switchgear required rating is a minimum: derating factors are placeholders and no sharing allowance is included", "Supply cable table references, the layout of parallel runs and the sharing allowance", "High")]:
+        add(src, cat, item, action, "OPEN", prio)
     return items
 
 
@@ -167,6 +179,15 @@ CHECKLIST: list[tuple[str, list[tuple[str, str]]]] = [
         ("Check the customer README is accurate against the package and states limitations honestly.", "CUSTOMER_README"),
         ("Note that the licence draft is outside this review: it needs a legal professional.", "LICENCE_COMMERCIAL"),
         ("Check the master index and manifest: every file has an id, revision and hash; cross-references are right.", "MASTER_INDEX, MANIFEST.json")]),
+    ("M. Revision A6 corrective actions (read CORRECTIVE_ACTION_REPORT first)", [
+        ("Architecture: confirm each concept symbol on SLD-001 (generator breakers, ACB-TX / ACB-GEN interlock, PMS, static and maintenance bypass, battery isolator, boundaries) is labelled concept and not designed; confirm independence of utility A and B is claimed nowhere; confirm the IT load is one dual-corded load.", "drawings/, models/architecture.py, 03_POWER_ARCHITECTURE sheet FUNCTIONS, ER-028"),
+        ("Distribution: confirm no derating factor of 1.00 reads as verified, required ratings are labelled minimums, and installation method, parallel arrangement and current sharing are reported as missing; confirm a grouping factor of 1.00 for parallel runs is called out.", "check cable_derating_basis, 08_CABLE_SIZING, docs/.../distribution.md, ER-029"),
+        ("Short-circuit: confirm the transformer-limited figure is never described as the bus fault level and never used to select a rating; confirm cases without data read NOT CALCULATED and arc-flash is out of scope.", "checks short_circuit_levels, arc_flash_scope, ER-024, ER-030"),
+        ("Earthing and lightning: confirm earthing is labelled preliminary screening only (not a mesh and step study) and that no IEC 62305 compliance is claimed.", "checks earthing_framework, lightning_scope, ER-031"),
+        ("Verification: confirm a reviewer name alone never marks a value verified (name, organisation, date, evidence reference and scope are required), the log is append-only, and the text says the name is not authenticated.", "models/attestation.py, verification_log.yaml, ER-032"),
+        ("Standards and specifications: confirm every standard named in a specification is in the register, no clause number is cited and editions are blank; review the vendor data schedule, compliance schedule, FAT, SAT, commissioning and integrated systems test sections.", "07_registers/standards_register.yaml, 08_specifications, ER-033"),
+        ("Document control: confirm revision A6 everywhere, no generated file from another revision, the ER log is reconciled (ER-028 to ER-034), the Excel limitation is stated, and WORKBOOK_LINT.md has been read.", "MASTER_INDEX, ENGINEERING_REVIEW_LOG, WORKBOOK_LINT.md, ER-034"),
+        ("Release gate: confirm the release state is DEVELOPMENT, nothing is marked approved, verified or construction-ready, and the corrective-action report agrees with the repository (re-run the tests and the key-number check).", "CORRECTIVE_ACTION_REPORT, 11_qa/QA_RESULTS.md")]),
 ]
 
 SIGNOFF = [("Reviewer name and organisation", ""), ("Qualification and registration (if any)", ""), ("Independence declaration", "I have no interest in the package or its sale and was not involved in producing it. [ ] Confirmed"), ("Scope reviewed", ""),
@@ -174,7 +195,7 @@ SIGNOFF = [("Reviewer name and organisation", ""), ("Qualification and registrat
 
 
 def checklist_markdown(cfg: ProjectConfig, stamp: str) -> str:
-    L = [f"# Independent reviewer checklist: {cfg.project.name}", "", f"**Document {cfg.project.code}-DOC-03  Issue P1. Package revision {cfg.project.revision}. Generated {stamp}.**", "", f"> {REVIEW_BANNER}", "",
+    L = [f"# Independent reviewer checklist: {cfg.project.name}", "", f"**Document {cfg.project.code}-DOC-03  Issue {ISSUE}. Package revision {cfg.project.revision}. Generated {stamp}.**", "", f"> {REVIEW_BANNER}", "",
          "Mark each item PASS, FAIL, N/A or QUERY and record findings in REVIEW_FINDINGS_LOG.xlsx with the item reference. The checklist does not limit the review.", ""]
     n = 0
     for sec, items in CHECKLIST:
@@ -188,7 +209,7 @@ def checklist_markdown(cfg: ProjectConfig, stamp: str) -> str:
 
 
 def checklist_docx(cfg: ProjectConfig, path: Path, stamp: str) -> Path:
-    d = dx.new_document("Independent reviewer checklist", f"{cfg.project.code}-DOC-03", "P1", "For review", f"OHMETRY {cfg.project.code}: independent reviewer checklist")
+    d = dx.new_document("Independent reviewer checklist", f"{cfg.project.code}-DOC-03", ISSUE, "For review", f"OHMETRY {cfg.project.code}: independent reviewer checklist")
     dx.title(d, "Independent reviewer checklist", f"{cfg.project.name}. Package revision {cfg.project.revision}. Generated {stamp}.")
     dx.banner(d, REVIEW_BANNER)
     d.add_paragraph("Mark each item PASS, FAIL, N/A or QUERY and record findings in REVIEW_FINDINGS_LOG.xlsx with the item reference. The checklist does not limit the review.")
@@ -210,7 +231,7 @@ def guide_markdown(cfg: ProjectConfig, stamp: str, n_files: int) -> str:
     c = cfg.project
     return f"""# Independent review guide: {c.name}
 
-**Document {c.code}-DOC-04  Issue P1. Package revision {c.revision}. Generated {stamp}.**
+**Document {c.code}-DOC-04  Issue {ISSUE}. Package revision {c.revision}. Generated {stamp}.**
 
 > {REVIEW_BANNER}
 
@@ -246,7 +267,7 @@ Use REVIEW_FINDINGS_LOG.xlsx (the columns match the engineering review log). Giv
 Legal review of the licence, commercial terms, and the website. Those need a different professional.
 
 ## 9. Known gaps you should expect
-See OUTSTANDING_VERIFICATION_ITEMS.md. The biggest: no independent review has happened yet; manufacturer, utility and site data are not supplied; the standards editions are NOT_VERIFIED; the workbooks were tested only in LibreOffice.
+See OUTSTANDING_VERIFICATION_ITEMS.md. The biggest: no independent review has happened yet; manufacturer, utility and site data are not supplied; the standards editions are NOT_VERIFIED; the workbooks were recalculated and tested in LibreOffice only: Microsoft Excel was not available, so they have never been opened in Excel (see WORKBOOK_LINT.md for the static lint, which does not replace that).
 """
 
 
@@ -325,9 +346,13 @@ def build_review_package(root: Path, out_dir: Path, cfg: ProjectConfig, stamp: s
         add(p, f"08_specifications/{p.relative_to(root / 'specifications')}")
     for p in sorted((root / "training").rglob("*")):
         add(p, f"09_training/{p.relative_to(root / 'training')}")
+    for n in ("CORRECTIVE_ACTION_REPORT.md", "CORRECTIVE_ACTION_REPORT.docx", "CORRECTIVE_ACTION_REPORT.pdf"):
+        add(rel / n, f"00_START_HERE/{n}")
     for n in ("CUSTOMER_README.md", "CUSTOMER_README.docx", "CUSTOMER_README.pdf", "LICENCE_COMMERCIAL.md", "LICENCE_COMMERCIAL.docx", "LICENCE_COMMERCIAL.pdf"):
         add(rel / n, f"10_customer_documents/{n}")
     add(root / "output" / "QA_RESULTS.md", "11_qa/QA_RESULTS.md")
+    add(root / "output" / "WORKBOOK_LINT.md", "11_qa/WORKBOOK_LINT.md")
+    add(root / "config" / "verification_log.yaml", "07_registers/verification_log.yaml")
 
     manifest = {"package": f"{code} independent review package", "revision": rev, "package_version": __version__, "generated": stamp, "state": REVIEW_BANNER,
                 "files": [{"path": z, "sha256": _sha(p), "bytes": p.stat().st_size} for p, z in files]}

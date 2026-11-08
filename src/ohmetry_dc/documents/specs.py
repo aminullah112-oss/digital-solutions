@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ohmetry_dc import __version__
+from ohmetry_dc.documents import ISSUE
 from ohmetry_dc.models import ProjectConfig
 from ohmetry_dc.models import data_status as ds
 from ohmetry_dc.reporting.manufacturer_register import build_rows, load_register_meta
@@ -17,7 +18,7 @@ from . import docx_tools as dx
 
 TBD = "[To be determined by the project]"
 DRAFT = "DRAFT TEMPLATE. NOT AN ISSUED SPECIFICATION. NOT FOR PROCUREMENT. PRELIMINARY VALUES ARE NOT MANUFACTURER-CONFIRMED."
-SPEC_REV = "P1"
+SPEC_REV = ISSUE
 
 COMMON_TESTING = ["Routine tests on every unit as required by the applicable standard and this specification.", "Type-test reports or evidence for the design, issued by an accredited or recognised laboratory [project to define acceptable evidence].",
                   "Inspection and test plan (ITP) approved before manufacture, naming witness and hold points.", "Calibration certificates for test instruments."]

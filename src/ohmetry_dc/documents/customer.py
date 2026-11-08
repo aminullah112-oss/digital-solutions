@@ -4,6 +4,8 @@ The licence is a DRAFT written without legal review. It is not claimed to be enf
 """
 from __future__ import annotations
 
+from ohmetry_dc.documents import ISSUE
+
 from pathlib import Path
 
 from ohmetry_dc import __version__
@@ -12,7 +14,7 @@ from ohmetry_dc.models import data_status as ds
 
 from . import docx_tools as dx
 
-README_REV, LICENCE_REV = "P1", "P1"
+README_REV, LICENCE_REV = ISSUE, ISSUE
 LEGAL_BANNER = ("DRAFT LICENCE. PREPARED WITHOUT LEGAL REVIEW. NOT CLAIMED TO BE LEGALLY ENFORCEABLE IN ANY JURISDICTION. "
                 "A QUALIFIED LEGAL PROFESSIONAL MUST REVIEW AND ADAPT THIS TEXT BEFORE IT IS USED WITH ANY CUSTOMER.")
 STATUS_BANNER = "PRELIMINARY EDUCATIONAL AND REFERENCE PACKAGE. NOT CONSTRUCTION-READY. NOT VERIFIED."

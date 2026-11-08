@@ -1,6 +1,6 @@
 # Module 04: MV Distribution and Transformer Sizing
 
-_Ohmetry engineering learning suite. Generated 2026-11-05 07:48 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
+_Ohmetry engineering learning suite. Generated 2026-11-08 12:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
 
 ## Learning objectives
 
@@ -29,7 +29,7 @@ The impedance of the transformer sets the fault level downstream: a lower impeda
 
 - Path-out: 2,866 kVA on one 3,150 kVA transformer (derating 1.00 placeholders) = 90.97 % against a 90 % target: WARNING.
 - A rating of 3,184 kVA each would meet the 90 % target; the owner accepted the exception up to 91.0 % pending verification.
-- With a 6 % impedance the transformer-limited LV fault level is 82.6 kA, valid for any utility fault level.
+- With a 6 % impedance the transformer-limited LV figure is 82.6 kA: the most the utility can contribute through that transformer. It excludes generators and motors, so it is not the bus fault level.
 
 ## Common engineering mistakes
 

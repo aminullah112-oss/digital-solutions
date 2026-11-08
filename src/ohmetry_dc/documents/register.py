@@ -76,6 +76,10 @@ def _scan(root: Path) -> list[tuple[str, str, str, str, str]]:
         add(p, "REG-03", "Manufacturer-data register (generated view / import template)", "Register", "WORKING RECORD")
     for p in sorted((root / "output").glob("OUTSTANDING_VERIFICATION_ITEMS.*")):
         add(p, "REG-07", "Outstanding verification items", "Register", "WORKING RECORD")
+    if (root / "output" / "WORKBOOK_LINT.md").exists():
+        add(root / "output" / "WORKBOOK_LINT.md", "LOG-05", "Workbook static lint (Excel compatibility)", "Log", "WORKING RECORD")
+    if (root / "config" / "verification_log.yaml").exists():
+        add(root / "config" / "verification_log.yaml", "REG-09", "Verification attestation log (append-only; names self-declared, not authenticated)", "Register", "WORKING RECORD")
     if (root / "output" / "QA_RESULTS.md").exists():
         add(root / "output" / "QA_RESULTS.md", "LOG-04", "QA test results", "Log", "WORKING RECORD")
     for name, sfx, title in (("ENGINEERING_REVIEW_LOG.md", "LOG-01", "Engineering review log"), ("DEVELOPMENT_STATUS.md", "LOG-02", "Development status"), ("RELEASE_CHECKLIST.md", "LOG-03", "Release checklist"),
@@ -84,7 +88,7 @@ def _scan(root: Path) -> list[tuple[str, str, str, str, str]]:
             add(root / name, sfx, title, "Log" if sfx.startswith("LOG") else "Document", "WORKING RECORD")
     for p in sorted((root / "docs" / "release").glob("*")):
         m = {"CUSTOMER_README": ("DOC-01", "Customer README", "PRELIMINARY: NOT VERIFIED"), "LICENCE_COMMERCIAL": ("DOC-02", "Commercial licence (draft, not legally reviewed)", "DRAFT: NOT LEGALLY REVIEWED"),
-             "MASTER_INDEX": ("DOC-00", "Master index", "WORKING RECORD"), "REVIEWER_CHECKLIST": ("DOC-03", "Independent reviewer checklist", "FOR REVIEW"), "REVIEW_GUIDE": ("DOC-04", "Independent review guide", "FOR REVIEW")}.get(p.stem)
+             "MASTER_INDEX": ("DOC-00", "Master index", "WORKING RECORD"), "CORRECTIVE_ACTION_REPORT": ("DOC-07", "Corrective action report (revision A6)", "FOR REVIEW"), "REVIEWER_CHECKLIST": ("DOC-03", "Independent reviewer checklist", "FOR REVIEW"), "REVIEW_GUIDE": ("DOC-04", "Independent review guide", "FOR REVIEW")}.get(p.stem)
         if p.is_file() and m:
             add(p, m[0], m[1], "Document", m[2])
     return out

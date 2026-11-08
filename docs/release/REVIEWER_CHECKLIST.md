@@ -1,6 +1,6 @@
 # Independent reviewer checklist: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
 
-**Document OHM-DC-2000-DOC-03  Issue P1. Package revision A5. Generated 2026-11-05 07:50 UTC.**
+**Document OHM-DC-2000-DOC-03  Issue P2. Package revision A6. Generated 2026-11-08 12:00 UTC.**
 
 > FOR INDEPENDENT ENGINEERING REVIEW. THE PACKAGE IS PRELIMINARY. IT IS NOT CONSTRUCTION-READY AND NOT VERIFIED. NOTHING IN IT HAS BEEN APPROVED.
 
@@ -81,7 +81,7 @@ Mark each item PASS, FAIL, N/A or QUERY and record findings in REVIEW_FINDINGS_L
 | R34 | Audit formulas in each workbook: no hard-coded critical values, correct references, correct units. | workbooks/ (all 20) |  |  |
 | R35 | Enter a datasheet value without a source: confirm it is rejected. Enter with a source: confirm the calculation updates and the status becomes SUPPLIED. Add a reviewer: confirm VERIFIED. | INPUTS sheets |  |  |
 | R36 | Confirm the overall status can only be PASS when the calculation passes and all inputs are verified (try it). | RESULTS sheets |  |  |
-| R37 | Open in Microsoft Excel (the tests recalculated with LibreOffice only) and confirm results agree. | All workbooks |  |  |
+| R37 | Open in Microsoft Excel (the tests recalculated with LibreOffice only; Excel was not available to the authors, so this has never been done) and confirm results agree. Read WORKBOOK_LINT.md for the static lint. | All workbooks, WORKBOOK_LINT.md |  |  |
 | R38 | Check the five input-register workbooks (14, 16, 17, 18, 19) do not produce a result without data and do not claim compliance. | 14, 16, 17, 18, 19 |  |  |
 
 ## I. Python engine
@@ -117,6 +117,19 @@ Mark each item PASS, FAIL, N/A or QUERY and record findings in REVIEW_FINDINGS_L
 | R50 | Check the customer README is accurate against the package and states limitations honestly. | CUSTOMER_README |  |  |
 | R51 | Note that the licence draft is outside this review: it needs a legal professional. | LICENCE_COMMERCIAL |  |  |
 | R52 | Check the master index and manifest: every file has an id, revision and hash; cross-references are right. | MASTER_INDEX, MANIFEST.json |  |  |
+
+## M. Revision A6 corrective actions (read CORRECTIVE_ACTION_REPORT first)
+
+| Ref | Check | Where | Result | Notes |
+|---|---|---|---|---|
+| R53 | Architecture: confirm each concept symbol on SLD-001 (generator breakers, ACB-TX / ACB-GEN interlock, PMS, static and maintenance bypass, battery isolator, boundaries) is labelled concept and not designed; confirm independence of utility A and B is claimed nowhere; confirm the IT load is one dual-corded load. | drawings/, models/architecture.py, 03_POWER_ARCHITECTURE sheet FUNCTIONS, ER-028 |  |  |
+| R54 | Distribution: confirm no derating factor of 1.00 reads as verified, required ratings are labelled minimums, and installation method, parallel arrangement and current sharing are reported as missing; confirm a grouping factor of 1.00 for parallel runs is called out. | check cable_derating_basis, 08_CABLE_SIZING, docs/.../distribution.md, ER-029 |  |  |
+| R55 | Short-circuit: confirm the transformer-limited figure is never described as the bus fault level and never used to select a rating; confirm cases without data read NOT CALCULATED and arc-flash is out of scope. | checks short_circuit_levels, arc_flash_scope, ER-024, ER-030 |  |  |
+| R56 | Earthing and lightning: confirm earthing is labelled preliminary screening only (not a mesh and step study) and that no IEC 62305 compliance is claimed. | checks earthing_framework, lightning_scope, ER-031 |  |  |
+| R57 | Verification: confirm a reviewer name alone never marks a value verified (name, organisation, date, evidence reference and scope are required), the log is append-only, and the text says the name is not authenticated. | models/attestation.py, verification_log.yaml, ER-032 |  |  |
+| R58 | Standards and specifications: confirm every standard named in a specification is in the register, no clause number is cited and editions are blank; review the vendor data schedule, compliance schedule, FAT, SAT, commissioning and integrated systems test sections. | 07_registers/standards_register.yaml, 08_specifications, ER-033 |  |  |
+| R59 | Document control: confirm revision A6 everywhere, no generated file from another revision, the ER log is reconciled (ER-028 to ER-034), the Excel limitation is stated, and WORKBOOK_LINT.md has been read. | MASTER_INDEX, ENGINEERING_REVIEW_LOG, WORKBOOK_LINT.md, ER-034 |  |  |
+| R60 | Release gate: confirm the release state is DEVELOPMENT, nothing is marked approved, verified or construction-ready, and the corrective-action report agrees with the repository (re-run the tests and the key-number check). | CORRECTIVE_ACTION_REPORT, 11_qa/QA_RESULTS.md |  |  |
 
 ## Sign-off
 

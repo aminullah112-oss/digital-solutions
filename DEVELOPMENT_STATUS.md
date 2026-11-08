@@ -1,7 +1,7 @@
 # Development status: OHM-DC-2000
 
-**Current milestone:** Stage 5 (short-circuit, protection and earthing framework) plus the status model, the data override system and six workbooks. Awaiting review.
-**Declared release state:** DEVELOPMENT. The computed release gate is DEVELOPMENT. No check FAILs, 2 are WARNING, and 25 are NOT VERIFIED. Approval is not possible. **Not construction-ready. Not verified.**
+**Current milestone:** revision A6 = the A5 package plus corrective actions 5 to 12 of the independent A5 review (see `docs/release/CORRECTIVE_ACTION_REPORT.md`). Items 1 to 4 of that review are NOT covered: their text was not available when the package was rebuilt. Awaiting independent review.
+**Declared release state:** DEVELOPMENT. The computed release gate is DEVELOPMENT. No check FAILs, 2 are WARNING, 26 are NOT VERIFIED and 2 are NOT APPLICABLE (arc-flash and lightning are out of scope). Approval is not possible. **Not construction-ready. Not verified.**
 
 ## Completed
 | Item | Location | Stage | Status |
@@ -36,7 +36,8 @@
 | Consolidated outstanding verification items, reviewer checklist and guide, findings log, independent review package (ZIP) | `documents/review.py`, `build-review-package` | 5 | Done. Review not performed |
 | `build-package`: assembles the customer ZIP from what exists, with a manifest and a status file (no engine source unless requested) | `packaging.py` | 5 | Done |
 | Data import from data sheets without changing code (overrides file, CSV template, data classification) | `import-manufacturer-data`, `config/manufacturer_data_overrides.yaml` | 5 | Done |
-| Tests: 220 | `tests/` | 1 to 5 | Passing |
+| Revision A6 corrective actions 5 to 12: SLD architecture concept symbols (utility A/B independence not claimed); derating, installation, parallel arrangement and current-sharing status; short-circuit wording and arc-flash scope; earthing screening and lightning scope; reviewer attestation records; standards register (33) and specification schedules (vendor data, compliance, SAT); document control, ER log, static workbook lint; `regenerate-all` release gate | see CORRECTIVE_ACTION_REPORT | A6 | Done. NOT REVIEWED. Excel never available: workbooks tested in LibreOffice only |
+| Tests: 270 | `tests/` | 1 to 5, A6 | Passing |
 
 ## Not started (do not treat as complete)
 Drawings other than the preliminary single-line diagram, the other engineering reports (only the load report exists), marketing assets (LinkedIn post, FAQ, product page copy, sample previews), network studies and protection coordination (needs manufacturer curves and a validated study), independent engineering review, and any manufacturer data.

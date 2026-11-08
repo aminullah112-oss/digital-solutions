@@ -2,10 +2,12 @@
 #   Revision   the package (design basis) revision, e.g. A5. It changes when the master configuration changes.
 #   Issue      the document's own preliminary issue, P1, P2, ... It changes when the document's content is reissued.
 #   Neither is an approval. No document in this package carries an approved issue.
-# A document with no entry below is at issue P1. Add an entry when a document is reissued; keep the history.
+# A document with no entry below is at the default issue (documents.ISSUE must equal default_issue; a test checks). Add an entry when a document is reissued; keep the history.
 schema_version: 1
-default_issue: P1
+default_issue: P2
 overrides: {}
 history:
+- date: 2026-11-08
+  note: Second preliminary issue (P2) at package revision A6. Reissued after the A5 independent review (corrective actions 5 to 12) - specification templates, single-line diagram, customer README, master index, reviewer checklist, review guide and outstanding items. Not an approval.
 - date: 2026-11-06
   note: First preliminary issue (P1) of the specification templates, customer README, commercial licence draft, master index, reviewer checklist and review guide.

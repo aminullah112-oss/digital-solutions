@@ -1,8 +1,10 @@
 # QA test results
 
-Run 2026-11-05 07:50 UTC. Package version 0.1.0.dev0. **220 passed, 0 failed, 0 skipped.**
+Run 2026-11-08 12:00 UTC. Package version 0.1.0.dev0. **270 passed, 0 failed, 0 skipped.**
 
 A passing test shows the code behaves as specified. It does not show the engineering is correct: that needs an independent review.
+
+**Excel:** Microsoft Excel was not available. The workbook tests recalculate with LibreOffice only. `lint-workbooks` (WORKBOOK_LINT.md) is a static check of Excel limits and is not a substitute for opening the workbooks in Excel.
 
 | Module | Test | Result |
 |---|---|---|
@@ -20,9 +22,19 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | documents.test_documents | test_reviewer_checklist_and_findings_log | PASS |
 | documents.test_documents | test_the_review_package_contains_every_required_component_with_hashes | PASS |
 | documents.test_documents | test_cli_generate_documents_and_the_package_manifest_cross_references | PASS |
+| documents.test_documents | test_every_standard_named_in_a_specification_is_in_the_register | PASS |
+| documents.test_documents | test_the_register_cites_no_clause_and_claims_no_edition_or_verification | PASS |
+| documents.test_documents | test_the_register_covers_modules_and_states_that_compliance_is_not_claimed_where_it_is_not | PASS |
+| documents.test_documents | test_specifications_carry_vendor_data_and_compliance_schedules_and_sat_and_commissioning | PASS |
+| documents.test_documents | test_specifications_cite_no_clause_numbers | PASS |
 | drawing.test_single_line | test_the_diagram_is_valid_svg_with_every_major_tag | PASS |
 | drawing.test_single_line | test_the_diagram_states_it_is_preliminary_and_shows_no_unverified_values_as_facts | PASS |
 | drawing.test_single_line | test_ratings_on_the_diagram_follow_the_master_configuration | PASS |
+| drawing.test_single_line | test_architecture_concept_symbols_are_drawn_and_labelled_not_designed | PASS |
+| drawing.test_single_line | test_independence_of_the_two_utility_supplies_is_not_claimed | PASS |
+| drawing.test_single_line | test_dual_corded_it_load_is_one_load_not_two_and_never_shown_as_4_mw | PASS |
+| drawing.test_single_line | test_every_architecture_function_has_a_status_and_a_need_and_a_tag_on_the_drawing | PASS |
+| drawing.test_single_line | test_generators_per_path_scale_with_the_configuration | PASS |
 | integration.test_cli | test_validate_config_on_the_shipped_configuration | PASS |
 | integration.test_cli | test_validate_config_fails_and_blocks_release_when_a_current_stage_input_is_missing | PASS |
 | integration.test_cli | test_configuration_error_gives_exit_2 | PASS |
@@ -34,7 +46,15 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | integration.test_cli | test_build_manufacturer_register_writes_markdown_and_csv | PASS |
 | integration.test_cli | test_qa_report_is_not_run_recursively_in_the_suite | PASS |
 | integration.test_cli | test_build_package_assembles_only_what_exists_and_is_labelled_preliminary | PASS |
+| integration.test_cli | test_verification_needs_name_organisation_date_evidence_and_scope | PASS |
+| integration.test_cli | test_a_complete_attestation_is_recorded_in_the_register_and_an_append_only_log_and_says_it_is_not_authenticated | PASS |
+| integration.test_cli | test_verifying_a_placeholder_is_refused_even_with_a_complete_record | PASS |
+| integration.test_cli | test_regenerate_all_runs_every_step_in_order_documents_twice_around_qa_and_stops_on_failure | PASS |
 | integration.test_dependency | test_it_load_change_propagates_to_results_workbook_and_report | PASS |
+| integration.test_reviewed_numbers | test_every_reviewed_a5_number_reproduces | PASS |
+| integration.test_reviewed_numbers | test_reviewed_values_are_the_ones_given_for_a5 | PASS |
+| integration.test_reviewed_numbers | test_the_check_summary_has_no_fail_and_no_check_was_upgraded_since_a5 | PASS |
+| integration.test_reviewed_numbers | test_the_report_says_items_1_to_4_are_not_covered_and_that_implemented_is_not_verified | PASS |
 | integration.test_revision | test_no_change_means_no_equipment_sizing_change | PASS |
 | integration.test_revision | test_new_demand_figures_are_traced_to_the_sizing_changes | PASS |
 | integration.test_revision | test_revision_log_entry_is_appended_and_marked_not_reviewed | PASS |
@@ -45,6 +65,11 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | package.test_repository_files | test_no_secrets_or_personal_data_in_the_repository | PASS |
 | package.test_repository_files | test_every_standard_starts_not_verified_with_no_invented_edition | PASS |
 | package.test_repository_files | test_equipment_template_contains_no_values | PASS |
+| package.test_repository_files | test_engineering_review_log_is_complete_contiguous_and_every_row_has_nine_columns | PASS |
+| package.test_repository_files | test_every_er_reference_in_the_code_tests_and_docs_exists_in_the_log | PASS |
+| package.test_repository_files | test_open_items_have_no_closure_evidence_and_closed_or_addressed_items_name_it | PASS |
+| package.test_repository_files | test_no_generated_file_carries_a_different_revision_from_the_configuration | PASS |
+| package.test_repository_files | test_the_excel_limitation_is_stated_in_the_documents_a_buyer_or_reviewer_reads | PASS |
 | report.test_load_report | test_report_contains_the_required_sections | PASS |
 | report.test_load_report | test_report_shows_the_project_values_status_and_limitations | PASS |
 | report.test_load_report | test_report_does_not_imply_a_completed_specialist_study | PASS |
@@ -71,6 +96,13 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | unit.test_checks | test_outstanding_manufacturer_data_is_listed_not_hidden | PASS |
 | unit.test_checks | test_missing_input_in_a_check_returns_not_verified | PASS |
 | unit.test_checks | test_release_gate_is_blocked_by_a_fail_and_never_approves | PASS |
+| unit.test_checks | test_a_derating_of_one_is_never_treated_as_verified | PASS |
+| unit.test_checks | test_grouping_of_one_with_parallel_runs_is_called_out_as_a_placeholder | PASS |
+| unit.test_checks | test_evidence_for_a_factor_removes_it_from_the_unverified_list_but_the_others_stay | PASS |
+| unit.test_checks | test_current_sharing_allowance_raises_the_required_rating_and_removes_the_minimum_flag_for_sharing | PASS |
+| unit.test_checks | test_parallel_feeder_without_an_arrangement_lists_it_as_missing_data | PASS |
+| unit.test_checks | test_invalid_sharing_allowance_is_rejected | PASS |
+| unit.test_checks | test_derating_basis_check_is_not_verified_and_says_the_ratings_are_minimums | PASS |
 | unit.test_load_calc | test_shipped_values_match_hand_calculation | PASS |
 | unit.test_load_calc | test_matches_the_independent_reference_model | PASS |
 | unit.test_load_calc | test_apparent_power_is_from_p_and_q_not_a_sum_of_kva | PASS |
@@ -152,6 +184,9 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | unit.test_stage4 | test_register_detects_a_missing_entry | PASS |
 | unit.test_stage4 | test_register_rejects_verification_of_a_placeholder | PASS |
 | unit.test_stage4 | test_supplying_manufacturer_data_changes_the_register_state | PASS |
+| unit.test_stage4 | test_a_register_entry_with_only_a_name_is_an_incomplete_record_and_is_not_verified | PASS |
+| unit.test_stage4 | test_the_register_text_states_the_name_is_not_authenticated | PASS |
+| unit.test_stage4 | test_a_design_exception_needs_a_complete_record_before_it_reads_verified | PASS |
 | unit.test_stage5 | test_mv_fault_level_equals_the_utility_power_over_root3_un | PASS |
 | unit.test_stage5 | test_lv_utility_case_matches_independent_complex_calculation | PASS |
 | unit.test_stage5 | test_generator_case_uses_n_units_in_parallel | PASS |
@@ -181,6 +216,12 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | unit.test_stage5 | test_manufacturer_verified_is_reachable_only_through_import_and_a_recorded_reviewer | PASS |
 | unit.test_stage5 | test_the_register_refuses_verification_of_a_placeholder | PASS |
 | unit.test_stage5 | test_register_lists_every_required_column_and_uses_the_data_status_vocabulary | PASS |
+| unit.test_stage5 | test_no_rating_or_requirement_is_selected_from_the_transformer_limited_figure | PASS |
+| unit.test_stage5 | test_the_transformer_limited_figure_is_never_described_as_the_bus_fault_level_or_a_design_value | PASS |
+| unit.test_stage5 | test_every_case_that_lacks_data_reads_not_calculated_and_no_default_is_substituted | PASS |
+| unit.test_stage5 | test_arc_flash_is_explicitly_out_of_scope_and_never_calculated | PASS |
+| unit.test_stage5 | test_earthing_is_labelled_a_screening_and_not_a_mesh_and_step_study_in_every_state | PASS |
+| unit.test_stage5 | test_lightning_is_out_of_scope_and_iec_62305_compliance_is_not_claimed | PASS |
 | unit.test_status_model | test_a_calculation_on_preliminary_inputs_never_reaches_pass | PASS |
 | unit.test_status_model | test_preliminary_warnings_are_kept_and_labelled | PASS |
 | unit.test_status_model | test_a_preliminary_fail_stays_fail | PASS |
@@ -219,6 +260,8 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | workbook.test_calc_workbooks | test_power_quality_workbook_calculates_from_measurements_and_needs_limits_and_instrument | PASS |
 | workbook.test_calc_workbooks | test_energy_workbook_agrees_with_the_python_design_point_pue | PASS |
 | workbook.test_calc_workbooks | test_fuel_workbook_estimates_nothing_without_the_manufacturer_curve | PASS |
+| workbook.test_calc_workbooks | test_architecture_workbook_lists_every_concept_function_as_not_designed_and_does_not_claim_utility_independence | PASS |
+| workbook.test_calc_workbooks | test_a_bare_reviewer_name_in_a_workbook_is_rejected_as_an_incomplete_attestation | PASS |
 | workbook.test_load_workbook | test_required_sheets_exist_and_open | PASS |
 | workbook.test_load_workbook | test_key_formulas_exist_and_nothing_critical_is_hard_coded | PASS |
 | workbook.test_load_workbook | test_every_input_has_a_unit_and_status_and_generation_stamp_is_recorded | PASS |
@@ -226,3 +269,12 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | workbook.test_load_workbook | test_editing_an_input_in_excel_makes_the_python_comparison_fail | PASS |
 | workbook.test_load_workbook | test_sheet_protection_has_no_unlock_phrase | PASS |
 | workbook.test_load_workbook | test_workbook_content_is_reproducible | PASS |
+| workbook.test_workbook_lint | test_clean_formulas_pass | PASS |
+| workbook.test_workbook_lint | test_a_text_literal_over_255_characters_is_flagged | PASS |
+| workbook.test_workbook_lint | test_functions_newer_than_excel_2016_and_unknown_functions_are_flagged | PASS |
+| workbook.test_workbook_lint | test_missing_sheet_external_link_error_literal_and_unbalanced_brackets_are_flagged | PASS |
+| workbook.test_workbook_lint | test_over_deep_nesting_and_long_validation_lists_are_flagged | PASS |
+| workbook.test_workbook_lint | test_numeric_constants_in_formulas_are_listed_for_the_reviewer_but_are_not_errors | PASS |
+| workbook.test_workbook_lint | test_report_states_that_excel_was_not_used | PASS |
+| workbook.test_workbook_lint | test_cli_fails_on_a_finding_and_on_an_empty_directory | PASS |
+| workbook.test_workbook_lint | test_every_shipped_workbook_passes_the_lint | PASS |

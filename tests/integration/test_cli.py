@@ -129,7 +129,7 @@ def test_verification_needs_name_organisation_date_evidence_and_scope(root, tmp_
     assert _verify(base, cfgdir, date="not-a-date") == EXIT_FAIL and "not an ISO date" in capsys.readouterr().out
     assert _verify(base, cfgdir, date="2999-01-01") == EXIT_FAIL and "in the future" in capsys.readouterr().out
     assert _verify(base, cfgdir, org="  ") == EXIT_FAIL and "organisation" in capsys.readouterr().out
-    assert not (cfgdir / "verification_log.yaml").exists()           # nothing was recorded by a rejected attempt
+    assert yaml.safe_load((cfgdir / "verification_log.yaml").read_text())["records"] == []           # nothing was recorded by a rejected attempt
 
 
 def test_a_complete_attestation_is_recorded_in_the_register_and_an_append_only_log_and_says_it_is_not_authenticated(root, tmp_path, capsys):
@@ -151,3 +151,30 @@ def test_verifying_a_placeholder_is_refused_even_with_a_complete_record(root, tm
     base = ["--config", str(cfgdir / "project_config.yaml"), "--loads", str(cfgdir / "load_schedule.yaml")]
     code = _verify(base, cfgdir)
     assert code == EXIT_FAIL and "placeholder" in capsys.readouterr().out
+
+
+# ---- revision A6, item 12: the release gate
+def test_regenerate_all_runs_every_step_in_order_documents_twice_around_qa_and_stops_on_failure(monkeypatch, capsys):
+    import ohmetry_dc.cli as cli
+    calls = []
+    real = cli.main
+
+    def fake(argv):
+        if argv[:1] == ["--config"] and argv[4:5] != ["regenerate-all"]:
+            i = argv.index("--loads") + 2
+            i += 2 if argv[i:i + 1] == ["--generated"] else 0
+            calls.append(argv[i:])
+            return 0 if argv[i] != "generate-reports" or not FAIL["on"] else 1
+        return real(argv)
+    FAIL = {"on": False}
+    monkeypatch.setattr(cli, "main", fake)
+    assert real(["--generated", "2026-11-08 00:00 UTC", "regenerate-all", "--dist", "d"]) == 0
+    names = [c[0] for c in calls]
+    assert names == ["build-assumptions-register", "validate-config", "run-calculations", "sizing-summary", "build-manufacturer-register", "generate-workbooks", "lint-workbooks", "generate-reports", "generate-drawings",
+                     "generate-training", "generate-documents", "qa-report", "generate-documents", "build-review-package", "build-package"]
+    assert calls[-2] == ["build-review-package", "--dist", "d"]
+    calls.clear()
+    assert real(["regenerate-all", "--skip-qa"]) == 0 and "qa-report" not in [c[0] for c in calls]
+    calls.clear()
+    FAIL["on"] = True
+    assert real(["regenerate-all", "--skip-qa"]) == 1 and [c[0] for c in calls][-1] == "generate-reports" and "regenerate-all stopped" in capsys.readouterr().out

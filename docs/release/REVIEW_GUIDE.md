@@ -1,6 +1,6 @@
 # Independent review guide: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
 
-**Document OHM-DC-2000-DOC-04  Issue P1. Package revision A5. Generated 2026-11-05 07:50 UTC.**
+**Document OHM-DC-2000-DOC-04  Issue P2. Package revision A6. Generated 2026-11-08 12:00 UTC.**
 
 > FOR INDEPENDENT ENGINEERING REVIEW. THE PACKAGE IS PRELIMINARY. IT IS NOT CONSTRUCTION-READY AND NOT VERIFIED. NOTHING IN IT HAS BEEN APPROVED.
 
@@ -19,7 +19,7 @@ The Ohmetry OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000
 2. In `04_engine` (the repository root): install the dependencies in `requirements.txt` (pydantic, PyYAML, openpyxl, reportlab, python-docx, pytest).
 3. Run `PYTHONPATH=src python -m pytest -q`. All tests should pass. Note any that do not.
 4. Run `PYTHONPATH=src python -m ohmetry_dc validate-config` and compare with `11_qa/QA_RESULTS.md` and the CHECK_STATUS sheet of workbook 01.
-5. Run `generate-workbooks`, `generate-reports`, `generate-drawings`, `generate-training`, `generate-documents` and compare the outputs with the supplied files (timestamps will differ).
+5. Run `generate-workbooks`, `lint-workbooks`, `generate-reports`, `generate-drawings`, `generate-training`, `generate-documents` and compare the outputs with the supplied files (timestamps will differ).
 
 ## 5. Suggested order of review
 Design basis, then the methodology documents, then the engine code for each calculation, then the workbooks against the engine, then registers, drawing, specifications, training and customer documents. Use the checklist; it does not limit your review.
@@ -36,4 +36,4 @@ Use REVIEW_FINDINGS_LOG.xlsx (the columns match the engineering review log). Giv
 Legal review of the licence, commercial terms, and the website. Those need a different professional.
 
 ## 9. Known gaps you should expect
-See OUTSTANDING_VERIFICATION_ITEMS.md. The biggest: no independent review has happened yet; manufacturer, utility and site data are not supplied; the standards editions are NOT_VERIFIED; the workbooks were tested only in LibreOffice.
+See OUTSTANDING_VERIFICATION_ITEMS.md. The biggest: no independent review has happened yet; manufacturer, utility and site data are not supplied; the standards editions are NOT_VERIFIED; the workbooks were recalculated and tested in LibreOffice only: Microsoft Excel was not available, so they have never been opened in Excel (see WORKBOOK_LINT.md for the static lint, which does not replace that).

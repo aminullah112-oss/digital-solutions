@@ -11,6 +11,7 @@ import pytest
 from ohmetry_dc.cli import EXIT_OK, main
 from ohmetry_dc.config import load_config
 from ohmetry_dc.documents import customer, register, review, specs
+from ohmetry_dc.documents import ISSUE
 from ohmetry_dc.documents.specs import _specs
 
 from conftest import STAMP, set_value, needs_soffice
@@ -118,7 +119,7 @@ def test_the_register_ids_every_file_and_cross_references_resolve(root):
     ids = {r["id"] for r in rows}
     assert len(rows) > 80
     for r in rows:
-        assert (root / r["path"]).exists() and r["revision"] == cfg.project.revision and r["issue"] == "P1" and r["status"]
+        assert (root / r["path"]).exists() and r["revision"] == cfg.project.revision and r["issue"] == ISSUE and r["status"]
         assert all(x in ids for x in r["related"]), (r["id"], r["related"])
     assert {f"OHM-DC-2000-WB-{n:02d}" for n in range(1, 21)} <= ids and {f"OHM-DC-2000-SPEC-{n:02d}" for n in range(1, 11)} <= ids and {f"OHM-DC-2000-TRN-{n:02d}" for n in range(1, 17)} <= ids
     spec = next(r for r in rows if r["id"].endswith("SPEC-01"))
@@ -180,7 +181,7 @@ def test_cli_generate_documents_and_the_package_manifest_cross_references(root, 
     assert man["unregistered_files"] == []
     byp = {f["path"]: f for f in man["files"]}
     assert byp["CUSTOMER_README.pdf"]["document_id"] == "OHM-DC-2000-DOC-01" and byp["LICENCE_COMMERCIAL.md"]["document_id"] == "OHM-DC-2000-DOC-02"
-    assert byp["workbooks/04_TRANSFORMER_SIZING.xlsx"]["document_id"].endswith("WB-04") and byp["workbooks/04_TRANSFORMER_SIZING.xlsx"]["issue"] == "P1"
+    assert byp["workbooks/04_TRANSFORMER_SIZING.xlsx"]["document_id"].endswith("WB-04") and byp["workbooks/04_TRANSFORMER_SIZING.xlsx"]["issue"] == ISSUE
     assert any(f["path"].startswith("specifications/") for f in man["files"]) and "MASTER_INDEX.md" in byp
     assert all(f["document_id"] and f["revision"] for f in man["files"])
     assert not any(n.endswith(("REVIEW_GUIDE.md", "REVIEWER_CHECKLIST.md")) for n in z.namelist())      # review documents are for the reviewer, not the customer ZIP

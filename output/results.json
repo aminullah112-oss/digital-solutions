@@ -1,6 +1,6 @@
 {
   "project_code": "OHM-DC-2000",
-  "revision": "A1",
+  "revision": "A6",
   "load_estimate": {
     "items": [
       {
@@ -176,6 +176,7 @@
       "rating_each": 3150.0,
       "derated_each": 3150.0,
       "units_per_path": 1,
+      "nameplate_loading_worst": 0.9097127777273507,
       "required_derated_each_for_target": 3183.9947220457275,
       "required_derated_each_for_limit": 2865.595249841155,
       "required_rating_each_for_target": 3183.9947220457275,
@@ -233,6 +234,7 @@
       "rating_each": 2500.0,
       "derated_each": 2500.0,
       "units_per_path": 1,
+      "nameplate_loading_worst": 0.8,
       "required_derated_each_for_target": 2500.0,
       "required_derated_each_for_limit": 2000.0,
       "required_rating_each_for_target": 2500.0,
@@ -288,6 +290,7 @@
       "rating_each": 2500.0,
       "derated_each": 2500.0,
       "units_per_path": 1,
+      "nameplate_loading_worst": 0.8421052631578948,
       "required_derated_each_for_target": 2631.5789473684213,
       "required_derated_each_for_limit": 2105.263157894737,
       "required_rating_each_for_target": 2631.5789473684213,
@@ -343,6 +346,7 @@
       "rating_each": 2000.0,
       "derated_each": 2000.0,
       "units_per_path": 3,
+      "nameplate_loading_worst": 0.4757403802145893,
       "required_derated_each_for_target": 1189.3509505364732,
       "required_derated_each_for_limit": 951.4807604291786,
       "required_rating_each_for_target": 1189.3509505364732,
@@ -360,7 +364,7 @@
         "generators.overload_capability"
       ],
       "notes": [
-        "Rating basis: PRP. PRP (Prime Power), ESP (Emergency Standby Power) and COP (Continuous Power) are different ISO 8528 ratings and are not interchangeable.",
+        "Rating basis: PRP, ASSUMED and NOT confirmed by manufacturer documentation. PRP (Prime Power), ESP (Emergency Standby Power) and COP (Continuous Power) are different ISO 8528 ratings and are not interchangeable.",
         "PRP is the default basis. ESP is selectable but should not be relied on for prolonged outages.",
         "No overload capability is used. Final selection must be verified against manufacturer data for load steps, UPS interaction, harmonics, altitude and ambient temperature.",
         "Lightly loaded generators need the manufacturer's minimum-load guidance. A low loading percentage is not automatically better."
@@ -417,6 +421,98 @@
           "capacity_each": 2000.0,
           "capacity_total": 4000.0,
           "loading": 0.713610570321884,
+          "note": "Informational: not judged against the limits (redundancy.double_contingency_credible is False)",
+          "status": "NOT APPLICABLE"
+        }
+      ]
+    },
+    "generator_kw": {
+      "equipment": "generator",
+      "metric": "kW",
+      "derating": {
+        "ambient": 1.0,
+        "altitude": 1.0,
+        "installation": 1.0,
+        "combined": 1.0
+      },
+      "rating_each": 1600.0,
+      "derated_each": 1600.0,
+      "units_per_path": 3,
+      "nameplate_loading_worst": 0.5598415972222223,
+      "required_derated_each_for_target": 1119.6831944444443,
+      "required_derated_each_for_limit": 895.7465555555556,
+      "required_rating_each_for_target": 1119.6831944444443,
+      "required_rating_each_for_limit": 895.7465555555556,
+      "suggested_size_for_target": null,
+      "suggested_size_for_limit": null,
+      "missing_data": [
+        "generators.prp_max_average_load_factor_pct",
+        "generators.operating_hours_restriction",
+        "generators.max_step_load_pct",
+        "generators.max_frequency_dip_pct",
+        "generators.max_voltage_dip_pct",
+        "generators.ups_rectifier_walk_in_s",
+        "generators.ups_input_current_thd_pct",
+        "generators.overload_capability"
+      ],
+      "notes": [
+        "Rating basis: PRP, ASSUMED and NOT confirmed by manufacturer documentation. PRP (Prime Power), ESP (Emergency Standby Power) and COP (Continuous Power) are different ISO 8528 ratings and are not interchangeable.",
+        "PRP is the default basis. ESP is selectable but should not be relied on for prolonged outages.",
+        "No overload capability is used. Final selection must be verified against manufacturer data for load steps, UPS interaction, harmonics, altitude and ambient temperature.",
+        "Lightly loaded generators need the manufacturer's minimum-load guidance. A low loading percentage is not automatically better."
+      ],
+      "policy": {
+        "target_pct": 80.0,
+        "limit_pct": 100.0
+      },
+      "status": "PASS",
+      "worst_credible": "GEN-PATH-OUT",
+      "scenarios": [
+        {
+          "id": "GEN-NORMAL",
+          "description": "Normal operation: the more heavily loaded path on its own units",
+          "credible": true,
+          "load": 1343.6198333333334,
+          "units_available": 3,
+          "capacity_each": 1600.0,
+          "capacity_total": 4800.0,
+          "loading": 0.27992079861111113,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-PATH-OUT",
+          "description": "Loss of the other path: the surviving path carries the whole load",
+          "credible": true,
+          "load": 2687.239666666667,
+          "units_available": 3,
+          "capacity_each": 1600.0,
+          "capacity_total": 4800.0,
+          "loading": 0.5598415972222223,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-UNIT-OUT",
+          "description": "Loss of one unit (N+1): the path load on the remaining units",
+          "credible": true,
+          "load": 1343.6198333333334,
+          "units_available": 2,
+          "capacity_each": 1600.0,
+          "capacity_total": 3200.0,
+          "loading": 0.41988119791666667,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-PATH-OUT-UNIT-OUT",
+          "description": "Loss of the other path and one unit: beyond an N+1 design basis",
+          "credible": false,
+          "load": 2687.239666666667,
+          "units_available": 2,
+          "capacity_each": 1600.0,
+          "capacity_total": 3200.0,
+          "loading": 0.8397623958333333,
           "note": "Informational: not judged against the limits (redundancy.double_contingency_credible is False)",
           "status": "NOT APPLICABLE"
         }
@@ -482,19 +578,28 @@
   "checks": [
     {
       "id": "required_user_inputs",
-      "title": "Inputs needed up to Stage 3 are supplied",
+      "title": "Inputs needed up to Stage 5 are supplied",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "All required user inputs for the current stage are present.",
       "values": {
         "missing": []
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "manufacturer_data_pending",
-      "title": "Manufacturer data needed up to Stage 3 is supplied",
+      "title": "Manufacturer data needed up to Stage 5 is supplied",
       "status": "NOT VERIFIED",
-      "detail": "15 manufacturer data item(s) pending: equipment.generator_esp_rating, equipment.generator_cop_rating, generators.prp_max_average_load_factor_pct, generators.operating_hours_restriction, generators.overload_capability, generators.max_step_load_pct, generators.max_frequency_dip_pct, generators.max_voltage_dip_pct, generators.ups_rectifier_walk_in_s, generators.ups_input_current_thd_pct, battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_of_life_capacity_factor, battery.temperature_correction_factor, battery.constant_power_discharge_data",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "18 manufacturer data item(s) pending: equipment.generator_esp_rating, equipment.generator_cop_rating, generators.prp_max_average_load_factor_pct, generators.operating_hours_restriction, generators.overload_capability, generators.max_step_load_pct, generators.max_frequency_dip_pct, generators.max_voltage_dip_pct, generators.ups_rectifier_walk_in_s, generators.ups_input_current_thd_pct, battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_of_life_capacity_factor, battery.temperature_correction_factor, battery.constant_power_discharge_data, short_circuit.transformer_x_r_ratio, short_circuit.generator_subtransient_reactance_pct, short_circuit.generator_x_r_ratio",
       "values": {
         "pending": [
           "equipment.generator_esp_rating",
@@ -511,38 +616,38 @@
           "battery.inverter_efficiency_pct",
           "battery.end_of_life_capacity_factor",
           "battery.temperature_correction_factor",
-          "battery.constant_power_discharge_data"
+          "battery.constant_power_discharge_data",
+          "short_circuit.transformer_x_r_ratio",
+          "short_circuit.generator_subtransient_reactance_pct",
+          "short_circuit.generator_x_r_ratio"
         ]
       },
+      "inputs_used": [],
       "next_action": "Obtain the data sheets and enter the values with their source."
     },
     {
       "id": "inputs_deferred",
       "title": "Inputs needed in later stages",
-      "status": "NOT VERIFIED",
-      "detail": "installation.cable_installation_method (Stage 4); earthing.earthing_system_type (Stage 5); earthing.soil_resistivity (Stage 5)",
+      "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "Nothing is deferred.",
       "values": {
-        "deferred": [
-          {
-            "id": "installation.cable_installation_method",
-            "stage": 4
-          },
-          {
-            "id": "earthing.earthing_system_type",
-            "stage": 5
-          },
-          {
-            "id": "earthing.soil_resistivity",
-            "stage": 5
-          }
-        ]
+        "deferred": []
       },
-      "next_action": "Supply these before the stage that needs them. Release stays blocked from approval while any remain."
+      "inputs_used": [],
+      "next_action": ""
     },
     {
       "id": "pue_arithmetic",
       "title": "Facility demand equals IT load times target PUE",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "2000 kW x 1.35 = 2,700.0 kW against 2700 kW stated (0.00 % apart).",
       "values": {
         "it_kw": 2000,
@@ -551,114 +656,220 @@
         "stated_demand_kw": 2700,
         "difference_pct": 0.0
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "lv_phase_relation",
       "title": "LV line and phase voltages are consistent",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "400 V / 230 V = 1.739 against sqrt(3) = 1.732.",
       "values": {
         "ratio": 1.7391304347826086,
         "sqrt3": 1.7320508075688772
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "lv_voltage_frequency",
       "title": "LV voltage and frequency pairing",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "400/230 V at 60 Hz is an unusual pairing. The project owner's decision is recorded and has not been independently verified: Project owner selected 400/230 V at 60 Hz for this reference project and stated that the serving utility confirmed it. Not independently verified.",
       "values": {
         "lv_line_voltage_v": 400,
         "frequency_hz": 60
       },
+      "inputs_used": [],
       "next_action": "For a real project, obtain the serving utility's written confirmation."
     },
     {
       "id": "equipment_vs_paths",
       "title": "Equipment quantities divide evenly between power paths",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "Transformer and UPS quantities divide evenly between 2 paths.",
       "values": {
         "paths": 2
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "transformer_secondary_current",
       "title": "Transformer secondary full-load current",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
       "detail": "3150 kVA at 400 V gives 4,547 A. Whether LV switchgear and busduct exist at this current, and the prospective fault level, must be verified in Stages 4 and 5. No limit is applied here.",
       "values": {
         "rating_kva": 3150,
         "lv_voltage_v": 400,
         "full_load_current_a": 4546.633369868303
       },
+      "inputs_used": [
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        }
+      ],
       "next_action": "Verify LV equipment availability and fault level with manufacturer data."
     },
     {
       "id": "load_it_matches_design_basis",
       "title": "IT load in the schedule matches the design basis",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "Connected IT load in the schedule 2,000.0 kW against the design basis 2000 kW.",
       "values": {
         "schedule_kw": 2000.0,
         "design_basis_kw": 2000
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "load_pue_vs_target",
       "title": "Design-point PUE against the target",
-      "status": "PASS",
-      "detail": "Design-point PUE 1.349 against a target of 1.35. A design-point power ratio under the stated assumptions, not an annual energy PUE.",
+      "status": "NOT VERIFIED",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Design-point PUE 1.349 against a target of 1.35. A design-point power ratio under the stated assumptions, not an annual energy PUE. CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 7 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
       "values": {
         "pue": 1.3486698333333336,
         "target": 1.35
       },
-      "next_action": ""
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "general.target_pue",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 1.35,
+          "unit": "-"
+        }
+      ],
+      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
     },
     {
       "id": "load_demand_vs_initial_estimate",
       "title": "Load model against the initial facility demand estimate",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "Load model 2,697.3 kW against the initial estimate 2700 kW (-0.10 %). The initial estimate is not adjusted to match. 2 % is a review trigger, not an engineering limit.",
       "values": {
         "model_kw": 2697.339666666667,
         "initial_estimate_kw": 2700,
         "difference_pct": -0.09853086419751114
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "load_pf_vs_design",
       "title": "Facility power factor against the design assumption",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "Facility power factor 0.941 against the design assumption 0.95. 0.02 is a review trigger, not an engineering limit.",
       "values": {
         "model_pf": 0.9412842468999018,
         "design_pf": 0.95
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "load_path_allocation_consistent",
       "title": "A/B path allocation adds up to the facility load",
       "status": "PASS",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "N/A",
+      "verification_status": "N/A",
       "detail": "Path A 1,348.7 kW + path B 1,348.7 kW against 2,697.3 kW. A software consistency check, not an engineering verification.",
       "values": {
         "path_a_kw": 1348.6698333333336,
         "path_b_kw": 1348.6698333333336,
         "facility_kw": 2697.339666666667
       },
+      "inputs_used": [],
       "next_action": ""
     },
     {
       "id": "transformer_loading",
       "title": "Transformer loading, worst credible contingency",
       "status": "WARNING",
-      "detail": "Worst credible case TX-PATH-OUT: 2,866 kVA on 1 x 3,150 kVA derated = 3,150 kVA, loading 91.0 % (target 90 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 3,184 kVA (suggested size 4,000). ",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "WARNING",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Worst credible case TX-PATH-OUT: 2,866 kVA on 1 x 3,150 kVA derated = 3,150 kVA, loading 91.0 % of the site-derated continuous rating (target 90 %, maximum 100 %), within the maximum. Against the nameplate rating it is 91.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 3,184 kVA (suggested size 4,000).  ACCEPTED DESIGN-TARGET EXCEPTION EX-001 (conditionally accepted by Project owner, 2026-11-05): the result is within the accepted ceiling of 91 %, pending independent technical verification. The check stays a WARNING. This is a preliminary result on unverified inputs (worst: UNVERIFIED_PLACEHOLDER).",
       "values": {
         "worst_scenario": "TX-PATH-OUT",
         "loading_pct": 90.97127777273506,
@@ -693,15 +904,111 @@
         "required_rating_each_for_target": 3183.9947220457275,
         "required_rating_each_for_limit": 2865.595249841155,
         "suggested_size_for_target": 4000.0,
-        "missing_manufacturer_data": []
+        "missing_manufacturer_data": [],
+        "exception": {
+          "id": "EX-001",
+          "applies": true,
+          "accepted_ceiling_pct": 91.0,
+          "verified": false
+        }
       },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "derating.transformer_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_contingency_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.transformer_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.transformer_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 90,
+          "unit": "%"
+        }
+      ],
       "next_action": "Above the preferred target: review the concept or accept the exception in the design record."
     },
     {
       "id": "ups_loading_kw",
       "title": "UPS loading in kW, worst credible contingency",
-      "status": "PASS",
-      "detail": "Worst credible case UPS-PATH-OUT: 2,000 kW on 1 x 2,500 kW derated = 2,500 kW, loading 80.0 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 2,500 kW (suggested size 2,500). ",
+      "status": "NOT VERIFIED",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Worst credible case UPS-PATH-OUT: 2,000 kW on 1 x 2,500 kW derated = 2,500 kW, loading 80.0 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 80.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 2,500 kW (suggested size 2,500).  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 11 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
       "values": {
         "worst_scenario": "UPS-PATH-OUT",
         "loading_pct": 80.0,
@@ -738,13 +1045,97 @@
         "suggested_size_for_target": 2500.0,
         "missing_manufacturer_data": []
       },
-      "next_action": ""
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.ups_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2500,
+          "unit": "kW"
+        },
+        {
+          "parameter": "derating.ups_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.ups_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.ups_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 80,
+          "unit": "%"
+        }
+      ],
+      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
     },
     {
       "id": "ups_loading_kva",
       "title": "UPS loading in kVA, worst credible contingency",
       "status": "WARNING",
-      "detail": "Worst credible case UPS-PATH-OUT: 2,105 kVA on 1 x 2,500 kVA derated = 2,500 kVA, loading 84.2 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 2,632 kVA (suggested size 3,000). ",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "WARNING",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Worst credible case UPS-PATH-OUT: 2,105 kVA on 1 x 2,500 kVA derated = 2,500 kVA, loading 84.2 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 84.2 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 2,632 kVA (suggested size 3,000).  This is a preliminary result on unverified inputs (worst: UNVERIFIED_PLACEHOLDER).",
       "values": {
         "worst_scenario": "UPS-PATH-OUT",
         "loading_pct": 84.21052631578948,
@@ -781,13 +1172,97 @@
         "suggested_size_for_target": 3000.0,
         "missing_manufacturer_data": []
       },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.ups_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_rating_kva",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2500,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "derating.ups_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.ups_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.ups_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 80,
+          "unit": "%"
+        }
+      ],
       "next_action": "Above the preferred target: review the concept or accept the exception in the design record."
     },
     {
       "id": "generator_loading",
-      "title": "Generator loading, worst credible N+1 contingency",
-      "status": "PASS",
-      "detail": "Worst credible case GEN-PATH-OUT: 2,854 kVA on 3 x 2,000 kVA derated = 6,000 kVA, loading 47.6 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 1,189 kVA (suggested size 1,250). ",
+      "title": "Generator loading in kVA, worst credible N+1 contingency",
+      "status": "NOT VERIFIED",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Worst credible case GEN-PATH-OUT: 2,854 kVA on 3 x 2,000 kVA derated = 6,000 kVA, loading 47.6 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 47.6 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,189 kVA (suggested size 1,250).  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 11 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
       "values": {
         "worst_scenario": "GEN-PATH-OUT",
         "loading_pct": 47.57403802145893,
@@ -851,12 +1326,302 @@
           "generators.overload_capability"
         ]
       },
-      "next_action": ""
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "derating.generator_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.generator_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.generator_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 80,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.rating_basis",
+          "data_status": "PROJECT_INPUT",
+          "value": "PRP",
+          "unit": "-"
+        }
+      ],
+      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
+    },
+    {
+      "id": "generator_loading_kw",
+      "title": "Generator loading in kW, worst credible N+1 contingency",
+      "status": "NOT VERIFIED",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Worst credible case GEN-PATH-OUT: 2,687 kW on 3 x 1,600 kW derated = 4,800 kW, loading 56.0 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 56.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,120 kW.  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 12 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
+      "values": {
+        "worst_scenario": "GEN-PATH-OUT",
+        "loading_pct": 55.98415972222222,
+        "target_pct": 80.0,
+        "limit_pct": 100.0,
+        "derating": {
+          "ambient": 1.0,
+          "altitude": 1.0,
+          "installation": 1.0,
+          "combined": 1.0
+        },
+        "scenarios": [
+          {
+            "id": "GEN-NORMAL",
+            "credible": true,
+            "load": 1343.6198333333334,
+            "units": 3,
+            "capacity_total": 4800.0,
+            "loading_pct": 27.99207986111111,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-PATH-OUT",
+            "credible": true,
+            "load": 2687.239666666667,
+            "units": 3,
+            "capacity_total": 4800.0,
+            "loading_pct": 55.98415972222222,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-UNIT-OUT",
+            "credible": true,
+            "load": 1343.6198333333334,
+            "units": 2,
+            "capacity_total": 3200.0,
+            "loading_pct": 41.98811979166667,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-PATH-OUT-UNIT-OUT",
+            "credible": false,
+            "load": 2687.239666666667,
+            "units": 2,
+            "capacity_total": 3200.0,
+            "loading_pct": 83.97623958333334,
+            "status": "NOT APPLICABLE"
+          }
+        ],
+        "required_rating_each_for_target": 1119.6831944444443,
+        "required_rating_each_for_limit": 895.7465555555556,
+        "suggested_size_for_target": null,
+        "missing_manufacturer_data": [
+          "generators.prp_max_average_load_factor_pct",
+          "generators.operating_hours_restriction",
+          "generators.max_step_load_pct",
+          "generators.max_frequency_dip_pct",
+          "generators.max_voltage_dip_pct",
+          "generators.ups_rectifier_walk_in_s",
+          "generators.ups_input_current_thd_pct",
+          "generators.overload_capability"
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.generator_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.generator_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 80,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.rating_basis",
+          "data_status": "PROJECT_INPUT",
+          "value": "PRP",
+          "unit": "-"
+        }
+      ],
+      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
+    },
+    {
+      "id": "generator_rating_basis",
+      "title": "Generator rating basis confirmed",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "The 2000 kVA rating is ASSUMED to be a PRP rating. Manufacturer documentation has not confirmed it, and it must not be treated as one until it does. The rated power factor (0.8) is a placeholder.",
+      "values": {
+        "confirmed": false
+      },
+      "inputs_used": [
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "generators.rating_basis",
+          "data_status": "PROJECT_INPUT",
+          "value": "PRP",
+          "unit": "-"
+        },
+        {
+          "parameter": "generators.rating_basis_confirmed",
+          "data_status": "PROJECT_INPUT",
+          "value": false,
+          "unit": "-"
+        }
+      ],
+      "next_action": "Obtain the generator set data sheet stating the ISO 8528 rating basis, kW and kVA, and site derating."
     },
     {
       "id": "generator_step_load",
       "title": "Generator load steps and transient performance",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
       "detail": "Upper-bound steps: STEP-1 2,215 kVA (36.9 % of running capacity), STEP-2 601 kVA (10.0 % of running capacity), STEP-3 41 kVA (0.7 % of running capacity). Upper bound: each block applied at once at its steady-state demand. Soft starting, rectifier walk-in and sequencing are not modelled. Transient performance is not verified: manufacturer step, dip, walk-in and harmonic data are required.",
       "values": {
         "blocks": [
@@ -892,12 +1657,90 @@
         ],
         "max_step_load_pct": null
       },
+      "inputs_used": [
+        {
+          "parameter": "generators.rating_basis",
+          "data_status": "PROJECT_INPUT",
+          "value": "PRP",
+          "unit": "-"
+        },
+        {
+          "parameter": "generators.prp_max_average_load_factor_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.operating_hours_restriction",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "generators.overload_capability",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "generators.max_step_load_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.max_frequency_dip_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.max_voltage_dip_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.ups_rectifier_walk_in_s",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "s"
+        },
+        {
+          "parameter": "generators.ups_input_current_thd_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "generators.rating_basis_confirmed",
+          "data_status": "PROJECT_INPUT",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "generators.largest_unit_loss_required",
+          "data_status": "PROJECT_INPUT",
+          "value": true,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        }
+      ],
       "next_action": "Obtain the manufacturer's step-load and UPS interaction data."
     },
     {
       "id": "generator_prp_load_factor",
       "title": "Generator PRP load-factor and operating-hour limits",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
       "detail": "Worst credible loading 47.6 % is an upper bound on the average load factor during an outage. The manufacturer's average load factor limit and operating-hour restriction for the PRP rating are not yet supplied.",
       "values": {
         "missing": [
@@ -905,12 +1748,24 @@
           "generators.operating_hours_restriction"
         ]
       },
+      "inputs_used": [
+        {
+          "parameter": "generators.prp_max_average_load_factor_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        }
+      ],
       "next_action": "Record the manufacturer's PRP load factor and hour restrictions."
     },
     {
       "id": "battery_sizing",
       "title": "Battery sizing",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
       "detail": "2,000 kW for 10 min is 333 kWh at the UPS output (arithmetic, not a battery size). No battery is sized without the manufacturer's constant-power discharge data. Missing: battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_of_life_capacity_factor, battery.temperature_correction_factor, battery.design_margin_factor, battery.constant_power_discharge_data.",
       "values": {
         "energy_at_ups_output_kwh": 333.3333333333333,
@@ -923,12 +1778,60 @@
           "battery.constant_power_discharge_data"
         ]
       },
+      "inputs_used": [
+        {
+          "parameter": "battery.dc_bus_voltage_v",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "V"
+        },
+        {
+          "parameter": "battery.inverter_efficiency_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "battery.end_of_life_capacity_factor",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "battery.temperature_correction_factor",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "battery.design_margin_factor",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "battery.constant_power_discharge_data",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.battery_autonomy",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 10,
+          "unit": "min"
+        }
+      ],
       "next_action": "Obtain the battery manufacturer's constant-power discharge data."
     },
     {
       "id": "derating_factors",
       "title": "Derating factors",
       "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
       "detail": "10 derating factor(s) are placeholders of 1.00 for ideal conditions (30 degC, 0 m): no derating is applied. Replace them with the manufacturer's values at the site conditions: derating.transformer_ambient_factor, derating.transformer_altitude_factor, derating.transformer_installation_factor, derating.ups_ambient_factor, derating.ups_altitude_factor, derating.ups_installation_factor, derating.generator_ambient_factor, derating.generator_altitude_factor, derating.generator_installation_factor, derating.transformer_contingency_factor",
       "values": {
         "placeholders": [
@@ -944,7 +1847,1905 @@
           "derating.transformer_contingency_factor"
         ]
       },
+      "inputs_used": [
+        {
+          "parameter": "derating.transformer_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_contingency_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        }
+      ],
       "next_action": "Obtain the manufacturers' derating data for the site conditions."
+    },
+    {
+      "id": "cable_voltage_drop",
+      "title": "Cable voltage drop",
+      "status": "NOT VERIFIED",
+      "calculation_status": "CALCULATED",
+      "calculation_result": "PASS",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "CAB-MV-A: 120 A, drop 0.05 %; CAB-GEN-A: 2,887 A on 6 runs (481 A per run), drop 0.47 %; CAB-UPS-IN-A: 3,037 A on 6 runs (506 A per run), drop 0.20 %; CAB-UPS-OUT-A: 3,039 A on 6 runs (506 A per run), drop 0.25 %; CAB-MECH-A: 860 A on 3 runs (287 A per run), drop 0.50 %. Limit 3 % (a placeholder criterion). Resistance is derived at the stated conductor temperature; reactance is a placeholder. CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 18 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
+      "values": {
+        "limit_pct": 3.0,
+        "feeders": [
+          {
+            "tag": "CAB-MV-A",
+            "voltage_drop_pct": 0.04633005354933666,
+            "voltage_drop_v": 6.393547389808459,
+            "status": "PASS"
+          },
+          {
+            "tag": "CAB-GEN-A",
+            "voltage_drop_pct": 0.4744761833333333,
+            "voltage_drop_v": 1.8979047333333332,
+            "status": "PASS"
+          },
+          {
+            "tag": "CAB-UPS-IN-A",
+            "voltage_drop_pct": 0.20093150727646575,
+            "voltage_drop_v": 0.8037260291058629,
+            "status": "PASS"
+          },
+          {
+            "tag": "CAB-UPS-OUT-A",
+            "voltage_drop_pct": 0.2549581878373989,
+            "voltage_drop_v": 1.0198327513495955,
+            "status": "PASS"
+          },
+          {
+            "tag": "CAB-MECH-A",
+            "voltage_drop_pct": 0.5006097887730849,
+            "voltage_drop_v": 2.0024391550923397,
+            "status": "PASS"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "cable_data.lv_reactance_ohm_per_km",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.08,
+          "unit": "ohm/km"
+        },
+        {
+          "parameter": "cable_data.mv_reactance_ohm_per_km",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.1,
+          "unit": "ohm/km"
+        },
+        {
+          "parameter": "cable_data.conductor_operating_temperature",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 90.0,
+          "unit": "degC"
+        },
+        {
+          "parameter": "design_criteria.voltage_drop_limit_pct",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Replace the placeholder reactance and the criterion with project data."
+    },
+    {
+      "id": "cable_ampacity",
+      "title": "Cable current rating against the design current",
+      "status": "NOT VERIFIED",
+      "calculation_status": "NOT CALCULATED",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "CAB-MV-A: needs 120 A per run after derating; CAB-GEN-A: needs 481 A per run after derating; CAB-UPS-IN-A: needs 506 A per run after derating; CAB-UPS-OUT-A: needs 506 A per run after derating; CAB-MECH-A: needs 287 A per run after derating. No tabulated rating has been supplied, so none is assumed and the cables cannot be judged. Compare each required rating with the cable table or data sheet for the installation method. Where the derating factors are placeholders or the sharing between parallel runs is not supplied, the required rating is a MINIMUM (see cable_derating_basis).",
+      "values": {
+        "feeders": [
+          {
+            "tag": "CAB-MV-A",
+            "required_rating_per_run_a": 119.88783977422489,
+            "runs": 1,
+            "tabulated_rating_a": null,
+            "loading_pct": null,
+            "required_runs": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-GEN-A",
+            "required_rating_per_run_a": 481.12522432468813,
+            "runs": 6,
+            "tabulated_rating_a": null,
+            "loading_pct": null,
+            "required_runs": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-UPS-IN-A",
+            "required_rating_per_run_a": 506.23445320358604,
+            "runs": 6,
+            "tabulated_rating_a": null,
+            "loading_pct": null,
+            "required_runs": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-UPS-OUT-A",
+            "required_rating_per_run_a": 506.44760455230335,
+            "runs": 6,
+            "tabulated_rating_a": null,
+            "loading_pct": null,
+            "required_runs": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-MECH-A",
+            "required_rating_per_run_a": 286.66738238353474,
+            "runs": 3,
+            "tabulated_rating_a": null,
+            "loading_pct": null,
+            "required_runs": null,
+            "status": "NOT VERIFIED"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "design_criteria.cable_max_loading",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "installation.cable_installation_method",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "Single-core cables in trefoil on ventilated cable tray in air",
+          "unit": "-"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Supply the tabulated ratings and the real derating factors (grouping, ambient, installation)."
+    },
+    {
+      "id": "cable_derating_basis",
+      "title": "Cable and busduct derating, installation, parallel arrangement and current sharing",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "8 of 8 required ratings are MINIMUMS: a derating factor of 1.00 is a placeholder, not a verified value, and no allowance for unequal sharing between parallel runs is included. CAB-MV-A: method: Single-core cables in trefoil on ventilated cable tray in air; derating NOT VERIFIED (grouping 1.00, ambient 1.00, installation 1.00, placeholders) | CAB-GEN-A: method: Single-core cables in trefoil on ventilated cable tray in air; 6 parallel runs, arrangement: NOT SUPPLIED; sharing allowance: NOT SUPPLIED (no allowance included); derating NOT VERIFIED (grouping 1.00, ambient 1.00, installation 1.00, placeholders) | CAB-UPS-IN-A: method: Single-core cables in trefoil on ventilated cable tray in air; 6 parallel runs, arrangement: NOT SUPPLIED; sharing allowance: NOT SUPPLIED (no allowance included); derating NOT VERIFIED (grouping 1.00, ambient 1.00, installation 1.00, placeholders) | CAB-UPS-OUT-A: method: Single-core cables in trefoil on ventilated cable tray in air; 6 parallel runs, arrangement: NOT SUPPLIED; sharing allowance: NOT SUPPLIED (no allowance included); derating NOT VERIFIED (grouping 1.00, ambient 1.00, installation 1.00, placeholders) | CAB-MECH-A: method: Single-core cables in trefoil on ventilated cable tray in air; 3 parallel runs, arrangement: NOT SUPPLIED; sharing allowance: NOT SUPPLIED (no allowance included); derating NOT VERIFIED (grouping 1.00, ambient 1.00, installation 1.00, placeholders) | BD-TX-A: derating NOT VERIFIED (ambient 1.00, installation 1.00, placeholders) | LV-MSB-A: derating NOT VERIFIED (ambient 1.00, installation 1.00, placeholders) | MV-SWG-A: derating NOT VERIFIED (ambient 1.00, installation 1.00, placeholders)",
+      "values": {
+        "items": [
+          {
+            "tag": "CAB-MV-A",
+            "kind": "cable",
+            "installation_method": "Single-core cables in trefoil on ventilated cable tray in air",
+            "parallel_runs": 1,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "grouping": 1.0,
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "grouping",
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "CAB-GEN-A",
+            "kind": "cable",
+            "installation_method": "Single-core cables in trefoil on ventilated cable tray in air",
+            "parallel_runs": 6,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "grouping": 1.0,
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "grouping",
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "CAB-UPS-IN-A",
+            "kind": "cable",
+            "installation_method": "Single-core cables in trefoil on ventilated cable tray in air",
+            "parallel_runs": 6,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "grouping": 1.0,
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "grouping",
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "CAB-UPS-OUT-A",
+            "kind": "cable",
+            "installation_method": "Single-core cables in trefoil on ventilated cable tray in air",
+            "parallel_runs": 6,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "grouping": 1.0,
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "grouping",
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "CAB-MECH-A",
+            "kind": "cable",
+            "installation_method": "Single-core cables in trefoil on ventilated cable tray in air",
+            "parallel_runs": 3,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "grouping": 1.0,
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "grouping",
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "BD-TX-A",
+            "kind": "busduct",
+            "installation_method": null,
+            "parallel_runs": 1,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "LV-MSB-A",
+            "kind": "switchgear",
+            "installation_method": null,
+            "parallel_runs": 1,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          },
+          {
+            "tag": "MV-SWG-A",
+            "kind": "switchgear",
+            "installation_method": null,
+            "parallel_runs": 1,
+            "parallel_arrangement": null,
+            "sharing_allowance_pct": null,
+            "derating_factors": {
+              "ambient": 1.0,
+              "installation": 1.0
+            },
+            "derating_unverified": [
+              "ambient",
+              "installation"
+            ],
+            "required_rating_is_minimum": true
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "installation.cable_installation_method",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "Single-core cables in trefoil on ventilated cable tray in air",
+          "unit": "-"
+        },
+        {
+          "parameter": "environment.design_ambient_temperature",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 30,
+          "unit": "degC"
+        },
+        {
+          "parameter": "cable_data.conductor_operating_temperature",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 90.0,
+          "unit": "degC"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Supply the cable table or data sheet reference for each derating factor (grouping, ambient, installation), the layout of the parallel runs and the current-sharing allowance."
+    },
+    {
+      "id": "busduct_rating",
+      "title": "Busduct rating against the design current",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "BD-TX-A: 4,136 A, needs 4,136 A rated after derating. The busduct rating is manufacturer data and is not supplied.",
+      "values": {
+        "items": [
+          {
+            "tag": "BD-TX-A",
+            "design_current_a": 4136.130472210759,
+            "required_rating_a": 4136.130472210759,
+            "rating_a": null,
+            "missing": [
+              "BD-TX-A.rated_current_a",
+              "BD-TX-A.resistance_ohm_per_km",
+              "BD-TX-A.reactance_ohm_per_km",
+              "BD-TX-A.short_circuit_withstand_ka"
+            ]
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "design_criteria.busduct_max_loading",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Obtain the busduct data sheet."
+    },
+    {
+      "id": "busduct_voltage_drop",
+      "title": "Busduct voltage drop",
+      "status": "NOT VERIFIED",
+      "calculation_status": "NOT CALCULATED",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Busduct impedance is manufacturer data and is not supplied, so the voltage drop cannot be calculated.",
+      "values": {},
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Obtain the busduct resistance and reactance."
+    },
+    {
+      "id": "switchgear_ratings",
+      "title": "Switchgear rated current and verification data",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "LV-MSB-A: busbars need 4,136 A rated (missing: rated_current_a, short_circuit_rating_ka, form_of_separation, ip_rating, verification_evidence); MV-SWG-A: busbars need 120 A rated (missing: rated_current_a, short_circuit_rating_ka, form_of_separation, ip_rating, verification_evidence). Ratings, separation, IP rating and IEC 61439 or IEC 62271 verification evidence are manufacturer data and are not supplied.",
+      "values": {
+        "items": [
+          {
+            "tag": "LV-MSB-A",
+            "required_rating_a": 4136.130472210759,
+            "rating_a": null,
+            "missing": [
+              "LV-MSB-A.rated_current_a",
+              "LV-MSB-A.short_circuit_rating_ka",
+              "LV-MSB-A.form_of_separation",
+              "LV-MSB-A.ip_rating",
+              "LV-MSB-A.verification_evidence"
+            ]
+          },
+          {
+            "tag": "MV-SWG-A",
+            "required_rating_a": 119.88783977422489,
+            "rating_a": null,
+            "missing": [
+              "MV-SWG-A.rated_current_a",
+              "MV-SWG-A.short_circuit_rating_ka",
+              "MV-SWG-A.form_of_separation",
+              "MV-SWG-A.ip_rating",
+              "MV-SWG-A.verification_evidence"
+            ]
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "design_criteria.switchgear_max_loading",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Obtain the switchgear data and verification evidence."
+    },
+    {
+      "id": "distribution_selections",
+      "title": "Distribution selections are placeholders",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "Cable sizes, runs and lengths in config/distribution.yaml are illustrative placeholders. Only path A is modelled; path B is assumed identical by symmetry. A selection is not a verified design.",
+      "values": {},
+      "inputs_used": [],
+      "next_action": "Replace with the routed, engineered selections."
+    },
+    {
+      "id": "short_circuit_levels",
+      "title": "Prospective short-circuit levels",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "LV bus: only the transformer-limited figure is available (Transformer-limited upper bound 82.6 kA). It limits the utility contribution through one transformer and excludes generator and motor contributions, so it is NOT the LV bus fault level and NOT a design value; no rating is selected from it. NOT CALCULATED, MV bus, utility: missing short_circuit.utility_fault_level_mva, short_circuit.utility_x_r_ratio. NOT CALCULATED, LV bus, utility and one transformer: missing short_circuit.transformer_x_r_ratio, short_circuit.utility_fault_level_mva, short_circuit.utility_x_r_ratio. NOT CALCULATED, LV bus, generators: missing short_circuit.generator_subtransient_reactance_pct, short_circuit.generator_x_r_ratio. Engineering impact and the documents needed: Generator subtransient reactance x''d (short_circuit.generator_subtransient_reactance_pct): Sets the generator fault contribution. Without it the generator case is NOT CALCULATED. Source needed: Generator set data sheet: subtransient reactance x''d, X/R, rated power factor. Generator X/R ratio (short_circuit.generator_x_r_ratio): Sets the peak current from generators. Source needed: Generator set data sheet: subtransient reactance x''d, X/R, rated power factor. Transformer X/R ratio (short_circuit.transformer_x_r_ratio): Sets the peak factor on the LV side. Source needed: Transformer test report (short-circuit impedance and load losses). Utility initial short-circuit power at the MV connection (short_circuit.utility_fault_level_mva): Sets every fault level in the facility. Without it no MV or LV fault level can be calculated. Source needed: Utility written statement of maximum and minimum fault levels and X/R at the point of connection. Utility X/R ratio (short_circuit.utility_x_r_ratio): Sets the peak factor and the DC component of the fault current. Source needed: Utility written statement of maximum and minimum fault levels and X/R at the point of connection. Maximum three-phase level at the busbars, IEC 60909 method. Cable and busduct impedance between the transformer and the bus are ignored, which is conservative. Motor contribution (the mechanical plant motors) is not included. It adds to the LV level and needs motor data. Minimum fault current, needed for protection sensitivity, is not calculated. A result is NOT VERIFIED until the utility, transformer and generator data are confirmed.",
+      "values": {
+        "mv_ik_ka": null,
+        "lv_cases": [
+          {
+            "name": "Transformer-limited upper bound",
+            "ik_ka": 82.63705563479934,
+            "ip_ka": null,
+            "ith_ka": null
+          }
+        ],
+        "design_lv_ik_ka": null,
+        "unavailable": {
+          "MV bus, utility": [
+            "short_circuit.utility_fault_level_mva",
+            "short_circuit.utility_x_r_ratio"
+          ],
+          "LV bus, utility and one transformer": [
+            "short_circuit.transformer_x_r_ratio",
+            "short_circuit.utility_fault_level_mva",
+            "short_circuit.utility_x_r_ratio"
+          ],
+          "LV bus, generators": [
+            "short_circuit.generator_subtransient_reactance_pct",
+            "short_circuit.generator_x_r_ratio"
+          ]
+        },
+        "generator_parallel_with_utility": false
+      },
+      "inputs_used": [
+        {
+          "parameter": "short_circuit.utility_fault_level_mva",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "MVA"
+        },
+        {
+          "parameter": "short_circuit.utility_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.transformer_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_subtransient_reactance_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "short_circuit.generator_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_lv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.05,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_mv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.1,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_parallel_with_utility",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.assumed_clearing_time_s",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.5,
+          "unit": "s"
+        },
+        {
+          "parameter": "short_circuit.cable_short_circuit_k_factor",
+          "data_status": "REFERENCE_DATA",
+          "value": 143,
+          "unit": "A.s^0.5/mm2"
+        },
+        {
+          "parameter": "short_circuit.lv_fault_level_limit_ka",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100,
+          "unit": "kA"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "electrical_system.frequency",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 60,
+          "unit": "Hz"
+        }
+      ],
+      "next_action": "Supply the missing data (see the manufacturer-data register) and rerun."
+    },
+    {
+      "id": "fault_level_vs_limit",
+      "title": "LV fault level against the practical limit",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "Only the transformer-limited figure can be calculated: 82.6 kA, the most that the utility can contribute through one transformer for any utility fault level. It does not exceed the 100 kA practical limit (Ohmetry preliminary policy), but it excludes the generator and motor contributions, so it does not show that the bus stays below the limit. The design level is NOT CALCULATED: it needs the utility and generator data.",
+      "values": {
+        "bound_ka": 82.63705563479934,
+        "limit_ka": 100
+      },
+      "inputs_used": [
+        {
+          "parameter": "short_circuit.utility_fault_level_mva",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "MVA"
+        },
+        {
+          "parameter": "short_circuit.utility_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.transformer_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_subtransient_reactance_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "short_circuit.generator_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_lv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.05,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_mv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.1,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_parallel_with_utility",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.assumed_clearing_time_s",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.5,
+          "unit": "s"
+        },
+        {
+          "parameter": "short_circuit.cable_short_circuit_k_factor",
+          "data_status": "REFERENCE_DATA",
+          "value": 143,
+          "unit": "A.s^0.5/mm2"
+        },
+        {
+          "parameter": "short_circuit.lv_fault_level_limit_ka",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100,
+          "unit": "kA"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "electrical_system.frequency",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 60,
+          "unit": "Hz"
+        }
+      ],
+      "next_action": "Supply the missing data."
+    },
+    {
+      "id": "short_circuit_withstand",
+      "title": "Short-circuit withstand of cables, busducts and switchgear",
+      "status": "NOT VERIFIED",
+      "calculation_status": "NOT CALCULATED",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "BD-TX-A: required level not calculable; LV-MSB-A: required level not calculable; MV-SWG-A: required level not calculable. A rating that is not supplied is not assumed, so the item cannot be judged. A peak withstand above the peak current is needed as well.",
+      "values": {
+        "items": [
+          {
+            "tag": "BD-TX-A",
+            "required_ka": null,
+            "rating_ka": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "LV-MSB-A",
+            "required_ka": null,
+            "rating_ka": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "MV-SWG-A",
+            "required_ka": null,
+            "rating_ka": null,
+            "status": "NOT VERIFIED"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "short_circuit.utility_fault_level_mva",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "MVA"
+        },
+        {
+          "parameter": "short_circuit.utility_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.transformer_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_subtransient_reactance_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "short_circuit.generator_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_lv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.05,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_mv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.1,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_parallel_with_utility",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.assumed_clearing_time_s",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.5,
+          "unit": "s"
+        },
+        {
+          "parameter": "short_circuit.cable_short_circuit_k_factor",
+          "data_status": "REFERENCE_DATA",
+          "value": 143,
+          "unit": "A.s^0.5/mm2"
+        },
+        {
+          "parameter": "short_circuit.lv_fault_level_limit_ka",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100,
+          "unit": "kA"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "electrical_system.frequency",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 60,
+          "unit": "Hz"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Obtain the short-circuit ratings and the fault levels, then compare."
+    },
+    {
+      "id": "cable_thermal_withstand",
+      "title": "Cable thermal withstand against the fault level",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "The fault current is not available, so no cable can be judged. Adiabatic equation with k = 143 (reference value, verify against the cable data sheet) and an assumed clearing time of 0.5 s, a placeholder until the protection study. Fault taken at the bus the cable leaves, split equally over parallel runs.",
+      "values": {
+        "items": [
+          {
+            "tag": "CAB-MV-A",
+            "min_section_mm2": null,
+            "section_mm2": 120.0,
+            "runs": 1,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-GEN-A",
+            "min_section_mm2": null,
+            "section_mm2": 630.0,
+            "runs": 6,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-UPS-IN-A",
+            "min_section_mm2": null,
+            "section_mm2": 630.0,
+            "runs": 6,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-UPS-OUT-A",
+            "min_section_mm2": null,
+            "section_mm2": 630.0,
+            "runs": 6,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "CAB-MECH-A",
+            "min_section_mm2": null,
+            "section_mm2": 300.0,
+            "runs": 3,
+            "status": "NOT VERIFIED"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "short_circuit.utility_fault_level_mva",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "MVA"
+        },
+        {
+          "parameter": "short_circuit.utility_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.transformer_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_subtransient_reactance_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "short_circuit.generator_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_lv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.05,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_mv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.1,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_parallel_with_utility",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.assumed_clearing_time_s",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.5,
+          "unit": "s"
+        },
+        {
+          "parameter": "short_circuit.cable_short_circuit_k_factor",
+          "data_status": "REFERENCE_DATA",
+          "value": 143,
+          "unit": "A.s^0.5/mm2"
+        },
+        {
+          "parameter": "short_circuit.lv_fault_level_limit_ka",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100,
+          "unit": "kA"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "electrical_system.frequency",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 60,
+          "unit": "Hz"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Supply the fault levels and replace the clearing time with the coordination study result."
+    },
+    {
+      "id": "protection_devices",
+      "title": "Protection devices: breaking capacity and settings",
+      "status": "NOT VERIFIED",
+      "calculation_status": "NOT CALCULATED",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "MV-CB-A: required breaking capacity not calculable; ACB-TX-A: required breaking capacity not calculable; ACB-GEN-A: required breaking capacity not calculable; ACB-UPS-IN-A: required breaking capacity not calculable. Device ratings, time-current curves and settings are manufacturer data and are not supplied. Discrimination, arc-flash and sensitivity to minimum fault current are not assessed.",
+      "values": {
+        "devices": [
+          {
+            "tag": "MV-CB-A",
+            "required_breaking_ka": null,
+            "breaking_ka": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "ACB-TX-A",
+            "required_breaking_ka": null,
+            "breaking_ka": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "ACB-GEN-A",
+            "required_breaking_ka": null,
+            "breaking_ka": null,
+            "status": "NOT VERIFIED"
+          },
+          {
+            "tag": "ACB-UPS-IN-A",
+            "required_breaking_ka": null,
+            "breaking_ka": null,
+            "status": "NOT VERIFIED"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "short_circuit.utility_fault_level_mva",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "MVA"
+        },
+        {
+          "parameter": "short_circuit.utility_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.transformer_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_subtransient_reactance_pct",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "%"
+        },
+        {
+          "parameter": "short_circuit.generator_x_r_ratio",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_lv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.05,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.voltage_factor_c_max_mv",
+          "data_status": "REFERENCE_DATA",
+          "value": 1.1,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.generator_parallel_with_utility",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": false,
+          "unit": "-"
+        },
+        {
+          "parameter": "short_circuit.assumed_clearing_time_s",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.5,
+          "unit": "s"
+        },
+        {
+          "parameter": "short_circuit.cable_short_circuit_k_factor",
+          "data_status": "REFERENCE_DATA",
+          "value": 143,
+          "unit": "A.s^0.5/mm2"
+        },
+        {
+          "parameter": "short_circuit.lv_fault_level_limit_ka",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 100,
+          "unit": "kA"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "electrical_system.lv_line_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 400,
+          "unit": "V"
+        },
+        {
+          "parameter": "electrical_system.mv_supply_voltage",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 13.8,
+          "unit": "kV"
+        },
+        {
+          "parameter": "electrical_system.frequency",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 60,
+          "unit": "Hz"
+        },
+        {
+          "parameter": "@distribution",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": null,
+          "unit": ""
+        }
+      ],
+      "next_action": "Obtain device data and curves, then run the coordination study."
+    },
+    {
+      "id": "arc_flash_scope",
+      "title": "Arc-flash (incident energy) assessment",
+      "status": "NOT APPLICABLE",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "OUT OF SCOPE for this package. No incident energy, arc-flash boundary, PPE category or label is calculated or implied. It needs a coordination study, protection settings and clearing times from the manufacturers' data, to IEEE 1584 or an equivalent method used by a competent person.",
+      "values": {
+        "in_scope": false
+      },
+      "inputs_used": [],
+      "next_action": "Commission a separate arc-flash study when the protection design exists."
+    },
+    {
+      "id": "earthing_framework",
+      "title": "Earthing: grid resistance and ground potential rise screening",
+      "status": "NOT VERIFIED",
+      "calculation_status": "NOT CALCULATED",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "NOT CALCULATED (screening only, not a study). Missing: Soil resistivity (earthing.soil_resistivity): Sets the grid resistance and ground potential rise. Without it the earthing screening is NOT CALCULATED. Source needed: Site soil resistivity survey (Wenner method) report. Earth grid area (earthing_study.grid_area_m2): Sets the grid resistance. Source needed: Earthing grid layout drawing and design. Total buried grid conductor length (earthing_study.grid_conductor_length_m): Sets the grid resistance. Source needed: Earthing grid layout drawing and design. Grid burial depth (earthing_study.grid_burial_depth_m): Sets the grid resistance. Source needed: Earthing grid layout drawing and design. No default is substituted.",
+      "values": {
+        "missing": [
+          "earthing.soil_resistivity",
+          "earthing_study.grid_area_m2",
+          "earthing_study.grid_conductor_length_m",
+          "earthing_study.grid_burial_depth_m"
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "earthing.earthing_system_type",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": "TN-S",
+          "unit": "-"
+        },
+        {
+          "parameter": "earthing.soil_resistivity",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "ohm.m"
+        },
+        {
+          "parameter": "earthing_study.grid_area_m2",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "m2"
+        },
+        {
+          "parameter": "earthing_study.grid_conductor_length_m",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "m"
+        },
+        {
+          "parameter": "earthing_study.grid_burial_depth_m",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "m"
+        },
+        {
+          "parameter": "earthing_study.earth_fault_current_ka",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "kA"
+        },
+        {
+          "parameter": "earthing_study.fault_clearing_time_s",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "s"
+        },
+        {
+          "parameter": "earthing_study.surface_layer_resistivity_ohm_m",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "ohm.m"
+        },
+        {
+          "parameter": "earthing_study.surface_layer_thickness_m",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "m"
+        }
+      ],
+      "next_action": "Supply the soil survey and grid design, then rerun."
+    },
+    {
+      "id": "lightning_scope",
+      "title": "Lightning protection and IEC 62305",
+      "status": "NOT APPLICABLE",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "OUT OF SCOPE. No lightning risk assessment or protection design is done, and compliance with IEC 62305 is NOT claimed. A collection area or a flash density is one input to a risk assessment, not a result. Workbook 16 is an input register only.",
+      "values": {
+        "in_scope": false,
+        "compliance_claimed": false
+      },
+      "inputs_used": [],
+      "next_action": "Commission a complete IEC 62305-2 risk assessment and a specialist design."
+    },
+    {
+      "id": "manufacturer_register",
+      "title": "Manufacturer-data register is complete and honest",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "N/A",
+      "verification_status": "N/A",
+      "detail": "The register covers every manufacturer-data item and placeholder (83 entries). 83 are NOT VERIFIED: 59 missing (no value), 24 unverified placeholders, 0 supplied and awaiting review. Placeholders are not validated equipment data.",
+      "values": {
+        "entries": 83,
+        "unverified": 83
+      },
+      "inputs_used": [],
+      "next_action": "Obtain the data sheets listed in the register."
     }
   ]
 }

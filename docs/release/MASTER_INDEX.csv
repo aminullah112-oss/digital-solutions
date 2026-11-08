@@ -1,119 +1,121 @@
 id,title,type,revision,issue,status,path,related
-OHM-DC-2000-WB-01,Workbook 01_MASTER_DESIGN_BASIS: Master design basis,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/01_MASTER_DESIGN_BASIS.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-TRN-01;OHM-DC-2000-TRN-11
-OHM-DC-2000-WB-02,Workbook 02_LOAD_ESTIMATION: Load estimation,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/02_LOAD_ESTIMATION.xlsx,OHM-DC-2000-MET-02;OHM-DC-2000-REG-03;OHM-DC-2000-RPT-02;OHM-DC-2000-TRN-01;OHM-DC-2000-TRN-02
-OHM-DC-2000-WB-03,Workbook 03_POWER_ARCHITECTURE: Power architecture,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/03_POWER_ARCHITECTURE.xlsx,OHM-DC-2000-DRW-001;OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-03
-OHM-DC-2000-WB-04,Workbook 04_TRANSFORMER_SIZING: Transformer sizing,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/04_TRANSFORMER_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-01;OHM-DC-2000-TRN-04
-OHM-DC-2000-WB-05,Workbook 05_GENERATOR_SIZING: Generator sizing,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/05_GENERATOR_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-02;OHM-DC-2000-TRN-05
-OHM-DC-2000-WB-06,Workbook 06_UPS_SIZING: UPS sizing,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/06_UPS_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-03;OHM-DC-2000-TRN-06
-OHM-DC-2000-WB-07,Workbook 07_BATTERY_SIZING: Battery sizing (interface),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/07_BATTERY_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-03;OHM-DC-2000-SPEC-04;OHM-DC-2000-TRN-06
-OHM-DC-2000-WB-08,Workbook 08_CABLE_SIZING: Cable sizing,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/08_CABLE_SIZING.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-07;OHM-DC-2000-TRN-08
-OHM-DC-2000-WB-09,Workbook 09_VOLTAGE_DROP: Voltage drop,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/09_VOLTAGE_DROP.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-07;OHM-DC-2000-TRN-08
-OHM-DC-2000-WB-10,Workbook 10_SHORT_CIRCUIT: Short-circuit levels,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/10_SHORT_CIRCUIT.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-01;OHM-DC-2000-SPEC-05;OHM-DC-2000-SPEC-06;OHM-DC-2000-TRN-09
-OHM-DC-2000-WB-11,Workbook 11_LV_SWITCHGEAR: LV switchgear,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/11_LV_SWITCHGEAR.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-06;OHM-DC-2000-TRN-07
-OHM-DC-2000-WB-12,Workbook 12_MV_SWITCHGEAR: MV switchgear,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/12_MV_SWITCHGEAR.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-05;OHM-DC-2000-TRN-07
-OHM-DC-2000-WB-13,Workbook 13_BUSDUCT_SIZING: Busduct sizing,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/13_BUSDUCT_SIZING.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-08;OHM-DC-2000-TRN-07
-OHM-DC-2000-WB-14,Workbook 14_PROTECTION_COORDINATION: Protection coordination (register),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/14_PROTECTION_COORDINATION.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-09;OHM-DC-2000-TRN-09
-OHM-DC-2000-WB-15,Workbook 15_EARTHING_BONDING: Earthing and bonding (screening),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/15_EARTHING_BONDING.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-10;OHM-DC-2000-TRN-10
-OHM-DC-2000-WB-16,Workbook 16_LIGHTNING_PROTECTION: Lightning protection (register),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/16_LIGHTNING_PROTECTION.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-10;OHM-DC-2000-TRN-10
-OHM-DC-2000-WB-17,Workbook 17_POWER_QUALITY: Power quality (register),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/17_POWER_QUALITY.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-TRN-10
-OHM-DC-2000-WB-18,Workbook 18_ENERGY_EFFICIENCY: Energy efficiency,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/18_ENERGY_EFFICIENCY.xlsx,OHM-DC-2000-MET-02;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-02
-OHM-DC-2000-WB-19,Workbook 19_GENERATOR_FUEL: Generator fuel (register),Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/19_GENERATOR_FUEL.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-02;OHM-DC-2000-TRN-05
-OHM-DC-2000-WB-20,Workbook 20_MASTER_EQUIPMENT_SCHEDULE: Master equipment schedule,Workbook,A5,P1,PRELIMINARY: NOT VERIFIED,workbooks/generated/20_MASTER_EQUIPMENT_SCHEDULE.xlsx,OHM-DC-2000-DRW-001;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-11
-OHM-DC-2000-RPT-02,Electrical load estimation report,Report,A5,P1,PRELIMINARY: NOT VERIFIED,reports/generated/02_Electrical_Load_Estimation_Report.pdf,OHM-DC-2000-WB-02
-OHM-DC-2000-DRW-001,Preliminary single-line diagram,Drawing,A5,P1,PRELIMINARY CONCEPT: NOT FOR CONSTRUCTION,drawings/pdf/OHM-DC-2000-SLD-001.pdf,OHM-DC-2000-SPEC-05;OHM-DC-2000-WB-03;OHM-DC-2000-WB-20
-OHM-DC-2000-DRW-001,Preliminary single-line diagram,Drawing,A5,P1,PRELIMINARY CONCEPT: NOT FOR CONSTRUCTION,drawings/svg/OHM-DC-2000-SLD-001.svg,OHM-DC-2000-SPEC-05;OHM-DC-2000-WB-03;OHM-DC-2000-WB-20
-OHM-DC-2000-SPEC-01,Specification template: Power transformers,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-01_Transformers.docx,OHM-DC-2000-WB-04;OHM-DC-2000-WB-10
-OHM-DC-2000-SPEC-02,Specification template: Standby generator sets,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-02_Generators.docx,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
-OHM-DC-2000-SPEC-03,Specification template: UPS systems,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-03_UPS.docx,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
-OHM-DC-2000-SPEC-04,Specification template: UPS batteries,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-04_Batteries.docx,OHM-DC-2000-WB-07
-OHM-DC-2000-SPEC-05,Specification template: MV switchgear,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-05_MV_Switchgear.docx,OHM-DC-2000-DRW-001;OHM-DC-2000-WB-10;OHM-DC-2000-WB-12
-OHM-DC-2000-SPEC-06,Specification template: LV switchgear and assemblies,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-06_LV_Switchgear.docx,OHM-DC-2000-WB-10;OHM-DC-2000-WB-11
-OHM-DC-2000-SPEC-07,Specification template: Power cables,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-07_Cables.docx,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
-OHM-DC-2000-SPEC-08,Specification template: Busduct,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-08_Busduct.docx,OHM-DC-2000-WB-13
-OHM-DC-2000-SPEC-09,Specification template: Protection and coordination,Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-09_Protection.docx,OHM-DC-2000-WB-14
-OHM-DC-2000-SPEC-10,"Specification template: Earthing, bonding and lightning interface",Specification template,A5,P1,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-10_Earthing.docx,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16
-OHM-DC-2000-SPEC-01,Specification template: Power transformers,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-01_Transformers.pdf,OHM-DC-2000-WB-04;OHM-DC-2000-WB-10
-OHM-DC-2000-SPEC-02,Specification template: Standby generator sets,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-02_Generators.pdf,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
-OHM-DC-2000-SPEC-03,Specification template: UPS systems,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-03_UPS.pdf,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
-OHM-DC-2000-SPEC-04,Specification template: UPS batteries,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-04_Batteries.pdf,OHM-DC-2000-WB-07
-OHM-DC-2000-SPEC-05,Specification template: MV switchgear,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-05_MV_Switchgear.pdf,OHM-DC-2000-DRW-001;OHM-DC-2000-WB-10;OHM-DC-2000-WB-12
-OHM-DC-2000-SPEC-06,Specification template: LV switchgear and assemblies,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-06_LV_Switchgear.pdf,OHM-DC-2000-WB-10;OHM-DC-2000-WB-11
-OHM-DC-2000-SPEC-07,Specification template: Power cables,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-07_Cables.pdf,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
-OHM-DC-2000-SPEC-08,Specification template: Busduct,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-08_Busduct.pdf,OHM-DC-2000-WB-13
-OHM-DC-2000-SPEC-09,Specification template: Protection and coordination,Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-09_Protection.pdf,OHM-DC-2000-WB-14
-OHM-DC-2000-SPEC-10,"Specification template: Earthing, bonding and lightning interface",Specification template,A5,P1,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-10_Earthing.pdf,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16
-OHM-DC-2000-MET-01,Methodology: distribution,Methodology,A5,P1,WORKING DOCUMENT,docs/calculation_methodology/distribution.md,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
-OHM-DC-2000-MET-02,Methodology: load estimation,Methodology,A5,P1,WORKING DOCUMENT,docs/calculation_methodology/load_estimation.md,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
-OHM-DC-2000-MET-03,Methodology: power system sizing,Methodology,A5,P1,WORKING DOCUMENT,docs/calculation_methodology/power_system_sizing.md,OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
-OHM-DC-2000-MET-04,Methodology: short circuit and earthing,Methodology,A5,P1,WORKING DOCUMENT,docs/calculation_methodology/short_circuit_and_earthing.md,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15
-OHM-DC-2000-MET-05,Methodology: status model,Methodology,A5,P1,WORKING DOCUMENT,docs/calculation_methodology/status_model.md,
-OHM-DC-2000-GUIDE-01,User guide: manufacturer data register,User guide,A5,P1,WORKING DOCUMENT,docs/user_guide/manufacturer_data_register.md,
-OHM-DC-2000-GUIDE-02,User guide: updating demand data,User guide,A5,P1,WORKING DOCUMENT,docs/user_guide/updating_demand_data.md,
-OHM-DC-2000-GUIDE-03,User guide: workbooks,User guide,A5,P1,WORKING DOCUMENT,docs/user_guide/workbooks.md,
-OHM-DC-2000-BASIS-01,Design basis: data classification,Design basis,A5,P1,WORKING DOCUMENT,docs/design_basis/data_classification.md,
-OHM-DC-2000-ERV-01,Engineering review note: stage3 verification notes,Engineering review note,A5,P1,WORKING DOCUMENT,docs/engineering_review/stage3_verification_notes.md,
-OHM-DC-2000-TRN-01,Training module 01: Introduction to data centre electrical design,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/01_Introduction_to_Data_Centre_Electrical_Design.pdf,OHM-DC-2000-WB-01;OHM-DC-2000-WB-02
-OHM-DC-2000-TRN-02,"Training module 02: IT load, facility load and PUE",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/02_IT_Load_Facility_Load_and_PUE.pdf,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
-OHM-DC-2000-TRN-03,"Training module 03: Architecture, A/B paths and redundancy",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/03_Electrical_Architecture_A_B_Paths_and_Redundancy.pdf,OHM-DC-2000-WB-03
-OHM-DC-2000-TRN-04,Training module 04: MV distribution and transformer sizing,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/04_MV_Distribution_and_Transformer_Sizing.pdf,OHM-DC-2000-WB-04
-OHM-DC-2000-TRN-05,Training module 05: Generator sizing and transients,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/05_Generator_Sizing_and_Transient_Performance.pdf,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
-OHM-DC-2000-TRN-06,Training module 06: UPS architecture and battery sizing,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/06_UPS_Architecture_and_Battery_Sizing.pdf,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
-OHM-DC-2000-TRN-07,Training module 07: LV distribution and switchgear,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/07_LV_Distribution_and_Switchgear_Selection.pdf,OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
-OHM-DC-2000-TRN-08,"Training module 08: Cable sizing, ampacity and voltage drop",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/08_Cable_Sizing_Ampacity_and_Voltage_Drop.pdf,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
-OHM-DC-2000-TRN-09,Training module 09: Short-circuit and protection coordination,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/09_Short-Circuit_Fundamentals_and_Protection_Coordination.pdf,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14
-OHM-DC-2000-TRN-10,"Training module 10: Earthing, lightning and power quality",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/10_Earthing_Bonding_Lightning_and_Power_Quality.pdf,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17
-OHM-DC-2000-TRN-11,"Training module 11: Single-line diagrams, schedules and reports",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/11_Single-Line_Diagrams_Schedules_and_Engineering_Reports.pdf,OHM-DC-2000-WB-01;OHM-DC-2000-WB-20
-OHM-DC-2000-TRN-12,"Training module 12: Commissioning, FAT, SAT and IST",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/12_Commissioning_FAT_SAT_and_Integrated_Systems_Testing.pdf,
-OHM-DC-2000-TRN-01,Training module 01: Introduction to data centre electrical design,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/01_Introduction_to_Data_Centre_Electrical_Design.md,OHM-DC-2000-WB-01;OHM-DC-2000-WB-02
-OHM-DC-2000-TRN-02,"Training module 02: IT load, facility load and PUE",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/02_IT_Load_Facility_Load_and_PUE.md,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
-OHM-DC-2000-TRN-03,"Training module 03: Architecture, A/B paths and redundancy",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/03_Electrical_Architecture_A_B_Paths_and_Redundancy.md,OHM-DC-2000-WB-03
-OHM-DC-2000-TRN-04,Training module 04: MV distribution and transformer sizing,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/04_MV_Distribution_and_Transformer_Sizing.md,OHM-DC-2000-WB-04
-OHM-DC-2000-TRN-05,Training module 05: Generator sizing and transients,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/05_Generator_Sizing_and_Transient_Performance.md,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
-OHM-DC-2000-TRN-06,Training module 06: UPS architecture and battery sizing,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/06_UPS_Architecture_and_Battery_Sizing.md,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
-OHM-DC-2000-TRN-07,Training module 07: LV distribution and switchgear,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/07_LV_Distribution_and_Switchgear_Selection.md,OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
-OHM-DC-2000-TRN-08,"Training module 08: Cable sizing, ampacity and voltage drop",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/08_Cable_Sizing_Ampacity_and_Voltage_Drop.md,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
-OHM-DC-2000-TRN-09,Training module 09: Short-circuit and protection coordination,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/09_Short-Circuit_Fundamentals_and_Protection_Coordination.md,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14
-OHM-DC-2000-TRN-10,"Training module 10: Earthing, lightning and power quality",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/10_Earthing_Bonding_Lightning_and_Power_Quality.md,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17
-OHM-DC-2000-TRN-11,"Training module 11: Single-line diagrams, schedules and reports",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/11_Single-Line_Diagrams_Schedules_and_Engineering_Reports.md,OHM-DC-2000-WB-01;OHM-DC-2000-WB-20
-OHM-DC-2000-TRN-12,"Training module 12: Commissioning, FAT, SAT and IST",Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/12_Commissioning_FAT_SAT_and_Integrated_Systems_Testing.md,
-OHM-DC-2000-TRN-13,Training exercise workbook,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/exercises/.gitkeep,
-OHM-DC-2000-TRN-13,Training exercise workbook,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/exercises/Exercise_Workbook.xlsx,
-OHM-DC-2000-TRN-14,Training assessment question bank,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/assessments/.gitkeep,
-OHM-DC-2000-TRN-14,Training assessment question bank,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/assessments/Question_Bank.csv,
-OHM-DC-2000-TRN-14,Training assessment question bank,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/assessments/Question_Bank.md,
-OHM-DC-2000-TRN-15,Training answer key,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/answer_keys/.gitkeep,
-OHM-DC-2000-TRN-15,Training answer key,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/answer_keys/Answer_Key.md,
-OHM-DC-2000-TRN-15,Training answer key,Training,A5,P1,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/answer_keys/Answer_Key.pdf,
-OHM-DC-2000-TRN-16,Completion certificate template,Training,A5,P1,TEMPLATE: not accredited,training/Completion_Certificate_Template.md,
-OHM-DC-2000-TRN-16,Completion certificate template,Training,A5,P1,TEMPLATE: not accredited,training/Completion_Certificate_Template.pdf,
-OHM-DC-2000-REG-01,Assumptions register,Register,A5,P1,WORKING RECORD,config/assumptions_register.yaml,
-OHM-DC-2000-REG-02,Standards register (all NOT_VERIFIED),Register,A5,P1,WORKING RECORD,config/standards_register.yaml,
-OHM-DC-2000-REG-03,Manufacturer-data register,Register,A5,P1,WORKING RECORD,config/manufacturer_data_register.yaml,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
-OHM-DC-2000-REG-04,Supplied-data overrides and history,Register,A5,P1,WORKING RECORD,config/manufacturer_data_overrides.yaml,OHM-DC-2000-REG-03
-OHM-DC-2000-REG-05,Accepted design-target exceptions,Register,A5,P1,WORKING RECORD,config/design_exceptions.yaml,
-OHM-DC-2000-REG-06,Design basis revision log,Register,A5,P1,WORKING RECORD,config/design_basis_revisions.yaml,
-OHM-DC-2000-REG-08,Document revision convention and history,Register,A5,P1,WORKING RECORD,config/document_revisions.yaml,
-OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A5,P1,WORKING RECORD,output/manufacturer_data_import_template.csv,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
-OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A5,P1,WORKING RECORD,output/manufacturer_data_register.csv,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
-OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A5,P1,WORKING RECORD,output/manufacturer_data_register.md,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
-OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A5,P1,WORKING RECORD,output/manufacturer_data_request.md,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
-OHM-DC-2000-REG-07,Outstanding verification items,Register,A5,P1,WORKING RECORD,output/OUTSTANDING_VERIFICATION_ITEMS.csv,OHM-DC-2000-DOC-03;OHM-DC-2000-LOG-01
-OHM-DC-2000-REG-07,Outstanding verification items,Register,A5,P1,WORKING RECORD,output/OUTSTANDING_VERIFICATION_ITEMS.md,OHM-DC-2000-DOC-03;OHM-DC-2000-LOG-01
-OHM-DC-2000-LOG-04,QA test results,Log,A5,P1,WORKING RECORD,output/QA_RESULTS.md,
-OHM-DC-2000-LOG-01,Engineering review log,Log,A5,P1,WORKING RECORD,ENGINEERING_REVIEW_LOG.md,OHM-DC-2000-REG-07
-OHM-DC-2000-LOG-02,Development status,Log,A5,P1,WORKING RECORD,DEVELOPMENT_STATUS.md,
-OHM-DC-2000-LOG-03,Release checklist,Log,A5,P1,WORKING RECORD,RELEASE_CHECKLIST.md,
-OHM-DC-2000-DOC-05,Engineer's README (repository),Document,A5,P1,WORKING RECORD,README.md,
-OHM-DC-2000-DOC-06,Repository licence placeholder,Document,A5,P1,WORKING RECORD,LICENSE,
-OHM-DC-2000-DOC-01,Customer README,Document,A5,P1,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.docx,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
-OHM-DC-2000-DOC-01,Customer README,Document,A5,P1,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.md,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
-OHM-DC-2000-DOC-01,Customer README,Document,A5,P1,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.pdf,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
-OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A5,P1,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.docx,OHM-DC-2000-DOC-01
-OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A5,P1,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.md,OHM-DC-2000-DOC-01
-OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A5,P1,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.pdf,OHM-DC-2000-DOC-01
-OHM-DC-2000-DOC-00,Master index,Document,A5,P1,WORKING RECORD,docs/release/MASTER_INDEX.csv,OHM-DC-2000-DOC-01
-OHM-DC-2000-DOC-00,Master index,Document,A5,P1,WORKING RECORD,docs/release/MASTER_INDEX.md,OHM-DC-2000-DOC-01
-OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A5,P1,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.docx,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
-OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A5,P1,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.md,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
-OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A5,P1,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.pdf,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
-OHM-DC-2000-DOC-04,Independent review guide,Document,A5,P1,FOR REVIEW,docs/release/REVIEW_GUIDE.md,OHM-DC-2000-DOC-03
+OHM-DC-2000-WB-01,Workbook 01_MASTER_DESIGN_BASIS: Master design basis,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/01_MASTER_DESIGN_BASIS.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-TRN-01;OHM-DC-2000-TRN-11
+OHM-DC-2000-WB-02,Workbook 02_LOAD_ESTIMATION: Load estimation,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/02_LOAD_ESTIMATION.xlsx,OHM-DC-2000-MET-02;OHM-DC-2000-REG-03;OHM-DC-2000-RPT-02;OHM-DC-2000-TRN-01;OHM-DC-2000-TRN-02
+OHM-DC-2000-WB-03,Workbook 03_POWER_ARCHITECTURE: Power architecture,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/03_POWER_ARCHITECTURE.xlsx,OHM-DC-2000-DRW-001;OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-03
+OHM-DC-2000-WB-04,Workbook 04_TRANSFORMER_SIZING: Transformer sizing,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/04_TRANSFORMER_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-01;OHM-DC-2000-TRN-04
+OHM-DC-2000-WB-05,Workbook 05_GENERATOR_SIZING: Generator sizing,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/05_GENERATOR_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-02;OHM-DC-2000-TRN-05
+OHM-DC-2000-WB-06,Workbook 06_UPS_SIZING: UPS sizing,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/06_UPS_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-03;OHM-DC-2000-TRN-06
+OHM-DC-2000-WB-07,Workbook 07_BATTERY_SIZING: Battery sizing (interface),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/07_BATTERY_SIZING.xlsx,OHM-DC-2000-MET-03;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-03;OHM-DC-2000-SPEC-04;OHM-DC-2000-TRN-06
+OHM-DC-2000-WB-08,Workbook 08_CABLE_SIZING: Cable sizing,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/08_CABLE_SIZING.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-07;OHM-DC-2000-TRN-08
+OHM-DC-2000-WB-09,Workbook 09_VOLTAGE_DROP: Voltage drop,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/09_VOLTAGE_DROP.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-07;OHM-DC-2000-TRN-08
+OHM-DC-2000-WB-10,Workbook 10_SHORT_CIRCUIT: Short-circuit levels,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/10_SHORT_CIRCUIT.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-01;OHM-DC-2000-SPEC-05;OHM-DC-2000-SPEC-06;OHM-DC-2000-TRN-09
+OHM-DC-2000-WB-11,Workbook 11_LV_SWITCHGEAR: LV switchgear,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/11_LV_SWITCHGEAR.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-06;OHM-DC-2000-TRN-07
+OHM-DC-2000-WB-12,Workbook 12_MV_SWITCHGEAR: MV switchgear,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/12_MV_SWITCHGEAR.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-05;OHM-DC-2000-TRN-07
+OHM-DC-2000-WB-13,Workbook 13_BUSDUCT_SIZING: Busduct sizing,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/13_BUSDUCT_SIZING.xlsx,OHM-DC-2000-MET-01;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-08;OHM-DC-2000-TRN-07
+OHM-DC-2000-WB-14,Workbook 14_PROTECTION_COORDINATION: Protection coordination (register),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/14_PROTECTION_COORDINATION.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-09;OHM-DC-2000-TRN-09
+OHM-DC-2000-WB-15,Workbook 15_EARTHING_BONDING: Earthing and bonding (screening),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/15_EARTHING_BONDING.xlsx,OHM-DC-2000-MET-04;OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-10;OHM-DC-2000-TRN-10
+OHM-DC-2000-WB-16,Workbook 16_LIGHTNING_PROTECTION: Lightning protection (register),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/16_LIGHTNING_PROTECTION.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-10;OHM-DC-2000-TRN-10
+OHM-DC-2000-WB-17,Workbook 17_POWER_QUALITY: Power quality (register),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/17_POWER_QUALITY.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-TRN-10
+OHM-DC-2000-WB-18,Workbook 18_ENERGY_EFFICIENCY: Energy efficiency,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/18_ENERGY_EFFICIENCY.xlsx,OHM-DC-2000-MET-02;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-02
+OHM-DC-2000-WB-19,Workbook 19_GENERATOR_FUEL: Generator fuel (register),Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/19_GENERATOR_FUEL.xlsx,OHM-DC-2000-REG-03;OHM-DC-2000-SPEC-02;OHM-DC-2000-TRN-05
+OHM-DC-2000-WB-20,Workbook 20_MASTER_EQUIPMENT_SCHEDULE: Master equipment schedule,Workbook,A6,P2,PRELIMINARY: NOT VERIFIED,workbooks/generated/20_MASTER_EQUIPMENT_SCHEDULE.xlsx,OHM-DC-2000-DRW-001;OHM-DC-2000-REG-03;OHM-DC-2000-TRN-11
+OHM-DC-2000-RPT-02,Electrical load estimation report,Report,A6,P2,PRELIMINARY: NOT VERIFIED,reports/generated/02_Electrical_Load_Estimation_Report.pdf,OHM-DC-2000-WB-02
+OHM-DC-2000-DRW-001,Preliminary single-line diagram,Drawing,A6,P2,PRELIMINARY CONCEPT: NOT FOR CONSTRUCTION,drawings/pdf/OHM-DC-2000-SLD-001.pdf,OHM-DC-2000-SPEC-05;OHM-DC-2000-WB-03;OHM-DC-2000-WB-20
+OHM-DC-2000-DRW-001,Preliminary single-line diagram,Drawing,A6,P2,PRELIMINARY CONCEPT: NOT FOR CONSTRUCTION,drawings/svg/OHM-DC-2000-SLD-001.svg,OHM-DC-2000-SPEC-05;OHM-DC-2000-WB-03;OHM-DC-2000-WB-20
+OHM-DC-2000-SPEC-01,Specification template: Power transformers,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-01_Transformers.docx,OHM-DC-2000-WB-04;OHM-DC-2000-WB-10
+OHM-DC-2000-SPEC-02,Specification template: Standby generator sets,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-02_Generators.docx,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
+OHM-DC-2000-SPEC-03,Specification template: UPS systems,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-03_UPS.docx,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
+OHM-DC-2000-SPEC-04,Specification template: UPS batteries,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-04_Batteries.docx,OHM-DC-2000-WB-07
+OHM-DC-2000-SPEC-05,Specification template: MV switchgear,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-05_MV_Switchgear.docx,OHM-DC-2000-DRW-001;OHM-DC-2000-WB-10;OHM-DC-2000-WB-12
+OHM-DC-2000-SPEC-06,Specification template: LV switchgear and assemblies,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-06_LV_Switchgear.docx,OHM-DC-2000-WB-10;OHM-DC-2000-WB-11
+OHM-DC-2000-SPEC-07,Specification template: Power cables,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-07_Cables.docx,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
+OHM-DC-2000-SPEC-08,Specification template: Busduct,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-08_Busduct.docx,OHM-DC-2000-WB-13
+OHM-DC-2000-SPEC-09,Specification template: Protection and coordination,Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-09_Protection.docx,OHM-DC-2000-WB-14
+OHM-DC-2000-SPEC-10,"Specification template: Earthing, bonding and lightning interface",Specification template,A6,P2,DRAFT TEMPLATE,specifications/OHM-DC-2000-SPEC-10_Earthing.docx,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16
+OHM-DC-2000-SPEC-01,Specification template: Power transformers,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-01_Transformers.pdf,OHM-DC-2000-WB-04;OHM-DC-2000-WB-10
+OHM-DC-2000-SPEC-02,Specification template: Standby generator sets,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-02_Generators.pdf,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
+OHM-DC-2000-SPEC-03,Specification template: UPS systems,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-03_UPS.pdf,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
+OHM-DC-2000-SPEC-04,Specification template: UPS batteries,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-04_Batteries.pdf,OHM-DC-2000-WB-07
+OHM-DC-2000-SPEC-05,Specification template: MV switchgear,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-05_MV_Switchgear.pdf,OHM-DC-2000-DRW-001;OHM-DC-2000-WB-10;OHM-DC-2000-WB-12
+OHM-DC-2000-SPEC-06,Specification template: LV switchgear and assemblies,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-06_LV_Switchgear.pdf,OHM-DC-2000-WB-10;OHM-DC-2000-WB-11
+OHM-DC-2000-SPEC-07,Specification template: Power cables,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-07_Cables.pdf,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
+OHM-DC-2000-SPEC-08,Specification template: Busduct,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-08_Busduct.pdf,OHM-DC-2000-WB-13
+OHM-DC-2000-SPEC-09,Specification template: Protection and coordination,Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-09_Protection.pdf,OHM-DC-2000-WB-14
+OHM-DC-2000-SPEC-10,"Specification template: Earthing, bonding and lightning interface",Specification template,A6,P2,DRAFT TEMPLATE,specifications/pdf/OHM-DC-2000-SPEC-10_Earthing.pdf,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16
+OHM-DC-2000-MET-01,Methodology: distribution,Methodology,A6,P2,WORKING DOCUMENT,docs/calculation_methodology/distribution.md,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
+OHM-DC-2000-MET-02,Methodology: load estimation,Methodology,A6,P2,WORKING DOCUMENT,docs/calculation_methodology/load_estimation.md,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
+OHM-DC-2000-MET-03,Methodology: power system sizing,Methodology,A6,P2,WORKING DOCUMENT,docs/calculation_methodology/power_system_sizing.md,OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
+OHM-DC-2000-MET-04,Methodology: short circuit and earthing,Methodology,A6,P2,WORKING DOCUMENT,docs/calculation_methodology/short_circuit_and_earthing.md,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15
+OHM-DC-2000-MET-05,Methodology: status model,Methodology,A6,P2,WORKING DOCUMENT,docs/calculation_methodology/status_model.md,
+OHM-DC-2000-GUIDE-01,User guide: manufacturer data register,User guide,A6,P2,WORKING DOCUMENT,docs/user_guide/manufacturer_data_register.md,
+OHM-DC-2000-GUIDE-02,User guide: updating demand data,User guide,A6,P2,WORKING DOCUMENT,docs/user_guide/updating_demand_data.md,
+OHM-DC-2000-GUIDE-03,User guide: workbooks,User guide,A6,P2,WORKING DOCUMENT,docs/user_guide/workbooks.md,
+OHM-DC-2000-BASIS-01,Design basis: data classification,Design basis,A6,P2,WORKING DOCUMENT,docs/design_basis/data_classification.md,
+OHM-DC-2000-ERV-01,Engineering review note: stage3 verification notes,Engineering review note,A6,P2,WORKING DOCUMENT,docs/engineering_review/stage3_verification_notes.md,
+OHM-DC-2000-TRN-01,Training module 01: Introduction to data centre electrical design,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/01_Introduction_to_Data_Centre_Electrical_Design.pdf,OHM-DC-2000-WB-01;OHM-DC-2000-WB-02
+OHM-DC-2000-TRN-02,"Training module 02: IT load, facility load and PUE",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/02_IT_Load_Facility_Load_and_PUE.pdf,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
+OHM-DC-2000-TRN-03,"Training module 03: Architecture, A/B paths and redundancy",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/03_Electrical_Architecture_A_B_Paths_and_Redundancy.pdf,OHM-DC-2000-WB-03
+OHM-DC-2000-TRN-04,Training module 04: MV distribution and transformer sizing,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/04_MV_Distribution_and_Transformer_Sizing.pdf,OHM-DC-2000-WB-04
+OHM-DC-2000-TRN-05,Training module 05: Generator sizing and transients,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/05_Generator_Sizing_and_Transient_Performance.pdf,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
+OHM-DC-2000-TRN-06,Training module 06: UPS architecture and battery sizing,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/06_UPS_Architecture_and_Battery_Sizing.pdf,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
+OHM-DC-2000-TRN-07,Training module 07: LV distribution and switchgear,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/07_LV_Distribution_and_Switchgear_Selection.pdf,OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
+OHM-DC-2000-TRN-08,"Training module 08: Cable sizing, ampacity and voltage drop",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/08_Cable_Sizing_Ampacity_and_Voltage_Drop.pdf,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
+OHM-DC-2000-TRN-09,Training module 09: Short-circuit and protection coordination,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/09_Short-Circuit_Fundamentals_and_Protection_Coordination.pdf,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14
+OHM-DC-2000-TRN-10,"Training module 10: Earthing, lightning and power quality",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/10_Earthing_Bonding_Lightning_and_Power_Quality.pdf,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17
+OHM-DC-2000-TRN-11,"Training module 11: Single-line diagrams, schedules and reports",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/11_Single-Line_Diagrams_Schedules_and_Engineering_Reports.pdf,OHM-DC-2000-WB-01;OHM-DC-2000-WB-20
+OHM-DC-2000-TRN-12,"Training module 12: Commissioning, FAT, SAT and IST",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/12_Commissioning_FAT_SAT_and_Integrated_Systems_Testing.pdf,
+OHM-DC-2000-TRN-01,Training module 01: Introduction to data centre electrical design,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/01_Introduction_to_Data_Centre_Electrical_Design.md,OHM-DC-2000-WB-01;OHM-DC-2000-WB-02
+OHM-DC-2000-TRN-02,"Training module 02: IT load, facility load and PUE",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/02_IT_Load_Facility_Load_and_PUE.md,OHM-DC-2000-WB-02;OHM-DC-2000-WB-18
+OHM-DC-2000-TRN-03,"Training module 03: Architecture, A/B paths and redundancy",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/03_Electrical_Architecture_A_B_Paths_and_Redundancy.md,OHM-DC-2000-WB-03
+OHM-DC-2000-TRN-04,Training module 04: MV distribution and transformer sizing,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/04_MV_Distribution_and_Transformer_Sizing.md,OHM-DC-2000-WB-04
+OHM-DC-2000-TRN-05,Training module 05: Generator sizing and transients,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/05_Generator_Sizing_and_Transient_Performance.md,OHM-DC-2000-WB-05;OHM-DC-2000-WB-19
+OHM-DC-2000-TRN-06,Training module 06: UPS architecture and battery sizing,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/06_UPS_Architecture_and_Battery_Sizing.md,OHM-DC-2000-WB-06;OHM-DC-2000-WB-07
+OHM-DC-2000-TRN-07,Training module 07: LV distribution and switchgear,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/07_LV_Distribution_and_Switchgear_Selection.md,OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13
+OHM-DC-2000-TRN-08,"Training module 08: Cable sizing, ampacity and voltage drop",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/08_Cable_Sizing_Ampacity_and_Voltage_Drop.md,OHM-DC-2000-WB-08;OHM-DC-2000-WB-09
+OHM-DC-2000-TRN-09,Training module 09: Short-circuit and protection coordination,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/09_Short-Circuit_Fundamentals_and_Protection_Coordination.md,OHM-DC-2000-WB-10;OHM-DC-2000-WB-14
+OHM-DC-2000-TRN-10,"Training module 10: Earthing, lightning and power quality",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/10_Earthing_Bonding_Lightning_and_Power_Quality.md,OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17
+OHM-DC-2000-TRN-11,"Training module 11: Single-line diagrams, schedules and reports",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/11_Single-Line_Diagrams_Schedules_and_Engineering_Reports.md,OHM-DC-2000-WB-01;OHM-DC-2000-WB-20
+OHM-DC-2000-TRN-12,"Training module 12: Commissioning, FAT, SAT and IST",Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/modules/source/12_Commissioning_FAT_SAT_and_Integrated_Systems_Testing.md,
+OHM-DC-2000-TRN-13,Training exercise workbook,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/exercises/Exercise_Workbook.xlsx,
+OHM-DC-2000-TRN-14,Training assessment question bank,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/assessments/Question_Bank.csv,
+OHM-DC-2000-TRN-14,Training assessment question bank,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/assessments/Question_Bank.md,
+OHM-DC-2000-TRN-15,Training answer key,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/answer_keys/Answer_Key.md,
+OHM-DC-2000-TRN-15,Training answer key,Training,A6,P2,PRELIMINARY: NOT INDEPENDENTLY REVIEWED,training/answer_keys/Answer_Key.pdf,
+OHM-DC-2000-TRN-16,Completion certificate template,Training,A6,P2,TEMPLATE: not accredited,training/Completion_Certificate_Template.md,
+OHM-DC-2000-TRN-16,Completion certificate template,Training,A6,P2,TEMPLATE: not accredited,training/Completion_Certificate_Template.pdf,
+OHM-DC-2000-REG-01,Assumptions register,Register,A6,P2,WORKING RECORD,config/assumptions_register.yaml,
+OHM-DC-2000-REG-02,Standards register (all NOT_VERIFIED),Register,A6,P2,WORKING RECORD,config/standards_register.yaml,
+OHM-DC-2000-REG-03,Manufacturer-data register,Register,A6,P2,WORKING RECORD,config/manufacturer_data_register.yaml,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
+OHM-DC-2000-REG-04,Supplied-data overrides and history,Register,A6,P2,WORKING RECORD,config/manufacturer_data_overrides.yaml,OHM-DC-2000-REG-03
+OHM-DC-2000-REG-05,Accepted design-target exceptions,Register,A6,P2,WORKING RECORD,config/design_exceptions.yaml,
+OHM-DC-2000-REG-06,Design basis revision log,Register,A6,P2,WORKING RECORD,config/design_basis_revisions.yaml,
+OHM-DC-2000-REG-08,Document revision convention and history,Register,A6,P2,WORKING RECORD,config/document_revisions.yaml,
+OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A6,P2,WORKING RECORD,output/manufacturer_data_import_template.csv,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
+OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A6,P2,WORKING RECORD,output/manufacturer_data_register.csv,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
+OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A6,P2,WORKING RECORD,output/manufacturer_data_register.md,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
+OHM-DC-2000-REG-03,Manufacturer-data register (generated view / import template),Register,A6,P2,WORKING RECORD,output/manufacturer_data_request.md,OHM-DC-2000-REG-04;OHM-DC-2000-WB-01;OHM-DC-2000-WB-02;OHM-DC-2000-WB-03;OHM-DC-2000-WB-04;OHM-DC-2000-WB-05;OHM-DC-2000-WB-06;OHM-DC-2000-WB-07;OHM-DC-2000-WB-08;OHM-DC-2000-WB-09;OHM-DC-2000-WB-10;OHM-DC-2000-WB-11;OHM-DC-2000-WB-12;OHM-DC-2000-WB-13;OHM-DC-2000-WB-14;OHM-DC-2000-WB-15;OHM-DC-2000-WB-16;OHM-DC-2000-WB-17;OHM-DC-2000-WB-18;OHM-DC-2000-WB-19;OHM-DC-2000-WB-20
+OHM-DC-2000-REG-07,Outstanding verification items,Register,A6,P2,WORKING RECORD,output/OUTSTANDING_VERIFICATION_ITEMS.csv,OHM-DC-2000-DOC-03;OHM-DC-2000-LOG-01
+OHM-DC-2000-REG-07,Outstanding verification items,Register,A6,P2,WORKING RECORD,output/OUTSTANDING_VERIFICATION_ITEMS.md,OHM-DC-2000-DOC-03;OHM-DC-2000-LOG-01
+OHM-DC-2000-LOG-05,Workbook static lint (Excel compatibility),Log,A6,P2,WORKING RECORD,output/WORKBOOK_LINT.md,
+OHM-DC-2000-REG-09,"Verification attestation log (append-only; names self-declared, not authenticated)",Register,A6,P2,WORKING RECORD,config/verification_log.yaml,
+OHM-DC-2000-LOG-04,QA test results,Log,A6,P2,WORKING RECORD,output/QA_RESULTS.md,
+OHM-DC-2000-LOG-01,Engineering review log,Log,A6,P2,WORKING RECORD,ENGINEERING_REVIEW_LOG.md,OHM-DC-2000-REG-07
+OHM-DC-2000-LOG-02,Development status,Log,A6,P2,WORKING RECORD,DEVELOPMENT_STATUS.md,
+OHM-DC-2000-LOG-03,Release checklist,Log,A6,P2,WORKING RECORD,RELEASE_CHECKLIST.md,
+OHM-DC-2000-DOC-05,Engineer's README (repository),Document,A6,P2,WORKING RECORD,README.md,
+OHM-DC-2000-DOC-06,Repository licence placeholder,Document,A6,P2,WORKING RECORD,LICENSE,
+OHM-DC-2000-DOC-07,Corrective action report (revision A6),Document,A6,P2,FOR REVIEW,docs/release/CORRECTIVE_ACTION_REPORT.docx,
+OHM-DC-2000-DOC-07,Corrective action report (revision A6),Document,A6,P2,FOR REVIEW,docs/release/CORRECTIVE_ACTION_REPORT.md,
+OHM-DC-2000-DOC-07,Corrective action report (revision A6),Document,A6,P2,FOR REVIEW,docs/release/CORRECTIVE_ACTION_REPORT.pdf,
+OHM-DC-2000-DOC-01,Customer README,Document,A6,P2,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.docx,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
+OHM-DC-2000-DOC-01,Customer README,Document,A6,P2,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.md,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
+OHM-DC-2000-DOC-01,Customer README,Document,A6,P2,PRELIMINARY: NOT VERIFIED,docs/release/CUSTOMER_README.pdf,OHM-DC-2000-DOC-00;OHM-DC-2000-DOC-02
+OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A6,P2,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.docx,OHM-DC-2000-DOC-01
+OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A6,P2,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.md,OHM-DC-2000-DOC-01
+OHM-DC-2000-DOC-02,"Commercial licence (draft, not legally reviewed)",Document,A6,P2,DRAFT: NOT LEGALLY REVIEWED,docs/release/LICENCE_COMMERCIAL.pdf,OHM-DC-2000-DOC-01
+OHM-DC-2000-DOC-00,Master index,Document,A6,P2,WORKING RECORD,docs/release/MASTER_INDEX.csv,OHM-DC-2000-DOC-01
+OHM-DC-2000-DOC-00,Master index,Document,A6,P2,WORKING RECORD,docs/release/MASTER_INDEX.md,OHM-DC-2000-DOC-01
+OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A6,P2,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.docx,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
+OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A6,P2,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.md,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
+OHM-DC-2000-DOC-03,Independent reviewer checklist,Document,A6,P2,FOR REVIEW,docs/release/REVIEWER_CHECKLIST.pdf,OHM-DC-2000-DOC-04;OHM-DC-2000-REG-07
+OHM-DC-2000-DOC-04,Independent review guide,Document,A6,P2,FOR REVIEW,docs/release/REVIEW_GUIDE.md,OHM-DC-2000-DOC-03
