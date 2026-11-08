@@ -101,7 +101,7 @@ def assess_short_circuit(cfg: ProjectConfig) -> ShortCircuitResult:
         uk = tv["equipment.transformer_impedance"] / 100.0
         k_t = 0.95 * clv / (1 + 0.6 * uk)
         zt_mag = uk * un_lv ** 2 / (tv["equipment.transformer_rating"] * 1000.0) * k_t
-        lv_bound = _case("Transformer-limited upper bound", f"Infinite source behind one transformer (K_T = {k_t:.4f}). No utility data is used, so this holds for any utility fault level",
+        lv_bound = _case("Transformer-limited upper bound", f"Infinite source behind one transformer (K_T = {k_t:.4f}). No utility data is used, so the UTILITY contribution through one transformer cannot exceed this for any utility fault level. Generator and motor contributions are not included: this is NOT the LV bus fault level and NOT a design value, and no rating is selected from it",
                          clv * un_lv / (ROOT3 * zt_mag), None, t, f)
     else:
         unavailable["LV bus, transformer-limited upper bound"] = tmiss

@@ -10,6 +10,8 @@ Preliminary and educational. Not a study.
 - Generators: Z_G = (x''d/100) Un^2 / Sg, with K_G = c_max / (1 + x''d sin(phi_r)), n units in parallel.
 - Ik'' = c Un / (sqrt3 |Z|). Peak ip = kappa sqrt2 Ik'' with kappa = 1.02 + 0.98 exp(-3 R/X). Thermal equivalent Ith = Ik'' sqrt(m + n), n = 1.
 - Design value at the LV bus: the larger of the utility case and the generator case (open transition). If the design allows generators in parallel with the utility (`short_circuit.generator_parallel_with_utility`), the arithmetic sum is used. The sum is shown either way, as a warning of what closed transition would cost.
+- **The transformer-limited figure is not the bus fault level (revision A6).** With only the transformer data it limits the *utility* contribution through one transformer (an infinite source behind it). It excludes generator and motor contributions, so it is not an upper bound on the LV bus and not a design value. **No breaking capacity, withstand rating, cable section or device is selected from it**; those checks stay NOT VERIFIED until the utility and generator data give a design level.
+- **Arc-flash is out of scope.** No incident energy, boundary, PPE category or label is calculated or implied. The check `arc_flash_scope` records this as NOT APPLICABLE.
 - Not included: motor contribution, cable and busduct impedance up to the bus (conservative), minimum fault current, the second path.
 
 ## Checks

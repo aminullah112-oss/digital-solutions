@@ -280,7 +280,7 @@ def check_short_circuit(cfg: ProjectConfig) -> list[CheckResult]:
     if sc.mv_case:
         parts.append(f"MV bus {sc.mv_case.ik_ka:.1f} kA.")
     if sc.lv_cases:
-        parts.append("LV bus calculated: " + tried(None) + ".")
+        parts.append("LV bus: only the transformer-limited figure is available (" + tried(None) + "). It limits the utility contribution through one transformer and excludes generator and motor contributions, so it is NOT the LV bus fault level and NOT a design value; no rating is selected from it.")
     for case, m in sc.unavailable.items():
         parts.append(f"NOT CALCULATED, {case}: missing {', '.join(m)}.")
     detail = " ".join(parts) + " Engineering impact and the documents needed: " + _pending(cfg, missing_all) if missing_all else " ".join(parts)
@@ -298,8 +298,8 @@ def check_short_circuit(cfg: ProjectConfig) -> list[CheckResult]:
     elif d is None:
         st = S.WARNING if bound.ik_ka > lim else S.NOT_VERIFIED
         out.append(CheckResult("fault_level_vs_limit", ids["fault_level_vs_limit"], st,
-                               f"Only the transformer-limited upper bound can be calculated: {bound.ik_ka:.1f} kA, valid for any utility fault level. " + ("It exceeds" if bound.ik_ka > lim else "It does not exceed") +
-                               f" the {lim:g} kA practical limit (Ohmetry preliminary policy). The design level needs the utility and generator data.", {"bound_ka": bound.ik_ka, "limit_ka": lim}, "Supply the missing data."))
+                               f"Only the transformer-limited figure can be calculated: {bound.ik_ka:.1f} kA, the most that the utility can contribute through one transformer for any utility fault level. " + ("It exceeds" if bound.ik_ka > lim else "It does not exceed") +
+                               f" the {lim:g} kA practical limit (Ohmetry preliminary policy), but it excludes the generator and motor contributions, so it does not show that the bus stays below the limit. The design level is NOT CALCULATED: it needs the utility and generator data.", {"bound_ka": bound.ik_ka, "limit_ka": lim}, "Supply the missing data."))
     else:
         par = next((c for c in sc.lv_cases if c.name.startswith("Utility and generators")), None)
         over = d.ik_ka > lim
@@ -345,6 +345,9 @@ def check_short_circuit(cfg: ProjectConfig) -> list[CheckResult]:
     out.append(CheckResult("protection_devices", ids["protection_devices"], _worst([S(x["status"]) for x in devs]) if devs else S.NOT_VERIFIED,
                            "; ".join(f"{x['tag']}: " + ("required breaking capacity not calculable" if x["required_breaking_ka"] is None else f"needs breaking {x['required_breaking_ka']:.1f} kA") for x in devs) +
                            ". Device ratings, time-current curves and settings are manufacturer data and are not supplied. Discrimination, arc-flash and sensitivity to minimum fault current are not assessed.", {"devices": devs}, "Obtain device data and curves, then run the coordination study."))
+    out.append(CheckResult("arc_flash_scope", "Arc-flash (incident energy) assessment", S.NOT_APPLICABLE,
+                           "OUT OF SCOPE for this package. No incident energy, arc-flash boundary, PPE category or label is calculated or implied. It needs a coordination study, protection settings and clearing times from the "
+                           "manufacturers' data, to IEEE 1584 or an equivalent method used by a competent person.", {"in_scope": False}, "Commission a separate arc-flash study when the protection design exists."))
     return out
 
 

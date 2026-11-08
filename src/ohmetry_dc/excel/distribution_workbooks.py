@@ -101,8 +101,8 @@ def build_short_circuit_workbook(cfg: ProjectConfig, checks: list[CheckResult], 
     txn = [I("tx_kva"), I("tx_uk"), I("c_lv"), I("lv_v")]
     line("kt", "Transformer correction factor K_T = 0.95 c / (1 + 0.6 xT)", f"0.95*{I('c_lv')}/(1+0.6*{I('tx_uk')}/100)", "-", "0.0000", needs=[I("c_lv"), I("tx_uk")])
     line("zt", "Transformer impedance K_T x uk Un^2/Sr", f"({I('tx_uk')}/100)*{I('lv_v')}^2/({I('tx_kva')}*1000)*{num('kt')}", "ohm", "0.000000", needs=txn)
-    line("ik_b", "LV bus: transformer-limited upper bound (infinite source)", f"{I('c_lv')}*{I('lv_v')}/(SQRT(3)*{num('zt')})/1000", "kA", "0.000", needs=txn,
-         nt="Needs only the transformer data. Holds for any utility fault level.")
+    line("ik_b", "LV bus: transformer-limited figure, utility contribution only (infinite source; NOT the bus fault level)", f"{I('c_lv')}*{I('lv_v')}/(SQRT(3)*{num('zt')})/1000", "kA", "0.000", needs=txn,
+         nt="Needs only the transformer data. Limits the utility contribution through one transformer. Generator and motor contributions are excluded: NOT a design value.")
     un = txn + [I("tx_xr")] + mvn
     line("rt", "Transformer resistance", f"{num('zt')}/SQRT(1+{I('tx_xr')}^2)", "ohm", "0.000000", needs=un)
     line("xt", "Transformer reactance", f"{num('rt')}*{I('tx_xr')}", "ohm", "0.000000", needs=un)

@@ -286,3 +286,44 @@ def test_register_lists_every_required_column_and_uses_the_data_status_vocabular
     for col in ("Equipment category", "Placeholder or current value", "Unit", "Verification status", "Outstanding verification action", "Input data status"):
         assert col in md
     assert next(r for r in rows if r.parameter == "equipment.transformer_impedance").category == "Transformer"
+
+
+# ---- revision A6, item 7: short-circuit and protection honesty
+def _cfg(root):
+    from ohmetry_dc.config import load_config
+    return load_config(root / "config" / "project_config.yaml", root / "config" / "load_schedule.yaml")
+
+
+def test_no_rating_or_requirement_is_selected_from_the_transformer_limited_figure(root):
+    from ohmetry_dc.validation.checks import check_short_circuit
+    cfg = _cfg(root)
+    sc = assess_short_circuit(cfg)
+    assert sc.design_lv is None and [c.name for c in sc.lv_cases] == ["Transformer-limited upper bound"]
+    chk = {c.id: c for c in check_short_circuit(cfg)}
+    for cid in ("short_circuit_withstand", "protection_devices"):
+        assert all(i.get("required_ka", i.get("required_breaking_ka")) is None for i in (chk[cid].values.get("items") or chk[cid].values.get("devices"))), cid
+        assert chk[cid].status.value == "NOT VERIFIED"
+    assert all(i["min_section_mm2"] is None for i in chk["cable_thermal_withstand"].values["items"])
+
+
+def test_the_transformer_limited_figure_is_never_described_as_the_bus_fault_level_or_a_design_value(root):
+    from ohmetry_dc.validation.checks import check_short_circuit
+    chk = {c.id: c for c in check_short_circuit(_cfg(root))}
+    for cid in ("short_circuit_levels", "fault_level_vs_limit"):
+        d = chk[cid].detail
+        assert "excludes" in d or "not included" in d or "excludes the generator" in d, cid
+        assert "valid for any utility fault level" not in d and "LV bus calculated" not in d
+    assert "NOT a design value" in chk["short_circuit_levels"].detail and "NOT CALCULATED" in chk["fault_level_vs_limit"].detail
+    assert chk["short_circuit_levels"].status.value == "NOT VERIFIED"
+
+
+def test_every_case_that_lacks_data_reads_not_calculated_and_no_default_is_substituted(root):
+    sc = assess_short_circuit(_cfg(root))
+    assert set(sc.unavailable) >= {"MV bus, utility", "LV bus, generators"} or len(sc.unavailable) >= 3
+    assert sc.mv_case is None and sc.design_lv is None
+
+
+def test_arc_flash_is_explicitly_out_of_scope_and_never_calculated(root):
+    from ohmetry_dc.validation.checks import check_short_circuit
+    chk = {c.id: c for c in check_short_circuit(_cfg(root))}["arc_flash_scope"]
+    assert chk.status.value == "NOT APPLICABLE" and "OUT OF SCOPE" in chk.detail and "No incident energy" in chk.detail
