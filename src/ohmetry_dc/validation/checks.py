@@ -199,7 +199,7 @@ def check_distribution(cfg: ProjectConfig) -> list[CheckResult]:
     from ohmetry_dc.models import ConfigError
 
     ids = {"cable_voltage_drop": "Cable voltage drop", "cable_ampacity": "Cable current rating against the design current", "busduct_rating": "Busduct rating against the design current",
-           "busduct_voltage_drop": "Busduct voltage drop", "switchgear_ratings": "Switchgear rated current and verification data", "short_circuit_withstand": "Short-circuit withstand of cables, busducts and switchgear",
+           "busduct_voltage_drop": "Busduct voltage drop", "cable_derating_basis": "Cable and busduct derating, installation, parallel arrangement and current sharing", "switchgear_ratings": "Switchgear rated current and verification data", "short_circuit_withstand": "Short-circuit withstand of cables, busducts and switchgear",
            "distribution_selections": "Distribution selections are placeholders"}
     if not cfg.distribution:
         return [CheckResult(i, t, S.NOT_VERIFIED, "No distribution schedule is configured (config/distribution.yaml).") for i, t in ids.items()]
@@ -218,9 +218,11 @@ def check_distribution(cfg: ProjectConfig) -> list[CheckResult]:
                        "Replace the placeholder reactance and the criterion with project data."),
            CheckResult("cable_ampacity", ids["cable_ampacity"], _worst([c.loading_status for c in vd]),
                        "; ".join(f"{c.tag}: needs {c.required_rating_a:,.0f} A per run after derating" + ("" if c.rating_a is None else f", table {c.rating_a:,.0f} A gives {c.loading_pct:.1f} %") for c in vd) +
-                       ". No tabulated rating has been supplied, so none is assumed and the cables cannot be judged. Compare each required rating with the cable table or data sheet for the installation method.",
+                       ". No tabulated rating has been supplied, so none is assumed and the cables cannot be judged. Compare each required rating with the cable table or data sheet for the installation method. "
+                       "Where the derating factors are placeholders or the sharing between parallel runs is not supplied, the required rating is a MINIMUM (see cable_derating_basis).",
                        {"feeders": [{"tag": c.tag, "required_rating_per_run_a": c.required_rating_a, "runs": c.runs, "tabulated_rating_a": c.rating_a, "loading_pct": c.loading_pct, "required_runs": c.required_runs,
                                      "status": c.loading_status.value} for c in vd]}, "Supply the tabulated ratings and the real derating factors (grouping, ambient, installation)."),
+           _derating_basis_check(ids["cable_derating_basis"], r),
            CheckResult("busduct_rating", ids["busduct_rating"], _worst([c.loading_status for c in r.busducts]),
                        "; ".join(f"{line(c)}, needs {c.required_rating_a:,.0f} A rated after derating" for c in r.busducts) + ". The busduct rating is manufacturer data and is not supplied.",
                        {"items": [{"tag": c.tag, "design_current_a": c.design_current_a, "required_rating_a": c.required_rating_a, "rating_a": c.rating_a, "missing": c.missing_data} for c in r.busducts]}, "Obtain the busduct data sheet."),
@@ -234,6 +236,29 @@ def check_distribution(cfg: ProjectConfig) -> list[CheckResult]:
                        "Cable sizes, runs and lengths in config/distribution.yaml are illustrative placeholders. Only path A is modelled; path B is assumed identical by symmetry. A selection is not a verified design.",
                        {}, "Replace with the routed, engineered selections.")]
     return out
+
+
+def _derating_basis_check(title: str, r) -> CheckResult:
+    """Cable, busduct and switchgear derating: never reported as verified while the factors are placeholders."""
+    items = [*r.cables, *r.busducts, *r.switchgear]
+    parts, rows = [], []
+    for c in items:
+        bits = []
+        if c.kind == "cable":
+            bits.append(f"method: {c.installation_method or 'NOT SUPPLIED'}")
+            if c.runs > 1:
+                bits.append(f"{c.runs} parallel runs, arrangement: {c.parallel_arrangement or 'NOT SUPPLIED'}")
+                bits.append("sharing allowance: " + ("NOT SUPPLIED (no allowance included)" if c.sharing_allowance_pct is None else f"{c.sharing_allowance_pct:g} %"))
+        if c.derating_unverified:
+            bits.append("derating NOT VERIFIED (" + ", ".join(f"{k} {c.derating_factors.get(k, 1.0):.2f}" for k in c.derating_unverified) + ", placeholders)")
+        if bits:
+            parts.append(f"{c.tag}: " + "; ".join(bits))
+        rows.append({"tag": c.tag, "kind": c.kind, "installation_method": c.installation_method, "parallel_runs": c.runs, "parallel_arrangement": c.parallel_arrangement, "sharing_allowance_pct": c.sharing_allowance_pct,
+                     "derating_factors": c.derating_factors, "derating_unverified": c.derating_unverified, "required_rating_is_minimum": c.lower_bound})
+    n_min = sum(1 for c in items if c.lower_bound)
+    return CheckResult("cable_derating_basis", title, S.NOT_VERIFIED,
+                       f"{n_min} of {len(items)} required ratings are MINIMUMS: a derating factor of 1.00 is a placeholder, not a verified value, and no allowance for unequal sharing between parallel runs is included. " + " | ".join(parts),
+                       {"items": rows}, "Supply the cable table or data sheet reference for each derating factor (grouping, ambient, installation), the layout of the parallel runs and the current-sharing allowance.")
 
 
 def _pending(cfg: ProjectConfig, ids: list[str]) -> str:

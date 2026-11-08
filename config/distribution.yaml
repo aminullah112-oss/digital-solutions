@@ -1,6 +1,9 @@
 # Distribution schedule for OHM-DC-2000 (path A shown; path B is assumed identical by symmetry, which is itself an assumption).
 # Cable selections and lengths are ILLUSTRATIVE PLACEHOLDERS for the sample project. Tabulated ratings, busduct and switchgear ratings,
 # impedances and short-circuit ratings are manufacturer or standard data and are null until supplied. Nothing is fabricated.
+# Revision A6 derating rules: every factor under `derating` is a PLACEHOLDER (1.00 = no derating applied) unless the item also carries
+# `derating_evidence.<factor>` naming the table or data sheet it came from. A 1.00 is never treated as verified. Parallel feeders also need
+# `parallel_arrangement` (layout of the runs) and `current_sharing_allowance_pct` (unequal sharing); both are null until supplied.
 schema_version: 1
 feeders:
 - tag: CAB-MV-A
@@ -17,6 +20,8 @@ feeders:
   conductor: copper
   cross_section_mm2: 120.0
   parallel_runs: 1
+  parallel_arrangement: null
+  current_sharing_allowance_pct: null
   power_factor: 0.95
   tabulated_rating_a: null
   derating:
@@ -43,6 +48,8 @@ feeders:
   conductor: copper
   cross_section_mm2: 630.0
   parallel_runs: 6
+  parallel_arrangement: null
+  current_sharing_allowance_pct: null
   power_factor: 0.8
   tabulated_rating_a: null
   derating:
@@ -69,6 +76,8 @@ feeders:
   conductor: copper
   cross_section_mm2: 630.0
   parallel_runs: 6
+  parallel_arrangement: null
+  current_sharing_allowance_pct: null
   power_factor: 0.99
   tabulated_rating_a: null
   derating:
@@ -94,6 +103,8 @@ feeders:
   conductor: copper
   cross_section_mm2: 630.0
   parallel_runs: 6
+  parallel_arrangement: null
+  current_sharing_allowance_pct: null
   power_factor: 0.95
   tabulated_rating_a: null
   derating:
@@ -119,6 +130,8 @@ feeders:
   conductor: copper
   cross_section_mm2: 300.0
   parallel_runs: 3
+  parallel_arrangement: null
+  current_sharing_allowance_pct: null
   power_factor: 0.9
   tabulated_rating_a: null
   derating:

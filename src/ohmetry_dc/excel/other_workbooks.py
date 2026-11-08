@@ -72,7 +72,9 @@ def build_rating_workbook(cfg: ProjectConfig, kind: str, path: str | Path, stamp
         k = 1.0
         for x in (r.get("derating") or {}).values():
             k *= x
-        inp.add(f"{it.tag}.k", f"{it.tag}: derating factors", "-", k, ds.UNVERIFIED_PLACEHOLDER, "Illustrative distribution schedule", "MANUFACTURER")
+        inp.add(f"{it.tag}.k", f"{it.tag}: derating factors (ambient x installation)", "-", k, ds.UNVERIFIED_PLACEHOLDER,
+                "PLACEHOLDER 1.00 (no derating applied): NOT a verified value. Take it from the manufacturer's data for the site ambient and the installation.", "MANUFACTURER",
+                "The required rating is a minimum until the real factors are entered.")
         inp.add(f"{it.tag}.rated", f"{it.tag}: rated current", "A", r.get("rated_current_a"), ds.UNVERIFIED_PLACEHOLDER, "Manufacturer data pending", "MANUFACTURER", "Never assumed.")
         inp.add(f"{it.tag}.sc", f"{it.tag}: short-circuit " + ("rating" if sw else "withstand"), "kA", r.get("short_circuit_rating_ka" if sw else "short_circuit_withstand_ka"), ds.UNVERIFIED_PLACEHOLDER,
                 "Manufacturer data pending", "MANUFACTURER", "With the type-test evidence.")

@@ -39,6 +39,7 @@ CHECK_INPUTS: dict[str, list[str]] = {
     "derating_factors": ["derating.*"],
     "cable_voltage_drop": CUR + ["cable_data.*", "design_criteria.voltage_drop_limit_pct", "@distribution"],
     "cable_ampacity": CUR + ["design_criteria.cable_max_loading", "installation.*", "@distribution"],
+    "cable_derating_basis": CUR + ["installation.*", "environment.design_ambient_temperature", "cable_data.conductor_operating_temperature", "@distribution"],
     "busduct_rating": CUR + ["design_criteria.busduct_max_loading", "@distribution"],
     "busduct_voltage_drop": CUR + ["@distribution"],
     "switchgear_ratings": CUR + ["design_criteria.switchgear_max_loading", "@distribution"],

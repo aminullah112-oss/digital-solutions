@@ -66,6 +66,12 @@ class ItemResult:
     short_circuit_status: LoadingStatus = LoadingStatus.NOT_VERIFIED
     missing_data: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    installation_method: str | None = None
+    parallel_arrangement: str | None = None
+    sharing_allowance_pct: float | None = None             # unequal current sharing between parallel runs; None = not supplied
+    derating_unverified: list[str] = field(default_factory=list)      # factors that are placeholders, not verified values
+    derating_factors: dict = field(default_factory=dict)
+    lower_bound: bool = False                                          # the required rating omits something (sharing, derating) so it is a minimum
 
 
 @dataclass
@@ -116,6 +122,31 @@ def design_current(basis: str, cfg: ProjectConfig, est: LoadEstimate, sizing: Po
     raise ConfigError(f"Unknown design_current_basis '{basis}'")
 
 
+DERATING_FACTORS = ("grouping", "ambient", "installation")
+
+
+def derating_review(item: dict, parallel_runs: int = 1) -> tuple[list[str], list[str]]:
+    """Which derating factors are NOT verified, and why.
+
+    A factor counts as verified only when the schedule carries evidence for it (`derating_evidence.<factor>`: a table or data sheet reference).
+    A value of 1.00 is never evidence of anything: it is the "no derating" placeholder. A grouping factor of 1.00 with several parallel runs
+    is called out because grouped cables always reduce the rating.
+    """
+    ev = item.get("derating_evidence") or {}
+    d = item.get("derating") or {}
+    unverified, notes = [], []
+    for k in d:
+        if not str(ev.get(k) or "").strip():
+            unverified.append(k)
+    if "grouping" in unverified and parallel_runs > 1 and float(d.get("grouping", 1.0)) >= 1.0:
+        notes.append(f"A grouping factor of 1.00 for {parallel_runs} parallel runs (and any neighbouring circuits) is a placeholder, not a verified value: grouped cables reduce the tabulated rating.")
+    if "ambient" in unverified:
+        notes.append("The ambient factor is a placeholder. It must be taken from the cable table for the actual design ambient and the table's reference ambient.")
+    if "installation" in unverified:
+        notes.append("The installation factor is a placeholder. It depends on the installation method and the layout of the parallel runs.")
+    return unverified, notes
+
+
 def _derate(d: dict) -> float:
     t = 1.0
     for k, v in d.items():
@@ -143,12 +174,35 @@ def assess_distribution(cfg: ProjectConfig, est: LoadEstimate, sizing: PowerSyst
         req = i_total / (n * k)
         tab = f.get("tabulated_rating_a")
         miss: list[str] = []
+        share = f.get("current_sharing_allowance_pct")
+        if share is not None:
+            if not isinstance(share, (int, float)) or isinstance(share, bool) or share < 0:
+                raise ConfigError(f"{f['tag']}: current_sharing_allowance_pct must be a number of at least 0 or null")
+            req = req * (1 + share / 100.0)
+        unv, dnotes = derating_review(f, n)
+        method = f.get("installation_method") or (cfg.value("installation.cable_installation_method") if "installation.cable_installation_method" in cfg.parameters else None)
+        arrangement = f.get("parallel_arrangement")
         notes = [f"Required tabulated current rating per run, after derating: {req:,.0f} A. Compare it with the cable table or data sheet for the installation method; no rating is assumed."]
+        lower = False
+        if n > 1:
+            if share is None:
+                lower = True
+                notes.append(f"Current sharing between the {n} parallel runs is not supplied: no allowance for unequal sharing is included, so the required rating is a MINIMUM. Equal sharing needs matched lengths, the same cross-section and a layout (phase sequence, spacing) that equalises impedance.")
+            else:
+                notes.append(f"Includes an allowance of {share:g} % for unequal current sharing between the {n} runs.")
+            if not arrangement:
+                miss.append(f"{f['tag']}.parallel_arrangement")
+        if unv:
+            lower = True
+            notes.append("Derating factors not verified: " + ", ".join(unv) + ". Their 1.00 values are placeholders, so the required rating is a MINIMUM until the real factors are applied.")
+            notes += dnotes
+        if not method:
+            miss.append(f"{f['tag']}.installation_method")
         if tab is None:
             miss.append(f"{f['tag']}.tabulated_rating_a")
             load_pct, ls, req_runs = None, LoadingStatus.NOT_VERIFIED, None
         else:
-            load_pct = per_run / (tab * k) * 100
+            load_pct = per_run * (1 + (share or 0) / 100.0) / (tab * k) * 100
             ls = classify_max(load_pct, limits["cable_max_loading_pct"])
             req_runs = math.ceil(i_total / (tab * k) - 1e-9)
         x_per_km = _num(cfg, f["reactance_ref"])
@@ -161,7 +215,9 @@ def assess_distribution(cfg: ProjectConfig, est: LoadEstimate, sizing: PowerSyst
             vdv, vdp = voltage_drop_three_phase(per_run, f["length_m"], r, x_per_km / 1000.0, f["power_factor"], v)
             vs = classify_max(vdp, vd_limit)
         notes.append("Voltage drop uses resistance derived from resistivity at the stated conductor temperature and a placeholder reactance. It is preliminary.")
-        cables.append(ItemResult(f["tag"], "cable", f["description"], i_total, f["design_current_basis"], v, k, req, tab, load_pct, ls, n, req_runs, vdp, vdv, vs, LoadingStatus.NOT_VERIFIED, miss, notes))
+        notes.append("Voltage drop is for this segment only at the operating (design) current, not cumulative from the source to the load, and does not include starting conditions.")
+        cables.append(ItemResult(f["tag"], "cable", f["description"], i_total, f["design_current_basis"], v, k, req, tab, load_pct, ls, n, req_runs, vdp, vdv, vs, LoadingStatus.NOT_VERIFIED, miss, notes,
+                                 method, arrangement, share, unv, dict(f.get("derating") or {}), lower))
 
     busducts: list[ItemResult] = []
     for b in dist.get("busducts") or []:
@@ -179,8 +235,14 @@ def assess_distribution(cfg: ProjectConfig, est: LoadEstimate, sizing: PowerSyst
             vdv, vdp = voltage_drop_three_phase(i_total, b["length_m"], b["resistance_ohm_per_km"] / 1000.0, b["reactance_ohm_per_km"] / 1000.0, b["power_factor"], v)
             vs = classify_max(vdp, vd_limit)
         sc = LoadingStatus.NOT_VERIFIED
-        busducts.append(ItemResult(b["tag"], "busduct", b["description"], i_total, b["design_current_basis"], v, k, req, rated, load_pct, ls, 1, None, vdp, vdv, vs, sc, miss,
-                                   [f"Required rated current after derating: {req:,.0f} A. The short-circuit withstand must exceed the Stage 5 fault level. Manufacturer data is required for all ratings."]))
+        unv, dnotes = derating_review(b)
+        bnotes = [f"Required rated current after derating: {req:,.0f} A. The short-circuit withstand must exceed the Stage 5 fault level. Manufacturer data is required for all ratings."]
+        if unv:
+            bnotes.append("Derating factors not verified: " + ", ".join(unv) + f". Their 1.00 values are placeholders, so {req:,.0f} A is a MINIMUM rating until the manufacturer's factors for the site ambient and the installation are applied.")
+            bnotes += dnotes
+        bnotes.append("The busduct rating, impedance and short-circuit withstand are manufacturer data. Voltage drop cannot be calculated without the busduct impedance.")
+        busducts.append(ItemResult(b["tag"], "busduct", b["description"], i_total, b["design_current_basis"], v, k, req, rated, load_pct, ls, 1, None, vdp, vdv, vs, sc, miss, bnotes,
+                                   b.get("installation_method"), None, None, unv, dict(b.get("derating") or {}), bool(unv)))
 
     sw: list[ItemResult] = []
     for s in dist.get("switchgear") or []:
@@ -193,6 +255,8 @@ def assess_distribution(cfg: ProjectConfig, est: LoadEstimate, sizing: PowerSyst
         load_pct = None if rated is None else i_total / (rated * k) * 100
         ls = LoadingStatus.NOT_VERIFIED if rated is None else classify_max(load_pct, limits["switchgear_max_loading_pct"])
         label = "IEC 61439" if s["voltage_class"] == "LV" else "IEC 62271"
+        unv, _ = derating_review(s)
         sw.append(ItemResult(s["tag"], "switchgear", s["description"], i_total, s["incomer_basis"], v, k, req, rated, load_pct, ls, 1, None, None, None, LoadingStatus.NOT_VERIFIED, LoadingStatus.NOT_VERIFIED, miss,
-                             [f"Required busbar rated current after derating: {req:,.0f} A. {label} verification evidence, the short-circuit rating (from the Stage 5 fault study), separation and IP rating are manufacturer data."]))
+                             [f"Required busbar rated current after derating: {req:,.0f} A. {label} verification evidence, the short-circuit rating (from the Stage 5 fault study), separation and IP rating are manufacturer data." + (f" Derating factors not verified ({', '.join(unv)}): the required rating is a MINIMUM." if unv else "")],
+                             None, None, None, unv, dict(s.get("derating") or {}), bool(unv)))
     return DistributionResult(cables, busducts, sw, limits)

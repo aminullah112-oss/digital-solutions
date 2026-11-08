@@ -212,9 +212,7 @@ def build_cable_workbook(cfg: ProjectConfig, checks: list[CheckResult], path: st
         f = feeders[c.tag]
         is_mv = str(f["voltage_ref"]).startswith("electrical_system.mv")
         x_pid = f["reactance_ref"]
-        k_deriv = 1.0
-        for v in (f.get("derating") or {}).values():
-            k_deriv *= v
+        der = f.get("derating") or {}
         inp.add(f"{c.tag}.I", f"{c.tag}: design current (total)", "A", c.design_current_a, ds.PRELIMINARY_ASSUMPTION, f"Load model and sizing, basis {c.basis}", "SITE_DATA")
         inp.add(f"{c.tag}.V", f"{c.tag}: voltage", "V", c.voltage_v, ds.PRELIMINARY_ASSUMPTION, "Master configuration", "SITE_DATA")
         inp.add(f"{c.tag}.n", f"{c.tag}: parallel runs", "-", f["parallel_runs"], ds.UNVERIFIED_PLACEHOLDER, "Illustrative distribution schedule", "MANUFACTURER")
@@ -224,7 +222,12 @@ def build_cable_workbook(cfg: ProjectConfig, checks: list[CheckResult], path: st
         inp.add(f"{c.tag}.alpha", f"{c.tag}: temperature coefficient", "1/degC", {"copper": 0.00393, "aluminium": 0.00403}[f["conductor"].lower()], ds.REFERENCE_DATA, "Reference constant", "MANUFACTURER")
         inp.add(f"{c.tag}.x", f"{c.tag}: reactance", "ohm/km", cfg.value(x_pid), st(x_pid), P(x_pid).source, "MANUFACTURER", "Depends on the cable and its layout.")
         inp.add(f"{c.tag}.pf", f"{c.tag}: load power factor", "-", f["power_factor"], ds.UNVERIFIED_PLACEHOLDER, "Illustrative distribution schedule", "SITE_DATA")
-        inp.add(f"{c.tag}.k", f"{c.tag}: derating factors (grouping x ambient x installation)", "-", k_deriv, ds.UNVERIFIED_PLACEHOLDER, "Illustrative distribution schedule", "MANUFACTURER")
+        for fk, fl in (("grouping", "grouping (parallel runs and neighbouring circuits)"), ("ambient", "ambient temperature"), ("installation", "installation method and layout")):
+            inp.add(f"{c.tag}.k_{fk}", f"{c.tag}: derating factor, {fl}", "-", der.get(fk, 1.0), ds.UNVERIFIED_PLACEHOLDER,
+                    "PLACEHOLDER 1.00 (no derating applied): NOT a verified value. Take it from the cable table or data sheet for the installation method.", "MANUFACTURER",
+                    "A 1.00 here is never evidence of anything: with several parallel runs the real grouping factor is below 1.00." if fk == "grouping" else "")
+        inp.add(f"{c.tag}.share", f"{c.tag}: allowance for unequal current sharing between parallel runs", "%", None, ds.UNVERIFIED_PLACEHOLDER,
+                "NOT SUPPLIED: no allowance is included, so the required rating is a minimum", "MANUFACTURER", "Blank = no allowance. Depends on equal lengths, matched cross-section and the layout of the runs.")
         inp.add(f"{c.tag}.tab", f"{c.tag}: tabulated current rating per run", "A", f.get("tabulated_rating_a"), ds.UNVERIFIED_PLACEHOLDER, "Pending: cable standard table or data sheet for the installation method", "MANUFACTURER",
                 "Never assumed. Without it the cable cannot be judged for current rating.")
     inp.finish()
@@ -244,12 +247,14 @@ def build_cable_workbook(cfg: ProjectConfig, checks: list[CheckResult], path: st
         ith = I("ith_mv") if is_mv else I("ith_lv")
         _put(calc, f"A{r}", t, bold)
         _put(calc, f"B{r}", f"={I(f'{t}.I')}/{n}", base, FILL_RESULT, "#,##0.0")
-        _put(calc, f"C{r}", f"={I(f'{t}.I')}/({n}*{I(f'{t}.k')})", base, FILL_RESULT, "#,##0.0")
+        kk = f"({I(f'{t}.k_grouping')}*{I(f'{t}.k_ambient')}*{I(f'{t}.k_installation')})"
+        sh = f"(1+N({I(f'{t}.share')})/100)"
+        _put(calc, f"C{r}", f"={I(f'{t}.I')}/({n}*{kk})*{sh}", base, FILL_RESULT, "#,##0.0")
         _put(calc, f"D{r}", f"={I(f'{t}.rho')}*(1+{I(f'{t}.alpha')}*({I('temp')}-20))/{A}", base, FILL_RESULT, "0.000000000")
         _put(calc, f"E{r}", f"=SQRT(3)*B{r}*{L}*(D{r}*{I(f'{t}.pf')}+{I(f'{t}.x')}/1000*SQRT(1-{I(f'{t}.pf')}^2))", base, FILL_RESULT, "0.000")
         _put(calc, f"F{r}", f"=E{r}/{V}*100", base, FILL_RESULT, "0.000")
         _put(calc, f"G{r}", f'=IF(F{r}>{I("vd_limit")}+0.000000001,"FAIL","PASS")', bold)
-        _put(calc, f"H{r}", f'=IF({I(f"{t}.tab")}="","",B{r}/({I(f"{t}.tab")}*{I(f"{t}.k")})*100)', base, FILL_RESULT, "0.0")
+        _put(calc, f"H{r}", f'=IF({I(f"{t}.tab")}="","",B{r}*{sh}/({I(f"{t}.tab")}*{kk})*100)', base, FILL_RESULT, "0.0")
         _put(calc, f"I{r}", f'=IF(H{r}="","NOT VERIFIED",IF(H{r}>{I("load_limit")}+0.000000001,"FAIL","PASS"))', bold)
         _put(calc, f"J{r}", f'=IF({ith}="","NOT CALCULATED",{ith}*1000/{n}*SQRT({I("clear_t")})/{I("k_factor")})', base, FILL_RESULT, "0.0")
         _put(calc, f"K{r}", f'=IF(J{r}="NOT CALCULATED","NOT VERIFIED",IF({A}>=J{r},"PASS","FAIL"))', bold)
@@ -276,7 +281,7 @@ def build_cable_workbook(cfg: ProjectConfig, checks: list[CheckResult], path: st
     colour_statuses(res, f"H5:J{4+len(dist.cables)}")
     readme(ws0, "Cable sizing: " + cfg.project.name, CABLE_FILE, cfg, stamp,
            "Design current per run, required tabulated rating after derating, three-phase voltage drop from conductor resistance and reactance, and the adiabatic thermal withstand against a fault current.",
-           "Tabulated ratings are never assumed: with none entered, the current rating reads NOT VERIFIED. Reactance is a placeholder and depends on the cable layout. Cable and busduct impedance does not "
+           "Tabulated ratings are never assumed: with none entered, the current rating reads NOT VERIFIED. The three derating factors (grouping, ambient, installation) are 1.00 placeholders, not verified values, and no allowance for unequal sharing between parallel runs is included, so every required rating is a minimum until real values are entered. Reactance is a placeholder and depends on the cable layout. Cable and busduct impedance does not "
            "feed back into the fault level. Path B is assumed identical to path A.", SHEETS)
     revision_sheet(rev, cfg, stamp, CABLE_FILE)
     out = Path(path)
