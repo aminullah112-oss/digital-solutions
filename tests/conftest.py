@@ -93,3 +93,12 @@ SC_TEST_INPUTS = {("short_circuit", "utility_fault_level_mva"): 500, ("short_cir
 def supply_sc(d: dict) -> None:
     for (sec, key), v in SC_TEST_INPUTS.items():
         set_value(d, sec, key, v)
+
+
+ATTESTATION = "A. Reviewer; Example Engineering Ltd; 2026-11-01; Data sheet DS-1 rev A; value and unit against the data sheet (test)"
+
+
+def attest(entry: dict, name: str = "A. Reviewer") -> dict:
+    """Fill a register entry with a complete (test) verification record."""
+    entry.update(verified_by=name, verified_org="Example Engineering Ltd", verification_date="2026-11-01", evidence_ref="Data sheet DS-1 rev A", verification_scope="value and unit against the data sheet (test)")
+    return entry

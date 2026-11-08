@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from ohmetry_dc.models import ProjectConfig
 
+from ohmetry_dc.models.attestation import describe, is_complete, is_started, missing_fields
+
 from .status import CheckResult, CheckStatus
 
 
@@ -17,14 +19,17 @@ def apply_exceptions(cfg: ProjectConfig, results: list[CheckResult]) -> list[Che
         if r is None:
             continue
         loading = r.values.get("loading_pct")
-        pending = "pending independent technical verification" if not ex.verified_by else f"verified by {ex.verified_by} on {ex.verification_date}"
+        rec = ex.model_dump()
+        done = is_complete(rec)
+        pending = ("pending independent technical verification" if not is_started(rec) else
+                   f"verification record INCOMPLETE ({', '.join(missing_fields(rec))}), treated as not verified") if not done else f"attested verified: {describe(rec)}"
         if r.status == CheckStatus.PASS:
             r.detail += f" Exception {ex.id} is not needed: the result is within the preferred target."
             r.values["exception"] = {"id": ex.id, "applies": False}
         elif loading is not None and r.status == CheckStatus.WARNING and loading <= ex.accepted_ceiling_pct + 1e-9:
             r.detail += (f" ACCEPTED DESIGN-TARGET EXCEPTION {ex.id} ({ex.status.lower()} by {ex.accepted_by}, {ex.accepted_date}): the result is within the accepted ceiling of {ex.accepted_ceiling_pct:g} %, {pending}. "
                          "The check stays a WARNING.")
-            r.values["exception"] = {"id": ex.id, "applies": True, "accepted_ceiling_pct": ex.accepted_ceiling_pct, "verified": bool(ex.verified_by)}
+            r.values["exception"] = {"id": ex.id, "applies": True, "accepted_ceiling_pct": ex.accepted_ceiling_pct, "verified": done}
         else:
             r.detail += (f" EXCEPTION {ex.id} DOES NOT COVER THIS RESULT: it was accepted only up to {ex.accepted_ceiling_pct:g} % and a result above that, or a status other than WARNING, needs re-review.")
             r.values["exception"] = {"id": ex.id, "applies": False, "accepted_ceiling_pct": ex.accepted_ceiling_pct}

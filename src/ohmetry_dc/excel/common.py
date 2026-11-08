@@ -21,7 +21,7 @@ from openpyxl.styles import PatternFill
 
 FILL_INPUT = PatternFill("solid", fgColor="DCEBFF")      # blue: cell the customer edits
 INPUT_HEADERS = ["Key", "Parameter", "Unit", "Preliminary value (retained)", "Datasheet / confirmed value (enter here)", "Effective value used", "Source of the effective value",
-                 "Datasheet source and revision (REQUIRED with a value in E)", "Reviewer (name, once checked against the source)", "Input status", "Preliminary status", "Note"]
+                 "Datasheet source and revision (REQUIRED with a value in E)", "Reviewer attestation: name; organisation; date (YYYY-MM-DD); evidence reference; scope (self-declared, not authenticated)", "Input status", "Preliminary status", "Note"]
 INPUT_WIDTHS = [20, 40, 9, 16, 18, 14, 44, 34, 24, 26, 24, 44]
 STATUS_COLORS = {"PASS": "CDEBD3", "WARNING": "FFE9A8", "FAIL": "F8C9C4", "NOT VERIFIED": "E4DCF2", "NOT CALCULATED": "E4DCF2", "MISSING": "F8C9C4", "VERIFIED": "CDEBD3",
                  "UNVERIFIED_PLACEHOLDER": "FFE9A8", "PRELIMINARY_ASSUMPTION": "FFF3C4", "MANUFACTURER_SUPPLIED": "DCEBFF", "SITE_DATA_SUPPLIED": "DCEBFF", "CALCULATED": "E3F4E3"}
@@ -77,7 +77,7 @@ class Inputs:
         h.protection = Protection(locked=False)
         i = _put(ws, f"I{r}", None, blue, FILL_INPUT)
         i.protection = Protection(locked=False)
-        _put(ws, f"J{r}", (f'=IF(AND(E{r}<>"",H{r}=""),"REJECTED: SOURCE MISSING",IF(F{r}="","MISSING",IF(AND(E{r}<>"",H{r}<>""),IF(I{r}<>"","{supplied}_VERIFIED","{supplied}_SUPPLIED"),K{r})))'), bold, align=CENTER)
+        _put(ws, f"J{r}", (f'=IF(AND(E{r}<>"",H{r}=""),"REJECTED: SOURCE MISSING",IF(F{r}="","MISSING",IF(AND(E{r}<>"",H{r}<>""),IF(I{r}="","{supplied}_SUPPLIED",IF({attested(f"I{r}")},"{supplied}_VERIFIED","REJECTED: ATTESTATION INCOMPLETE")),K{r})))'), bold, align=CENTER)
         _put(ws, f"K{r}", prelim_status if prelim is not None else "MISSING")
         _put(ws, f"L{r}", note_text, note, align=WRAP)
         self.row += 1
@@ -105,6 +105,12 @@ class Inputs:
                 dv.add(f"E{r}")
         colour_statuses(ws, f"J{self.first}:K{self.last}")
         ws.freeze_panes = f"C{self.first}"
+
+
+def attested(ref: str) -> str:
+    """Excel test that a reviewer cell holds a full attestation: name; organisation; date; evidence reference; scope (four semicolons, no empty text).
+    It cannot authenticate the person: it only refuses an entry that lacks the record."""
+    return f'AND(LEN(TRIM({ref}))>=20,LEN({ref})-LEN(SUBSTITUTE({ref},";",""))>=4)'
 
 
 def _q(text: str) -> str:

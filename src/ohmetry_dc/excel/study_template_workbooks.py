@@ -17,7 +17,7 @@ from ohmetry_dc.models import ProjectConfig
 from ohmetry_dc.models import data_status as ds
 
 from .architecture_workbooks import _edit, _sheets
-from .common import FILL_RESULT, Inputs, _header, _put, agg_status, base, bold, colour_statuses, note, new_workbook, readme, revision_sheet, status_block, title
+from .common import attested, FILL_RESULT, Inputs, _header, _put, agg_status, base, bold, colour_statuses, note, new_workbook, readme, revision_sheet, status_block, title
 from .other_workbooks import _P, _save
 
 FILES = {"protection": "14_PROTECTION_COORDINATION.xlsx", "lightning": "16_LIGHTNING_PROTECTION.xlsx", "pq": "17_POWER_QUALITY.xlsx", "energy": "18_ENERGY_EFFICIENCY.xlsx", "fuel": "19_GENERATOR_FUEL.xlsx"}
@@ -33,7 +33,7 @@ def build_protection_workbook(cfg: ProjectConfig, path: str | Path, stamp: str) 
     devs = (cfg.distribution or {}).get("protection_devices") or []
     dev["A1"].value, dev["A1"].font = "Protective device schedule", title
     dev["A2"].value, dev["A2"].font = "Breaking and making capacity and curve references are manufacturer data and are never assumed. The required fault level is blank until the short-circuit study can be calculated.", note
-    _header(dev, 4, ["Tag", "Description", "Bus", "Function", "Required breaking (kA)", "Required making peak (kA)", "Breaking capacity (kA)", "Making capacity (kA)", "TCC / curve reference", "Datasheet source and revision", "Reviewed by", "Rating check", "Device status"],
+    _header(dev, 4, ["Tag", "Description", "Bus", "Function", "Required breaking (kA)", "Required making peak (kA)", "Breaking capacity (kA)", "Making capacity (kA)", "TCC / curve reference", "Datasheet source and revision", "Reviewer attestation (name; organisation; date; evidence reference; scope. Self-declared)", "Rating check", "Device status"],
             [14, 44, 7, 40, 14, 14, 14, 14, 24, 30, 16, 16, 28])
     for i, d in enumerate(devs):
         r = 5 + i
@@ -47,7 +47,7 @@ def build_protection_workbook(cfg: ProjectConfig, path: str | Path, stamp: str) 
         for col in "GHIJK":
             _edit(dev, f"{col}{r}", d.get("breaking_capacity_ka") if col == "G" else None)
         _put(dev, f"L{r}", f'=IF(OR(E{r}="",G{r}="",J{r}=""),"NOT VERIFIED",IF(G{r}>=E{r},"PASS","FAIL"))', bold)
-        _put(dev, f"M{r}", f'=IF(L{r}="FAIL","FAIL",IF(AND(L{r}="PASS",I{r}<>"",K{r}<>""),"RATING VERIFIED (coordination separate)","NOT VERIFIED"))', bold)
+        _put(dev, f"M{r}", f'=IF(L{r}="FAIL","FAIL",IF(AND(L{r}="PASS",I{r}<>"",{attested(f"K{r}")}),"RATING VERIFIED (coordination separate)","NOT VERIFIED"))', bold)
     last = 4 + len(devs)
     colour_statuses(dev, f"L5:L{last}")
     dev.conditional_formatting.add(f"M5:M{last}", FormulaRule(formula=['LEFT(M5,12)="NOT VERIFIED"'], fill=VIOLET))

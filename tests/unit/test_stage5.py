@@ -9,7 +9,7 @@ from ohmetry_dc.config import load_config
 from ohmetry_dc.validation import run_all_checks
 from ohmetry_dc.validation.status import CheckStatus as S
 
-from conftest import set_value, supply_sc
+from conftest import attest, set_value, supply_sc
 
 
 def load(write_config, root, mutate=supply_sc):      # most tests supply the TEST INPUTS the shipped configuration leaves pending
@@ -271,7 +271,7 @@ def test_the_register_refuses_verification_of_a_placeholder(write_config, root):
     from ohmetry_dc.reporting import load_register_meta, problems
     cfg = load_config(write_config(lambda d: None), LS(root))
     meta = load_register_meta(root / "config" / "manufacturer_data_register.yaml")
-    next(e for e in meta if e["parameter"] == "equipment.transformer_impedance")["verified_by"] = "A. Reviewer"
+    attest(next(e for e in meta if e["parameter"] == "equipment.transformer_impedance"))
     assert any("still a placeholder" in p for p in problems(cfg, meta))
 
 

@@ -8,7 +8,7 @@ from ohmetry_dc.reporting import build_rows, load_register_meta, problems, requi
 from ohmetry_dc.validation import run_all_checks
 from ohmetry_dc.validation.status import CheckStatus as S
 
-from conftest import set_value
+from conftest import attest, set_value
 
 
 def load(write_config, root, mutate=lambda d: None):
@@ -92,7 +92,7 @@ def test_register_detects_a_missing_entry(write_config, root):
 def test_register_rejects_verification_of_a_placeholder(write_config, root):
     cfg = load(write_config, root)
     meta = load_register_meta(root / "config" / "manufacturer_data_register.yaml")
-    meta[0] = dict(meta[0], verified_by="A. Reviewer")
+    meta[0] = attest(dict(meta[0]))
     assert any("still a placeholder" in p for p in problems(cfg, meta))
 
 
@@ -101,3 +101,47 @@ def test_supplying_manufacturer_data_changes_the_register_state(write_config, ro
     meta = load_register_meta(root / "config" / "manufacturer_data_register.yaml")
     row = next(r for r in build_rows(cfg, meta) if r.parameter == "generators.max_step_load_pct")
     assert row.data_state == "SUPPLIED, REVIEW REQUIRED" and row.value == 60 and row.data_class == "MANUFACTURER_SUPPLIED"
+
+
+# ---- revision A6, item 9
+def test_a_register_entry_with_only_a_name_is_an_incomplete_record_and_is_not_verified(write_config, root):
+    cfg = load(write_config, root, lambda d: d["sections"]["generators"]["max_step_load_pct"].update(value=60, status="MANUFACTURER_DATA"))
+    meta = load_register_meta(root / "config" / "manufacturer_data_register.yaml")
+    e = next(x for x in meta if x["parameter"] == "generators.max_step_load_pct")
+    e["verified_by"] = "A. Reviewer"                                      # a bare name: the whole record is not there
+    row = next(r for r in build_rows(cfg, meta) if r.parameter == "generators.max_step_load_pct")
+    assert row.verified_by is None and row.data_class == "MANUFACTURER_SUPPLIED" and row.data_state == "SUPPLIED, REVIEW REQUIRED"
+    msg = " ".join(problems(cfg, meta))
+    assert "incomplete verification record" in msg and "verified_org" in msg and "evidence_ref" in msg and "verification_scope" in msg
+    attest(e)
+    row = next(r for r in build_rows(cfg, meta) if r.parameter == "generators.max_step_load_pct")
+    assert row.verified_by == "A. Reviewer" and "self-declared attestation" in row.attestation and "Data sheet DS-1 rev A" in row.attestation
+    assert row.data_class == "MANUFACTURER_SUPPLIED"       # a value typed into the master config is not an import, so it can never read VERIFIED (the import path is tested in test_cli)
+
+
+def test_the_register_text_states_the_name_is_not_authenticated(write_config, root):
+    from ohmetry_dc.reporting import to_csv, to_markdown
+    cfg = load(write_config, root)
+    rows = build_rows(cfg, load_register_meta(root / "config" / "manufacturer_data_register.yaml"))
+    assert "not an authenticated identity" in to_markdown(rows, "stamp") and to_csv(rows).splitlines()[0].endswith("attestation")
+
+
+def test_a_design_exception_needs_a_complete_record_before_it_reads_verified(write_config, root):
+    from ohmetry_dc.validation.exceptions import apply_exceptions
+    def detail(mut):
+        def m(d):
+            pass
+        cfg = load(write_config, root)
+        for ex in cfg.exceptions:
+            mut(ex)
+        res = {r.id: r for r in apply_exceptions(cfg, run_all_checks(cfg))}
+        return res["transformer_loading"]
+    none = detail(lambda ex: None)
+    assert "pending independent technical verification" in none.detail and none.values["exception"]["verified"] is False
+    partial = detail(lambda ex: setattr(ex, "verified_by", "A. Reviewer"))
+    assert "INCOMPLETE" in partial.detail and partial.values["exception"]["verified"] is False and partial.status is S.WARNING
+    def full(ex):
+        for k, v in dict(verified_by="A. Reviewer", verified_org="Example Engineering Ltd", verification_date="2026-11-01", evidence_ref="TX data sheet rev A", verification_scope="rating and cooling class").items():
+            setattr(ex, k, v)
+    done = detail(full)
+    assert "attested verified" in done.detail and done.values["exception"]["verified"] is True and done.status is S.WARNING       # an exception never turns a WARNING into a PASS

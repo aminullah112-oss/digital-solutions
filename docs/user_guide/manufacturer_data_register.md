@@ -19,3 +19,13 @@ Equivalent manual procedure when a data sheet arrives:
 4. Run `revision-impact` to record the equipment sizing changes.
 
 A placeholder is never treated as validated equipment data.
+
+## Recording a verification (revision A6)
+
+```
+PYTHONPATH=src python -m ohmetry_dc record-verification --parameter generators.max_step_load_pct \
+  --by "A. Reviewer" --org "Example Engineering Ltd" --evidence "GX-2000 data sheet rev B, table 4" \
+  --scope "value and unit against the data sheet; not the design" --date 2026-11-01
+```
+
+All five items are required. The name is a self-declared attestation and is not authenticated: the register records who said what, when, against which evidence and for which scope, so a reader can follow it up. Only a value that was imported from a source document can be verified; a placeholder cannot.

@@ -12,7 +12,7 @@ from ohmetry_dc.models.architecture import ARCHITECTURE_FUNCTIONS
 from ohmetry_dc.models import data_status as ds
 from ohmetry_dc.validation import CheckResult
 
-from .common import (FILL_INPUT, FILL_RESULT, Inputs, _header, _page, _put, agg_status, base, blue, bold, colour_statuses, new_workbook, note, readme, revision_sheet, title)
+from .common import (attested, FILL_INPUT, FILL_RESULT, Inputs, _header, _page, _put, agg_status, base, blue, bold, colour_statuses, new_workbook, note, readme, revision_sheet, title)
 from .other_workbooks import _P, _save
 from openpyxl.styles import Protection
 
@@ -321,7 +321,7 @@ def build_equipment_schedule(cfg: ProjectConfig, path: str | Path, stamp: str) -
     for c in dist.cables:
         rows.append((c.tag, c.description, "Cables", c.runs, "Duty", f"{c.voltage_v:g} V", c.design_current_a, None, None))
     heads = ["Equipment tag", "Description", "System", "Quantity", "Duty / standby", "Voltage", "Design current (A)", "Power", "Fault rating (kA)", "Manufacturer", "Model", "Datasheet reference", "Datasheet revision",
-             "Reviewed by", "Technical status", "Procurement status", "Remarks"]
+             "Reviewer attestation (name; organisation; date; evidence reference; scope. Self-declared, not authenticated)", "Technical status", "Procurement status", "Remarks"]
     sch["A1"].value, sch["A1"].font = "Master equipment schedule", title
     sch["A2"].value, sch["A2"].font = "Values are preliminary. Technical status: NOT VERIFIED until a manufacturer, model, datasheet and revision are entered AND a reviewer is recorded. No equipment is selected.", note
     _header(sch, 4, heads, [14, 40, 20, 9, 14, 16, 14, 30, 12, 20, 18, 22, 12, 16, 26, 18, 40])
@@ -331,7 +331,7 @@ def build_equipment_schedule(cfg: ProjectConfig, path: str | Path, stamp: str) -
             _put(sch, f"{col}{r}", v, base, FILL_RESULT if col == "G" and v is not None else None, "#,##0" if col == "G" else "General")
         for col in "IJKLMNPQ":
             _edit(sch, f"{col}{r}", "NOT STARTED" if col == "P" else None)
-        _put(sch, f"O{r}", f'=IF(OR(J{r}="",K{r}="",L{r}="",M{r}=""),"NOT VERIFIED: no datasheet",IF(N{r}="","DATA ENTERED: REVIEW REQUIRED","DATASHEET REVIEWED"))', bold)
+        _put(sch, f"O{r}", f'=IF(OR(J{r}="",K{r}="",L{r}="",M{r}=""),"NOT VERIFIED: no datasheet",IF(N{r}="","DATA ENTERED: REVIEW REQUIRED",IF({attested(f"N{r}")},"DATASHEET REVIEWED (attested, not authenticated)","DATA ENTERED: ATTESTATION INCOMPLETE")))', bold)
     last = 4 + len(rows)
     dv = DataValidation(type="list", formula1='"NOT STARTED,RFQ ISSUED,QUOTED,ORDERED,DELIVERED,INSTALLED"', allow_blank=True)
     sch.add_data_validation(dv)

@@ -16,6 +16,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from ohmetry_dc import __version__
 from ohmetry_dc.models import ProjectConfig
+from ohmetry_dc.models.attestation import is_complete
 from ohmetry_dc.reporting.manufacturer_register import build_rows, load_register_meta
 from ohmetry_dc.validation import run_all_checks
 
@@ -57,7 +58,7 @@ def outstanding_items(root: Path, cfg: ProjectConfig) -> list[dict]:
     add("Standards register", "Standard", "Local codes, utility and authority requirements are not stated", "Project team to add them", "OPEN", "High")
     # 5. exceptions
     for ex in cfg.exceptions:
-        if not ex.verified_by:
+        if not is_complete(ex.model_dump()):
             add(f"Exception {ex.id}", "Design-target exception", f"{ex.check_id}: {ex.status} up to {ex.accepted_ceiling_pct:g} %. Verification: {ex.verification_action}", ex.verification_action, "PENDING INDEPENDENT VERIFICATION", "High")
     # 6. assumptions
     for pid, p in cfg.parameters.items():

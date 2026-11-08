@@ -96,3 +96,58 @@ def test_build_package_assembles_only_what_exists_and_is_labelled_preliminary(ro
     assert man["workbooks_planned_total"] == 20 and any("drawings" in x for x in man["not_included"]) and len(man["workbooks_included"]) + len(man["workbooks_not_included"]) == 20
     assert "NOT construction-ready" in z.read(next(n for n in names if n.endswith("PACKAGE_STATUS.txt"))).decode()
     assert all(len(f["sha256"]) == 64 for f in man["files"])
+
+
+# ---- revision A6, item 9: the reviewer name is an attestation, recorded with organisation, date, evidence and scope
+def _supplied_copy(root, tmp_path):
+    """A temporary copy of config/ with one manufacturer value imported, so there is a supplied value to attest."""
+    import shutil
+    cfgdir = tmp_path / "config"
+    shutil.copytree(root / "config", cfgdir)
+    csvf = tmp_path / "in.csv"
+    csvf.write_text("parameter,value,unit,source,datasheet_revision,datasheet_reference\ngenerators.max_step_load_pct,60,%,Example Gensets GX-2000 data sheet,B,Table 4\n")
+    base = ["--config", str(cfgdir / "project_config.yaml"), "--loads", str(cfgdir / "load_schedule.yaml")]
+    assert main([*base, "import-manufacturer-data", "--file", str(csvf), "--register", str(cfgdir / "manufacturer_data_register.yaml"), "--output", str(tmp_path / "out")]) == EXIT_OK
+    return cfgdir, base
+
+
+def _verify(base, cfgdir, **kw):
+    a = {"by": "A. Reviewer", "org": "Example Engineering Ltd", "evidence": "GX-2000 data sheet rev B, table 4", "scope": "value and unit against the data sheet; not the design", "date": "2026-11-01"}
+    a.update(kw)
+    cmd = ["record-verification", "--parameter", "generators.max_step_load_pct", "--register", str(cfgdir / "manufacturer_data_register.yaml")]
+    for k, v in a.items():
+        if v is not None:
+            cmd += [f"--{k}", v]
+    return main([*base, *cmd])
+
+
+def test_verification_needs_name_organisation_date_evidence_and_scope(root, tmp_path, capsys):
+    cfgdir, base = _supplied_copy(root, tmp_path)
+    with pytest.raises(SystemExit):                                  # organisation, evidence and scope are required arguments
+        main([*base, "record-verification", "--parameter", "generators.max_step_load_pct", "--by", "A. Reviewer"])
+    capsys.readouterr()
+    assert _verify(base, cfgdir, date="not-a-date") == EXIT_FAIL and "not an ISO date" in capsys.readouterr().out
+    assert _verify(base, cfgdir, date="2999-01-01") == EXIT_FAIL and "in the future" in capsys.readouterr().out
+    assert _verify(base, cfgdir, org="  ") == EXIT_FAIL and "organisation" in capsys.readouterr().out
+    assert not (cfgdir / "verification_log.yaml").exists()           # nothing was recorded by a rejected attempt
+
+
+def test_a_complete_attestation_is_recorded_in_the_register_and_an_append_only_log_and_says_it_is_not_authenticated(root, tmp_path, capsys):
+    cfgdir, base = _supplied_copy(root, tmp_path)
+    assert _verify(base, cfgdir) == EXIT_OK
+    out = capsys.readouterr().out
+    assert "self-declared attestation" in out and "not an authenticated identity" in out
+    e = next(x for x in yaml.safe_load((cfgdir / "manufacturer_data_register.yaml").read_text())["entries"] if x["parameter"] == "generators.max_step_load_pct")
+    assert (e["verified_by"], e["verified_org"], e["verification_date"], e["evidence_ref"]) == ("A. Reviewer", "Example Engineering Ltd", "2026-11-01", "GX-2000 data sheet rev B, table 4") and "not the design" in e["verification_scope"]
+    assert _verify(base, cfgdir, by="B. Second Reviewer", date="2026-11-02") == EXIT_OK
+    log = yaml.safe_load((cfgdir / "verification_log.yaml").read_text())["records"]
+    assert [r["verified_by"] for r in log] == ["A. Reviewer", "B. Second Reviewer"] and all("recorded" in r for r in log)    # history is kept, not overwritten
+
+
+def test_verifying_a_placeholder_is_refused_even_with_a_complete_record(root, tmp_path, capsys):
+    import shutil
+    cfgdir = tmp_path / "config"
+    shutil.copytree(root / "config", cfgdir)
+    base = ["--config", str(cfgdir / "project_config.yaml"), "--loads", str(cfgdir / "load_schedule.yaml")]
+    code = _verify(base, cfgdir)
+    assert code == EXIT_FAIL and "placeholder" in capsys.readouterr().out

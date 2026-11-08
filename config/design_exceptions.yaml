@@ -16,4 +16,7 @@ exceptions:
       - The exception holds only while the result stays at or below the accepted ceiling.
     verification_action: Independent technical verification against the manufacturer's rating, cooling class, derating and loss data.
     verified_by: null
+    verified_org: null
     verification_date: null
+    evidence_ref: null
+    verification_scope: null

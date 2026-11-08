@@ -6,7 +6,7 @@ from ohmetry_dc.config import load_config
 from ohmetry_dc.excel import CABLE_FILE, SC_FILE, SIZING_KINDS, build_cable_workbook, build_short_circuit_workbook, build_sizing_workbook
 from ohmetry_dc.validation import run_all_checks
 
-from conftest import STAMP, needs_soffice, recalc, supply_sc
+from conftest import ATTESTATION, STAMP, needs_soffice, recalc, supply_sc
 
 
 def _cfg(root, write_config=None, mutate=None):
@@ -37,7 +37,7 @@ def test_workbooks_have_the_standard_sheets_and_input_columns(root, tmp_path):
         wb = openpyxl.load_workbook(_sizing(cfg, kind, tmp_path))
         assert wb.sheetnames == ["README", "INPUTS", "CALCULATIONS", "RESULTS", "REVISION_LOG"]
         hdr = [c.value for c in wb["INPUTS"][5]]
-        assert "Preliminary value (retained)" in hdr and "Datasheet / confirmed value (enter here)" in hdr and "Input status" in hdr and "Reviewer (name, once checked against the source)" in hdr
+        assert "Preliminary value (retained)" in hdr and "Datasheet / confirmed value (enter here)" in hdr and "Input status" in hdr and "Reviewer attestation: name; organisation; date (YYYY-MM-DD); evidence reference; scope (self-declared, not authenticated)" in hdr
         readme = " ".join(str(c.value) for row in wb["README"].iter_rows() for c in row if c.value)
         assert "Not for construction" in readme and "never read PASS overall" in readme
 
@@ -100,7 +100,7 @@ def test_overall_pass_needs_every_input_verified_by_a_reviewer(root, tmp_path):
         if ws[f"A{r}"].value:
             ws[f"E{r}"] = ws[f"D{r}"].value                       # restate each value from a (hypothetical) data sheet
             ws[f"H{r}"] = "Hypothetical data sheet, rev A (test)"
-            ws[f"I{r}"] = "Test reviewer"
+            ws[f"I{r}"] = ATTESTATION
     wb.save(path)
     res = openpyxl.load_workbook(recalc(path, tmp_path / "rc"), data_only=True)["RESULTS"]
     r = _col_find(res, "OVERALL DESIGN STATUS")
@@ -332,9 +332,9 @@ def test_equipment_schedule_never_reads_verified_without_a_datasheet_and_reviewe
     ws = openpyxl.load_workbook(recalc(path, tmp_path / "rc1"), data_only=True)["SCHEDULE"]
     assert ws["O5"].value == "DATA ENTERED: REVIEW REQUIRED"
     wb = openpyxl.load_workbook(path)
-    wb["SCHEDULE"]["N5"] = "Test reviewer"
+    wb["SCHEDULE"]["N5"] = ATTESTATION
     wb.save(path)
-    assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["SCHEDULE"]["O5"].value == "DATASHEET REVIEWED"
+    assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["SCHEDULE"]["O5"].value == "DATASHEET REVIEWED (attested, not authenticated)"
 
 
 def test_basis_workbook_lists_every_parameter_with_its_status_and_empty_approval_fields(root, tmp_path):
@@ -366,7 +366,7 @@ def test_protection_workbook_never_reports_a_coordination_pass(root, tmp_path):
     wb = openpyxl.load_workbook(recalc(path, tmp_path / "rc0"), data_only=True)
     assert not _errors(wb)
     assert wb["DEVICE_SCHEDULE"]["L5"].value == "NOT VERIFIED" and wb["SELECTIVITY"]["B14"].value == "NOT VERIFIED"
-    _set(path, "DEVICE_SCHEDULE", {"E6": 74, "G6": 100, "J6": "Breaker data sheet, rev A", "I6": "TCC-123", "K6": "Reviewer"})
+    _set(path, "DEVICE_SCHEDULE", {"E6": 74, "G6": 100, "J6": "Breaker data sheet, rev A", "I6": "TCC-123", "K6": ATTESTATION})
     _set(path, "SELECTIVITY", {"C5": "TCC-1", "D5": "TCC-2", "E5": "Study S-1", "G5": "SELECTIVE", "C6": "TCC-2", "D6": "TCC-3", "E6": "Study S-1", "C7": "TCC-4", "D7": "TCC-3", "E7": "Study S-1"})
     wb = openpyxl.load_workbook(recalc(path, tmp_path / "rc1"), data_only=True)
     assert wb["DEVICE_SCHEDULE"]["L6"].value == "PASS" and wb["DEVICE_SCHEDULE"]["M6"].value == "RATING VERIFIED (coordination separate)"
@@ -449,3 +449,20 @@ def test_architecture_workbook_lists_every_concept_function_as_not_designed_and_
     independence = next(r for r in rows if "Independence of utility" in r[1])
     assert independence[4] == "NOT CLAIMED"
     assert all(r[4] != "VERIFIED" for r in rows)
+
+
+@needs_soffice
+def test_a_bare_reviewer_name_in_a_workbook_is_rejected_as_an_incomplete_attestation(root, tmp_path):
+    cfg = _cfg(root)
+    path = _sizing(cfg, "ups", tmp_path)
+    wb = openpyxl.load_workbook(path)
+    ws = wb["INPUTS"]
+    r = next(r for r in range(6, ws.max_row + 1) if ws[f"A{r}"].value)
+    ws[f"E{r}"], ws[f"H{r}"], ws[f"I{r}"] = ws[f"D{r}"].value, "Hypothetical data sheet, rev A (test)", "Test reviewer"
+    wb.save(path)
+    got = openpyxl.load_workbook(recalc(path, tmp_path / "rc"), data_only=True)["INPUTS"]
+    assert got[f"J{r}"].value == "REJECTED: ATTESTATION INCOMPLETE"
+    wb = openpyxl.load_workbook(path)
+    wb["INPUTS"][f"I{r}"] = ATTESTATION
+    wb.save(path)
+    assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["INPUTS"][f"J{r}"].value.endswith("_VERIFIED")

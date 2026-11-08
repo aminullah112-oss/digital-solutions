@@ -69,7 +69,9 @@ def verified_ids(cfg: ProjectConfig) -> set[str]:
     path = Path(cfg.base_dir) / "manufacturer_data_register.yaml"
     if not path.exists():
         return set()
-    return {e["parameter"] for e in load_register_meta(path) if e.get("verified_by")}
+    from ohmetry_dc.models.attestation import is_complete
+
+    return {e["parameter"] for e in load_register_meta(path) if is_complete(e)}
 
 
 def input_statuses(cfg: ProjectConfig, ids: list[str], verified: set[str] | None = None) -> list[tuple[str, str]]:

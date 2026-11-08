@@ -110,7 +110,10 @@ class DesignException(BaseModel):
     conditions: list[str]
     verification_action: str
     verified_by: str | None = None
+    verified_org: str | None = None
     verification_date: str | None = None
+    evidence_ref: str | None = None
+    verification_scope: str | None = None
 
     @field_validator("accepted_date", mode="before")
     @classmethod

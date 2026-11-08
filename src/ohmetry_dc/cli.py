@@ -228,8 +228,13 @@ def cmd_verify(args) -> int:
     if entry is None:
         print(f"REJECTED: {args.parameter} is not in the register")
         return EXIT_FAIL
-    entry["verified_by"] = args.by
-    entry["verification_date"] = args.date or dt.date.today().isoformat()
+    from ohmetry_dc.models import attestation as at
+
+    entry.update({"verified_by": args.by, "verified_org": args.org, "verification_date": args.date or dt.date.today().isoformat(), "evidence_ref": args.evidence, "verification_scope": args.scope})
+    gap = at.missing_fields(entry)
+    if gap:
+        print("REJECTED: the verification record is incomplete or invalid: " + ", ".join(at.LABELS.get(g, g) for g in gap) + ". " + at.NOTICE)
+        return EXIT_FAIL
     bad = [b for b in problems(cfg, meta) if args.parameter in b]
     if bad:
         print("REJECTED: " + "; ".join(bad) + ". Only a value imported from a source document can be verified; a placeholder cannot.")
@@ -237,7 +242,11 @@ def cmd_verify(args) -> int:
     txt = reg.read_text(encoding="utf-8")
     hdr = "".join(l for l in txt.splitlines(True) if l.startswith("#"))
     reg.write_text(hdr + yaml.safe_dump({"schema_version": 1, "entries": meta}, sort_keys=False, allow_unicode=True, width=140), encoding="utf-8")
-    print(f"Recorded: {args.parameter} verified by {args.by}. It becomes MANUFACTURER_VERIFIED or SITE_DATA_VERIFIED.")
+    log = reg.parent / "verification_log.yaml"                                  # append-only: the register keeps the latest record, the log keeps every one
+    past = (yaml.safe_load(log.read_text(encoding="utf-8")) or {}).get("records", []) if log.exists() else []
+    past.append({"parameter": args.parameter, **{f: entry[f] for f in at.ATTESTATION_FIELDS}, "recorded": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")})
+    log.write_text("# Append-only log of verification attestations. Names are self-declared and not authenticated.\n" + yaml.safe_dump({"schema_version": 1, "records": past}, sort_keys=False, allow_unicode=True, width=140), encoding="utf-8")
+    print(f"Recorded: {args.parameter} attested as verified by {args.by} ({args.org}) on {entry['verification_date']}; evidence {args.evidence}; scope {args.scope}. It becomes MANUFACTURER_VERIFIED or SITE_DATA_VERIFIED. {at.NOTICE}")
     return EXIT_OK
 
 
@@ -395,8 +404,11 @@ def main(argv: list[str] | None = None) -> int:
     im.set_defaults(func=cmd_import)
     vf = sub.add_parser("record-verification", help="Record that a reviewer verified an imported value against its source document")
     vf.add_argument("--parameter", required=True)
-    vf.add_argument("--by", required=True, help="Reviewer name")
-    vf.add_argument("--date", default=None)
+    vf.add_argument("--by", required=True, help="Reviewer name (a self-declared attestation, not authenticated)")
+    vf.add_argument("--org", required=True, help="Reviewer's organisation")
+    vf.add_argument("--evidence", required=True, help="Evidence reference: the data sheet, document and revision the value was checked against")
+    vf.add_argument("--scope", required=True, help="What was verified (for example: value and unit against the data sheet; not the design)")
+    vf.add_argument("--date", default=None, help="ISO date of the review (default: today)")
     vf.add_argument("--register", default="config/manufacturer_data_register.yaml")
     vf.set_defaults(func=cmd_verify)
     tr = sub.add_parser("generate-training", help="Generate the training suite (modules, exercises, answer key, question bank, certificate template)")
