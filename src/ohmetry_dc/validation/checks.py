@@ -358,17 +358,23 @@ def check_earthing(cfg: ProjectConfig) -> CheckResult:
     try:
         e = assess_earthing(cfg)
     except MissingInputs as ex:
-        return CheckResult("earthing_framework", title, S.NOT_VERIFIED, "NOT CALCULATED. Missing: " + _pending(cfg, ex.ids) + " No default is substituted.", {"missing": ex.ids},
+        return CheckResult("earthing_framework", title, S.NOT_VERIFIED, "NOT CALCULATED (screening only, not a study). Missing: " + _pending(cfg, ex.ids) + " No default is substituted.", {"missing": ex.ids},
                            "Supply the soil survey and grid design, then rerun.")
     st = {"PASS": S.PASS, "WARNING": S.WARNING}.get(e.screening, S.NOT_VERIFIED)
-    det = f"{e.system_type} system. Soil {e.rho:g} ohm.m. Estimated grid resistance {e.grid_resistance_ohm:.2f} ohm."
+    det = f"PRELIMINARY SCREENING ONLY (grid resistance and ground potential rise); NOT a mesh and step voltage study and not an earthing design. {e.system_type} system. Soil {e.rho:g} ohm.m. Estimated grid resistance {e.grid_resistance_ohm:.2f} ohm."
     if e.gpr_v is not None:
         det += f" Ground potential rise {e.gpr_v:,.0f} V" + (f" against a tolerable touch voltage of {e.tolerable_touch_v:,.0f} V" if e.tolerable_touch_v is not None else "") + "."
     if e.missing:
         det += " Not supplied: " + _pending(cfg, e.missing) + " The safety screening is NOT VERIFIED."
     return CheckResult("earthing_framework", title, st, det + " " + " ".join(e.notes),
-                       {"grid_resistance_ohm": e.grid_resistance_ohm, "gpr_v": e.gpr_v, "tolerable_touch_v": e.tolerable_touch_v, "tolerable_step_v": e.tolerable_step_v, "missing": e.missing},
+                       {"scope": "GPR screening only; mesh and step study not done", "grid_resistance_ohm": e.grid_resistance_ohm, "gpr_v": e.gpr_v, "tolerable_touch_v": e.tolerable_touch_v, "tolerable_step_v": e.tolerable_step_v, "missing": e.missing},
                        "Commission a soil resistivity survey, obtain the earth-fault current and clearing time, then run a detailed grounding study.")
+
+
+def check_lightning_scope(cfg: ProjectConfig) -> CheckResult:
+    return CheckResult("lightning_scope", "Lightning protection and IEC 62305", S.NOT_APPLICABLE,
+                       "OUT OF SCOPE. No lightning risk assessment or protection design is done, and compliance with IEC 62305 is NOT claimed. A collection area or a flash density is one input to a risk assessment, not a result. "
+                       "Workbook 16 is an input register only.", {"in_scope": False, "compliance_claimed": False}, "Commission a complete IEC 62305-2 risk assessment and a specialist design.")
 
 
 def check_manufacturer_register(cfg: ProjectConfig, register_path=None) -> CheckResult:
@@ -452,6 +458,7 @@ def run_all_checks(cfg: ProjectConfig) -> list[CheckResult]:
     results += check_distribution(cfg)
     results += check_short_circuit(cfg)
     results.append(check_earthing(cfg))
+    results.append(check_lightning_scope(cfg))
     results.append(check_manufacturer_register(cfg))
     from .exceptions import apply_exceptions
 

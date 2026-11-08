@@ -18,7 +18,8 @@ def make(root, tmp_path, name="r.pdf", mutate_cfg=None):
 
 
 def text(path):
-    return subprocess.run(["pdftotext", "-layout", str(path), "-"], check=True, capture_output=True, text=True).stdout
+    out = subprocess.run(["pdftotext", "-layout", str(path), "-"], check=True, capture_output=True, text=True).stdout
+    return " ".join(out.split())          # a phrase can wrap across lines or pages; compare on whitespace-normalised text
 
 
 @needs_pdftotext

@@ -327,3 +327,22 @@ def test_arc_flash_is_explicitly_out_of_scope_and_never_calculated(root):
     from ohmetry_dc.validation.checks import check_short_circuit
     chk = {c.id: c for c in check_short_circuit(_cfg(root))}["arc_flash_scope"]
     assert chk.status.value == "NOT APPLICABLE" and "OUT OF SCOPE" in chk.detail and "No incident energy" in chk.detail
+
+
+# ---- revision A6, item 8: earthing is a screening, lightning is out of scope
+def test_earthing_is_labelled_a_screening_and_not_a_mesh_and_step_study_in_every_state(write_config, root):
+    from ohmetry_dc.validation.checks import check_earthing
+    r0 = check_earthing(_cfg(root))                       # the shipped configuration: no soil survey, no grid design
+    assert "screening only" in r0.detail and "NOT CALCULATED" in r0.detail and "No default is substituted" in r0.detail
+    def sup(d):
+        for k, v in (("soil_resistivity", 100), ("grid_area_m2", 2500), ("grid_conductor_length_m", 1200), ("grid_burial_depth_m", 0.5), ("earth_fault_current_ka", 10), ("fault_clearing_time_s", 0.5),
+                     ("surface_layer_resistivity_ohm_m", 3000), ("surface_layer_thickness_m", 0.1)):
+            set_value(d, "earthing" if k == "soil_resistivity" else "earthing_study", k, v)
+    r1 = by_id(run_all_checks(load(write_config, root, sup)))["earthing_framework"]
+    assert "PRELIMINARY SCREENING ONLY" in r1.detail and "NOT a mesh and step voltage study" in r1.detail and "not an earthing design" in r1.detail
+    assert r1.values["scope"].startswith("GPR screening only")
+
+
+def test_lightning_is_out_of_scope_and_iec_62305_compliance_is_not_claimed(write_config, root):
+    r = by_id(run_all_checks(load(write_config, root)))["lightning_scope"]
+    assert r.status is S.NOT_APPLICABLE and "NOT claimed" in r.detail and r.values["compliance_claimed"] is False

@@ -73,7 +73,9 @@ def assess_earthing(cfg: ProjectConfig) -> EarthingResult:
         screening = "NOT VERIFIED"
     else:
         screening = "PASS" if gpr <= touch else "WARNING"
-    notes = ["Grid resistance uses the IEEE 80 Sverak equation with a uniform soil. Soil layering, rods and the grid current split factor are not modelled.",
+    notes = ["SCOPE: PRELIMINARY SCREENING ONLY. It estimates the grid resistance and compares the ground potential rise (GPR) with the tolerable touch voltage. It is NOT a mesh and step voltage study: mesh voltage, step voltage, "
+             "transferred potentials, fault current split, multi-layer soil, conductor sizing and bonding design are not done. It is not an earthing design.",
+             "Grid resistance uses the IEEE 80 Sverak equation with a uniform soil. Soil layering, rods and the grid current split factor are not modelled.",
              "A ground potential rise at or below the tolerable touch voltage is a screening pass only. A higher value needs a detailed mesh and step voltage calculation, not a rejection.",
              "Soil resistivity and grid geometry are placeholders. A real project needs a Wenner-method soil survey.",
              f"System earthing {sys_t}: earth-fault loop impedance and disconnection times need the protective device data (manufacturer) and are NOT VERIFIED."]
