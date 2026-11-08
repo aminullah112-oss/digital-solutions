@@ -30,3 +30,10 @@ A reviewer name is a **self-declared attestation**. The package does not authent
 - A register or exception entry with some fields but not all is reported as a defect and is **not** treated as verified.
 - In a workbook, a reviewer cell without four semicolons and some text reads `REJECTED: ATTESTATION INCOMPLETE`. That test only refuses an entry that lacks the record. It cannot tell whether the person exists.
 - A verified value verifies the **value against its source document**, within the stated scope. It does not verify the design.
+
+## Standards register and specifications (revision A6)
+
+- `config/standards_register.yaml` names 33 standards. **None is quoted and no clause, table or equation number is cited anywhere in the package.** Editions are blank and every entry is NOT_VERIFIED until a reviewer records otherwise.
+- Each entry has `relevant_modules` (the workbooks it touches) and `package_use`, which says how the package uses it, including where it is named only to say that compliance is **not** claimed (IEC 62305, ASHRAE 90.4, EN 50600 / ISO/IEC 22237) or the topic is **out of scope** (IEEE 1584, arc-flash).
+- Every standard named in a specification must appear in the register (tested). Series parents cover their parts (IEC 61439 covers IEC 61439-6).
+- The ten specification templates now run: scope, standards, service conditions, ratings, technical requirements, **vendor data schedule**, **compliance schedule**, inspection and quality, **FAT**, **SAT**, **commissioning** (with integrated systems testing) and **submittals**. The vendor and compliance schedules are blank for a tenderer to complete; acceptance criteria are left to the project.

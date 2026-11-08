@@ -1,228 +1,477 @@
 # Standards and regulatory register. A starting list, NOT a declaration that any standard applies.
 # Edition, scope and applicability are NOT_VERIFIED until a reviewer checks the current edition and local requirements.
 # Local requirements (for example Saudi Building Code, utility and civil defence rules) must be added by the project team. None are invented here.
+# Revision A6 rules: (1) standards are NAMED, never quoted. No clause, table or equation number is cited anywhere in the package: take them from the edition in force.
+# (2) `edition` stays null until a reviewer records it (with the attestation record in models/attestation.py). (3) `package_use` says how the package uses the standard,
+# including where it is named only to say that compliance is NOT claimed or the topic is OUT OF SCOPE. (4) Every standard named in a specification must appear here (tested).
 schema_version: 1
 standards:
 - id: IEC_61936_1
   reference: IEC 61936-1
-  title: Power installations exceeding 1 kV AC
+  title: 'Power installations exceeding 1 kV AC (and 1.5 kV DC): Part 1, AC. The exact title varies with the edition'
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 01_MASTER_DESIGN_BASIS
+  - 03_POWER_ARCHITECTURE
+  - 12_MV_SWITCHGEAR
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: 'context: design basis for MV installations; not applied as a calculation method'
 - id: IEC_60364
   reference: IEC 60364
   title: Low-voltage electrical installations (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 08_CABLE_SIZING
+  - 09_VOLTAGE_DROP
+  - 15_EARTHING_BONDING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the cable and earthing specifications
 - id: IEC_60076
   reference: IEC 60076
   title: Power transformers (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 04_TRANSFORMER_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the transformer specification
 - id: IEC_62271
   reference: IEC 62271
   title: High-voltage switchgear and controlgear (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 12_MV_SWITCHGEAR
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the MV switchgear specification
 - id: IEC_61439
   reference: IEC 61439
   title: Low-voltage switchgear and controlgear assemblies (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 11_LV_SWITCHGEAR
+  - 13_BUSDUCT_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the LV switchgear and busduct specifications; design verification evidence is manufacturer data
 - id: IEC_60909
   reference: IEC 60909
   title: Short-circuit currents in three-phase AC systems (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 10_SHORT_CIRCUIT
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: 'method reference: the short-circuit equations follow it; the equations are for an independent reviewer to check against the edition in force'
 - id: IEC_62040
   reference: IEC 62040
   title: Uninterruptible power systems (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 06_UPS_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the UPS specification
 - id: IEC_60287
   reference: IEC 60287
   title: 'Electric cables: current rating calculation (series)'
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 08_CABLE_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the cable specification; the package does not perform an IEC 60287 rating calculation
 - id: IEC_60502
   reference: IEC 60502
   title: Power cables with extruded insulation (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 08_CABLE_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the cable specification
 - id: IEC_62305
   reference: IEC 62305
   title: Protection against lightning (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 16_LIGHTNING_PROTECTION
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named only to say that compliance is NOT claimed; workbook 16 is an input register
 - id: IEC_60364_5_54
   reference: IEC 60364-5-54
   title: Earthing arrangements and protective conductors
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 15_EARTHING_BONDING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the earthing specification
 - id: IEC_61000
   reference: IEC 61000
   title: Electromagnetic compatibility and power quality (series)
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 17_POWER_QUALITY
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the UPS specification; workbook 17 is an input register
 - id: IEEE_80
   reference: IEEE 80
   title: Safety in AC substation grounding
   issuing_organisation: IEEE
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 15_EARTHING_BONDING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: method reference for the preliminary grid-resistance and ground-potential-rise screening only; not a mesh and step study
 - id: IEEE_485
   reference: IEEE 485
   title: Sizing lead-acid batteries for stationary applications
   issuing_organisation: IEEE
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 07_BATTERY_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: method reference only; no battery is sized
 - id: IEEE_519
   reference: IEEE 519
   title: Harmonic control in electric power systems
   issuing_organisation: IEEE
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 17_POWER_QUALITY
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: named in the UPS specification if adopted; no harmonic study is done
 - id: ASHRAE_90_4
   reference: ASHRAE 90.4
   title: Energy Standard for Data Centers
   issuing_organisation: ASHRAE
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 18_ENERGY_EFFICIENCY
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: context for the PUE discussion; compliance is not claimed
 - id: ISO_8528
   reference: ISO 8528
-  title: Reciprocating internal combustion engine driven alternating current generating
-    sets (series)
+  title: Reciprocating internal combustion engine driven alternating current generating sets (series)
   issuing_organisation: ISO
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 05_GENERATOR_SIZING
+  - 19_GENERATOR_FUEL
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
+  package_use: basis of the PRP, ESP and COP rating definitions; the PRP basis is ASSUMED, not confirmed
 - id: IEC_60076_7
   reference: IEC 60076-7
   title: Loading guide for mineral-oil-immersed power transformers
   issuing_organisation: IEC
   edition: null
   scope: null
-  relevant_modules: []
+  relevant_modules:
+  - 04_TRANSFORMER_SIZING
   applicability_status: NOT_VERIFIED
   verification_source: null
   reviewer: null
   review_date: null
   notes: Review action - verify current edition, amendments, scope and applicability.
-local_requirements:
-- id: LOCAL_REQ_1
-  reference: 'null'
-  title: Local authority, utility and project-specific requirements
+  package_use: named in the transformer specification; emergency overload is not used
+- id: ISO_8528_1
+  reference: ISO 8528-1
+  title: 'Reciprocating internal combustion engine driven alternating current generating sets: Part 1, application, ratings and performance'
+  issuing_organisation: ISO
+  edition: null
+  scope: null
+  relevant_modules:
+  - 05_GENERATOR_SIZING
+  package_use: defines the rating bases used in the generator specification (PRP, ESP, COP); confirm against the edition in force
   applicability_status: NOT_VERIFIED
-  notes: To be supplied by the project team. Not invented.
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60076_5
+  reference: IEC 60076-5
+  title: 'Power transformers: Part 5, ability to withstand short circuit'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 04_TRANSFORMER_SIZING
+  - 10_SHORT_CIRCUIT
+  package_use: named in the transformer specification
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60076_11
+  reference: IEC 60076-11
+  title: 'Power transformers: Part 11, dry-type transformers'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 04_TRANSFORMER_SIZING
+  package_use: named in the transformer specification only if dry-type is selected
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60034
+  reference: IEC 60034
+  title: Rotating electrical machines (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 05_GENERATOR_SIZING
+  package_use: named in the generator specification
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60896
+  reference: IEC 60896
+  title: Stationary lead-acid batteries (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 07_BATTERY_SIZING
+  package_use: named in the battery specification only if lead-acid is selected
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62619
+  reference: IEC 62619
+  title: 'Secondary lithium cells and batteries for industrial applications: safety requirements'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 07_BATTERY_SIZING
+  package_use: named in the battery specification only if lithium-ion is selected
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62485_2
+  reference: IEC 62485-2
+  title: 'Safety requirements for secondary batteries and battery installations: Part 2, stationary batteries'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 07_BATTERY_SIZING
+  package_use: named in the battery specification
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_61869
+  reference: IEC 61869
+  title: Instrument transformers (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 14_PROTECTION_COORDINATION
+  package_use: named in the switchgear and protection specifications
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60255
+  reference: IEC 60255
+  title: Measuring relays and protection equipment (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 14_PROTECTION_COORDINATION
+  package_use: named in the MV switchgear and protection specifications
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_61850
+  reference: IEC 61850
+  title: Communication networks and systems for power utility automation (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 14_PROTECTION_COORDINATION
+  package_use: named in the protection specification only if adopted
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60947_2
+  reference: IEC 60947-2
+  title: 'Low-voltage switchgear and controlgear: Part 2, circuit-breakers'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 11_LV_SWITCHGEAR
+  - 14_PROTECTION_COORDINATION
+  package_use: named in the LV switchgear and protection specifications
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_61439_6
+  reference: IEC 61439-6
+  title: 'Low-voltage switchgear and controlgear assemblies: Part 6, busbar trunking systems'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 13_BUSDUCT_SIZING
+  package_use: named in the busduct specification
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62305_2
+  reference: IEC 62305-2
+  title: 'Protection against lightning: Part 2, risk management'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules:
+  - 16_LIGHTNING_PROTECTION
+  package_use: referenced by workbook 16 as the method a risk assessment must follow; no risk assessment is done and compliance is NOT claimed
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEEE_1584
+  reference: IEEE 1584
+  title: Guide for performing arc-flash hazard calculations
+  issuing_organisation: IEEE
+  edition: null
+  scope: null
+  relevant_modules: []
+  package_use: 'OUT OF SCOPE: named only to say that no arc-flash assessment is done'
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Out of scope for this package. Listed so that the exclusion is explicit. Verify the current edition if an arc-flash study is commissioned.
+- id: EN_50600_ISO_IEC_22237
+  reference: EN 50600 and ISO/IEC 22237
+  title: Data centre facilities and infrastructures (series)
+  issuing_organisation: CENELEC / ISO and IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  package_use: 'context only (training module): no availability class, protection class or Tier is claimed for this package'
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Context only. The package makes no availability-class claim. Uptime Institute Tier is a certification scheme, not an IEC, ISO or IEEE standard, and is not
+    claimed.

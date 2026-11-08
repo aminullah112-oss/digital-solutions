@@ -15,8 +15,8 @@ from ohmetry_dc.documents.specs import _specs
 
 from conftest import STAMP, set_value, needs_soffice
 
-REQUIRED_SPEC_HEADINGS = ["1. Scope", "2. Applicable standards", "4. Equipment ratings", "5. Technical requirements", "6. Manufacturer data required", "7. Inspection and quality requirements",
-                          "8. Factory acceptance test (FAT) requirements", "9. Commissioning requirements", "11. Open items (NOT VERIFIED)"]
+REQUIRED_SPEC_HEADINGS = ["1. Scope", "2. Applicable standards", "4. Equipment ratings", "5. Technical requirements", "6. Vendor data schedule", "7. Compliance schedule", "8. Inspection and quality requirements",
+                          "9. Factory acceptance test (FAT) requirements", "10. Site acceptance test (SAT) requirements", "11. Commissioning requirements", "12. Submittals and documentation", "13. Open items (NOT VERIFIED)"]
 
 
 def _cfg(root):
@@ -184,3 +184,72 @@ def test_cli_generate_documents_and_the_package_manifest_cross_references(root, 
     assert any(f["path"].startswith("specifications/") for f in man["files"]) and "MASTER_INDEX.md" in byp
     assert all(f["document_id"] and f["revision"] for f in man["files"])
     assert not any(n.endswith(("REVIEW_GUIDE.md", "REVIEWER_CHECKLIST.md")) for n in z.namelist())      # review documents are for the reviewer, not the customer ZIP
+
+
+# ---- revision A6, item 10: standards register and specification schedules
+STD_REF = re.compile(r"\b(IEC|ISO|IEEE|ASHRAE|EN)\s?(\d{2,6}(?:-\d+)*(?:\.\d+)?)")
+
+
+def _register(root):
+    import yaml
+    return yaml.safe_load((root / "config" / "standards_register.yaml").read_text())["standards"]
+
+
+def _covered(ref: str, register_refs: set[str]) -> bool:
+    """A named standard is covered by an entry for itself or for its series (IEC 61439-6 by 'IEC 61439-6' or 'IEC 61439')."""
+    parts = ref.split("-")
+    return any("-".join(parts[:i]) in register_refs for i in range(len(parts), 0, -1))
+
+
+def test_every_standard_named_in_a_specification_is_in_the_register(root):
+    reg = _register(root)
+    refs = {s["reference"].replace("ISO/IEC", "ISO") for s in reg} | {r.strip() for s in reg for r in s["reference"].split(" and ")}
+    cfg = _cfg(root)
+    missing = []
+    for spec in _specs(cfg):
+        for text in spec["standards"]:
+            for m in STD_REF.finditer(text):
+                ref = f"{m.group(1)} {m.group(2)}"
+                if not _covered(ref, refs):
+                    missing.append((spec["slug"], ref))
+    assert not missing, missing
+
+
+def test_the_register_cites_no_clause_and_claims_no_edition_or_verification(root):
+    reg = _register(root)
+    assert len(reg) >= 30 and len({s["id"] for s in reg}) == len(reg)
+    for s in reg:
+        assert s["edition"] is None and s["scope"] is None and s["applicability_status"] == "NOT_VERIFIED" and s["reviewer"] is None and s["review_date"] is None and s["verification_source"] is None, s["id"]
+        assert s.get("package_use"), s["id"]
+        text = " ".join(str(v) for v in s.values())
+        assert not re.search(r"\b(clause|sub-?clause|annex|table)\s+[A-Z]?\d", text, re.I) and not re.search(r":\s?(19|20)\d{2}\b", text), (s["id"], text)
+    out_of_scope = {s["id"] for s in reg if "OUT OF SCOPE" in s["package_use"]}
+    assert "IEEE_1584" in out_of_scope
+
+
+def test_the_register_covers_modules_and_states_that_compliance_is_not_claimed_where_it_is_not(root):
+    reg = {s["id"]: s for s in _register(root)}
+    assert reg["IEC_62305"]["package_use"].startswith("named only to say that compliance is NOT claimed") and reg["IEEE_80"]["relevant_modules"] == ["15_EARTHING_BONDING"]
+    assert "NOT claimed" in reg["EN_50600_ISO_IEC_22237"]["package_use"] or "no availability class" in reg["EN_50600_ISO_IEC_22237"]["package_use"]
+    assert all(s["relevant_modules"] for s in reg.values() if s["id"] not in ("IEEE_1584", "EN_50600_ISO_IEC_22237"))
+
+
+def test_specifications_carry_vendor_data_and_compliance_schedules_and_sat_and_commissioning(spec_dir, root):
+    cfg = _cfg(root)
+    by_slug = {s["slug"]: s for s in _specs(cfg)}
+    for f in sorted(spec_dir.glob("*.docx")):
+        t = _text(f)
+        slug = next(k for k in by_slug if f.name.endswith(f"_{k}.docx"))
+        assert "Value offered" in t and "Document and revision" in t and "[vendor to complete]" in t
+        assert "Standard named in section 2" in t and "Complies / complies with comment / does not comply" in t
+        assert "A SAT procedure shall be submitted for approval" in t and "Integrated systems testing" in t and "Equipment shall not be shipped until the FAT report is accepted" in t
+        assert t.count("[vendor to complete]") >= 10 + len(by_slug[slug]["requirements"]), f.name           # one compliance row per section 5 requirement
+        assert "5." + str(len(by_slug[slug]["requirements"])) in t
+        assert "no clause of any standard is quoted" in t
+
+
+def test_specifications_cite_no_clause_numbers(spec_dir):
+    for f in spec_dir.glob("*.docx"):
+        t = _text(f)
+        assert not re.search(r"\b(clause|sub-?clause|annex)\s+[A-Z]?\d", t, re.I), f.name
+        assert not re.search(r"\b(IEC|ISO|IEEE)\s?\d+(-\d+)*\s*(:|,)?\s*(clause|section)\s*\d", t, re.I), f.name

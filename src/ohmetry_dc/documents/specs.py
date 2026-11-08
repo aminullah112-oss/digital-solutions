@@ -23,6 +23,32 @@ COMMON_TESTING = ["Routine tests on every unit as required by the applicable sta
                   "Inspection and test plan (ITP) approved before manufacture, naming witness and hold points.", "Calibration certificates for test instruments."]
 
 
+VENDOR = "[vendor to complete]"
+
+COMMON_SAT = ["A SAT procedure shall be submitted for approval before the tests. It states the test, the method, the instrument, the acceptance criterion and the witness, with the criteria taken from the applicable standard and this specification [project to define].",
+              "SAT is carried out on the installed equipment with its final connections, after the installation inspection and before commissioning loads are applied.",
+              "Results are recorded on signed sheets. Any deviation, retest and concession is listed with its disposition. A SAT is not passed while a deviation is open.",
+              "SAT results are compared with the FAT results; a significant difference is investigated and recorded."]
+
+SAT = {
+    "Transformers": ["Inspection for transport damage, nameplate and accessories; insulation resistance and ratio on site; confirmation of tap position, protection settings and alarm functions."],
+    "Generators": ["Inspection of mountings, fuel and cooling connections; start tests; a load-bank test at the site conditions for the duration and steps in the approved procedure; control and protection function tests; paralleling and load-sharing tests where specified."],
+    "UPS": ["Input and output checks; transfer to and from battery and bypass; maintenance bypass operation and interlocking; alarm and communications checks; a load test with the site load or load banks as approved."],
+    "Batteries": ["Inspection, polarity and connection checks; insulation and voltage checks; an acceptance discharge test to the approved procedure; temperature and ventilation checks."],
+    "MV_Switchgear": ["Insulation resistance and the tests of the approved procedure on the installed assemblies; mechanical operation and interlock checks; protection relay secondary injection; trip and close circuit checks."],
+    "LV_Switchgear": ["Insulation resistance; mechanical operation and interlocking (including the utility-to-generator interlock); protection settings as set by the approved study; metering and communications checks."],
+    "Cables": ["Visual check of routing, bending radius and glands; insulation resistance and the specified electrical test on every cable after installation; phase and sequence checks."],
+    "Busduct": ["Visual and alignment check; joint torque verification; insulation resistance; continuity of the protective conductor; thermographic check under load [project to define]."],
+    "Protection": ["Secondary injection of every relay function used; primary injection where specified; checks of CT and VT polarity, ratio and wiring; trip circuit supervision; settings read back and compared with the approved settings study."],
+    "Earthing": ["Continuity of all bonds; earth resistance measurement by the specified method; comparison with the design values [project to define]."],
+}
+
+SUBMITTALS = [("Completed vendor data schedule (section 6) and compliance schedule (section 7)", "With the tender"), ("Datasheets and general arrangement drawings", "With the tender, final before manufacture"),
+              ("Type-test reports and certificates for the offered design", "With the tender"), ("Inspection and test plan (ITP)", "Before manufacture"), ("FAT procedure and report", "Before and after the FAT"),
+              ("Installation instructions and SAT procedure", "Before delivery"), ("Operation and maintenance manuals, as-built drawings and final data", "Before commissioning; as-built at handover"),
+              ("Recommended spare parts and special tools lists", "With the tender and at handover"), ("Training plan and materials [project to define]", "Before commissioning"), ("Warranty terms [project to define]", "With the tender")]
+
+
 def _p(cfg, pid):
     p = cfg.parameters[pid]
     return p.value, ds.data_status(p), p.unit
@@ -174,21 +200,37 @@ def build_spec_docx(cfg: ProjectConfig, spec: dict, path: Path, stamp: str, doc_
     dx.table(d, ["Item", "Requirement or preliminary value", "Data status and note"], spec["ratings"])
     d.add_heading("5. Technical requirements", 2)
     dx.numbered(d, spec["requirements"], "5")
-    d.add_heading("6. Manufacturer data required", 2)
-    d.add_paragraph("The tenderer shall supply the datasheets and values below with its offer, each with the document name and revision. A value without a source document is not accepted. These are also tracked in the manufacturer-data register and are imported into the calculations through the data override mechanism.")
+    d.add_heading("6. Vendor data schedule", 2)
+    d.add_paragraph("The tenderer shall complete the schedule below with its offer: the value offered, its unit, and the name and revision of the document that states it. A value without a source document is not accepted. "
+                    "The parameters are those in the manufacturer-data register; supplied values are imported into the calculations through the data override mechanism, and a value stays NOT VERIFIED until a reviewer records an attestation against its source (name, organisation, date, evidence reference, scope).")
     rows = _manufacturer_rows(cfg, spec["tags"])
-    dx.table(d, ["Parameter id", "Parameter", "Datasheet", "Current status"], rows or [["-", "See the manufacturer-data register", "-", "-"]])
-    d.add_heading("7. Inspection and quality requirements", 2)
-    dx.numbered(d, spec["inspection"] + COMMON_TESTING, "7")
-    d.add_heading("8. Factory acceptance test (FAT) requirements", 2)
-    dx.numbered(d, spec["fat"] + ["A FAT procedure shall be submitted for approval before the test; the results shall be issued as a signed report, with deviations and their disposition recorded."], "8")
-    d.add_heading("9. Commissioning requirements", 2)
-    dx.numbered(d, spec["commissioning"] + ["Commissioning records shall name the test, the instrument and its calibration, the date and the person, and shall be retained with the verification register."], "9")
-    d.add_heading("10. Submittals and documentation", 2)
-    dx.bullets(d, ["Datasheets, drawings and type-test reports.", "Inspection and test plan, FAT procedure and report.", "Installation, operation and maintenance manuals.", "Spare parts and special tools lists.", "Warranty terms [project to define]."])
-    d.add_heading("11. Open items (NOT VERIFIED)", 2)
+    dx.table(d, ["Parameter id", "Parameter", "Datasheet required", "Current status", "Value offered", "Unit", "Document and revision"],
+             [r + [VENDOR, VENDOR, VENDOR] for r in rows] or [["-", "See the manufacturer-data register", "-", "-", VENDOR, VENDOR, VENDOR]])
+    d.add_paragraph("Model, manufacturer, country of manufacture, and the type-test reports for the offered design: [vendor to complete].")
+    d.add_heading("7. Compliance schedule", 2)
+    d.add_paragraph("The tenderer shall state, for every standard in section 2 and every technical requirement in section 5, whether the offer complies. 'Complies' needs an evidence reference (type-test report, certificate, calculation, drawing or data sheet with revision). "
+                    "A statement without evidence is recorded as not demonstrated. The requirement references below are the numbered items of section 5 of this template; no clause of any standard is quoted.")
+    dx.table(d, ["Standard named in section 2", "Edition offered", "Complies / complies with comment / does not comply", "Evidence reference", "Comment or deviation"], [[x, VENDOR, VENDOR, VENDOR, VENDOR] for x in spec["standards"] if not x.startswith("Local")] +
+             [["Local requirements [project to add]", VENDOR, VENDOR, VENDOR, VENDOR]])
+    dx.table(d, ["Requirement (section 5)", "Complies / complies with comment / does not comply", "Evidence reference", "Comment or deviation"], [[f"5.{i}", VENDOR, VENDOR, VENDOR] for i, _ in enumerate(spec["requirements"], 1)])
+    d.add_heading("8. Inspection and quality requirements", 2)
+    dx.numbered(d, spec["inspection"] + COMMON_TESTING, "8")
+    d.add_heading("9. Factory acceptance test (FAT) requirements", 2)
+    dx.numbered(d, spec["fat"] + ["A FAT procedure shall be submitted for approval before the test; the results shall be issued as a signed report, with deviations and their disposition recorded.",
+                                  "Acceptance criteria are taken from the applicable standard and this specification [project to define]; a test passed against a criterion not stated in advance is not accepted.",
+                                  "Equipment shall not be shipped until the FAT report is accepted or a concession is recorded and approved by the owner."], "9")
+    d.add_heading("10. Site acceptance test (SAT) requirements", 2)
+    dx.numbered(d, SAT.get(spec["slug"], []) + COMMON_SAT, "10")
+    d.add_heading("11. Commissioning requirements", 2)
+    dx.numbered(d, spec["commissioning"] + ["Commissioning records shall name the test, the instrument and its calibration, the date and the person, and shall be retained with the verification register.",
+                                            "Integrated systems testing of the whole power chain (utility loss, generator start and transfer, UPS on battery, loss of one power path, return to normal) is carried out under a project procedure [project to define]. "
+                                            "This equipment's commissioning is not complete until it has taken part in that test."], "11")
+    d.add_heading("12. Submittals and documentation", 2)
+    dx.table(d, ["Document", "When required", "Status"], [[a, b, "[vendor to complete]"] for a, b in SUBMITTALS])
+    d.add_heading("13. Open items (NOT VERIFIED)", 2)
     dx.bullets(d, ["All ratings in section 4 marked PRELIMINARY or UNVERIFIED are open until confirmed from manufacturer data and the project studies.", "The prospective fault level is NOT CALCULATED until the utility, transformer and generator data are supplied.",
-                   "Standards editions and local requirements are NOT VERIFIED.", "This template has not been reviewed by an independent engineer."])
+                   "Standards editions and local requirements are NOT VERIFIED.", "The vendor data schedule (section 6) and the compliance schedule (section 7) are blank until a tenderer completes them.",
+                   "FAT, SAT and commissioning acceptance criteria are [project to define].", "This template has not been reviewed by an independent engineer."])
     d.save(path)
     return path
 
