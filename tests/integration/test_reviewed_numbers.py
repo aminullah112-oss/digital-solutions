@@ -12,6 +12,9 @@ def _cfg(root):
 def test_every_reviewed_a5_number_reproduces(root):
     rows = corrective.key_number_rows(_cfg(root))
     assert len(rows) == 13 and [r for r in rows if r[3] != "MATCH"] == []
+    st = {r[0]: r[4] for r in rows}
+    assert st["Transformer 3,150 kVA, path out (% of derated kVA)"] == "WARNING" and st["Transformer 4,000 kVA, same load (% kVA, arithmetic only)"] == "PASS" and st["UPS, path out (% kW)"] == "PASS" and st["UPS, path out (% kVA)"] == "WARNING"
+    assert st["Generators, path out and one unit out (% of 4,000 kVA)"] == "PASS" and st["Generators, path out and one unit out (% of 3,200 kW)"] == "WARNING"
 
 
 def test_reviewed_values_are_the_ones_given_for_a5(root):
@@ -23,13 +26,13 @@ def test_reviewed_values_are_the_ones_given_for_a5(root):
 
 def test_the_check_summary_has_no_fail_and_no_check_was_upgraded_since_a5(root):
     now = corrective.summary_now(_cfg(root))
-    assert now["FAIL"] == 0 and now["WARNING"] == corrective.A5_SUMMARY["WARNING"] and now["PASS"] == corrective.A5_SUMMARY["PASS"]
+    assert now["FAIL"] == 0 and now["WARNING"] == corrective.A5_SUMMARY["WARNING"] + 1 and now["PASS"] == corrective.A5_SUMMARY["PASS"]
     assert now["NOT VERIFIED"] >= corrective.A5_SUMMARY["NOT VERIFIED"]
 
 
 def test_the_report_says_items_1_to_4_are_not_covered_and_that_implemented_is_not_verified(root, tmp_path):
     md = corrective.markdown(_cfg(root), root, "stamp")
-    assert "Items 1 to 4 of the A5 review are NOT covered" in md and "Implemented is not verified" in md and "ALL MATCH" in md and "NOT REVIEWED" in md
+    assert "Item 1. Generator N+1" in md and "Item 4. Load model review and sensitivity" in md and "NOT covered" not in md and "Implemented is not verified" in md and "ALL MATCH" in md and "NOT REVIEWED" in md
     for line in md.splitlines():                                   # every use of "approved" is a negation or a status label
         if "approved" in line.lower():
             assert re.search(r"\b(not|no|nothing|never)\b", line.lower()) or "Independent reviewer | not assigned" in line, line

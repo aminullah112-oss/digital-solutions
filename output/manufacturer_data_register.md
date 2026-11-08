@@ -1,6 +1,6 @@
 # Manufacturer-data register
 
-Generated 2026-11-08 12:00 UTC. Values, sources and statuses are read live from the master configuration and the supplied-data overrides. **A placeholder is not validated equipment data, and reference data is not manufacturer-confirmed.** Every row is NOT VERIFIED until a reviewer records the source document for it. The reviewer name is a self-declared attestation, not an authenticated identity. The package does not check who the person is, their credentials or their independence. It records the name, organisation, date, evidence reference and scope so the claim can be followed up.
+Generated 2026-11-08 18:00 UTC. Values, sources and statuses are read live from the master configuration and the supplied-data overrides. **A placeholder is not validated equipment data, and reference data is not manufacturer-confirmed.** Every row is NOT VERIFIED until a reviewer records the source document for it. The reviewer name is a self-declared attestation, not an authenticated identity. The package does not check who the person is, their credentials or their independence. It records the name, organisation, date, evidence reference and scope so the claim can be followed up.
 
 | Equipment category | Required parameter | Equipment tags | Required datasheet | Placeholder or current value | Unit | Input data status | Source and status | Engineering impact | Outstanding verification action | Verification status |
 |---|---|---|---|---|---|---|---|---|---|---|

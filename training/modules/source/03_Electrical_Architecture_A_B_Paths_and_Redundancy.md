@@ -1,6 +1,6 @@
 # Module 03: Electrical Architecture, A/B Paths and Redundancy
 
-_Ohmetry engineering learning suite. Generated 2026-11-08 12:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
+_Ohmetry engineering learning suite. Generated 2026-11-08 18:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
 
 ## Learning objectives
 
@@ -28,7 +28,7 @@ Redundancy arithmetic does not prove independence. Two paths fed from one upstre
 
 - Reference project: path-out loads one transformer with 2,866 kVA against a derated 3,150 kVA: 91.0 % (preliminary).
 - Normal operation loads each path at about half: 45.5 %.
-- Generators: 3 units per path. Worst credible case (GEN-PATH-OUT) 47.6 % of kVA; with one unit out in normal operation 35.7 %. Workbook 03_POWER_ARCHITECTURE shows all the scenarios.
+- Generators: 3 units per path. Worst credible case (GEN-PATH-OUT-UNIT-OUT) 71.4 % of kVA; with one unit out in normal operation 35.7 %. Workbook 03_POWER_ARCHITECTURE shows all the scenarios.
 
 ## Common engineering mistakes
 

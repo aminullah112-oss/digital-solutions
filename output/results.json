@@ -346,13 +346,13 @@
       "rating_each": 2000.0,
       "derated_each": 2000.0,
       "units_per_path": 3,
-      "nameplate_loading_worst": 0.4757403802145893,
-      "required_derated_each_for_target": 1189.3509505364732,
-      "required_derated_each_for_limit": 951.4807604291786,
-      "required_rating_each_for_target": 1189.3509505364732,
-      "required_rating_each_for_limit": 951.4807604291786,
-      "suggested_size_for_target": 1250.0,
-      "suggested_size_for_limit": 1000.0,
+      "nameplate_loading_worst": 0.713610570321884,
+      "required_derated_each_for_target": 1784.0264258047098,
+      "required_derated_each_for_limit": 1427.221140643768,
+      "required_rating_each_for_target": 1784.0264258047098,
+      "required_rating_each_for_limit": 1427.221140643768,
+      "suggested_size_for_target": 2000.0,
+      "suggested_size_for_limit": 1500.0,
       "missing_data": [
         "generators.prp_max_average_load_factor_pct",
         "generators.operating_hours_restriction",
@@ -374,7 +374,7 @@
         "limit_pct": 100.0
       },
       "status": "PASS",
-      "worst_credible": "GEN-PATH-OUT",
+      "worst_credible": "GEN-PATH-OUT-UNIT-OUT",
       "scenarios": [
         {
           "id": "GEN-NORMAL",
@@ -414,15 +414,15 @@
         },
         {
           "id": "GEN-PATH-OUT-UNIT-OUT",
-          "description": "Loss of the other path and one unit: beyond an N+1 design basis",
-          "credible": false,
+          "description": "Loss of the other path and one unit (combined contingency: N+1 engine-out on the surviving path)",
+          "credible": true,
           "load": 2854.442281287536,
           "units_available": 2,
           "capacity_each": 2000.0,
           "capacity_total": 4000.0,
           "loading": 0.713610570321884,
-          "note": "Informational: not judged against the limits (redundancy.double_contingency_credible is False)",
-          "status": "NOT APPLICABLE"
+          "note": "",
+          "status": "PASS"
         }
       ]
     },
@@ -438,11 +438,11 @@
       "rating_each": 1600.0,
       "derated_each": 1600.0,
       "units_per_path": 3,
-      "nameplate_loading_worst": 0.5598415972222223,
-      "required_derated_each_for_target": 1119.6831944444443,
-      "required_derated_each_for_limit": 895.7465555555556,
-      "required_rating_each_for_target": 1119.6831944444443,
-      "required_rating_each_for_limit": 895.7465555555556,
+      "nameplate_loading_worst": 0.8397623958333333,
+      "required_derated_each_for_target": 1679.5247916666667,
+      "required_derated_each_for_limit": 1343.6198333333334,
+      "required_rating_each_for_target": 1679.5247916666667,
+      "required_rating_each_for_limit": 1343.6198333333334,
       "suggested_size_for_target": null,
       "suggested_size_for_limit": null,
       "missing_data": [
@@ -465,8 +465,8 @@
         "target_pct": 80.0,
         "limit_pct": 100.0
       },
-      "status": "PASS",
-      "worst_credible": "GEN-PATH-OUT",
+      "status": "WARNING",
+      "worst_credible": "GEN-PATH-OUT-UNIT-OUT",
       "scenarios": [
         {
           "id": "GEN-NORMAL",
@@ -506,15 +506,15 @@
         },
         {
           "id": "GEN-PATH-OUT-UNIT-OUT",
-          "description": "Loss of the other path and one unit: beyond an N+1 design basis",
-          "credible": false,
+          "description": "Loss of the other path and one unit (combined contingency: N+1 engine-out on the surviving path)",
+          "credible": true,
           "load": 2687.239666666667,
           "units_available": 2,
           "capacity_each": 1600.0,
           "capacity_total": 3200.0,
           "loading": 0.8397623958333333,
-          "note": "Informational: not judged against the limits (redundancy.double_contingency_credible is False)",
-          "status": "NOT APPLICABLE"
+          "note": "",
+          "status": "WARNING"
         }
       ]
     },
@@ -525,24 +525,24 @@
           "description": "UPS input (IT load and UPS losses)",
           "step_kva": 2214.9122807017548,
           "cumulative_kva": 2214.9122807017548,
-          "percent_of_running_capacity": 36.91520467836258
+          "percent_of_running_capacity": 55.37280701754387
         },
         {
           "id": "STEP-2",
           "description": "Mechanical and cooling plant",
           "step_kva": 601.4754288143025,
           "cumulative_kva": 2813.180617172338,
-          "percent_of_running_capacity": 10.024590480238375
+          "percent_of_running_capacity": 15.036885720357562
         },
         {
           "id": "STEP-3",
           "description": "Lighting, small power and auxiliary",
           "step_kva": 41.497153405369744,
           "cumulative_kva": 2854.442281287536,
-          "percent_of_running_capacity": 0.691619223422829
+          "percent_of_running_capacity": 1.0374288351342438
         }
       ],
-      "running_capacity_kva": 6000.0,
+      "running_capacity_kva": 4000.0,
       "status": "NOT VERIFIED",
       "requirements": [
         "Manufacturer maximum single load step (%) at the site conditions",
@@ -754,16 +754,17 @@
     },
     {
       "id": "load_pue_vs_target",
-      "title": "Design-point PUE against the target",
+      "title": "Design-point PUE (an output) compared with the target (context only)",
       "status": "NOT VERIFIED",
       "calculation_status": "CALCULATED",
       "calculation_result": "PASS",
       "input_status": "UNVERIFIED_PLACEHOLDER",
       "verification_status": "NOT VERIFIED",
-      "detail": "Design-point PUE 1.349 against a target of 1.35. A design-point power ratio under the stated assumptions, not an annual energy PUE. CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 7 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
+      "detail": "Design-point PUE 1.349 compared with a target of 1.35. PUE is an OUTPUT of the load model, not an input constraint: no input is adjusted to reach the target, and the result is reported, not enforced. It is a design-point power ratio under the stated assumptions, not an annual energy PUE. See the sensitivity table (IT load, cooling plant, losses) for the range. CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 7 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
       "values": {
         "pue": 1.3486698333333336,
-        "target": 1.35
+        "target": 1.35,
+        "pue_is_an_output": true
       },
       "inputs_used": [
         {
@@ -809,7 +810,7 @@
           "unit": "-"
         }
       ],
-      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
+      "next_action": "Report the result as it is. Do not retune inputs to meet the target; the sensitivity table shows the range."
     },
     {
       "id": "load_demand_vs_initial_estimate",
@@ -869,7 +870,7 @@
       "calculation_result": "WARNING",
       "input_status": "UNVERIFIED_PLACEHOLDER",
       "verification_status": "NOT VERIFIED",
-      "detail": "Worst credible case TX-PATH-OUT: 2,866 kVA on 1 x 3,150 kVA derated = 3,150 kVA, loading 91.0 % of the site-derated continuous rating (target 90 %, maximum 100 %), within the maximum. Against the nameplate rating it is 91.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 3,184 kVA (suggested size 4,000).  ACCEPTED DESIGN-TARGET EXCEPTION EX-001 (conditionally accepted by Project owner, 2026-11-05): the result is within the accepted ceiling of 91 %, pending independent technical verification. The check stays a WARNING. This is a preliminary result on unverified inputs (worst: UNVERIFIED_PLACEHOLDER).",
+      "detail": "Worst credible case TX-PATH-OUT: 2,866 kVA on 1 x 3,150 kVA derated = 3,150 kVA, loading 91.0 % of the site-derated continuous rating (target 90 %, maximum 100 %), within the maximum. Against the nameplate rating it is 91.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 3,184 kVA (suggested size 4,000).  ACCEPTED DESIGN-TARGET EXCEPTION EX-001 (conditionally accepted by Project owner, 2026-11-05): the exact result is 90.97 % (shown as 91.0 %), within the accepted ceiling of 91 % by 0.03 percentage points, pending independent technical verification. The margin is small: any change that raises the loading above the ceiling (a derating factor below 1.00, +1 % load, a UPS or distribution loss change) voids the exception, and the 4,000 kVA option needs none. The check stays a WARNING; the 90 % target and 100 % limit are unchanged. This is a preliminary result on unverified inputs (worst: UNVERIFIED_PLACEHOLDER).",
       "values": {
         "worst_scenario": "TX-PATH-OUT",
         "loading_pct": 90.97127777273506,
@@ -1262,10 +1263,10 @@
       "calculation_result": "PASS",
       "input_status": "UNVERIFIED_PLACEHOLDER",
       "verification_status": "NOT VERIFIED",
-      "detail": "Worst credible case GEN-PATH-OUT: 2,854 kVA on 3 x 2,000 kVA derated = 6,000 kVA, loading 47.6 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 47.6 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,189 kVA (suggested size 1,250).  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 11 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
+      "detail": "Worst credible case GEN-PATH-OUT-UNIT-OUT: 2,854 kVA on 2 x 2,000 kVA derated = 4,000 kVA, loading 71.4 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 71.4 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,784 kVA (suggested size 2,000).  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 11 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
       "values": {
-        "worst_scenario": "GEN-PATH-OUT",
-        "loading_pct": 47.57403802145893,
+        "worst_scenario": "GEN-PATH-OUT-UNIT-OUT",
+        "loading_pct": 71.3610570321884,
         "target_pct": 80.0,
         "limit_pct": 100.0,
         "derating": {
@@ -1304,17 +1305,17 @@
           },
           {
             "id": "GEN-PATH-OUT-UNIT-OUT",
-            "credible": false,
+            "credible": true,
             "load": 2854.442281287536,
             "units": 2,
             "capacity_total": 4000.0,
             "loading_pct": 71.3610570321884,
-            "status": "NOT APPLICABLE"
+            "status": "PASS"
           }
         ],
-        "required_rating_each_for_target": 1189.3509505364732,
-        "required_rating_each_for_limit": 951.4807604291786,
-        "suggested_size_for_target": 1250.0,
+        "required_rating_each_for_target": 1784.0264258047098,
+        "required_rating_each_for_limit": 1427.221140643768,
+        "suggested_size_for_target": 2000.0,
         "missing_manufacturer_data": [
           "generators.prp_max_average_load_factor_pct",
           "generators.operating_hours_restriction",
@@ -1417,15 +1418,15 @@
     {
       "id": "generator_loading_kw",
       "title": "Generator loading in kW, worst credible N+1 contingency",
-      "status": "NOT VERIFIED",
+      "status": "WARNING",
       "calculation_status": "CALCULATED",
-      "calculation_result": "PASS",
+      "calculation_result": "WARNING",
       "input_status": "UNVERIFIED_PLACEHOLDER",
       "verification_status": "NOT VERIFIED",
-      "detail": "Worst credible case GEN-PATH-OUT: 2,687 kW on 3 x 1,600 kW derated = 4,800 kW, loading 56.0 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 56.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,120 kW.  CALCULATION RESULT: PASS (preliminary). OVERALL STATUS: NOT VERIFIED, because 12 input(s) are not verified (worst: UNVERIFIED_PLACEHOLDER). A calculation on unverified inputs is not evidence that the design works.",
+      "detail": "Worst credible case GEN-PATH-OUT-UNIT-OUT: 2,687 kW on 2 x 1,600 kW derated = 3,200 kW, loading 84.0 % of the site-derated continuous rating (target 80 %, maximum 100 %), within the maximum. Against the nameplate rating it is 84.0 %, shown for information only: the status uses the derated rating. Preliminary: derating factors are placeholders, no overload used. Rating per unit to meet the target 1,680 kW.  This is a preliminary result on unverified inputs (worst: UNVERIFIED_PLACEHOLDER).",
       "values": {
-        "worst_scenario": "GEN-PATH-OUT",
-        "loading_pct": 55.98415972222222,
+        "worst_scenario": "GEN-PATH-OUT-UNIT-OUT",
+        "loading_pct": 83.97623958333334,
         "target_pct": 80.0,
         "limit_pct": 100.0,
         "derating": {
@@ -1464,16 +1465,16 @@
           },
           {
             "id": "GEN-PATH-OUT-UNIT-OUT",
-            "credible": false,
+            "credible": true,
             "load": 2687.239666666667,
             "units": 2,
             "capacity_total": 3200.0,
             "loading_pct": 83.97623958333334,
-            "status": "NOT APPLICABLE"
+            "status": "WARNING"
           }
         ],
-        "required_rating_each_for_target": 1119.6831944444443,
-        "required_rating_each_for_limit": 895.7465555555556,
+        "required_rating_each_for_target": 1679.5247916666667,
+        "required_rating_each_for_limit": 1343.6198333333334,
         "suggested_size_for_target": null,
         "missing_manufacturer_data": [
           "generators.prp_max_average_load_factor_pct",
@@ -1578,7 +1579,7 @@
           "unit": "-"
         }
       ],
-      "next_action": "Replace the preliminary inputs with verified manufacturer, site or project data."
+      "next_action": "Above the preferred target: review the concept or accept the exception in the design record."
     },
     {
       "id": "generator_rating_basis",
@@ -1622,7 +1623,7 @@
       "calculation_result": "N/A",
       "input_status": "MISSING",
       "verification_status": "NOT VERIFIED",
-      "detail": "Upper-bound steps: STEP-1 2,215 kVA (36.9 % of running capacity), STEP-2 601 kVA (10.0 % of running capacity), STEP-3 41 kVA (0.7 % of running capacity). Upper bound: each block applied at once at its steady-state demand. Soft starting, rectifier walk-in and sequencing are not modelled. Transient performance is not verified: manufacturer step, dip, walk-in and harmonic data are required.",
+      "detail": "Upper-bound steps: STEP-1 2,215 kVA (55.4 % of running capacity), STEP-2 601 kVA (15.0 % of running capacity), STEP-3 41 kVA (1.0 % of running capacity). Upper bound: each block applied at once at its steady-state demand. Soft starting, rectifier walk-in and sequencing are not modelled. Transient performance is not verified: manufacturer step, dip, walk-in and harmonic data are required.",
       "values": {
         "blocks": [
           {
@@ -1630,21 +1631,21 @@
             "description": "UPS input (IT load and UPS losses)",
             "step_kva": 2214.9122807017548,
             "cumulative_kva": 2214.9122807017548,
-            "percent_of_running_capacity": 36.91520467836258
+            "percent_of_running_capacity": 55.37280701754387
           },
           {
             "id": "STEP-2",
             "description": "Mechanical and cooling plant",
             "step_kva": 601.4754288143025,
             "cumulative_kva": 2813.180617172338,
-            "percent_of_running_capacity": 10.024590480238375
+            "percent_of_running_capacity": 15.036885720357562
           },
           {
             "id": "STEP-3",
             "description": "Lighting, small power and auxiliary",
             "step_kva": 41.497153405369744,
             "cumulative_kva": 2854.442281287536,
-            "percent_of_running_capacity": 0.691619223422829
+            "percent_of_running_capacity": 1.0374288351342438
           }
         ],
         "requirements": [
@@ -1741,7 +1742,7 @@
       "calculation_result": "N/A",
       "input_status": "MISSING",
       "verification_status": "NOT VERIFIED",
-      "detail": "Worst credible loading 47.6 % is an upper bound on the average load factor during an outage. The manufacturer's average load factor limit and operating-hour restriction for the PRP rating are not yet supplied.",
+      "detail": "Worst credible loading 71.4 % is an upper bound on the average load factor during an outage. The manufacturer's average load factor limit and operating-hour restriction for the PRP rating are not yet supplied.",
       "values": {
         "missing": [
           "generators.prp_max_average_load_factor_pct",
@@ -1823,6 +1824,449 @@
         }
       ],
       "next_action": "Obtain the battery manufacturer's constant-power discharge data."
+    },
+    {
+      "id": "generator_contingency_basis",
+      "title": "Generator contingency basis: selected and documented by an engineer",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "MISSING",
+      "verification_status": "NOT VERIFIED",
+      "detail": "The generators are judged against: N+1 engine-out on the surviving path combined with loss of the other utility path. That combined case is judged against the 3-unit-per-path N+1 concept. Loading by basis: loss of one utility path only: 47.6 % kVA on 3 x 2,000 kVA, 56.0 % kW on 3 x 1,600 kW; N+1: one engine out, the utility path available: 35.7 % kVA on 2 x 2,000 kVA, 42.0 % kW on 2 x 1,600 kW; one utility path out AND one engine out: 71.4 % kVA on 2 x 2,000 kVA, 84.0 % kW on 2 x 1,600 kW. The kW check on the engines reads WARNING in the combined case (above the 80 % target, below the 100 % limit) and is NOT converted to a PASS. THE ENGINEER MUST SELECT AND DOCUMENT THE CONTINGENCY BASIS: which of these cases the generators must carry, for how long, with what fuel and load-shedding assumptions. This package does not decide it.",
+      "values": {
+        "basis": "N+1 engine-out on the surviving path combined with loss of the other utility path",
+        "cases": {
+          "GEN-PATH-OUT": {
+            "kva_pct": 47.57403802145893,
+            "kw_pct": 55.98415972222222
+          },
+          "GEN-UNIT-OUT": {
+            "kva_pct": 35.6805285160942,
+            "kw_pct": 41.98811979166667
+          },
+          "GEN-PATH-OUT-UNIT-OUT": {
+            "kva_pct": 71.3610570321884,
+            "kw_pct": 83.97623958333334
+          }
+        }
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.generator_quantity_per_path",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.generator_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_esp_rating",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_cop_rating",
+          "data_status": "MISSING",
+          "value": null,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_size_list_kva",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "1000,1250,1500,1750,2000,2250,2500,3000",
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.generator_rating_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.8,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.architecture",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "Dual independent A and B power paths",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.power_paths",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.ups_topology",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "2N",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.generator_concept",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "N+1 per power path",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.battery_autonomy",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 10,
+          "unit": "min"
+        },
+        {
+          "parameter": "redundancy.double_contingency_credible",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": true,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.generator_contingency_basis",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "N+1 engine-out on the surviving path combined with loss of the other utility path",
+          "unit": "-"
+        },
+        {
+          "parameter": "design_criteria.generator_max_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 100,
+          "unit": "%"
+        },
+        {
+          "parameter": "design_criteria.generator_target_loading",
+          "data_status": "PROJECT_INPUT",
+          "value": 80,
+          "unit": "%"
+        }
+      ],
+      "next_action": "The engineer selects the contingency basis and records it with the reasoning."
+    },
+    {
+      "id": "equipment_options",
+      "title": "Transformer and UPS options shown side by side (none selected)",
+      "status": "NOT VERIFIED",
+      "calculation_status": "PARTIAL",
+      "calculation_result": "N/A",
+      "input_status": "UNVERIFIED_PLACEHOLDER",
+      "verification_status": "NOT VERIFIED",
+      "detail": "transformer retained (preliminary) 3,150 kVA: kVA 90.97 % (WARNING); transformer illustrative option 4,000 kVA: kVA 71.64 % (PASS); ups retained (preliminary) 2,500 kW, 2,500 kVA: kW 80.00 %, kVA 84.21 % (WARNING); ups illustrative option 3,000 kW, 3,000 kVA: kW 66.67 %, kVA 70.18 % (PASS). The options use the same contingency, derating placeholders and loading policy. NO OPTION IS SELECTED: the engineer selects. A 4,000 kVA transformer at the same impedance raises the transformer-limited figure (see the options table). Illustrative options are not manufacturer data.",
+      "values": {
+        "options": [
+          {
+            "equipment": "transformer",
+            "label": "Retained (preliminary)",
+            "rating": {
+              "kVA": 3150.0
+            },
+            "loading_pct": {
+              "kVA": 90.97127777273506
+            },
+            "status": "WARNING"
+          },
+          {
+            "equipment": "transformer",
+            "label": "Illustrative option",
+            "rating": {
+              "kVA": 4000
+            },
+            "loading_pct": {
+              "kVA": 71.63988124602886
+            },
+            "status": "PASS"
+          },
+          {
+            "equipment": "ups",
+            "label": "Retained (preliminary)",
+            "rating": {
+              "kW": 2500.0,
+              "kVA": 2500.0
+            },
+            "loading_pct": {
+              "kW": 80.0,
+              "kVA": 84.21052631578948
+            },
+            "status": "WARNING"
+          },
+          {
+            "equipment": "ups",
+            "label": "Illustrative option",
+            "rating": {
+              "kW": 3000.0,
+              "kVA": 3000
+            },
+            "loading_pct": {
+              "kW": 66.66666666666666,
+              "kVA": 70.17543859649123
+            },
+            "status": "PASS"
+          }
+        ]
+      },
+      "inputs_used": [
+        {
+          "parameter": "general.it_critical_load",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "general.design_power_factor",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0.95,
+          "unit": "-"
+        },
+        {
+          "parameter": "general.future_expansion_allowance",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 0,
+          "unit": "%"
+        },
+        {
+          "parameter": "demand_data.it_critical_load_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2000,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_efficiency",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 96,
+          "unit": "%"
+        },
+        {
+          "parameter": "losses.distribution_loss_fraction",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.transformer_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 3150,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.transformer_impedance",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 6,
+          "unit": "%"
+        },
+        {
+          "parameter": "equipment.transformer_size_list_kva",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "630,800,1000,1250,1600,2000,2500,3150,4000",
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.ups_quantity",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "equipment.ups_rating",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2500,
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_rating_kva",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 2500,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "equipment.ups_size_list_kw",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "1500,1600,2000,2250,2500,3000",
+          "unit": "kW"
+        },
+        {
+          "parameter": "equipment.ups_input_power_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 0.99,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.ups_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_ambient_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_altitude_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.generator_installation_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "derating.transformer_contingency_factor",
+          "data_status": "UNVERIFIED_PLACEHOLDER",
+          "value": 1.0,
+          "unit": "-"
+        },
+        {
+          "parameter": "design_options.transformer_option_kva",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 4000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "design_options.ups_option_kva",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 3000,
+          "unit": "kVA"
+        },
+        {
+          "parameter": "redundancy.architecture",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "Dual independent A and B power paths",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.power_paths",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 2,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.ups_topology",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "2N",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.generator_concept",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "N+1 per power path",
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.battery_autonomy",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": 10,
+          "unit": "min"
+        },
+        {
+          "parameter": "redundancy.double_contingency_credible",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": true,
+          "unit": "-"
+        },
+        {
+          "parameter": "redundancy.generator_contingency_basis",
+          "data_status": "PRELIMINARY_ASSUMPTION",
+          "value": "N+1 engine-out on the surviving path combined with loss of the other utility path",
+          "unit": "-"
+        }
+      ],
+      "next_action": "The engineer selects the ratings from manufacturer data."
     },
     {
       "id": "derating_factors",

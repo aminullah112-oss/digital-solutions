@@ -19,7 +19,7 @@ def by_id(results):
 
 def test_a_calculation_on_preliminary_inputs_never_reaches_pass(write_config, root):
     r = by_id(run_all_checks(load(write_config, root)))
-    for cid in ("ups_loading_kw", "generator_loading", "generator_loading_kw", "cable_voltage_drop", "load_pue_vs_target"):
+    for cid in ("ups_loading_kw", "generator_loading", "cable_voltage_drop", "load_pue_vs_target"):
         c = r[cid]
         assert c.calculation_result == "PASS" and c.status is S.NOT_VERIFIED and c.verification_status == "NOT VERIFIED", cid
         assert c.input_status in (ds.PRELIMINARY_ASSUMPTION, ds.UNVERIFIED_PLACEHOLDER) and "CALCULATION RESULT: PASS (preliminary)" in c.detail

@@ -18,7 +18,7 @@ from ohmetry_dc.calculations import LoadEstimate
 from ohmetry_dc.models import ProjectConfig
 from ohmetry_dc.validation import CheckResult
 
-REQUIRED_SHEETS = ["README", "PROJECT_INPUTS", "LOAD_SCHEDULE", "CALCULATIONS", "AB_ALLOCATION", "DESIGN_CHECKS", "RESULTS", "REVISION_LOG"]
+REQUIRED_SHEETS = ["README", "PROJECT_INPUTS", "LOAD_SCHEDULE", "CALCULATIONS", "AB_ALLOCATION", "DESIGN_CHECKS", "RESULTS", "SENSITIVITY", "REVISION_LOG"]
 
 F = "Arial"
 INK = "0E171E"
@@ -91,7 +91,7 @@ def build_load_workbook(cfg: ProjectConfig, est: LoadEstimate, checks: list[Chec
     wb.properties.title = f"{cfg.project.code} load estimation"
     ws0 = wb.active
     ws0.title = "README"
-    pin, ls, calc, ab, dc, res, rev = (wb.create_sheet(n) for n in REQUIRED_SHEETS[1:])
+    pin, ls, calc, ab, dc, res, sens, rev = (wb.create_sheet(n) for n in REQUIRED_SHEETS[1:])
     for ws in wb.worksheets:
         _page(ws)
 
@@ -303,6 +303,28 @@ def build_load_workbook(cfg: ProjectConfig, est: LoadEstimate, checks: list[Chec
     dc.freeze_panes = "A5"
     dc[f"A{r + len(other) + 2}"].value = "A PASS is a software check against the stated assumptions. It is not an engineering approval."
     dc[f"A{r + len(other) + 2}"].font = note
+
+    # ---- SENSITIVITY: computed by the Python engine at generation. A snapshot, NOT live formulas.
+    from ohmetry_dc.calculations.sensitivity import discrete_allocation_review, it_load_cases, loss_cases, pue_range
+
+    sens["A1"].value, sens["A1"].font = "Sensitivity of the load model (computed by the Python engine at generation: a snapshot, not live formulas)", title
+    sens["A2"].value, sens["A2"].font = "Illustrative variations chosen by the package, not forecasts. PUE is an OUTPUT of the load model: no input was adjusted to reach a target, and the design-basis target is context only.", note
+    _header(sens, 4, ["Case", "IT (kW)", "Facility (kW)", "Facility (kVA)", "PUE", "Transformer path-out %", "Transformer status", "UPS kW %", "UPS kVA %", "UPS status", "Generators kVA % (combined)", "Generators kW % (combined)", "Generators status"],
+            [52, 10, 13, 13, 8, 14, 16, 10, 10, 12, 16, 16, 16])
+    cases = it_load_cases(cfg) + loss_cases(cfg)
+    for k, c in enumerate(cases):
+        rr = 5 + k
+        for col, v, fmt in (("A", c.label, None), ("B", c.it_kw, "#,##0"), ("C", c.facility_kw, "#,##0.0"), ("D", c.facility_kva, "#,##0.0"), ("E", c.pue, "0.000"), ("F", c.transformer_pct, "0.0"), ("G", c.transformer_status + (" (EX-001 covers)" if c.exception_covers else " (EX-001 does NOT cover)" if c.exception_covers is False else ""), None),
+                            ("H", c.ups_kw_pct, "0.0"), ("I", c.ups_kva_pct, "0.0"), ("J", c.ups_status, None), ("K", c.gen_kva_pct, "0.0"), ("L", c.gen_kw_pct, "0.0"), ("M", c.gen_status, None)):
+            _put(sens, f"{col}{rr}", v, base, None, fmt)
+    rr = 5 + len(cases) + 1
+    lo, hi = pue_range(cases)
+    sens[f"A{rr}"].value, sens[f"A{rr}"].font = f"PUE across all cases: {lo:.3f} to {hi:.3f}", bold
+    rr += 2
+    _header(sens, rr, ["Mechanical item (whole-unit allocation)", "Installed", "Running", "kW per unit", "Model worst path (kW)", "Whole-unit worst path (kW)", "Note"], [52, 10, 13, 13, 8, 14, 60])
+    for j, a in enumerate(discrete_allocation_review(cfg)):
+        for col, v in zip("ABCDEFG", (a.item, a.installed, a.running, a.unit_kw, a.model_per_path_kw, a.discrete_worst_path_kw, a.note)):
+            _put(sens, f"{col}{rr + 1 + j}", v, base, None, None)
 
     # ---- REVISION_LOG
     rev["A1"].value, rev["A1"].font = "Revision log", title

@@ -1,6 +1,6 @@
 # Independent reviewer checklist: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
 
-**Document OHM-DC-2000-DOC-03  Issue P2. Package revision A6. Generated 2026-11-08 12:00 UTC.**
+**Document OHM-DC-2000-DOC-03  Issue P2. Package revision A6. Generated 2026-11-08 18:00 UTC.**
 
 > FOR INDEPENDENT ENGINEERING REVIEW. THE PACKAGE IS PRELIMINARY. IT IS NOT CONSTRUCTION-READY AND NOT VERIFIED. NOTHING IN IT HAS BEEN APPROVED.
 
@@ -129,7 +129,11 @@ Mark each item PASS, FAIL, N/A or QUERY and record findings in REVIEW_FINDINGS_L
 | R57 | Verification: confirm a reviewer name alone never marks a value verified (name, organisation, date, evidence reference and scope are required), the log is append-only, and the text says the name is not authenticated. | models/attestation.py, verification_log.yaml, ER-032 |  |  |
 | R58 | Standards and specifications: confirm every standard named in a specification is in the register, no clause number is cited and editions are blank; review the vendor data schedule, compliance schedule, FAT, SAT, commissioning and integrated systems test sections. | 07_registers/standards_register.yaml, 08_specifications, ER-033 |  |  |
 | R59 | Document control: confirm revision A6 everywhere, no generated file from another revision, the ER log is reconciled (ER-028 to ER-034), the Excel limitation is stated, and WORKBOOK_LINT.md has been read. | MASTER_INDEX, ENGINEERING_REVIEW_LOG, WORKBOOK_LINT.md, ER-034 |  |  |
-| R60 | Release gate: confirm the release state is DEVELOPMENT, nothing is marked approved, verified or construction-ready, and the corrective-action report agrees with the repository (re-run the tests and the key-number check). | CORRECTIVE_ACTION_REPORT, 11_qa/QA_RESULTS.md |  |  |
+| R60 | Generator contingency (item 1): confirm the combined case (one path out and one engine out) is judged, the kW result reads WARNING (83.98 % of 3,200 kW) and is not converted to PASS, and that the contingency basis is flagged as the engineer's to select and document. | checks generator_loading_kw, generator_contingency_basis, ER-035 |  |  |
+| R61 | Transformer (item 2): confirm EX-001 is reconciled with the exact 90.97 % and its 0.03-point margin, the 90 % target and 100 % limit are unchanged, and that 3,150 and 4,000 kVA are shown side by side with nothing selected (note the 4,000 kVA fault-level consequence). | check transformer_loading, equipment_options, workbook 04 OPTIONS, ER-036 |  |  |
+| R62 | UPS (item 3): confirm kW (80.0 %, PASS) and kVA (84.2 %, WARNING) are separate and the illustrative 3,000 kVA option is shown. | checks ups_loading_kw, ups_loading_kva, workbook 06 OPTIONS |  |  |
+| R63 | Load model (item 4): review the cooling redundancy, whole-unit A/B allocation, loss assumptions and the sensitivity table; confirm PUE is treated as an output and no input is adjusted to reach a target. | sizing summary, workbook 02 SENSITIVITY, check load_pue_vs_target, ER-037 |  |  |
+| R64 | Release gate: confirm the release state is DEVELOPMENT, nothing is marked approved, verified or construction-ready, and the corrective-action report agrees with the repository (re-run the tests and the key-number check). | CORRECTIVE_ACTION_REPORT, 11_qa/QA_RESULTS.md |  |  |
 
 ## Sign-off
 

@@ -71,10 +71,12 @@ def test_loadings_match_hand_calculation_and_the_policy_statuses(write_config, r
     assert res["ups_loading_kw"].values["loading_pct"] == pytest.approx(80.0, abs=1e-9)
     it_kva = math.hypot(2000, 2000 * math.tan(math.acos(0.95)))
     assert res["ups_loading_kva"].values["loading_pct"] == pytest.approx(it_kva / 2500 * 100, abs=1e-9)
-    # generators carry everything except the small-power item (not on the generator): hand-built reference, three units per path, path out
+    # generators carry everything except the small-power item (not on the generator): hand-built reference. The judged case is the combined contingency (one path out and one engine out): two units of 2,000 kVA
     ess = reference_model([i for i in DEFAULT_ITEMS if not (i[0] == 1 and i[1] == 20)])
-    assert res["generator_loading"].values["loading_pct"] == pytest.approx(ess["kva"] / 6000 * 100, abs=1e-9)
+    assert res["generator_loading"].values["loading_pct"] == pytest.approx(ess["kva"] / 4000 * 100, abs=1e-9)
+    assert res["generator_loading"].values["loading_pct"] == pytest.approx(71.36, abs=0.01) and res["generator_loading_kw"].values["loading_pct"] == pytest.approx(83.98, abs=0.01)
     assert (res["transformer_loading"].status, res["ups_loading_kw"].status, res["ups_loading_kva"].status, res["generator_loading"].status) == (S.WARNING, S.PASS, S.WARNING, S.PASS)
+    assert res["generator_loading_kw"].status is S.WARNING                      # 83.98 % of 3,200 kW is above the 80 % target and below the 100 % limit; never converted to PASS
 
 
 def test_policy_is_configurable_through_the_master_configuration(write_config, root):

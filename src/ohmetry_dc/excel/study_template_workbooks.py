@@ -257,7 +257,7 @@ def build_fuel_workbook(cfg: ProjectConfig, path: str | Path, stamp: str) -> Pat
     inp.add("model", "Generator model (manufacturer and model)", "text", None, ds.MISSING, "Pending: manufacturer data", "MANUFACTURER", text=True)
     w = sizing.generator_kw.worst_credible
     inp.add("load_pct", "Generator load for the runtime case (percent of the rated kW)", "%", None if w is None else w.loading * 100, ds.PRELIMINARY_ASSUMPTION, "Preliminary: worst credible loading from 05_GENERATOR_SIZING", "SITE_DATA")
-    inp.add("running", "Generators running in the case", "-", sizing.generator.units_per_path, ds.PRELIMINARY_ASSUMPTION, "Preliminary: the units of one path", "SITE_DATA")
+    inp.add("running", "Generators running in the case", "-", (w.units_available if w is not None else sizing.generator.units_per_path), ds.PRELIMINARY_ASSUMPTION, "Preliminary: the units available in the worst credible case (05_GENERATOR_SIZING)", "SITE_DATA")
     for i in range(1, 5):
         inp.add(f"x{i}", f"Fuel curve point {i}: load", "%", None, ds.MISSING, "Pending: manufacturer fuel consumption curve", "MANUFACTURER", "Ascending load points.")
         inp.add(f"y{i}", f"Fuel curve point {i}: fuel consumption (each generator)", "L/h", None, ds.MISSING, "Pending: manufacturer fuel consumption curve", "MANUFACTURER")

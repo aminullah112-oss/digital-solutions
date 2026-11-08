@@ -45,11 +45,23 @@ def live_values(cfg: ProjectConfig) -> list[float]:
             sc_by(sz.generator, "GEN-PATH-OUT-UNIT-OUT").loading * 100, sc_by(sz.generator_kw, "GEN-PATH-OUT-UNIT-OUT").loading * 100, bound.ik_ka, i_full, dist.busducts[0].required_rating_a]
 
 
+def live_statuses(cfg: ProjectConfig) -> list[str]:
+    """The loading status of each key number where it has one (calculation result against the target and limit; not an engineering verification)."""
+    from ohmetry_dc.calculations import estimate_loads, size_power_system
+    from ohmetry_dc.calculations.sizing import classify
+
+    sz = size_power_system(cfg, estimate_loads(cfg))
+    sc_by = lambda blk, i: next(s for s in blk.scenarios if s.id == i)
+    tx = sc_by(sz.transformer, "TX-PATH-OUT")
+    return ["-", "-", "-", "-", tx.status.value, classify(tx.load / 4000, sz.transformer.policy).value, sc_by(sz.ups_kw, "UPS-PATH-OUT").status.value, sc_by(sz.ups_kva, "UPS-PATH-OUT").status.value,
+            sc_by(sz.generator, "GEN-PATH-OUT-UNIT-OUT").status.value, sc_by(sz.generator_kw, "GEN-PATH-OUT-UNIT-OUT").status.value, "-", "-", "-"]
+
+
 def key_number_rows(cfg: ProjectConfig) -> list[list[str]]:
     rows = []
-    for (label, reviewed, tol), got in zip(REVIEWED_A5, live_values(cfg)):
+    for (label, reviewed, tol), got, st in zip(REVIEWED_A5, live_values(cfg), live_statuses(cfg)):
         nd = next(v for k, v in DECIMALS.items() if label.startswith(k))
-        rows.append([label, f"{reviewed:,.{nd}f}", f"{got:,.{nd}f}", "MATCH" if abs(got - reviewed) <= tol else "DIFFERENT"])
+        rows.append([label, f"{reviewed:,.{nd}f}", f"{got:,.{nd}f}", "MATCH" if abs(got - reviewed) <= tol else "DIFFERENT", st])
     return rows
 
 
@@ -77,6 +89,31 @@ def summary_now(cfg: ProjectConfig) -> dict[str, int]:
 
 
 ITEMS = [
+    dict(no=1, title="Generator N+1 (combined contingency)",
+         asked="Judge one utility path out plus one generator out (about 71.4 % kVA and 84.0 % kW: WARNING against the 80 % kW target, under the 100 % hard limit); document the redundancy philosophy (N+1 engine-out basis); flag that the engineer must select and document the contingency basis; do not convert the WARNING to PASS.",
+         done=["The combined case is judged (`redundancy.double_contingency_credible` is true, source: the A5 review). Generator kVA 71.36 % of 4,000 kVA (under the 80 % target); kW 83.98 % of 3,200 kW: WARNING, never converted to PASS. Loss of a path only gives 47.6 % kVA / 56.0 % kW.",
+               "New check `generator_contingency_basis` (NOT VERIFIED): states the basis used, shows the loading under each candidate basis, and says in capitals that the engineer must select and document it. New parameter `redundancy.generator_contingency_basis` records the assumption. The methodology document and the sizing summary state the philosophy.",
+               "Note on the reviewed table: it lists the 71.36 % kVA row as WARNING; against the 80 % kVA target it reads PASS, and the WARNING is on kW. The item text says the same (WARNING against the 80 % kW target)."],
+         evidence=["tests/unit/test_options_sensitivity.py", "tests/unit/test_sizing.py", "check generator_contingency_basis", "ER-035"],
+         still=["No engineer has selected or documented the contingency basis, the outage duration, fuel autonomy or load-shedding assumptions it implies.", "The PRP rating basis and 1,600 kW engine rating are still assumptions."]),
+    dict(no=2, title="Transformer: EX-001 and the 3,150 / 4,000 kVA options",
+         asked="Reconcile design exception EX-001 with the 91.0 % kVA loading on 3,150 kVA; keep the 90 % target / 100 % limit (WARNING); show 3,150 kVA and 4,000 kVA side by side so the engineer can select.",
+         done=["The exact loading is 90.97 % (shown as 91.0 %). EX-001's ceiling is 91.0 %: the check now states the exact value, the 0.03 percentage point margin and that any small increase voids the exception (at +10 % IT the loading is 98 % and EX-001 does not cover it). Target 90 % and limit 100 % unchanged; the result stays WARNING.",
+               "3,150 kVA (90.97 %, WARNING) and an illustrative 4,000 kVA (71.64 %, PASS) are shown side by side in the check `equipment_options`, workbook 04 sheet OPTIONS (live formulas, option rating editable) and the sizing summary. The 4,000 kVA option raises the transformer-limited figure to 104.9 kA at the same impedance, above the 100 kA practical limit, and the full-load LV current to 5,774 A: the table flags both. Nothing is selected."],
+         evidence=["tests/unit/test_options_sensitivity.py (4 tests)", "tests/workbook/test_calc_workbooks.py (OPTIONS sheets)", "ER-008, ER-036"],
+         still=["The 4,000 kVA option assumes the same impedance percentage and derating, which a real unit would not have to share.", "Transformer selection, impedance and the fault-level consequence are for the engineer, from manufacturer data."]),
+    dict(no=3, title="UPS: separate kW and kVA, 3,000 kVA option",
+         asked="Separate kW and kVA checks; kVA 84.2 % at 2,500 kVA is a WARNING; keep kW at 80.0 % (PASS); include an illustrative 3,000 kVA option in the sizing table.",
+         done=["kW (80.0 %, PASS) and kVA (84.2 %, WARNING) remain separate checks (`ups_loading_kw`, `ups_loading_kva`). The 3,000 kVA option (kW scaled by the same ratio) reads 66.7 % kW and 70.2 % kVA (PASS) in the options table, workbook 06 sheet OPTIONS and the sizing summary."],
+         evidence=["tests/unit/test_options_sensitivity.py", "workbook 06_UPS_SIZING sheet OPTIONS", "ER-009, ER-036"],
+         still=["Real UPS kW and kVA ratings and the output power factor are manufacturer data; the 3,000 kVA option is illustrative."]),
+    dict(no=4, title="Load model review and sensitivity",
+         asked="Review cooling load (chiller and pump redundancy, CRAH), the A/B split, UPS and distribution losses; add a sensitivity table (+/-10 % IT load, PUE range); do not force a PUE target.",
+         done=["Review recorded (sizing summary, methodology document, ER-037): chillers 4 installed / 3 running (N+1), pumps 6 / 4, CRAH 20 all counted as running with spares not stated; the 50 / 50 path split is an assumption and 3 running chillers cannot split evenly (worst path 240 kW against 180 kW in the model); UPS efficiency (flat 96 %) and distribution loss (flat 1 %) are assumptions.",
+               "Sensitivity table: IT load -10 / 0 / +10 % with the cooling plant held as scheduled and scaled with the load, plus UPS efficiency +/-2 points and doubled distribution losses. PUE ranges from 1.322 to 1.382. At +10 % IT the transformer reads 98.0 to 99.9 % and EX-001 does not cover it. Workbook 02 sheet SENSITIVITY (a Python snapshot, labelled as such).",
+               "PUE is documented and tested as an output: the check `load_pue_vs_target` no longer suggests retuning inputs, and the sensitivity code varies copies of the configuration, never the configuration itself."],
+         evidence=["tests/unit/test_options_sensitivity.py (5 tests)", "calculations/sensitivity.py", "docs/calculation_methodology/power_system_sizing.md", "ER-005, ER-037"],
+         still=["CRAH redundancy, the real UPS efficiency curve, the A/B allocation by whole units and mechanical behaviour after a path loss need design decisions and manufacturer data.", "The sensitivity table is a snapshot, not live formulas, and its cases are the package's own choices."]),
     dict(no=5, title="Single-line diagram and architecture",
          asked="Utility A/B independence not claimed; generator transfer and interlocking; paralleling and synchronising; PMS and load sharing; load shedding; UPS static and maintenance bypass; battery isolation and protection; protection and measurement boundaries.",
          done=["SLD-001 redrawn at A6: a breaker per generator (GCB) onto a generator bus; a dashed interlock between ACB-TX and ACB-GEN; a PMS box (synchronising, load sharing, load shedding); UPS static bypass (STS) and maintenance bypass (MBB); a battery isolator (BAT-ISO); the utility point-of-connection boundary and the UPS vendor-scope boundary. Every one is labelled concept or not designed.",
@@ -130,11 +167,6 @@ ITEMS = [
          still=["The release state stays DEVELOPMENT. Nothing is pushed or approved by this work."]),
 ]
 
-ITEMS_1_TO_4 = ("Items 1 to 4 of the A5 review are NOT covered by this report. They were implemented in an earlier working session whose repository was lost before it was ever pushed, and their text was not in the handover. "
-                "This package was rebuilt from the A5 review package, so it is the A5 state plus corrective actions 5 to 12. Until the text of items 1 to 4 is supplied and checked, do not assume they are present. "
-                "Signals in the handover suggest the reviewed values included a judged path-out-plus-one-unit generator case and a third WARNING; the engine currently reports that case as informational and still shows 2 WARNINGs. This is an inference, not a fact.")
-
-
 def _short(items):
     return "; ".join(items)
 
@@ -144,11 +176,11 @@ def markdown(cfg: ProjectConfig, root: Path, stamp: str) -> str:
     now = summary_now(cfg)
     L = [f"# Corrective action report: {cfg.project.name}", "", f"**Document {cfg.project.code}-DOC-07  Issue {ISSUE}. Package revision {cfg.project.revision}. Generated {stamp}. Package version {__version__}.**", "", f"> {BANNER}", "",
          "This report answers items 5 to 12 of the independent review of revision A5. **Implemented is not verified:** every change below is NOT REVIEWED until an independent engineer says otherwise.", "",
-         "## 1. What changed and what did not", "", "Revision A6 changes how results are labelled, drawn and documented. **No load, demand, rating or sizing value changed**: the revision log records no equipment sizing change, and the table in section 3 shows the reviewed A5 values reproduce.", "",
-         "## 2. Items 1 to 4", "", ITEMS_1_TO_4, "", "## 3. Key numbers: reviewed at A5, computed now", "", "| Item | Reviewed at A5 | Computed now | Agreement |", "|---|---|---|---|"] + [f"| {' | '.join(r)} |" for r in kn] + [
+         "## 1. What changed and what did not", "", "Revision A6 changes how results are labelled, drawn and documented, and applies items 1 to 4 of the review. **No load, demand or rating input changed.** One judgement setting changed: the generator combined contingency (one utility path out and one engine out) is now judged, so the generator verification, the suggested generator size and the check summary change (one new WARNING, on generator kW). The table in section 3 shows the reviewed A5 values reproduce.", "",
+         "## 2. Items 1 to 4", "", "The text of items 1 to 4 was supplied by the project owner on 2026-11-08 and is answered in the same way as items 5 to 12 below (items 1 to 4 first).", "", "## 3. Key numbers: reviewed at A5, computed now", "", "| Item | Reviewed at A5 | Computed now | Agreement | Status now |", "|---|---|---|---|---|"] + [f"| {' | '.join(r)} |" for r in kn] + [
          "", f"Agreement: {'ALL MATCH' if all(r[3] == 'MATCH' for r in kn) else 'DIFFERENCE FOUND: investigate before release'}. The transformer-limited figure is the utility contribution through one transformer only; it is not the bus fault level.", "",
          "## 4. Check summary", "", "| Status | A5 | A6 |", "|---|---|---|"] + [f"| {k} | {A5_SUMMARY[k]} | {now[k]} |" for k in A5_SUMMARY] + [
-         "", "The NOT VERIFIED count rose because new checks were added (`cable_derating_basis`; arc-flash and lightning scope are NOT APPLICABLE). No check changed status and nothing was upgraded.", "",
+         "", "WARNING rose from 2 to 3 because the generator kW check now judges the combined contingency (84.0 % of 3,200 kW, above the 80 % target, below the 100 % limit). NOT VERIFIED rose because checks were added (`cable_derating_basis`, `generator_contingency_basis`, `equipment_options`) and two scope checks read NOT APPLICABLE. Nothing was upgraded and no WARNING was converted to a PASS.", "",
          f"Tests: {_qa_line(root)}.", ""]
     for it in ITEMS:
         L += [f"## Item {it['no']}. {it['title']}", "", f"**Asked:** {it['asked']}", "", "**Done:**", ""] + [f"- {d}" for d in it["done"]] + ["", f"**Evidence:** {_short(it['evidence'])}.", "", "**Still open:**", ""] + [f"- {s}" for s in it["still"]] + [""]
@@ -163,11 +195,11 @@ def docx(cfg: ProjectConfig, root: Path, path: Path, stamp: str) -> Path:
     dx.banner(d, BANNER)
     d.add_paragraph("This report answers items 5 to 12 of the independent review of revision A5. Implemented is not verified: every change below is NOT REVIEWED until an independent engineer says otherwise.")
     d.add_heading("1. What changed and what did not", 2)
-    d.add_paragraph("Revision A6 changes how results are labelled, drawn and documented. No load, demand, rating or sizing value changed.")
+    d.add_paragraph("Revision A6 changes how results are labelled, drawn and documented, and applies items 1 to 4 of the review. No load, demand or rating input changed. One judgement setting changed: the generator combined contingency is now judged, so the generator verification, the suggested generator size and the check summary change (one new WARNING, on generator kW).")
     d.add_heading("2. Items 1 to 4", 2)
-    d.add_paragraph(ITEMS_1_TO_4)
+    d.add_paragraph("The text of items 1 to 4 was supplied by the project owner on 2026-11-08 and is answered in the same way as items 5 to 12 (items 1 to 4 first).")
     d.add_heading("3. Key numbers: reviewed at A5, computed now", 2)
-    dx.table(d, ["Item", "Reviewed at A5", "Computed now", "Agreement"], key_number_rows(cfg))
+    dx.table(d, ["Item", "Reviewed at A5", "Computed now", "Agreement", "Status now"], key_number_rows(cfg))
     d.add_heading("4. Check summary", 2)
     now = summary_now(cfg)
     dx.table(d, ["Status", "A5", "A6"], [[k, str(A5_SUMMARY[k]), str(now[k])] for k in A5_SUMMARY])

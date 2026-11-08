@@ -166,7 +166,7 @@ def _scenarios(kind: str, per_path: int, normal_path: tuple[float, float], total
         "Contingency derating factor applied" if contingency_factor != 1.0 else "")
     if redundant_unit and per_path >= 2:
         add(f"{kind}-UNIT-OUT", "Loss of one unit (N+1): the path load on the remaining units", pn, per_path - 1, True)
-        add(f"{kind}-PATH-OUT-UNIT-OUT", "Loss of the other path and one unit: beyond an N+1 design basis", tt, per_path - 1, double_credible, contingency_factor,
+        add(f"{kind}-PATH-OUT-UNIT-OUT", "Loss of the other path and one unit (combined contingency: N+1 engine-out on the surviving path)", tt, per_path - 1, double_credible, contingency_factor,
             "" if double_credible else "Informational: not judged against the limits (redundancy.double_contingency_credible is False)")
     return out
 

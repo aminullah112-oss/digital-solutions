@@ -1,12 +1,12 @@
 # Customer README
 
-**Document OHM-DC-2000-DOC-01  Revision A6, Issue P2.  Generated 2026-11-08 12:00 UTC.**
+**Document OHM-DC-2000-DOC-01  Revision A6, Issue P2.  Generated 2026-11-08 18:00 UTC.**
 
 > PRELIMINARY EDUCATIONAL AND REFERENCE PACKAGE. NOT CONSTRUCTION-READY. NOT VERIFIED.
 
 ## 1. What this package is
 
-The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A6, version 0.1.0.dev0, generated 2026-11-08 12:00 UTC.
+The OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT (OHM-DC-2000) is a worked electrical engineering reference for a 2 MW (IT load) data centre. It contains calculation workbooks, a calculation engine, reports, a preliminary single-line diagram, specification templates and a training suite. This is package revision A6, version 0.1.0.dev0, generated 2026-11-08 18:00 UTC.
 
 It shows how a data centre electrical design is built up: design basis, load estimate, redundancy architecture, equipment sizing, distribution, short-circuit levels, protection data, earthing and documentation. Every calculation states its inputs and their status.
 

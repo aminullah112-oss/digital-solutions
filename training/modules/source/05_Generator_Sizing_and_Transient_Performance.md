@@ -1,6 +1,6 @@
 # Module 05: Generator Sizing and Transient Performance
 
-_Ohmetry engineering learning suite. Generated 2026-11-08 12:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
+_Ohmetry engineering learning suite. Generated 2026-11-08 18:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
 
 ## Learning objectives
 
@@ -26,7 +26,7 @@ Steady-state loading is not enough. A UPS rectifier or a large motor applies a s
 
 ## Worked example (reference project configuration)
 
-- 3 x 2,000 kVA per path. Worst credible case (loss of the other path, all units available): 47.6 % of kVA and 56.0 % of kW.
+- 3 x 2,000 kVA per path. Worst credible case (loss of the other path, all units available): 71.4 % of kVA and 84.0 % of kW.
 - With one unit out in normal operation: 35.7 % of kVA. Path out and one unit out together is beyond N+1 and is shown for information only: 71.4 % of kVA.
 - The step-load check, prime-power load factor and hours restriction all read NOT VERIFIED because the manufacturer data is missing.
 

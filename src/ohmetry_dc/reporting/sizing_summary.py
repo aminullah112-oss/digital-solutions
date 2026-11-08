@@ -83,6 +83,13 @@ def build_sizing_summary(cfg: ProjectConfig, generated: str | None = None) -> st
     L += [f"| {b.id} | {b.description} | {b.step_kva:,.0f} kVA | {b.percent_of_running_capacity:.1f} % |" for b in st.blocks]
     L += ["", f"Status: **{st.status.value}**. Data required for the transient verification:", ""] + [f"- {x}" for x in st.requirements] + [""]
     b = r.battery
+    from ohmetry_dc.calculations.options import equipment_options, options_markdown
+
+    L += ["## Generator contingency basis", "", f"Judged against: {(cfg.optional_value('redundancy.generator_contingency_basis') or 'not recorded')}. **The engineer must select and document the contingency basis**; the generator verification table above shows the loading for each candidate basis. A WARNING is never converted to a PASS.", ""]
+    L += ["## Transformer and UPS options side by side", ""] + options_markdown(equipment_options(cfg, r)) + [""]
+    from ohmetry_dc.calculations.sensitivity import sensitivity_markdown
+
+    L += ["## Sensitivity and load-model review", ""] + sensitivity_markdown(cfg) + [""]
     L += ["## Battery (interface only)", "", f"Critical load {b.ups_output_kw:,.0f} kW for {b.autonomy_min:g} min is {b.energy_at_ups_output_kwh:,.0f} kWh at the UPS output. Status: **{b.status.value}**.", ""] + [f"- {n}" for n in b.notes]
     L += ["", "Missing: " + (", ".join(b.missing_data) or "none"), ""]
     pend = [p for p in cfg.parameters.values() if p.status.value == "MANUFACTURER_DATA" and p.missing]

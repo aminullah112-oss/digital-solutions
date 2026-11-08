@@ -148,17 +148,59 @@ assumptions:
   notes: Battery sizing needs manufacturer discharge data (Stage 3).
 - id: redundancy.double_contingency_credible
   name: Double contingency treated as credible
-  value: false
+  value: true
   unit: '-'
-  source: Ohmetry default for an N+1 and 2N concept
-  revision: A1
+  source: Project owner instruction, A5 review item 1 (judge one utility path out
+    plus one generator out)
+  revision: A6
   confirmation_status: UNCONFIRMED
   confirmed_by: null
   confirmation_date: null
-  notes: 'False: that case is reported as informational and is not judged against
-    the limits. Set True to judge it. The loss of the other path together with the
-    loss of the largest generator is always shown in the generator verification table,
-    whatever this flag says.'
+  notes: 'True: that case is judged against the limits. It is a CONTINGENCY BASIS
+    the engineer must select and document: the alternatives are N+1 engine-out only,
+    loss of a path only, or this combined case. Set False to report it as informational.
+    A WARNING is never converted to a PASS. Only the generators have a spare unit
+    in each path in the retained concept, so the flag changes no transformer or UPS
+    result.'
+- id: redundancy.generator_contingency_basis
+  name: Generator contingency basis (the case that sizes the generators)
+  value: N+1 engine-out on the surviving path combined with loss of the other utility
+    path
+  unit: '-'
+  source: Project owner instruction, A5 review item 1. NOT selected or documented
+    by an engineer
+  revision: A6
+  confirmation_status: UNCONFIRMED
+  confirmed_by: null
+  confirmation_date: null
+  notes: 'Alternatives: (a) loss of one utility path only; (b) N+1, one engine out
+    with the utility available on that path; (c) this combined case. The loading under
+    each is shown in the generator verification table. A WARNING is never converted
+    to a PASS.'
+- id: design_options.transformer_option_kva
+  name: Transformer option shown beside the retained rating
+  value: 4000
+  unit: kVA
+  source: Project owner instruction, A5 review item 2 (show 3,150 kVA and 4,000 kVA
+    side by side)
+  revision: A6
+  confirmation_status: UNCONFIRMED
+  confirmed_by: null
+  confirmation_date: null
+  notes: Illustrative. Same impedance percentage and derating factors as the retained
+    transformer are assumed, which a 4,000 kVA unit would not have to share. Nothing
+    is selected.
+- id: design_options.ups_option_kva
+  name: UPS option shown beside the retained rating
+  value: 3000
+  unit: kVA
+  source: Project owner instruction, A5 review item 3 (include an illustrative 3,000
+    kVA option)
+  revision: A6
+  confirmation_status: UNCONFIRMED
+  confirmed_by: null
+  confirmation_date: null
+  notes: Illustrative. Not a selection. UPS ratings come from manufacturer data.
 - id: design_criteria.voltage_drop_limit_pct
   name: Maximum voltage drop per feeder
   value: 3.0

@@ -20,7 +20,7 @@ def test_validate_config_on_the_shipped_configuration(root, tmp_path, capsys):
     assert code == EXIT_OK and data["summary"]["FAIL"] == 0
     assert data["release_gate"] == "DEVELOPMENT" and data["declared_state"] == "DEVELOPMENT"
     assert {c["id"] for c in data["checks"]} >= {"required_user_inputs", "inputs_deferred", "pue_arithmetic", "transformer_loading", "load_pue_vs_target"}
-    assert data["summary"]["NOT VERIFIED"] >= 5 and data["summary"]["WARNING"] == 2      # transformer and UPS kVA are above the preferred targets
+    assert data["summary"]["NOT VERIFIED"] >= 5 and data["summary"]["WARNING"] == 3      # transformer, UPS kVA and generator kW (combined contingency) are above the preferred targets
     statuses = {c["id"]: c["status"] for c in data["checks"]}
     calc = {c["id"]: c["calculation_result"] for c in data["checks"]}
     assert statuses["transformer_loading"] == "WARNING" and statuses["ups_loading_kw"] == "NOT VERIFIED" and calc["ups_loading_kw"] == "PASS" and statuses["generator_step_load"] == "NOT VERIFIED" and statuses["battery_sizing"] == "NOT VERIFIED"

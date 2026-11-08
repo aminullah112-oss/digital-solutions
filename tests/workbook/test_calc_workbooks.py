@@ -35,7 +35,7 @@ def test_workbooks_have_the_standard_sheets_and_input_columns(root, tmp_path):
     cfg = _cfg(root)
     for kind in SIZING_KINDS:
         wb = openpyxl.load_workbook(_sizing(cfg, kind, tmp_path))
-        assert wb.sheetnames == ["README", "INPUTS", "CALCULATIONS", "RESULTS", "REVISION_LOG"]
+        assert wb.sheetnames == ["README", "INPUTS", "CALCULATIONS", "RESULTS"] + (["OPTIONS"] if kind in ("transformer", "ups") else []) + ["REVISION_LOG"]
         hdr = [c.value for c in wb["INPUTS"][5]]
         assert "Preliminary value (retained)" in hdr and "Datasheet / confirmed value (enter here)" in hdr and "Input status" in hdr and "Reviewer attestation: name; organisation; date (YYYY-MM-DD); evidence reference; scope (self-declared, not authenticated)" in hdr
         readme = " ".join(str(c.value) for row in wb["README"].iter_rows() for c in row if c.value)
@@ -431,9 +431,12 @@ def test_fuel_workbook_estimates_nothing_without_the_manufacturer_curve(root, tm
     vals = {"x1": 25, "x2": 50, "x3": 75, "x4": 100, "y1": 20, "y2": 35, "y3": 50, "y4": 70, "tank": 20000, "reserve": 10}
     _set(path, "INPUTS", {**{f"E{rows[k]}": v for k, v in vals.items()}, **{f"H{rows[k]}": "Fuel curve, test, rev A" for k in vals}})
     res = openpyxl.load_workbook(recalc(path, tmp_path / "rc1"), data_only=True)["RESULTS"]
-    per = 35 + 15 * (res["B3"].value and (openpyxl.load_workbook(path)["INPUTS"][f"D{rows['load_pct']}"].value - 50) / 25)
-    assert res["B3"].value == pytest.approx(per, rel=1e-9) and res["B4"].value == pytest.approx(3 * per, rel=1e-9)
-    assert res["B6"].value == pytest.approx(18000 / (3 * per), rel=1e-9) and res["B9"].value.startswith("NOT VERIFIED")
+    load = openpyxl.load_workbook(path)["INPUTS"][f"D{rows['load_pct']}"].value                 # 83.98 %: the combined contingency, two engines running
+    run = openpyxl.load_workbook(path)["INPUTS"][f"D{rows['running']}"].value
+    per = next(y0 + (y1 - y0) * (load - x0) / (x1 - x0) for (x0, y0), (x1, y1) in zip([(25, 20), (50, 35), (75, 50)], [(50, 35), (75, 50), (100, 70)]) if x0 < load <= x1)
+    assert run == 2 and load == pytest.approx(83.98, abs=0.01)
+    assert res["B3"].value == pytest.approx(per, rel=1e-9) and res["B4"].value == pytest.approx(run * per, rel=1e-9)
+    assert res["B6"].value == pytest.approx(18000 / (run * per), rel=1e-9) and res["B9"].value.startswith("NOT VERIFIED")
     _set(path, "INPUTS", {f"E{rows['load_pct']}": 110, f"H{rows['load_pct']}": "Test"})
     assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["RESULTS"]["B3"].value == "OUTSIDE CURVE"
 
@@ -466,3 +469,23 @@ def test_a_bare_reviewer_name_in_a_workbook_is_rejected_as_an_incomplete_attesta
     wb["INPUTS"][f"I{r}"] = ATTESTATION
     wb.save(path)
     assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["INPUTS"][f"J{r}"].value.endswith("_VERIFIED")
+
+
+@needs_soffice
+def test_options_sheets_recalculate_to_the_python_values_and_follow_a_changed_option_rating(root, tmp_path):
+    from ohmetry_dc.calculations import estimate_loads, size_power_system
+    from ohmetry_dc.calculations.options import equipment_options
+    cfg = _cfg(root)
+    opts = equipment_options(cfg, size_power_system(cfg, estimate_loads(cfg)))
+    for kind, want in (("transformer", [("kVA", 90.97, "WARNING"), ("kVA", 71.64, "PASS")]), ("ups", [("kW", 80.0, "PASS"), ("kW", 66.67, "PASS"), ("kVA", 84.21, "WARNING"), ("kVA", 70.18, "PASS")])):
+        path = _sizing(cfg, kind, tmp_path)
+        ws = openpyxl.load_workbook(recalc(path, tmp_path / f"rc_{kind}"), data_only=True)["OPTIONS"]
+        assert not _errors(openpyxl.load_workbook(recalc(path, tmp_path / f"rc2_{kind}"), data_only=True))
+        got = [(ws[f"A{r}"].value, round(ws[f"D{r}"].value, 2), ws[f"E{r}"].value, ws[f"G{r}"].value) for r in range(5, 5 + len(want))]
+        assert [(m, v, s) for m, v, s, _ in got] == want and all(g[3] == "MATCH" for g in got), got
+    path = _sizing(cfg, "transformer", tmp_path)                                    # overwrite the option rating: the loading follows
+    wb = openpyxl.load_workbook(path)
+    wb["OPTIONS"]["C6"] = 3600
+    wb.save(path)
+    ws = openpyxl.load_workbook(recalc(path, tmp_path / "rc3"), data_only=True)["OPTIONS"]
+    assert ws["D6"].value == pytest.approx(2865.595 / 3600 * 100, rel=1e-4) and ws["G6"].value.startswith("DIFFERENT")

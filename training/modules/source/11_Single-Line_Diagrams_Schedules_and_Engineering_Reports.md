@@ -1,6 +1,6 @@
 # Module 11: Single-Line Diagrams, Schedules and Engineering Reports
 
-_Ohmetry engineering learning suite. Generated 2026-11-08 12:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
+_Ohmetry engineering learning suite. Generated 2026-11-08 18:00 UTC. Ohmetry course material for engineering learning. It is not accredited training. Worked examples use preliminary assumptions, not manufacturer data. It does not replace the standards, manufacturer data or a qualified engineer._
 
 ## Learning objectives
 
@@ -25,7 +25,7 @@ A report states its scope, its inputs and their status, its limitations, and wha
 
 ## Worked example (reference project configuration)
 
-- Reference project at this revision: 9 checks PASS (all arithmetic or consistency checks), 2 WARNING, 0 FAIL, 26 NOT VERIFIED.
+- Reference project at this revision: 9 checks PASS (all arithmetic or consistency checks), 3 WARNING, 0 FAIL, 27 NOT VERIFIED.
 - The single-line diagram OHM-DC-2000-SLD-001 and the equipment schedule use the same tags as the workbooks.
 
 ## Common engineering mistakes

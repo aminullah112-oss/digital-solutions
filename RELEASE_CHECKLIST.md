@@ -20,7 +20,7 @@ Release status: **DEVELOPMENT**. Nothing below is complete except where ticked.
 - [ ] Final release assessment
 
 ## Test status
-Stage 1 to 5 and revision A6 automated tests (270). Workbooks are recalculated with LibreOffice only; Microsoft Excel was not available (see `output/WORKBOOK_LINT.md`). Results: `python -m ohmetry_dc qa-report` writes `output/QA_RESULTS.md`. A passing test proves code behaviour, not engineering correctness.
+Stage 1 to 5 and revision A6 automated tests (282). Workbooks are recalculated with LibreOffice only; Microsoft Excel was not available (see `output/WORKBOOK_LINT.md`). Results: `python -m ohmetry_dc qa-report` writes `output/QA_RESULTS.md`. A passing test proves code behaviour, not engineering correctness.
 
 ## Engineering review status
 NOT PERFORMED. An independent review package has been prepared (`build-review-package`) with a reviewer checklist, a findings log and the consolidated outstanding items. No independent review of any calculation or assumption has taken place.

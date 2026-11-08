@@ -245,15 +245,62 @@ revisions:
   review_status: NOT REVIEWED
 - revision: A6
   date: '2026-11-08'
-  description: 'A6. Corrective actions after the A5 independent review (items 5 to
-    12): architecture concept symbols on the single-line diagram (independence of
-    utility A and B not claimed), distribution derating and parallel-run status, short-circuit
-    and earthing wording and scope, reviewer attestation records, standards register
-    and specification schedules, document control and QA, release package. No load,
-    demand or equipment concept change; no sizing change.'
-  changed_parameters: {}
+  description: 'A6. Corrective actions after the A5 independent review. Items 1 to
+    4: the generator combined contingency (one utility path out and one engine out)
+    is now judged (redundancy.double_contingency_credible true); transformer and UPS
+    options shown side by side; load-model review and sensitivity; PUE documented
+    as an output. Items 5 to 12: architecture concept symbols, distribution derating
+    status, short-circuit and earthing wording, reviewer attestation, standards and
+    specifications, document control, release gate. No load, demand or equipment rating
+    input changed.'
+  changed_parameters:
+    design_options.transformer_option_kva:
+    - null
+    - 4000
+    design_options.ups_option_kva:
+    - null
+    - 3000
+    redundancy.double_contingency_credible:
+    - false
+    - true
+    redundancy.generator_contingency_basis:
+    - null
+    - N+1 engine-out on the surviving path combined with loss of the other utility
+      path
   load_changes: {}
-  equipment_sizing_changes: {}
-  check_status_changes: {}
+  equipment_sizing_changes:
+    generator:
+      worst_loading_pct:
+      - 47.57403802145893
+      - 71.3610570321884
+      required_rating_each_for_target:
+      - 1189.3509505364732
+      - 1784.0264258047098
+      required_rating_each_for_limit:
+      - 951.4807604291786
+      - 1427.221140643768
+      suggested_size_for_target:
+      - 1250.0
+      - 2000.0
+      suggested_size_for_limit:
+      - 1000.0
+      - 1500.0
+    generator_kw:
+      worst_loading_pct:
+      - 55.98415972222222
+      - 83.97623958333334
+      status:
+      - PASS
+      - WARNING
+      required_rating_each_for_target:
+      - 1119.6831944444443
+      - 1679.5247916666667
+      required_rating_each_for_limit:
+      - 895.7465555555556
+      - 1343.6198333333334
+  check_status_changes:
+    generator_loading_kw:
+    - NOT VERIFIED
+    - WARNING
   reviewer: null
   review_status: NOT REVIEWED

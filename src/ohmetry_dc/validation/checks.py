@@ -181,10 +181,35 @@ def check_power_system_sizing(cfg: ProjectConfig) -> list[CheckResult]:
     out.append(CheckResult("battery_sizing", ids["battery_sizing"], S.NOT_VERIFIED,
                            f"{b.ups_output_kw:,.0f} kW for {b.autonomy_min:g} min is {b.energy_at_ups_output_kwh:,.0f} kWh at the UPS output (arithmetic, not a battery size). No battery is sized without the manufacturer's constant-power discharge data. Missing: {', '.join(b.missing_data) or 'none'}.",
                            {"energy_at_ups_output_kwh": b.energy_at_ups_output_kwh, "missing": b.missing_data}, "Obtain the battery manufacturer's constant-power discharge data."))
+    out += _options_and_basis_checks(cfg, est, r)
     ph = [p.id for p in cfg.parameters.values() if p.id.startswith("derating.") and p.status.value == "ASSUMPTION" and p.value == 1.0]
     out.append(CheckResult("derating_factors", ids["derating_factors"], S.NOT_VERIFIED if ph else S.PASS,
                            (f"{len(ph)} derating factor(s) are placeholders of 1.00 for ideal conditions (30 degC, 0 m): no derating is applied. Replace them with the manufacturer's values at the site conditions: " + ", ".join(ph)) if ph else "Derating factors are supplied.",
                            {"placeholders": ph}, "Obtain the manufacturers' derating data for the site conditions."))
+    return out
+
+
+def _options_and_basis_checks(cfg: ProjectConfig, est, r) -> list[CheckResult]:
+    """Generator contingency basis (A5 review item 1) and the equipment options shown side by side (items 2 and 3). The package selects nothing."""
+    from ohmetry_dc.calculations.options import equipment_options
+
+    out = []
+    gk, gw = {s.id: s for s in r.generator.scenarios}, {s.id: s for s in r.generator_kw.scenarios}
+    cases = [("GEN-PATH-OUT", "loss of one utility path only"), ("GEN-UNIT-OUT", "N+1: one engine out, the utility path available"), ("GEN-PATH-OUT-UNIT-OUT", "one utility path out AND one engine out")]
+    rows = [f"{lab}: {gk[i].loading * 100:.1f} % kVA on {gk[i].units_available} x {gk[i].capacity_each:,.0f} kVA, {gw[i].loading * 100:.1f} % kW on {gw[i].units_available} x {gw[i].capacity_each:,.0f} kW" for i, lab in cases if i in gk]
+    judged = gk.get("GEN-PATH-OUT-UNIT-OUT")
+    out.append(CheckResult("generator_contingency_basis", "Generator contingency basis: selected and documented by an engineer", S.NOT_VERIFIED,
+                           f"The generators are judged against: {(cfg.optional_value('redundancy.generator_contingency_basis') or 'not recorded')}. " + ("That combined case is judged" if judged and judged.credible else "That combined case is informational (not judged)") +
+                           f" against the {gk['GEN-NORMAL'].units_available}-unit-per-path N+1 concept. Loading by basis: " + "; ".join(rows) + ". The kW check on the engines reads WARNING in the combined case (above the 80 % target, below the 100 % limit) and is NOT converted to a PASS. "
+                           "THE ENGINEER MUST SELECT AND DOCUMENT THE CONTINGENCY BASIS: which of these cases the generators must carry, for how long, with what fuel and load-shedding assumptions. This package does not decide it.",
+                           {"basis": (cfg.optional_value("redundancy.generator_contingency_basis") or "not recorded"), "cases": {i: {"kva_pct": gk[i].loading * 100, "kw_pct": gw[i].loading * 100} for i, _ in cases if i in gk}},
+                           "The engineer selects the contingency basis and records it with the reasoning."))
+    opts = equipment_options(cfg, r)
+    if opts:
+        txt = "; ".join(f"{o.equipment} {o.label.lower()} {', '.join(f'{v:,.0f} {k}' for k, v in o.rating.items())}: " + ", ".join(f"{k} {v:.2f} %" for k, v in o.loadings_pct.items()) + f" ({o.overall})" for o in opts)
+        out.append(CheckResult("equipment_options", "Transformer and UPS options shown side by side (none selected)", S.NOT_VERIFIED,
+                               txt + ". The options use the same contingency, derating placeholders and loading policy. NO OPTION IS SELECTED: the engineer selects. A 4,000 kVA transformer at the same impedance raises the transformer-limited figure (see the options table). Illustrative options are not manufacturer data.",
+                               {"options": [{"equipment": o.equipment, "label": o.label, "rating": o.rating, "loading_pct": o.loadings_pct, "status": o.overall} for o in opts]}, "The engineer selects the ratings from manufacturer data."))
     return out
 
 
@@ -404,7 +429,7 @@ def check_load_model(cfg: ProjectConfig) -> list[CheckResult]:
     from ohmetry_dc.models import Category, ConfigError
 
     ids = ("load_it_matches_design_basis", "load_pue_vs_target", "load_demand_vs_initial_estimate", "load_pf_vs_design", "load_path_allocation_consistent")
-    titles = {"load_it_matches_design_basis": "IT load in the schedule matches the design basis", "load_pue_vs_target": "Design-point PUE against the target",
+    titles = {"load_it_matches_design_basis": "IT load in the schedule matches the design basis", "load_pue_vs_target": "Design-point PUE (an output) compared with the target (context only)",
               "load_demand_vs_initial_estimate": "Load model against the initial facility demand estimate", "load_pf_vs_design": "Facility power factor against the design assumption",
               "load_path_allocation_consistent": "A/B path allocation adds up to the facility load"}
     try:
@@ -422,8 +447,9 @@ def check_load_model(cfg: ProjectConfig) -> list[CheckResult]:
         out.append(CheckResult(ids[1], titles[ids[1]], S.NOT_VERIFIED, f"Design-point PUE {est.pue:.3f}. No target is configured."))
     else:
         out.append(CheckResult(ids[1], titles[ids[1]], S.PASS if est.pue <= target else S.WARNING,
-                               f"Design-point PUE {est.pue:.3f} against a target of {target:g}. A design-point power ratio under the stated assumptions, not an annual energy PUE.",
-                               {"pue": est.pue, "target": target}, "" if est.pue <= target else "Review the cooling and loss assumptions, or revisit the target."))
+                               f"Design-point PUE {est.pue:.3f} compared with a target of {target:g}. PUE is an OUTPUT of the load model, not an input constraint: no input is adjusted to reach the target, and the result is reported, not enforced. "
+                               "It is a design-point power ratio under the stated assumptions, not an annual energy PUE. See the sensitivity table (IT load, cooling plant, losses) for the range.",
+                               {"pue": est.pue, "target": target, "pue_is_an_output": True}, "Report the result as it is. Do not retune inputs to meet the target; the sensitivity table shows the range."))
     initial = _n(cfg, "general.estimated_facility_demand")
     if initial is None:
         out.append(CheckResult(ids[2], titles[ids[2]], S.NOT_VERIFIED, f"Load model {est.facility_kw:,.1f} kW. No initial estimate is configured."))

@@ -155,15 +155,46 @@ sections:
       notes: Battery sizing needs manufacturer discharge data (Stage 3).
     double_contingency_credible:
       name: Double contingency treated as credible
-      value: false
+      value: true
       unit: '-'
       description: Whether loss of a path together with loss of a redundant unit is treated as a credible design case.
-      source: Ohmetry default for an N+1 and 2N concept
+      source: 'Project owner instruction, A5 review item 1 (judge one utility path out plus one generator out)'
       status: ASSUMPTION
-      revision: A1
-      notes: 'False: that case is reported as informational and is not judged against the limits. Set True to judge it. The loss of
-        the other path together with the loss of the largest generator is always shown in the generator verification table, whatever
-        this flag says.'
+      revision: A6
+      notes: 'True: that case is judged against the limits. It is a CONTINGENCY BASIS the engineer must select and document: the alternatives are
+        N+1 engine-out only, loss of a path only, or this combined case. Set False to report it as informational. A WARNING is never converted
+        to a PASS. Only the generators have a spare unit in each path in the retained concept, so the flag changes no transformer or UPS result.'
+      needed_from_stage: 3
+    generator_contingency_basis:
+      name: Generator contingency basis (the case that sizes the generators)
+      value: 'N+1 engine-out on the surviving path combined with loss of the other utility path'
+      unit: '-'
+      description: The contingency the generator loading is judged against. The engineer must select and document the basis.
+      source: 'Project owner instruction, A5 review item 1. NOT selected or documented by an engineer'
+      status: ASSUMPTION
+      revision: A6
+      notes: 'Alternatives: (a) loss of one utility path only; (b) N+1, one engine out with the utility available on that path; (c) this combined case. The loading under each is shown in the generator verification table. A WARNING is never converted to a PASS.'
+      needed_from_stage: 3
+  design_options:
+    transformer_option_kva:
+      name: Transformer option shown beside the retained rating
+      value: 4000
+      unit: kVA
+      description: An illustrative alternative transformer rating, shown side by side with the retained 3,150 kVA so the engineer can select. It is not a selection.
+      source: 'Project owner instruction, A5 review item 2 (show 3,150 kVA and 4,000 kVA side by side)'
+      status: ASSUMPTION
+      revision: A6
+      notes: Illustrative. Same impedance percentage and derating factors as the retained transformer are assumed, which a 4,000 kVA unit would not have to share. Nothing is selected.
+      needed_from_stage: 3
+    ups_option_kva:
+      name: UPS option shown beside the retained rating
+      value: 3000
+      unit: kVA
+      description: An illustrative alternative UPS apparent-power rating shown in the sizing table. The kW rating is scaled by the same kW/kVA ratio as the retained UPS.
+      source: 'Project owner instruction, A5 review item 3 (include an illustrative 3,000 kVA option)'
+      status: ASSUMPTION
+      revision: A6
+      notes: Illustrative. Not a selection. UPS ratings come from manufacturer data.
       needed_from_stage: 3
   design_criteria:
     transformer_max_loading:

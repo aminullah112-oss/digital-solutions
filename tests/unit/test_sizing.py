@@ -124,15 +124,18 @@ def test_generator_n_plus_1_scenarios_match_hand_calculation(root):
     assert sc["GEN-NORMAL"].load == pytest.approx(ess["kva"] / 2, rel=1e-9) and sc["GEN-NORMAL"].units_available == 3
     assert sc["GEN-UNIT-OUT"].units_available == 2 and sc["GEN-UNIT-OUT"].loading == pytest.approx(ess["kva"] / 2 / 4000, rel=1e-9)
     assert sc["GEN-PATH-OUT"].loading == pytest.approx(ess["kva"] / 6000, rel=1e-9)
-    assert r.generator.worst_credible.id == "GEN-PATH-OUT"
+    assert r.generator.worst_credible.id == "GEN-PATH-OUT-UNIT-OUT"          # the combined contingency is judged (A5 review item 1)
 
 
-def test_double_contingency_is_informational_unless_declared_credible(root, write_config):
+def test_the_combined_contingency_is_judged_as_shipped_and_informational_when_the_flag_is_false(root, write_config):
     _, r = run(root)
     dbl = {s.id: s for s in r.generator.scenarios}["GEN-PATH-OUT-UNIT-OUT"]
-    assert not dbl.credible and dbl.status is LoadingStatus.NOT_APPLICABLE and dbl.loading > r.generator.worst_credible.loading
-    _, c = run(root, write_config, param("redundancy", "double_contingency_credible", True))
-    assert c.generator.worst_credible.id == "GEN-PATH-OUT-UNIT-OUT" and c.generator.worst_credible.loading == pytest.approx(dbl.loading)
+    assert dbl.credible and r.generator.worst_credible.id == "GEN-PATH-OUT-UNIT-OUT" and dbl.loading == pytest.approx(0.7136, abs=1e-4)
+    kw = {s.id: s for s in r.generator_kw.scenarios}["GEN-PATH-OUT-UNIT-OUT"]
+    assert kw.loading == pytest.approx(0.8398, abs=1e-4) and kw.status is LoadingStatus.WARNING and kw.units_available == 2          # two 1,600 kW engines: WARNING against the 80 % target, below the 100 % limit
+    _, c = run(root, write_config, param("redundancy", "double_contingency_credible", False))
+    off = {s.id: s for s in c.generator.scenarios}["GEN-PATH-OUT-UNIT-OUT"]
+    assert not off.credible and off.status is LoadingStatus.NOT_APPLICABLE and c.generator.worst_credible.id == "GEN-PATH-OUT"
 
 
 def test_prp_is_the_default_and_esp_cop_are_distinct_bases(root, write_config):

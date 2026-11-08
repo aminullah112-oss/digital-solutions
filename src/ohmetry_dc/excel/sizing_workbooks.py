@@ -13,15 +13,46 @@ from ohmetry_dc.models import ProjectConfig
 from ohmetry_dc.models import data_status as ds
 from ohmetry_dc.validation import CheckResult
 
-from .common import (FILL_RESULT, Inputs, _header, _page, _put, base, bold, colour_statuses, new_workbook, note, readme, revision_sheet, status_block, title)
+from .common import (FILL_INPUT, FILL_RESULT, Inputs, blue, _header, _page, _put, base, bold, colour_statuses, new_workbook, note, readme, revision_sheet, status_block, title)
 
 KINDS = {
     "transformer": ("04_TRANSFORMER_SIZING.xlsx", "Transformer sizing", ["transformer_loading"]),
-    "generator": ("05_GENERATOR_SIZING.xlsx", "Generator sizing", ["generator_loading", "generator_loading_kw"]),
+    "generator": ("05_GENERATOR_SIZING.xlsx", "Generator sizing", ["generator_loading_kw", "generator_loading"]),      # same order as the blocks: kW, then kVA
     "ups": ("06_UPS_SIZING.xlsx", "UPS sizing", ["ups_loading_kw", "ups_loading_kva"]),
 }
 SHEETS = ["README", "INPUTS", "CALCULATIONS", "RESULTS", "REVISION_LOG"]
 LOAD_SRC = "Preliminary: from the load estimate (02_LOAD_ESTIMATION). Replace with your own load figures."
+
+
+def _options_sheet(wb, cfg, kind, sizing, blocks, block_cells, I) -> None:
+    """OPTIONS: the retained rating and an illustrative alternative side by side, as live formulas on the CALCULATIONS scenarios. The package selects nothing."""
+    from ohmetry_dc.calculations.options import equipment_options
+
+    ws = wb.create_sheet("OPTIONS", index=wb.sheetnames.index("REVISION_LOG"))
+    _page(ws)
+    ws["A1"].value, ws["A1"].font = "Options side by side (the engineer selects; the package selects nothing)", title
+    ws["A2"].value, ws["A2"].font = ("Each row applies the CALCULATIONS scenarios, derating and loading policy to a rating. The retained row follows the INPUTS sheet. The option row is an illustrative rating you can overwrite (blue). "
+                                      "Derating factors are 1.00 placeholders. Not manufacturer data."), note
+    _header(ws, 4, ["Metric", "Option", "Rating", "Worst credible loading %", "Status", "Python at generation (%)", "Agreement"], [14, 26, 14, 24, 16, 22, 40])
+    rows = [o for o in equipment_options(cfg, sizing) if o.equipment == kind]
+    r = 5
+    for metric, s in blocks:
+        b = block_cells[metric]
+        for o in rows:
+            ws[f"A{r}"].value, ws[f"B{r}"].value = metric, o.label
+            if o.retained:
+                _put(ws, f"C{r}", f"={I(f'rating_{metric}')}", base, FILL_RESULT, "#,##0")
+            else:
+                _put(ws, f"C{r}", o.rating[metric], blue, FILL_INPUT, "#,##0")
+            terms = ",".join(f"IF(AND(CALCULATIONS!$C${k}=1,CALCULATIONS!$D${k}=1,CALCULATIONS!$F${k}*CALCULATIONS!$G${k}>0),CALCULATIONS!$E${k}/(CALCULATIONS!$F${k}*CALCULATIONS!$G${k}*C{r}*{b['comb']}),0)" for k in range(b["first"], b["last"] + 1))
+            _put(ws, f"D{r}", f"=100*MAX({terms})", bold, FILL_RESULT, "0.00")
+            _put(ws, f"E{r}", f'=IF(D{r}>{I("limit_pct")}+0.000000001,"FAIL",IF(D{r}>{I("target_pct")}+0.000000001,"WARNING","PASS"))', bold)
+            _put(ws, f"F{r}", o.loadings_pct[metric], base, None, "0.00")
+            _put(ws, f"G{r}", f'=IF(ABS(D{r}-F{r})<=0.000001,"MATCH","DIFFERENT (inputs changed since generation)")', note)
+            r += 1
+    colour_statuses(ws, f"E5:E{r - 1}")
+    ws[f"A{r + 1}"].value, ws[f"A{r + 1}"].font = ("The transformer-limited fault figure rises with the rating at the same impedance (see 10_SHORT_CIRCUIT). It is not the bus fault level." if kind == "transformer" else
+                                                  "UPS ratings and output power factor come from the manufacturer. The option kW is the kVA scaled by the retained ratio."), note
 
 
 def _scen(s: Sizing, sid: str):
@@ -107,7 +138,7 @@ def build_sizing_workbook(cfg: ProjectConfig, kind: str, sizing: PowerSystemSizi
                 (f"{ck}-PATH-OUT", "Loss of the other path: the surviving path carries the whole load", "1", "1", f"{I(f'total_{metric}')}*(1+{I('growth_pct')}/100)", n, cont),
                 (f"{ck}-UNIT-OUT", "Loss of one unit (N+1): the path load on the remaining units", f"IF(AND({I('redundant_unit')}=1,{n}>=2),1,0)", f"IF(AND({I('redundant_unit')}=1,{n}>=2),1,0)",
                  f"{I(f'normal_{metric}')}*(1+{I('growth_pct')}/100)", f"{n}-1", "1"),
-                (f"{ck}-PATH-OUT-UNIT-OUT", "Loss of the other path and one unit: beyond an N+1 design basis", f"IF(AND({I('redundant_unit')}=1,{n}>=2),1,0)",
+                (f"{ck}-PATH-OUT-UNIT-OUT", "Loss of the other path and one unit (combined contingency: N+1 engine-out on the surviving path)", f"IF(AND({I('redundant_unit')}=1,{n}>=2),1,0)",
                  f"IF(AND({I('redundant_unit')}=1,{n}>=2,{I('double_contingency')}=1),1,0)", f"{I(f'total_{metric}')}*(1+{I('growth_pct')}/100)", f"{n}-1", cont)]
         for k, (sid, desc, app, jud, load, units, fac) in enumerate(rows):
             r = first + k
@@ -136,6 +167,11 @@ def build_sizing_workbook(cfg: ProjectConfig, kind: str, sizing: PowerSystemSizi
                                "comb": f"CALCULATIONS!$B${top+2}", "req_t": f"MAX(CALCULATIONS!$N${first}:$N${last})/CALCULATIONS!$B${top+2}", "req_l": f"MAX(CALCULATIONS!$O${first}:$O${last})/CALCULATIONS!$B${top+2}"}
         calc.freeze_panes = "C4"
         top = wr + 3
+
+    sheets_listed = SHEETS
+    if kind in ("transformer", "ups"):
+        sheets_listed = SHEETS[:-1] + ["OPTIONS"] + SHEETS[-1:]
+        _options_sheet(wb, cfg, kind, sizing, blocks, block_cells, I)
 
     # ---- RESULTS
     res["A1"].value, res["A1"].font = f"{heading}: results and statuses", title
@@ -186,7 +222,7 @@ def build_sizing_workbook(cfg: ProjectConfig, kind: str, sizing: PowerSystemSizi
            "Loading of the equipment against its derated continuous rating in normal operation, loss of the other path, and loss of one unit, with the preferred target and maximum from the project owner. "
            "Required rating to meet the target and the maximum.",
            "Loads are taken from the preliminary load estimate and must be replaced by project loads. Overload capability is not used. Generator load steps, transients, UPS rectifier interaction and minimum "
-           "load are not assessed here (see the Python engine notes). Derating factors of 1.00 are placeholders for ideal conditions.", SHEETS)
+           "load are not assessed here (see the Python engine notes). Derating factors of 1.00 are placeholders for ideal conditions.", sheets_listed)
     revision_sheet(rev, cfg, stamp, file)
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)

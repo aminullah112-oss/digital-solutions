@@ -1,6 +1,6 @@
 # QA test results
 
-Run 2026-11-08 12:00 UTC. Package version 0.1.0.dev0. **270 passed, 0 failed, 0 skipped.**
+Run 2026-11-08 18:00 UTC. Package version 0.1.0.dev0. **282 passed, 0 failed, 0 skipped.**
 
 A passing test shows the code behaves as specified. It does not show the engineering is correct: that needs an independent review.
 
@@ -142,6 +142,17 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | unit.test_models | test_required_provenance_fields_must_not_be_empty[revision] | PASS |
 | unit.test_models | test_value_and_value_ref_together_are_rejected | PASS |
 | unit.test_models | test_unknown_fields_are_rejected | PASS |
+| unit.test_options_sensitivity | test_generator_combined_contingency_is_judged_warning_on_kw_and_never_converted_to_pass | PASS |
+| unit.test_options_sensitivity | test_the_contingency_basis_must_be_selected_by_an_engineer_and_the_alternatives_are_shown | PASS |
+| unit.test_options_sensitivity | test_with_the_flag_off_the_combined_case_is_informational_and_the_basis_check_says_so | PASS |
+| unit.test_options_sensitivity | test_transformer_options_side_by_side_and_the_larger_one_exceeds_the_practical_fault_limit | PASS |
+| unit.test_options_sensitivity | test_ex_001_is_reconciled_with_the_exact_loading_and_a_small_margin_and_stays_a_warning | PASS |
+| unit.test_options_sensitivity | test_ups_kw_and_kva_are_separate_and_the_3000_kva_option_is_shown | PASS |
+| unit.test_options_sensitivity | test_the_options_check_selects_nothing | PASS |
+| unit.test_options_sensitivity | test_sensitivity_covers_plus_minus_ten_percent_and_does_not_change_the_configuration | PASS |
+| unit.test_options_sensitivity | test_pue_range_is_reported_as_an_output_and_no_target_is_forced | PASS |
+| unit.test_options_sensitivity | test_whole_unit_allocation_shows_the_chillers_do_not_split_evenly | PASS |
+| unit.test_options_sensitivity | test_review_notes_cover_cooling_redundancy_path_split_and_losses | PASS |
 | unit.test_sizing | test_status_boundaries_against_target_90_and_maximum_100[50-PASS] | PASS |
 | unit.test_sizing | test_status_boundaries_against_target_90_and_maximum_100[90.0-PASS] | PASS |
 | unit.test_sizing | test_status_boundaries_against_target_90_and_maximum_100[90.0000000001-PASS] | PASS |
@@ -164,7 +175,7 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | unit.test_sizing | test_required_rating_and_suggested_size | PASS |
 | unit.test_sizing | test_size_lists_must_be_numbers | PASS |
 | unit.test_sizing | test_generator_n_plus_1_scenarios_match_hand_calculation | PASS |
-| unit.test_sizing | test_double_contingency_is_informational_unless_declared_credible | PASS |
+| unit.test_sizing | test_the_combined_contingency_is_judged_as_shipped_and_informational_when_the_flag_is_false | PASS |
 | unit.test_sizing | test_prp_is_the_default_and_esp_cop_are_distinct_bases | PASS |
 | unit.test_sizing | test_manufacturer_overload_capability_is_recorded_but_never_used | PASS |
 | unit.test_sizing | test_generator_step_loads_are_an_upper_bound_and_never_verified | PASS |
@@ -262,6 +273,7 @@ A passing test shows the code behaves as specified. It does not show the enginee
 | workbook.test_calc_workbooks | test_fuel_workbook_estimates_nothing_without_the_manufacturer_curve | PASS |
 | workbook.test_calc_workbooks | test_architecture_workbook_lists_every_concept_function_as_not_designed_and_does_not_claim_utility_independence | PASS |
 | workbook.test_calc_workbooks | test_a_bare_reviewer_name_in_a_workbook_is_rejected_as_an_incomplete_attestation | PASS |
+| workbook.test_calc_workbooks | test_options_sheets_recalculate_to_the_python_values_and_follow_a_changed_option_rating | PASS |
 | workbook.test_load_workbook | test_required_sheets_exist_and_open | PASS |
 | workbook.test_load_workbook | test_key_formulas_exist_and_nothing_critical_is_hard_coded | PASS |
 | workbook.test_load_workbook | test_every_input_has_a_unit_and_status_and_generation_stamp_is_recorded | PASS |

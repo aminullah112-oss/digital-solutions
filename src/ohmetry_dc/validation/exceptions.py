@@ -27,8 +27,9 @@ def apply_exceptions(cfg: ProjectConfig, results: list[CheckResult]) -> list[Che
             r.detail += f" Exception {ex.id} is not needed: the result is within the preferred target."
             r.values["exception"] = {"id": ex.id, "applies": False}
         elif loading is not None and r.status == CheckStatus.WARNING and loading <= ex.accepted_ceiling_pct + 1e-9:
-            r.detail += (f" ACCEPTED DESIGN-TARGET EXCEPTION {ex.id} ({ex.status.lower()} by {ex.accepted_by}, {ex.accepted_date}): the result is within the accepted ceiling of {ex.accepted_ceiling_pct:g} %, {pending}. "
-                         "The check stays a WARNING.")
+            r.detail += (f" ACCEPTED DESIGN-TARGET EXCEPTION {ex.id} ({ex.status.lower()} by {ex.accepted_by}, {ex.accepted_date}): the exact result is {loading:.2f} % (shown as {loading:.1f} %), within the accepted ceiling of "
+                         f"{ex.accepted_ceiling_pct:g} % by {ex.accepted_ceiling_pct - loading:.2f} percentage points, {pending}. The margin is small: any change that raises the loading above the ceiling (a derating factor below 1.00, +1 % load, a UPS or distribution loss "
+                         "change) voids the exception, and the 4,000 kVA option needs none. The check stays a WARNING; the 90 % target and 100 % limit are unchanged.")
             r.values["exception"] = {"id": ex.id, "applies": True, "accepted_ceiling_pct": ex.accepted_ceiling_pct, "verified": done}
         else:
             r.detail += (f" EXCEPTION {ex.id} DOES NOT COVER THIS RESULT: it was accepted only up to {ex.accepted_ceiling_pct:g} % and a result above that, or a status other than WARNING, needs re-review.")
