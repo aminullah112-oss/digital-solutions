@@ -1,0 +1,244 @@
+# Distribution schedule for OHM-DC-2000 (path A shown; path B is assumed identical by symmetry, which is itself an assumption).
+# Cable selections and lengths are ILLUSTRATIVE PLACEHOLDERS for the sample project. Tabulated ratings, busduct and switchgear ratings,
+# impedances and short-circuit ratings are manufacturer or standard data and are null until supplied. Nothing is fabricated.
+schema_version: 1
+feeders:
+- tag: CAB-MV-A
+  description: MV supply cable from the MV switchgear to the path A transformer primary
+  from_tag: MV-SWG-A
+  to_tag: TX-A1
+  equipment_tags:
+  - MV-SWG-A
+  - TX-A1
+  voltage_ref: electrical_system.mv_supply_voltage
+  reactance_ref: cable_data.mv_reactance_ohm_per_km
+  design_current_basis: transformer_path_out_load
+  length_m: 150.0
+  conductor: copper
+  cross_section_mm2: 120.0
+  parallel_runs: 1
+  power_factor: 0.95
+  tabulated_rating_a: null
+  derating:
+    grouping: 1.0
+    ambient: 1.0
+    installation: 1.0
+  notes: Illustrative selection and length. The tabulated rating comes from the cable manufacturer or the standard's table for the installation
+    method, and is not supplied.
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+- tag: CAB-GEN-A
+  description: Generator output cables to the path A generator switchgear (one generator)
+  from_tag: GEN-A1
+  to_tag: GEN-SWG-A
+  equipment_tags:
+  - GEN-A1
+  - GEN-SWG-A
+  voltage_ref: electrical_system.lv_line_voltage
+  reactance_ref: cable_data.lv_reactance_ohm_per_km
+  design_current_basis: generator_rated
+  length_m: 30.0
+  conductor: copper
+  cross_section_mm2: 630.0
+  parallel_runs: 6
+  power_factor: 0.8
+  tabulated_rating_a: null
+  derating:
+    grouping: 1.0
+    ambient: 1.0
+    installation: 1.0
+  notes: 'Illustrative selection and length. Designed for the generator''s rated current, not its load. The number of parallel runs
+    is a placeholder: the required rating per run is shown for checking against the cable table.'
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+- tag: CAB-UPS-IN-A
+  description: UPS input cables from the LV main switchboard A to the path A UPS
+  from_tag: LV-MSB-A
+  to_tag: UPS-A1
+  equipment_tags:
+  - LV-MSB-A
+  - UPS-A1
+  voltage_ref: electrical_system.lv_line_voltage
+  reactance_ref: cable_data.lv_reactance_ohm_per_km
+  design_current_basis: ups_input_path_out
+  length_m: 20.0
+  conductor: copper
+  cross_section_mm2: 630.0
+  parallel_runs: 6
+  power_factor: 0.99
+  tabulated_rating_a: null
+  derating:
+    grouping: 1.0
+    ambient: 1.0
+    installation: 1.0
+  notes: Illustrative selection and length. Input current for the whole critical load on one UPS (loss of the other path).
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+- tag: CAB-UPS-OUT-A
+  description: UPS output cables from the path A UPS to the path A critical distribution
+  from_tag: UPS-A1
+  to_tag: CRIT-DIST-A
+  equipment_tags:
+  - UPS-A1
+  - CRIT-DIST-A
+  voltage_ref: electrical_system.lv_line_voltage
+  reactance_ref: cable_data.lv_reactance_ohm_per_km
+  design_current_basis: ups_output_path_out
+  length_m: 20.0
+  conductor: copper
+  cross_section_mm2: 630.0
+  parallel_runs: 6
+  power_factor: 0.95
+  tabulated_rating_a: null
+  derating:
+    grouping: 1.0
+    ambient: 1.0
+    installation: 1.0
+  notes: Illustrative selection and length. Output current for the whole critical load on one UPS (loss of the other path).
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+- tag: CAB-MECH-A
+  description: Feeder from the LV main switchboard A to the mechanical and cooling motor control centre A
+  from_tag: LV-MSB-A
+  to_tag: MCC-A
+  equipment_tags:
+  - LV-MSB-A
+  - MCC-A
+  voltage_ref: electrical_system.lv_line_voltage
+  reactance_ref: cable_data.lv_reactance_ohm_per_km
+  design_current_basis: mechanical_path_out
+  length_m: 40.0
+  conductor: copper
+  cross_section_mm2: 300.0
+  parallel_runs: 3
+  power_factor: 0.9
+  tabulated_rating_a: null
+  derating:
+    grouping: 1.0
+    ambient: 1.0
+    installation: 1.0
+  notes: Illustrative selection and length. The whole mechanical load on one path (loss of the other path).
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+busducts:
+- tag: BD-TX-A
+  description: Busduct from the path A transformer secondary to the LV main switchboard A
+  from_tag: TX-A1
+  to_tag: LV-MSB-A
+  equipment_tags:
+  - TX-A1
+  - LV-MSB-A
+  - BD-TX-A
+  voltage_ref: electrical_system.lv_line_voltage
+  design_current_basis: transformer_path_out_load
+  length_m: 15.0
+  power_factor: 0.94
+  rated_current_a: null
+  derating:
+    ambient: 1.0
+    installation: 1.0
+  resistance_ohm_per_km: null
+  reactance_ohm_per_km: null
+  short_circuit_withstand_ka: null
+  notes: Illustrative length. The rated current, impedance and short-circuit withstand are manufacturer data and are not supplied.
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+switchgear:
+- tag: LV-MSB-A
+  description: Path A LV main switchboard
+  voltage_class: LV
+  voltage_ref: electrical_system.lv_line_voltage
+  incomer_basis: transformer_path_out_load
+  outgoing_feeders:
+  - CAB-UPS-IN-A
+  - CAB-MECH-A
+  rated_current_a: null
+  derating:
+    ambient: 1.0
+    installation: 1.0
+  short_circuit_rating_ka: null
+  form_of_separation: null
+  ip_rating: null
+  verification_evidence: null
+  notes: Ratings are manufacturer data and are not supplied. The required short-circuit rating comes from the Stage 5 fault study.
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+- tag: MV-SWG-A
+  description: Path A MV switchgear
+  voltage_class: MV
+  voltage_ref: electrical_system.mv_supply_voltage
+  incomer_basis: transformer_path_out_load
+  outgoing_feeders:
+  - CAB-MV-A
+  rated_current_a: null
+  derating:
+    ambient: 1.0
+    installation: 1.0
+  short_circuit_rating_ka: null
+  form_of_separation: null
+  ip_rating: null
+  verification_evidence: null
+  notes: Ratings are manufacturer data and are not supplied. The required short-circuit rating comes from the Stage 5 fault study.
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+    data is unavailable)'
+  revision: A2
+protection_devices:
+- tag: MV-CB-A
+  description: Path A MV incomer circuit breaker
+  bus: MV
+  function: Incomer, overcurrent and earth fault protection
+  breaking_capacity_ka: null
+  making_capacity_ka: null
+  time_current_curve_ref: null
+  settings: null
+  source: Manufacturer data pending (illustrative device list)
+  status: ASSUMPTION
+  revision: A3
+- tag: ACB-TX-A
+  description: Path A LV transformer incomer air circuit breaker
+  bus: LV
+  function: Incomer, long-time, short-time, instantaneous and earth fault
+  breaking_capacity_ka: null
+  making_capacity_ka: null
+  time_current_curve_ref: null
+  settings: null
+  source: Manufacturer data pending (illustrative device list)
+  status: ASSUMPTION
+  revision: A3
+- tag: ACB-GEN-A
+  description: Path A generator output circuit breaker
+  bus: LV
+  function: Generator protection, overcurrent, reverse power, earth fault
+  breaking_capacity_ka: null
+  making_capacity_ka: null
+  time_current_curve_ref: null
+  settings: null
+  source: Manufacturer data pending (illustrative device list)
+  status: ASSUMPTION
+  revision: A3
+- tag: ACB-UPS-IN-A
+  description: Path A UPS input circuit breaker
+  bus: LV
+  function: Feeder protection to the UPS rectifier
+  breaking_capacity_ka: null
+  making_capacity_ka: null
+  time_current_curve_ref: null
+  settings: null
+  source: Manufacturer data pending (illustrative device list)
+  status: ASSUMPTION
+  revision: A3

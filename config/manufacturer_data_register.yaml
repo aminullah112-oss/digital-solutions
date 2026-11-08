@@ -1,0 +1,812 @@
+# Manufacturer-data register: what each manufacturer-specific input needs, which equipment it concerns, and the open verification action.
+# The CURRENT VALUE, SOURCE AND STATUS are read live from the master configuration, so this file never holds a second copy of a value.
+# Every parameter with status MANUFACTURER_DATA, or flagged requires_manufacturer_verification, must have an entry (the QA check fails otherwise).
+# datasheet_reference, verified_by and verification_date are filled by a reviewer only after the configuration holds real manufacturer data.
+# A placeholder is never treated as validated equipment data: a verified_by on an entry whose value is still a placeholder is a QA failure.
+schema_version: 1
+entries:
+- parameter: equipment.transformer_rating
+  equipment_tags: &id001
+  - TX-A1
+  - TX-B1
+  required_datasheet: 'Transformer data sheet: rating by cooling stage, short-circuit impedance, type-test and loss report'
+  engineering_impact: Sets the transformer loading in the worst contingency (91.0 % today, a design-target exception) and the LV current and fault
+    level.
+  verification_action: Confirm the continuous rating on the applicable cooling stage at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.transformer_impedance
+  equipment_tags: *id001
+  required_datasheet: 'Transformer data sheet: rating by cooling stage, short-circuit impedance, type-test and loss report'
+  engineering_impact: Sets the prospective fault level at 400 V and every downstream short-circuit rating. Without it the transformer-limited
+    bound is NOT CALCULATED.
+  verification_action: Enter the guaranteed impedance and tolerance.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.generator_rating
+  equipment_tags: &id002
+  - GEN-A1
+  - GEN-A2
+  - GEN-A3
+  - GEN-B1
+  - GEN-B2
+  - GEN-B3
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Sets generator loading and N+1 capacity. The 2,000 kVA is assumed to be PRP and is NOT confirmed.
+  verification_action: Obtain the data sheet stating the ISO 8528 basis, kVA, kW and site derating.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.generator_rating_power_factor
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Converts kVA to engine kW. The engine kW loading in the double-contingency case is 84.0 %, above the 80 % target, with the
+    placeholder 0.8.
+  verification_action: Enter the rated power factor, engine kW and alternator kVA.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.generator_esp_rating
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Needed only if the ESP basis is selected. ESP is not a basis for prolonged outages.
+  verification_action: Enter the ESP rating if that basis is selected.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.generator_cop_rating
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Needed only if the COP basis is selected.
+  verification_action: Enter the COP rating if that basis is selected.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.ups_rating
+  equipment_tags: &id003
+  - UPS-A1
+  - UPS-B1
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: 'Sets UPS kW loading: exactly 80.0 % today, so there is no margin.'
+  verification_action: Confirm the continuous kW rating at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.ups_rating_kva
+  equipment_tags: *id003
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: Sets UPS kVA loading (84.2 % today, above the 80 % target). A unity output power factor is assumed.
+  verification_action: Confirm the kVA rating and output power factor.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.ups_efficiency
+  equipment_tags: *id003
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: Sets UPS losses, the facility load and the PUE.
+  verification_action: Enter the efficiency at the operating load points.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: equipment.ups_input_power_factor
+  equipment_tags: *id003
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: Sets the UPS input current and the input cable design current.
+  verification_action: Enter the input power factor at the operating load.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: losses.distribution_loss_fraction
+  equipment_tags:
+  - TX-A1
+  - TX-B1
+  - BD-TX-A
+  required_datasheet: Transformer loss report and busduct and cable loss data
+  engineering_impact: Sets distribution losses, the facility load and the PUE.
+  verification_action: Replace the single percentage with calculated losses.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.transformer_ambient_factor
+  equipment_tags: *id001
+  required_datasheet: Manufacturer derating curve for ambient conditions (transformer)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the transformer loading and could turn a WARNING into
+    a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.transformer_altitude_factor
+  equipment_tags: *id001
+  required_datasheet: Manufacturer derating curve for altitude conditions (transformer)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the transformer loading and could turn a WARNING into
+    a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.transformer_installation_factor
+  equipment_tags: *id001
+  required_datasheet: Manufacturer derating curve for installation conditions (transformer)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the transformer loading and could turn a WARNING into
+    a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.ups_ambient_factor
+  equipment_tags: *id003
+  required_datasheet: Manufacturer derating curve for ambient conditions (ups)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the ups loading and could turn a WARNING into a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.ups_altitude_factor
+  equipment_tags: *id003
+  required_datasheet: Manufacturer derating curve for altitude conditions (ups)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the ups loading and could turn a WARNING into a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.ups_installation_factor
+  equipment_tags: *id003
+  required_datasheet: Manufacturer derating curve for installation conditions (ups)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the ups loading and could turn a WARNING into a FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.generator_ambient_factor
+  equipment_tags: *id002
+  required_datasheet: Manufacturer derating curve for ambient conditions (generator)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the generator loading and could turn a WARNING into a
+    FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.generator_altitude_factor
+  equipment_tags: *id002
+  required_datasheet: Manufacturer derating curve for altitude conditions (generator)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the generator loading and could turn a WARNING into a
+    FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.generator_installation_factor
+  equipment_tags: *id002
+  required_datasheet: Manufacturer derating curve for installation conditions (generator)
+  engineering_impact: Placeholder 1.00 applies no derating. A real factor below 1 raises the generator loading and could turn a WARNING into a
+    FAIL.
+  verification_action: Enter the manufacturer's factor at the site conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: derating.transformer_contingency_factor
+  equipment_tags: *id001
+  required_datasheet: 'Transformer data sheet: rating by cooling stage, short-circuit impedance, type-test and loss report'
+  engineering_impact: Placeholder 1.00 assumes no additional derating when the other path is lost. Reduced cooling or higher room temperature
+    would raise the transformer loading.
+  verification_action: Confirm with the manufacturer's loading guide and the room design.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.prp_max_average_load_factor_pct
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Limits the average load under the PRP rating. Cannot judge the outage profile without it.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.operating_hours_restriction
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Limits running hours under the PRP rating.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.overload_capability
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Recorded for information only. Never used for continuous loading.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.max_step_load_pct
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Limits each load step. The UPS input block is 36.9 % of running capacity as an upper bound.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.max_frequency_dip_pct
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Defines the frequency dip the loads and the UPS tolerate during a step.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.max_voltage_dip_pct
+  equipment_tags: *id002
+  required_datasheet: 'Generator set data sheet: ISO 8528 rating basis (PRP, ESP, COP) in kW and kVA, site derating curves, transient and step-load
+    data'
+  engineering_impact: Defines the voltage dip the loads and the UPS tolerate during a step.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.ups_rectifier_walk_in_s
+  equipment_tags:
+  - GEN-A1
+  - GEN-A2
+  - GEN-A3
+  - GEN-B1
+  - GEN-B2
+  - GEN-B3
+  - UPS-A1
+  - UPS-B1
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: Sets the real step the generators see from the UPS rectifier.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: generators.ups_input_current_thd_pct
+  equipment_tags:
+  - GEN-A1
+  - GEN-A2
+  - GEN-A3
+  - GEN-B1
+  - GEN-B2
+  - GEN-B3
+  - UPS-A1
+  - UPS-B1
+  required_datasheet: 'UPS data sheet: kW and kVA ratings, output power factor, efficiency curve, input power factor and harmonics, rectifier
+    walk-in, overload data'
+  engineering_impact: Sets harmonic voltage distortion and the alternator rating needed with the UPS rectifier load.
+  verification_action: Obtain the manufacturer's value and conditions.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: battery.dc_bus_voltage_v
+  equipment_tags: &id004
+  - BAT-A1
+  - BAT-B1
+  required_datasheet: Battery data sheet with the constant-power discharge table (W per cell to the end voltage at the autonomy time), temperature
+    and ageing data
+  engineering_impact: Fixes the cell count and string configuration.
+  verification_action: Obtain the battery manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: battery.inverter_efficiency_pct
+  equipment_tags: *id004
+  required_datasheet: Battery data sheet with the constant-power discharge table (W per cell to the end voltage at the autonomy time), temperature
+    and ageing data
+  engineering_impact: Converts the energy at the UPS output to DC energy.
+  verification_action: Obtain the battery manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: battery.end_of_life_capacity_factor
+  equipment_tags: *id004
+  required_datasheet: Battery data sheet with the constant-power discharge table (W per cell to the end voltage at the autonomy time), temperature
+    and ageing data
+  engineering_impact: Sets the capacity margin at end of life.
+  verification_action: Obtain the battery manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: battery.temperature_correction_factor
+  equipment_tags: *id004
+  required_datasheet: Battery data sheet with the constant-power discharge table (W per cell to the end voltage at the autonomy time), temperature
+    and ageing data
+  engineering_impact: Corrects capacity for the battery-room temperature.
+  verification_action: Obtain the battery manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: battery.constant_power_discharge_data
+  equipment_tags: *id004
+  required_datasheet: Battery data sheet with the constant-power discharge table (W per cell to the end voltage at the autonomy time), temperature
+    and ageing data
+  engineering_impact: Without it no battery can be sized. Today only the energy at the UPS output (333 kWh) is known.
+  verification_action: Obtain the battery manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: cable_data.lv_reactance_ohm_per_km
+  equipment_tags:
+  - CAB-MV-A
+  - CAB-GEN-A
+  - CAB-UPS-IN-A
+  - CAB-UPS-OUT-A
+  - CAB-MECH-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: Sets the LV cable voltage drop (reactance is a placeholder).
+  verification_action: Enter the value from the cable data sheet for the chosen cable and layout.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: cable_data.mv_reactance_ohm_per_km
+  equipment_tags:
+  - CAB-MV-A
+  - CAB-GEN-A
+  - CAB-UPS-IN-A
+  - CAB-UPS-OUT-A
+  - CAB-MECH-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: Sets the MV cable voltage drop.
+  verification_action: Enter the value from the cable data sheet for the chosen cable and layout.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: cable_data.conductor_operating_temperature
+  equipment_tags:
+  - CAB-MV-A
+  - CAB-GEN-A
+  - CAB-UPS-IN-A
+  - CAB-UPS-OUT-A
+  - CAB-MECH-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: Sets the conductor resistance used for the voltage drop.
+  verification_action: Enter the value from the cable data sheet for the chosen cable and layout.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.CAB-MV-A.tabulated_rating_a
+  equipment_tags:
+  - CAB-MV-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: No ampacity check is possible without it. The required rating per run is shown in the check.
+  verification_action: Enter the table value per run for the installation method, with the real derating factors.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.CAB-GEN-A.tabulated_rating_a
+  equipment_tags:
+  - CAB-GEN-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: No ampacity check is possible without it. The required rating per run is shown in the check.
+  verification_action: Enter the table value per run for the installation method, with the real derating factors.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.CAB-UPS-IN-A.tabulated_rating_a
+  equipment_tags:
+  - CAB-UPS-IN-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: No ampacity check is possible without it. The required rating per run is shown in the check.
+  verification_action: Enter the table value per run for the installation method, with the real derating factors.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.CAB-UPS-OUT-A.tabulated_rating_a
+  equipment_tags:
+  - CAB-UPS-OUT-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: No ampacity check is possible without it. The required rating per run is shown in the check.
+  verification_action: Enter the table value per run for the installation method, with the real derating factors.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.CAB-MECH-A.tabulated_rating_a
+  equipment_tags:
+  - CAB-MECH-A
+  required_datasheet: Cable data sheet or the standard's current-rating table for the installation method, with grouping and ambient factors
+  engineering_impact: No ampacity check is possible without it. The required rating per run is shown in the check.
+  verification_action: Enter the table value per run for the installation method, with the real derating factors.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.BD-TX-A.rated_current_a
+  equipment_tags:
+  - BD-TX-A
+  required_datasheet: Busduct data sheet with the manufacturer's type-test evidence
+  engineering_impact: No busduct rating check is possible without it.
+  verification_action: Obtain the busduct data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.BD-TX-A.resistance_ohm_per_km
+  equipment_tags:
+  - BD-TX-A
+  required_datasheet: Busduct data sheet with the manufacturer's type-test evidence
+  engineering_impact: Needed for the busduct voltage drop.
+  verification_action: Obtain the busduct data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.BD-TX-A.reactance_ohm_per_km
+  equipment_tags:
+  - BD-TX-A
+  required_datasheet: Busduct data sheet with the manufacturer's type-test evidence
+  engineering_impact: Needed for the busduct voltage drop.
+  verification_action: Obtain the busduct data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.BD-TX-A.short_circuit_withstand_ka
+  equipment_tags:
+  - BD-TX-A
+  required_datasheet: Busduct data sheet with the manufacturer's type-test evidence
+  engineering_impact: Must exceed the Stage 5 fault level.
+  verification_action: Obtain the busduct data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.LV-MSB-A.rated_current_a
+  equipment_tags:
+  - LV-MSB-A
+  required_datasheet: LV switchgear data sheet and IEC 61439 verification evidence
+  engineering_impact: No busbar rating check is possible without it.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.LV-MSB-A.short_circuit_rating_ka
+  equipment_tags:
+  - LV-MSB-A
+  required_datasheet: LV switchgear data sheet and IEC 61439 verification evidence
+  engineering_impact: Must exceed the Stage 5 fault level.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.LV-MSB-A.form_of_separation
+  equipment_tags:
+  - LV-MSB-A
+  required_datasheet: LV switchgear data sheet and IEC 61439 verification evidence
+  engineering_impact: Part of the assembly specification.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.LV-MSB-A.ip_rating
+  equipment_tags:
+  - LV-MSB-A
+  required_datasheet: LV switchgear data sheet and IEC 61439 verification evidence
+  engineering_impact: Part of the assembly specification.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.LV-MSB-A.verification_evidence
+  equipment_tags:
+  - LV-MSB-A
+  required_datasheet: LV switchgear data sheet and IEC 61439 verification evidence
+  engineering_impact: IEC 61439 verification evidence for the assembly.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-SWG-A.rated_current_a
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: MV switchgear data sheet and IEC 62271 verification evidence
+  engineering_impact: No busbar rating check is possible without it.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-SWG-A.short_circuit_rating_ka
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: MV switchgear data sheet and IEC 62271 verification evidence
+  engineering_impact: Must exceed the Stage 5 fault level.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-SWG-A.form_of_separation
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: MV switchgear data sheet and IEC 62271 verification evidence
+  engineering_impact: Part of the assembly specification.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-SWG-A.ip_rating
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: MV switchgear data sheet and IEC 62271 verification evidence
+  engineering_impact: Part of the assembly specification.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-SWG-A.verification_evidence
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: MV switchgear data sheet and IEC 62271 verification evidence
+  engineering_impact: IEC 62271 verification evidence for the assembly.
+  verification_action: Obtain the manufacturer's data and evidence.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.utility_fault_level_mva
+  equipment_tags:
+  - MV-SWG-A
+  - TX-A1
+  - TX-B1
+  required_datasheet: Utility written statement of maximum and minimum fault levels and X/R at the point of connection
+  engineering_impact: Sets every fault level in the facility. Without it no MV or LV fault level can be calculated.
+  verification_action: Obtain the utility's written fault levels (maximum and minimum).
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.utility_x_r_ratio
+  equipment_tags:
+  - MV-SWG-A
+  required_datasheet: Utility written statement of maximum and minimum fault levels and X/R at the point of connection
+  engineering_impact: Sets the peak factor and the DC component of the fault current.
+  verification_action: Obtain from the utility.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.transformer_x_r_ratio
+  equipment_tags:
+  - TX-A1
+  - TX-B1
+  required_datasheet: Transformer test report (short-circuit impedance and load losses)
+  engineering_impact: Sets the peak factor on the LV side.
+  verification_action: Obtain from the transformer test report.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.generator_subtransient_reactance_pct
+  equipment_tags:
+  - GEN-A1
+  - GEN-A2
+  - GEN-A3
+  - GEN-B1
+  - GEN-B2
+  - GEN-B3
+  required_datasheet: 'Generator set data sheet: subtransient reactance x''''d, X/R, rated power factor'
+  engineering_impact: Sets the generator fault contribution. Without it the generator case is NOT CALCULATED.
+  verification_action: Obtain from the generator data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.generator_x_r_ratio
+  equipment_tags:
+  - GEN-A1
+  - GEN-A2
+  - GEN-A3
+  - GEN-B1
+  - GEN-B2
+  - GEN-B3
+  required_datasheet: 'Generator set data sheet: subtransient reactance x''''d, X/R, rated power factor'
+  engineering_impact: Sets the peak current from generators.
+  verification_action: Obtain from the generator data sheet.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: short_circuit.assumed_clearing_time_s
+  equipment_tags:
+  - CAB-MV-A
+  - CAB-GEN-A
+  - CAB-UPS-IN-A
+  - CAB-UPS-OUT-A
+  - CAB-MECH-A
+  - BD-TX-A
+  required_datasheet: Protection coordination study result and protective device time-current curves
+  engineering_impact: Sets the thermal withstand requirement of cables and busduct.
+  verification_action: Replace with the clearing time from the coordination study.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: earthing_study.grid_area_m2
+  equipment_tags:
+  - EARTH-GRID
+  required_datasheet: Earthing grid layout drawing and design
+  engineering_impact: Sets the grid resistance.
+  verification_action: Replace with the designed grid geometry.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: earthing_study.grid_conductor_length_m
+  equipment_tags:
+  - EARTH-GRID
+  required_datasheet: Earthing grid layout drawing and design
+  engineering_impact: Sets the grid resistance.
+  verification_action: Replace with the designed grid geometry.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: earthing_study.grid_burial_depth_m
+  equipment_tags:
+  - EARTH-GRID
+  required_datasheet: Earthing grid layout drawing and design
+  engineering_impact: Sets the grid resistance.
+  verification_action: Replace with the designed grid geometry.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: earthing.earthing_system_type
+  equipment_tags:
+  - EARTH-GRID
+  required_datasheet: Project earthing design basis
+  engineering_impact: Determines fault loops, protection and the earth-fault current path.
+  verification_action: Confirm the system type (TN-S assumed).
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: earthing.soil_resistivity
+  equipment_tags:
+  - EARTH-GRID
+  required_datasheet: Site soil resistivity survey (Wenner method) report
+  engineering_impact: Sets the grid resistance and ground potential rise. Without it the earthing screening is NOT CALCULATED.
+  verification_action: Commission the survey and enter the layered or apparent resistivity.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-CB-A.breaking_capacity_ka
+  equipment_tags:
+  - MV-CB-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the fault level at the device location.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-CB-A.making_capacity_ka
+  equipment_tags:
+  - MV-CB-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the peak fault current.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-CB-A.time_current_curve_ref
+  equipment_tags:
+  - MV-CB-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Needed for discrimination and clearing time.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.MV-CB-A.settings
+  equipment_tags:
+  - MV-CB-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Settings come from the coordination study.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-TX-A.breaking_capacity_ka
+  equipment_tags:
+  - ACB-TX-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the fault level at the device location.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-TX-A.making_capacity_ka
+  equipment_tags:
+  - ACB-TX-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the peak fault current.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-TX-A.time_current_curve_ref
+  equipment_tags:
+  - ACB-TX-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Needed for discrimination and clearing time.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-TX-A.settings
+  equipment_tags:
+  - ACB-TX-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Settings come from the coordination study.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-GEN-A.breaking_capacity_ka
+  equipment_tags:
+  - ACB-GEN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the fault level at the device location.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-GEN-A.making_capacity_ka
+  equipment_tags:
+  - ACB-GEN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the peak fault current.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-GEN-A.time_current_curve_ref
+  equipment_tags:
+  - ACB-GEN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Needed for discrimination and clearing time.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-GEN-A.settings
+  equipment_tags:
+  - ACB-GEN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Settings come from the coordination study.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-UPS-IN-A.breaking_capacity_ka
+  equipment_tags:
+  - ACB-UPS-IN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the fault level at the device location.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-UPS-IN-A.making_capacity_ka
+  equipment_tags:
+  - ACB-UPS-IN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Must exceed the peak fault current.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-UPS-IN-A.time_current_curve_ref
+  equipment_tags:
+  - ACB-UPS-IN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Needed for discrimination and clearing time.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null
+- parameter: distribution.ACB-UPS-IN-A.settings
+  equipment_tags:
+  - ACB-UPS-IN-A
+  required_datasheet: Circuit breaker or relay data sheet with time-current curves and test certificates
+  engineering_impact: Settings come from the coordination study.
+  verification_action: Obtain the manufacturer's data.
+  datasheet_reference: null
+  verified_by: null
+  verification_date: null

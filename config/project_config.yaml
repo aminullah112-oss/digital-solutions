@@ -1,0 +1,1103 @@
+# OHM-DC-2000 master configuration. Every value is a PRELIMINARY ILLUSTRATIVE ASSUMPTION unless its status says otherwise.
+# Nothing in this file is an approved design selection. Values that were not supplied are null and are reported as missing,
+# never replaced with a default. Status: USER_INPUT, ASSUMPTION, MANUFACTURER_DATA or REFERENCE.
+# needed_from_stage: the development stage that first needs the input. Earlier stages report it as deferred, not as a failure.
+# demand_data is the single place to enter new load figures: general.* reads from it.
+schema_version: 1
+project:
+  code: OHM-DC-2000
+  name: OHMETRY 2 MW DATA CENTRE ELECTRICAL ENGINEERING PROJECT
+  product_code: OHM-DC-2000
+  edition: Professional Edition + Engineering Learning Suite
+  revision: A5
+  release_state: DEVELOPMENT
+  current_stage: 5
+sections:
+  general:
+    it_critical_load:
+      name: IT critical load
+      unit: kW
+      description: Total IT critical load at the design point.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Must be confirmed against the Stage 2 load model. Read from the demand data section.
+      value_ref: demand_data.it_critical_load_kw
+    target_pue:
+      name: Target PUE
+      value: 1.35
+      unit: '-'
+      description: Target power usage effectiveness (total facility energy divided by IT energy).
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: A target, not a result. The Stage 2 load model must show whether it is achievable.
+    estimated_facility_demand:
+      name: Initial estimated total facility demand
+      unit: kW
+      description: Initial estimate of total facility demand.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Initial estimate only. It must be replaced by the load model result, not forced to match it. Read from the demand data
+        section.
+      value_ref: demand_data.facility_demand_estimate_kw
+    design_power_factor:
+      name: Initial design power factor
+      value: 0.95
+      unit: '-'
+      description: Overall power factor used for kW to kVA conversion in preliminary checks.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    future_expansion_allowance:
+      name: Future expansion allowance
+      value: 0
+      unit: '%'
+      description: Allowance for future load growth.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A0
+      notes: 'No growth allowance is applied in this sample. This is an explicit choice, not a default: set the project''s value.'
+  electrical_system:
+    mv_supply_voltage:
+      name: Incoming MV supply voltage
+      value: 13.8
+      unit: kV
+      description: Nominal line-to-line voltage of the incoming medium-voltage supply.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Confirm with the serving utility.
+    lv_line_voltage:
+      name: LV line-to-line voltage
+      value: 400
+      unit: V
+      description: Nominal LV line-to-line voltage, three-phase.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: See ENGINEERING_REVIEW_LOG.md item ER-001 on the pairing with the frequency.
+    lv_phase_voltage:
+      name: LV line-to-neutral voltage
+      value: 230
+      unit: V
+      description: Nominal LV line-to-neutral voltage.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    frequency:
+      name: System frequency
+      value: 60
+      unit: Hz
+      description: Nominal system frequency.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: See ENGINEERING_REVIEW_LOG.md item ER-001.
+    voltage_frequency_basis:
+      name: Basis for the LV voltage and frequency pairing
+      value: Project owner selected 400/230 V at 60 Hz for this reference project and stated that the serving utility confirmed it.
+        Not independently verified.
+      unit: '-'
+      description: Records who decided the voltage and frequency pairing flagged as ER-001.
+      source: Project owner decision, recorded 2026-11-05
+      status: USER_INPUT
+      revision: A0
+      notes: For a real project, the serving utility's written confirmation is required.
+  redundancy:
+    architecture:
+      name: Power architecture
+      value: Dual independent A and B power paths
+      unit: '-'
+      description: Top-level distribution architecture concept.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    power_paths:
+      name: Number of independent power paths
+      value: 2
+      unit: '-'
+      description: Number of independent power paths implied by the architecture.
+      source: Derived from "Dual independent A and B power paths"
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    ups_topology:
+      name: UPS topology
+      value: 2N
+      unit: '-'
+      description: UPS redundancy concept. In 2N each path can carry the full IT load.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    generator_concept:
+      name: Generator concept
+      value: N+1 per power path
+      unit: '-'
+      description: Generator redundancy concept in each path.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+    battery_autonomy:
+      name: Battery autonomy target
+      value: 10
+      unit: min
+      description: Autonomy at end of battery life.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Battery sizing needs manufacturer discharge data (Stage 3).
+    double_contingency_credible:
+      name: Double contingency treated as credible
+      value: false
+      unit: '-'
+      description: Whether loss of a path together with loss of a redundant unit is treated as a credible design case.
+      source: Ohmetry default for an N+1 and 2N concept
+      status: ASSUMPTION
+      revision: A1
+      notes: 'False: that case is reported as informational and is not judged against the limits. Set True to judge it. The loss of
+        the other path together with the loss of the largest generator is always shown in the generator verification table, whatever
+        this flag says.'
+      needed_from_stage: 3
+  design_criteria:
+    transformer_max_loading:
+      name: Transformer max loading
+      value: 100
+      unit: '%'
+      description: 'Loading policy: transformer maximum continuous loading, of the derated continuous rating. Applied to the worst credible
+        contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    ups_max_loading:
+      name: Ups max loading
+      value: 100
+      unit: '%'
+      description: 'Loading policy: UPS maximum continuous loading, of the derated continuous kW and kVA capability. Applied to the
+        worst credible contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    generator_max_loading:
+      name: Generator max loading
+      value: 100
+      unit: '%'
+      description: 'Loading policy: generator maximum continuous loading, of the derated PRP rating. Applied to the worst credible contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    transformer_target_loading:
+      name: Transformer target loading
+      value: 90
+      unit: '%'
+      description: 'Loading policy: transformer preferred design target. Applied to the worst credible contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    ups_target_loading:
+      name: Ups target loading
+      value: 80
+      unit: '%'
+      description: 'Loading policy: UPS preferred design target. Applied to the worst credible contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    generator_target_loading:
+      name: Generator target loading
+      value: 80
+      unit: '%'
+      description: 'Loading policy: generator preferred design target. Applied to the worst credible contingency.'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: Above the target gives WARNING. Above the maximum gives FAIL. Short-duration overload capability is never used to justify
+        continuous loading. Configurable.
+      needed_from_stage: 3
+    voltage_drop_limit_pct:
+      name: Maximum voltage drop per feeder
+      value: 3.0
+      unit: '%'
+      description: Maximum voltage drop of a feeder in the design condition, as a percentage of the nominal voltage.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: 'Placeholder: the project criterion was not supplied. Replace with the project requirement.'
+      needed_from_stage: 4
+    cable_max_loading:
+      name: Maximum cable loading
+      value: 100.0
+      unit: '%'
+      description: Maximum loading of a cable run against its derated tabulated current rating.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: 'Placeholder: the project criterion was not supplied. Above it gives FAIL. There is no separate preferred target for cables.'
+      needed_from_stage: 4
+    busduct_max_loading:
+      name: Maximum busduct loading
+      value: 100.0
+      unit: '%'
+      description: Maximum loading of a busduct against its derated rated current.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: 'Placeholder: the project criterion was not supplied.'
+      needed_from_stage: 4
+    switchgear_max_loading:
+      name: Maximum switchgear busbar loading
+      value: 100.0
+      unit: '%'
+      description: Maximum loading of switchgear busbars against their derated rated current.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: 'Placeholder: the project criterion was not supplied.'
+      needed_from_stage: 4
+  equipment:
+    transformer_quantity:
+      name: Transformer quantity (total)
+      value: 2
+      unit: '-'
+      description: Total number of MV/LV transformers in the concept.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Concept "2 x 3,150 kVA".
+    transformer_rating:
+      name: Transformer rating
+      value: 3150
+      unit: kVA
+      description: Rated apparent power of each transformer.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+      requires_manufacturer_verification: true
+    generator_quantity_per_path:
+      name: Generators per power path
+      value: 3
+      unit: '-'
+      description: Number of generators in each power path, including the redundant unit.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Concept "3 x 2,000 kVA per path".
+    generator_rating:
+      name: Generator PRP rating (each)
+      value: 2000
+      unit: kVA
+      description: ISO 8528 Prime Power (PRP) rating of each generator, in kVA. It is the default sizing basis.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Assumed to be a PRP rating. NOT confirmed by manufacturer documentation. Illustrative, NOT manufacturer data. Replace with
+        the manufacturer's PRP rating at the site conditions.
+      requires_manufacturer_verification: true
+    ups_quantity:
+      name: UPS quantity (total)
+      value: 2
+      unit: '-'
+      description: Total number of UPS systems in the concept.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: Concept "2 x 2,500 kW".
+    ups_rating:
+      name: UPS rating
+      value: 2500
+      unit: kW
+      description: Rated active power of each UPS.
+      source: Master prompt OHM-DC-2000, section 4
+      status: ASSUMPTION
+      revision: A0
+      notes: ''
+      requires_manufacturer_verification: true
+    transformer_impedance:
+      name: Transformer impedance
+      value: 6
+      unit: '%'
+      description: Per-unit short-circuit impedance of the transformer.
+      source: 'Ohmetry preliminary concept value, retained by the project owner on 2026-11-05. NOT manufacturer data.'
+      status: ASSUMPTION
+      revision: A0
+      notes: 'Preliminary assumption (UNVERIFIED_PLACEHOLDER). Replace with the transformer test report value; the short-circuit results then update.'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+    ups_efficiency:
+      name: UPS efficiency
+      value: 96
+      unit: '%'
+      description: UPS efficiency at the operating load, used for UPS losses in the load model.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A0
+      notes: Illustrative value, NOT manufacturer data. Replace with the data sheet value at the actual operating load.
+      requires_manufacturer_verification: true
+    generator_esp_rating:
+      name: Generator ESP rating (each)
+      value: null
+      unit: kVA
+      description: ISO 8528 Emergency Standby Power (ESP) rating, used only if the ESP basis is selected.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Not assumed. ESP is not a basis for prolonged outages.
+      needed_from_stage: 3
+      required: false
+    generator_cop_rating:
+      name: Generator COP rating (each)
+      value: null
+      unit: kVA
+      description: ISO 8528 Continuous Power (COP) rating, used only if the COP basis is selected.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Not assumed.
+      needed_from_stage: 3
+      required: false
+    ups_rating_kva:
+      name: UPS rating (each), apparent power
+      value: 2500
+      unit: kVA
+      description: Apparent power rating of each UPS. Checked alongside the kW rating.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Illustrative: a unity output power factor is assumed, so kVA equals kW. NOT manufacturer data.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    transformer_size_list_kva:
+      name: Transformer sizes for suggestions
+      value: 630,800,1000,1250,1600,2000,2500,3150,4000
+      unit: kVA
+      description: Comma-separated list of sizes used only to suggest the next size up. It is not a selection.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: Illustrative. Edit to the supplier's range.
+      needed_from_stage: 3
+    generator_size_list_kva:
+      name: Generator sizes for suggestions
+      value: 1000,1250,1500,1750,2000,2250,2500,3000
+      unit: kVA
+      description: Comma-separated list of PRP sizes used only to suggest the next size up. It is not a selection.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: Illustrative. Edit to the supplier's range.
+      needed_from_stage: 3
+    ups_size_list_kw:
+      name: UPS sizes for suggestions
+      value: 1500,1600,2000,2250,2500,3000
+      unit: kW
+      description: Comma-separated list of UPS sizes used only to suggest the next size up. It is not a selection.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: Illustrative. Edit to the supplier's range.
+      needed_from_stage: 3
+    generator_rating_power_factor:
+      name: Generator rating power factor
+      value: 0.8
+      unit: '-'
+      description: Rated power factor that converts the generator kVA rating to kW.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: Placeholder, NOT manufacturer data. The engine kW limit is checked separately from the alternator kVA.
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    ups_input_power_factor:
+      name: UPS input power factor
+      value: 0.99
+      unit: '-'
+      description: Power factor at the UPS input, used for the UPS input current.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: Placeholder, NOT manufacturer data.
+      needed_from_stage: 4
+      requires_manufacturer_verification: true
+  environment:
+    design_ambient_temperature:
+      name: Design ambient temperature
+      value: 30
+      unit: degC
+      description: Design ambient temperature for equipment and cable derating.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A0
+      notes: 'Ideal (reference) condition for the sample: no ambient derating is implied. Replace with the site design value.'
+      needed_from_stage: 3
+    site_altitude:
+      name: Site altitude
+      value: 0
+      unit: m
+      description: Altitude above sea level, needed for generator derating.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A0
+      notes: Sea level for the sample, so no altitude derating is implied. Replace with the site value.
+      needed_from_stage: 3
+  installation:
+    cable_installation_method:
+      name: Cable installation method
+      value: Single-core cables in trefoil on ventilated cable tray in air
+      unit: '-'
+      description: Installation method for the main power cables, as named in the standard used.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders)'
+      status: ASSUMPTION
+      revision: A2
+      notes: Placeholder for the sample. The installation method fixes the tabulated rating and the grouping derating, which come from
+        the standard or the cable manufacturer.
+      needed_from_stage: 4
+  earthing:
+    earthing_system_type:
+      name: Earthing system type
+      value: TN-S
+      unit: '-'
+      description: LV system earthing arrangement.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner: proceed with placeholders)'
+      status: ASSUMPTION
+      revision: A3
+      notes: 'Assumed for the sample. The earthing system is a design decision for the real project.'
+      requires_manufacturer_verification: true
+      needed_from_stage: 5
+    soil_resistivity:
+      name: Soil resistivity
+      value: null
+      unit: ohm.m
+      description: Measured or surveyed soil resistivity at the site.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Project input, pending. Source needed: a Wenner-method soil resistivity survey report.'
+      requires_manufacturer_verification: true
+      needed_from_stage: 5
+      required: false
+  standards:
+    standards_register_file:
+      name: Standards register file
+      value: config/standards_register.yaml
+      unit: '-'
+      description: Location of the standards register. Every entry starts NOT_VERIFIED.
+      source: This repository
+      status: REFERENCE
+      revision: A0
+      notes: ''
+  losses:
+    distribution_loss_fraction:
+      name: Distribution losses
+      value: 1.0
+      unit: '%'
+      description: Transformer and cable losses in the distribution, as a percentage of the load they supply.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A0
+      notes: Illustrative. Transformer losses need manufacturer data. Without this term the PUE would be understated.
+      requires_manufacturer_verification: true
+  demand_data:
+    it_critical_load_kw:
+      name: IT critical load (demand data)
+      value: 2000
+      unit: kW
+      description: IT critical load at the design point. The single place to enter new load figures.
+      source: Preliminary assumption (master prompt OHM-DC-2000)
+      status: ASSUMPTION
+      revision: A1
+      notes: Preliminary. Replace with new figures when available; every dependent calculation re-runs without code changes.
+    facility_demand_estimate_kw:
+      name: Initial facility demand estimate (demand data)
+      value: 2700
+      unit: kW
+      description: Initial estimate of total facility demand, used only for comparison with the load model.
+      source: Preliminary assumption (master prompt OHM-DC-2000)
+      status: ASSUMPTION
+      revision: A1
+      notes: Preliminary. Never forced to match the load model.
+    demand_data_source:
+      name: Source of the demand figures
+      value: Preliminary assumption. No external data yet.
+      unit: '-'
+      description: Where the demand figures came from.
+      source: Ohmetry
+      status: USER_INPUT
+      revision: A1
+      notes: Update when new figures are incorporated.
+    demand_data_date:
+      name: Date of the demand figures
+      value: '2026-11-05'
+      unit: '-'
+      description: Date the demand figures were set.
+      source: Ohmetry
+      status: USER_INPUT
+      revision: A1
+      notes: ''
+  derating:
+    transformer_ambient_factor:
+      name: Transformer ambient derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the transformer continuous rating for ambient conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    transformer_altitude_factor:
+      name: Transformer altitude derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the transformer continuous rating for altitude conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    transformer_installation_factor:
+      name: Transformer installation derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the transformer continuous rating for installation conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    ups_ambient_factor:
+      name: UPS ambient derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the ups continuous rating for ambient conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    ups_altitude_factor:
+      name: UPS altitude derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the ups continuous rating for altitude conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    ups_installation_factor:
+      name: UPS installation derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the ups continuous rating for installation conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    generator_ambient_factor:
+      name: Generator ambient derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the generator continuous rating for ambient conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions. Enter the ratio of the manufacturer''s site-derated PRP rating to the reference PRP rating. Use
+        1.00 if the rating entered is already the site rating, so the derating is not counted twice.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    generator_altitude_factor:
+      name: Generator altitude derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the generator continuous rating for altitude conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions. Enter the ratio of the manufacturer''s site-derated PRP rating to the reference PRP rating. Use
+        1.00 if the rating entered is already the site rating, so the derating is not counted twice.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    generator_installation_factor:
+      name: Generator installation derating factor
+      value: 1.0
+      unit: '-'
+      description: Multiplier on the generator continuous rating for installation conditions, from the manufacturer.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: 'Placeholder for the sample project at ideal conditions (30 degC, 0 m): no derating assumed. Replace with the manufacturer''s
+        value at the site conditions. Enter the ratio of the manufacturer''s site-derated PRP rating to the reference PRP rating. Use
+        1.00 if the rating entered is already the site rating, so the derating is not counted twice.'
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+    transformer_contingency_factor:
+      name: Transformer contingency derating factor
+      value: 1.0
+      unit: '-'
+      description: Additional multiplier applied to the surviving transformer when the other path is lost (for example elevated room
+        temperature or reduced cooling).
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+      status: ASSUMPTION
+      revision: A1
+      notes: No additional derating assumed. Short-duration emergency overload is not used.
+      needed_from_stage: 3
+      requires_manufacturer_verification: true
+  generators:
+    rating_basis:
+      name: Generator sizing rating basis
+      value: PRP
+      unit: '-'
+      description: 'ISO 8528 rating basis used for sizing: PRP (Prime Power, default), ESP (Emergency Standby Power) or COP (Continuous
+        Power).'
+      source: 'Project owner decision, 2026-11-05: preliminary Ohmetry design policy, not a universal IEC acceptance limit'
+      status: USER_INPUT
+      revision: A1
+      notes: PRP is the default because it does not rely on emergency standby ratings for prolonged outages. ESP is selectable. Do not
+        mix the bases.
+      needed_from_stage: 3
+    prp_max_average_load_factor_pct:
+      name: PRP maximum average load factor
+      value: null
+      unit: '%'
+      description: Manufacturer's limit on the average load over the stated period for the PRP rating.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Record the manufacturer's value and period. Not assumed.
+      needed_from_stage: 3
+    operating_hours_restriction:
+      name: PRP operating-hour restriction
+      value: null
+      unit: '-'
+      description: Manufacturer's restriction on running hours under the PRP rating, as stated on the data sheet.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Record verbatim. Not assumed.
+      needed_from_stage: 3
+    overload_capability:
+      name: Manufacturer overload capability
+      value: null
+      unit: '-'
+      description: Overload capability stated by the manufacturer, if any.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Recorded for information only. Overload capability is never used to justify continuous loading.
+      needed_from_stage: 3
+    max_step_load_pct:
+      name: Maximum single load step
+      value: null
+      unit: '%'
+      description: Largest single load step the manufacturer allows, as a percentage of the running capacity.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Needed for the load-step check.
+      needed_from_stage: 3
+    max_frequency_dip_pct:
+      name: Maximum frequency dip allowed
+      value: null
+      unit: '%'
+      description: Frequency dip the loads and the UPS can tolerate during a step.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+    max_voltage_dip_pct:
+      name: Maximum voltage dip allowed
+      value: null
+      unit: '%'
+      description: Voltage dip the loads and the UPS can tolerate during a step.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+    ups_rectifier_walk_in_s:
+      name: UPS rectifier walk-in time
+      value: null
+      unit: s
+      description: UPS rectifier ramp-up time on generator supply.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Needed for UPS and generator interaction.
+      needed_from_stage: 3
+    ups_input_current_thd_pct:
+      name: UPS input current THD
+      value: null
+      unit: '%'
+      description: Total harmonic distortion of the UPS input current at the operating load.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Needed for generator harmonic and voltage distortion checks.
+      needed_from_stage: 3
+    rating_basis_confirmed:
+      name: PRP rating confirmed by manufacturer documentation
+      value: false
+      unit: '-'
+      description: Whether the generator rating entered is confirmed as the stated basis by a manufacturer data sheet.
+      source: Project owner decision, 2026-11-05
+      status: USER_INPUT
+      revision: A2
+      notes: 'False: the 2,000 kVA is assumed to be PRP. Do not assume it is PRP until the manufacturer''s documentation confirms it.'
+      needed_from_stage: 3
+    largest_unit_loss_required:
+      name: Loss of the largest generator must be verified
+      value: true
+      unit: '-'
+      description: Records that loss-of-largest-unit and remaining capacity are verified for every generator scenario.
+      source: Project owner decision, 2026-11-05
+      status: USER_INPUT
+      revision: A2
+      notes: Informational flag. The verification table is always produced.
+      needed_from_stage: 3
+  battery:
+    dc_bus_voltage_v:
+      name: DC bus voltage
+      value: null
+      unit: V
+      description: Nominal UPS DC bus voltage.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+      required: false
+    inverter_efficiency_pct:
+      name: Inverter efficiency on battery
+      value: null
+      unit: '%'
+      description: DC to AC efficiency while discharging.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+      required: false
+    end_of_life_capacity_factor:
+      name: End-of-life capacity factor
+      value: null
+      unit: '-'
+      description: Fraction of nominal capacity available at end of life.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: The battery manufacturer's or standard's value. Not assumed.
+      needed_from_stage: 3
+      required: false
+    temperature_correction_factor:
+      name: Temperature correction factor
+      value: null
+      unit: '-'
+      description: Capacity correction for the design battery-room temperature.
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+      required: false
+    design_margin_factor:
+      name: Design margin factor
+      value: null
+      unit: '-'
+      description: Multiplier of at least 1 for design margin.
+      source: Project design criteria
+      status: USER_INPUT
+      revision: A1
+      notes: ''
+      needed_from_stage: 3
+      required: false
+    constant_power_discharge_data:
+      name: Constant-power discharge data reference
+      value: null
+      unit: '-'
+      description: Reference to the manufacturer's constant-power discharge table (W per cell to the end voltage at the autonomy time).
+      source: Manufacturer data pending
+      status: MANUFACTURER_DATA
+      revision: A1
+      notes: Without it no battery can be sized.
+      needed_from_stage: 3
+      required: false
+  cable_data:
+    lv_reactance_ohm_per_km:
+      name: LV cable reactance
+      value: 0.08
+      unit: ohm/km
+      description: Placeholder reactance of the LV single-core cable run, used for voltage drop.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: Placeholder, NOT manufacturer data. Reactance depends on the cable layout and spacing.
+      needed_from_stage: 4
+      requires_manufacturer_verification: true
+    mv_reactance_ohm_per_km:
+      name: MV cable reactance
+      value: 0.1
+      unit: ohm/km
+      description: Placeholder reactance of the MV cable, used for voltage drop.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: Placeholder, NOT manufacturer data.
+      needed_from_stage: 4
+      requires_manufacturer_verification: true
+    conductor_operating_temperature:
+      name: Conductor temperature for resistance
+      value: 90.0
+      unit: degC
+      description: Conductor temperature at which resistance is evaluated for voltage drop.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer
+        data is unavailable)'
+      status: ASSUMPTION
+      revision: A2
+      notes: 'Placeholder: the insulation''s maximum operating temperature of the chosen cable. Confirm with the cable data sheet.'
+      needed_from_stage: 4
+      requires_manufacturer_verification: true
+  short_circuit:
+    utility_fault_level_mva:
+      name: Utility initial short-circuit power at the MV connection
+      value: null
+      unit: 'MVA'
+      description: Initial symmetrical short-circuit power S''kQ of the utility at the MV point of connection.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: "Project input, pending. Source needed: The serving utility's written statement of maximum and minimum fault levels."
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+      required: false
+    utility_x_r_ratio:
+      name: Utility X/R ratio
+      value: null
+      unit: '-'
+      description: X/R ratio of the utility source impedance.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: "Project input, pending. Source needed: The serving utility's written statement of the source X/R ratio."
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+      required: false
+    transformer_x_r_ratio:
+      name: Transformer X/R ratio
+      value: null
+      unit: '-'
+      description: X/R ratio of the transformer impedance.
+      source: 'Manufacturer data pending'
+      status: MANUFACTURER_DATA
+      revision: A3
+      notes: 'Not invented. Source needed: Transformer test report (short-circuit reactance and load losses).'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+    generator_subtransient_reactance_pct:
+      name: Generator subtransient reactance x''d
+      value: null
+      unit: '%'
+      description: Saturated subtransient reactance of each generator, on its own rating.
+      source: 'Manufacturer data pending'
+      status: MANUFACTURER_DATA
+      revision: A3
+      notes: "Not invented. Source needed: Generator data sheet (subtransient reactance x''d, saturated)."
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+    generator_x_r_ratio:
+      name: Generator X/R ratio
+      value: null
+      unit: '-'
+      description: X/R ratio of the generator impedance.
+      source: 'Manufacturer data pending'
+      status: MANUFACTURER_DATA
+      revision: A3
+      notes: 'Not invented. Source needed: Generator data sheet (X/R or armature time constant).'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+    voltage_factor_c_max_lv:
+      name: Voltage factor c max, LV
+      value: 1.05
+      unit: '-'
+      description: IEC 60909 voltage factor for the maximum fault current at LV (tolerance 6 %).
+      source: 'IEC 60909 voltage factor table (verify the current edition)'
+      status: REFERENCE
+      revision: A3
+      notes: 'Reference value. Use 1.10 for a tolerance of 10 %. Verify the edition.'
+      needed_from_stage: 5
+    voltage_factor_c_max_mv:
+      name: Voltage factor c max, MV
+      value: 1.1
+      unit: '-'
+      description: IEC 60909 voltage factor for the maximum fault current at MV.
+      source: 'IEC 60909 voltage factor table (verify the current edition)'
+      status: REFERENCE
+      revision: A3
+      notes: 'Reference value. Verify the edition.'
+      needed_from_stage: 5
+    generator_parallel_with_utility:
+      name: Generators can run in parallel with the utility
+      value: False
+      unit: '-'
+      description: True if the design allows the generators and the utility to supply the same bus at the same time (closed transition or no transfer switch).
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer data is unavailable)'
+      status: ASSUMPTION
+      revision: A3
+      notes: 'Design decision, placeholder. False means open transition, so the generator and utility fault contributions are not added. The parallel case is still shown.'
+      needed_from_stage: 5
+    assumed_clearing_time_s:
+      name: Assumed fault clearing time for cable and busduct withstand
+      value: 0.5
+      unit: 's'
+      description: Fault duration used for the thermal withstand check.
+      source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: proceed with placeholders where manufacturer data is unavailable)'
+      status: ASSUMPTION
+      revision: A3
+      notes: 'Placeholder. Replace with the protection coordination result (device curves are manufacturer data).'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+    cable_short_circuit_k_factor:
+      name: Cable short-circuit constant k (copper, XLPE)
+      value: 143
+      unit: 'A.s^0.5/mm2'
+      description: Constant in the adiabatic equation S = I x sqrt(t) / k.
+      source: 'Cable standard (verify)'
+      status: REFERENCE
+      revision: A3
+      notes: 'Reference value for copper XLPE at 90 C initial temperature. Verify against the cable standard and data sheet.'
+      needed_from_stage: 5
+    lv_fault_level_limit_ka:
+      name: Practical LV fault level limit
+      value: 100
+      unit: 'kA'
+      description: Fault level above which the design needs review (equipment selection, transformer size or impedance, bus splitting).
+      source: 'Ohmetry preliminary design policy'
+      status: ASSUMPTION
+      revision: A3
+      notes: 'Ohmetry preliminary design policy, NOT a standard limit. The project owner can change it.'
+      needed_from_stage: 5
+  earthing_study:
+    grid_area_m2:
+      name: Earth grid area
+      value: null
+      unit: 'm2'
+      description: Area covered by the earth grid.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Project input, pending. Source needed: The earthing grid design.'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+      required: false
+    grid_conductor_length_m:
+      name: Total buried grid conductor length
+      value: null
+      unit: 'm'
+      description: Total length of buried conductor, rods excluded.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Project input, pending. Source needed: The earthing grid design.'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+      required: false
+    grid_burial_depth_m:
+      name: Grid burial depth
+      value: null
+      unit: 'm'
+      description: Depth of the grid below the surface.
+      source: 'Pending. Not supplied: do not substitute a default.'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Project input, pending. Source needed: The earthing grid design.'
+      needed_from_stage: 5
+      requires_manufacturer_verification: true
+      required: false
+    earth_fault_current_ka:
+      name: Earth fault current into the grid
+      value: null
+      unit: 'kA'
+      description: Maximum earth-fault current that flows through the grid to remote earth.
+      source: 'Not supplied'
+      status: USER_INPUT
+      revision: A3
+      notes: "Needs the utility's neutral earthing arrangement and a fault study. Not assumed."
+      needed_from_stage: 5
+      required: false
+    fault_clearing_time_s:
+      name: Earth fault clearing time
+      value: null
+      unit: 's'
+      description: Duration used for the tolerable touch and step voltages.
+      source: 'Not supplied'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Needs the protection study. Not assumed.'
+      needed_from_stage: 5
+      required: false
+    surface_layer_resistivity_ohm_m:
+      name: Surface layer resistivity
+      value: null
+      unit: 'ohm.m'
+      description: Resistivity of the surface material (crushed rock, asphalt, concrete).
+      source: 'Not supplied'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Site data. Not assumed.'
+      needed_from_stage: 5
+      required: false
+    surface_layer_thickness_m:
+      name: Surface layer thickness
+      value: null
+      unit: 'm'
+      description: Thickness of the surface material.
+      source: 'Not supplied'
+      status: USER_INPUT
+      revision: A3
+      notes: 'Site data. Not assumed.'
+      needed_from_stage: 5
+      required: false

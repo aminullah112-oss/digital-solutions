@@ -1,0 +1,49 @@
+id,module,question,A,B,C,D,answer,explanation
+Q01.1,1,Which statement about a data centre power chain is correct?,Generators carry the load in normal operation,The UPS bridges the time until generators accept load,Transformers store energy,Switchgear sets the IT load,B,The UPS and battery carry the load during the gap.
+Q01.2,1,What does 'worst credible contingency' mean?,The largest load in normal operation,The most onerous failure the design is required to survive,Any failure that can be imagined,The first failure in the schedule,B,It is the most onerous failure the project has decided is credible.
+Q01.3,1,Which of these is manufacturer data?,Target PUE,Transformer short-circuit impedance,Number of power paths,Loading target,B,Impedance comes from the test report.
+Q01.4,1,Apparent power for P = 300 kW and Q = 400 kvar is:,700 kVA,500 kVA,100 kVA,350 kVA,B,sqrt(300^2 + 400^2) = 500.
+Q02.1,2,Why are kvar added separately from kW?,They are different units of the same thing,Reactive and real power are different quantities; apparent power is the vector sum,Because kvar is smaller,It is a convention only,B,S = sqrt(P^2 + Q^2).
+Q02.2,2,UPS losses increase when:,Efficiency rises,Efficiency falls,IT load is constant and efficiency constant,PUE is below 1,B,Loss = P x (100/eta - 1).
+Q02.3,2,A design-point PUE is:,The annual PUE,A power ratio at the design point,Always below 1.2,Measured,B,"It is a ratio of power, not annual energy."
+Q02.4,2,PUE below 1.0 is:,Possible with free cooling,Not possible: facility power cannot be below IT power,Normal for large sites,A sign of good design,B,Facility power includes the IT load plus overhead.
+Q03.1,3,2N means:,One spare unit,"Two complete independent paths, each able to carry the whole load",Two generators,Two UPS in series,B,Each path can carry the whole critical load.
+Q03.2,3,N+1 for generators means:,Load carried with the largest unit out,Load carried only with all units,Two generators per path,One generator per two paths,A,The load must be carried with one unit out.
+Q03.3,3,Two paths fed from one upstream busbar are:,Independent,Not independent at that point,Always acceptable,2N+1,B,A shared point is a common failure.
+Q03.4,3,Loss of a path and a unit together is:,Always judged against limits,"A double contingency, informational unless the project decides it is credible",Impossible,Normal operation,B,It is beyond N+1.
+Q04.1,4,Transformer loading is calculated against:,The nameplate rating,The derated continuous rating,The short-time rating,The fault rating,B,Derating first.
+Q04.2,4,A result between the target and the maximum is:,PASS,WARNING needing a decision,FAIL,Not applicable,B,It needs a recorded decision.
+Q04.3,4,A lower transformer impedance gives:,A lower fault level,A higher fault level,No change,A lower voltage,B,Less impedance passes more fault current.
+Q04.4,4,Emergency overload capability may be used to:,Justify continuous loading,Nothing in continuous sizing,Replace derating,Raise the target,B,It is not used for continuous loading.
+Q05.1,5,"PRP, ESP and COP are:",The same rating,Different ISO 8528 rating bases,Brands,Fuel types,B,They are not interchangeable.
+Q05.2,5,"Engine kW for 2,000 kVA at 0.8 power factor is:","2,000","1,600","2,500","1,200",B,kVA x pf.
+Q05.3,5,Why are generator load steps assessed?,Steps cause frequency and voltage dips that depend on the unit,Steps change the fuel,Steps change the rating basis,They are not relevant,A,Needs manufacturer data.
+Q05.4,5,A very low generator loading percentage is:,Always good,Not automatically good: minimum-load guidance applies,A FAIL,Impossible,B,Light running has its own limits.
+Q06.1,6,A battery is sized from:,Ampere-hours on the nameplate,The manufacturer's constant-power discharge data at end of life,The UPS kVA,The generator rating,B,Capacity depends on discharge rate.
+Q06.2,6,"Energy for 2,000 kW over 10 min is:",333 kWh,200 kWh,"20,000 kWh",3.3 kWh,A,2000 x 10 / 60.
+Q06.3,6,"A load with power factor 0.95 on a UPS rated 2,500 kW / 2,500 kVA is limited by:",kW first,kVA first,Neither,Both equally,B,kVA = kW / 0.95 is larger.
+Q06.4,6,"In 2N each UPS carries, after the other path is lost:",Half the load,The whole critical load,Nothing,The mechanical load,B,That is the point of 2N.
+Q07.1,7,Required rated current is:,Design current times derating,Design current divided by derating,Fault current,Nameplate current,B,I / k.
+Q07.2,7,A switchboard short-circuit rating must exceed:,The load current,The prospective fault level at the busbars,The transformer rating,The cable rating,B,Including the peak current.
+Q07.3,7,IEC 61439 verification evidence comes from:,The project designer,The assembly manufacturer's verification,The utility,The cable maker,B,The designer checks the evidence.
+Q07.4,7,Ratings in the Ohmetry workbooks without entered data read:,PASS,NOT VERIFIED,FAIL,Assumed,B,They are never assumed.
+Q08.1,8,Conductor resistance at 90 C compared with 20 C is:,Lower,Higher,The same,Zero,B,Resistance rises with temperature.
+Q08.2,8,A tabulated current rating comes from:,Memory,The standard for the installation method or the manufacturer,The voltage drop,The fault level,B,It depends on construction and layout.
+Q08.3,8,Fault current in a parallel cable group:,Goes through one run,Divides between runs,Is zero,Doubles,B,Per-run share.
+Q08.4,8,The adiabatic equation gives:,Voltage drop,Minimum conductor area for a fault of given duration,Ampacity,Resistance,B,S >= I sqrt(t) / k.
+Q09.1,9,The utility fault level comes from:,A default table,The utility's written statement,The transformer,The generator,B,It is a site/utility input.
+Q09.2,9,The peak current factor kappa depends on:,X/R,Voltage,Frequency only,Cable length,A,kappa = 1.02 + 0.98 exp(-3 R/X).
+Q09.3,9,Selectivity can be asserted from:,The number of breakers,Device time-current curves and a study,Rated currents,Colour codes,B,Curves and a validated study.
+Q09.4,9,The transformer-limited bound needs:,The utility fault level,Only the transformer rating and impedance,Generator data,Soil data,B,It assumes an infinite source.
+Q10.1,10,Ground potential rise is:,Earth-fault current times grid resistance,Grid resistance times voltage,Soil resistivity times area,Touch voltage,A,GPR = Ig x Rg.
+Q10.2,10,A screening pass for touch voltage means:,The earthing is designed,No further study is needed,A detailed mesh and step calculation may still be required,Lightning is protected,C,It is only a screening.
+Q10.3,10,Lightning compliance can be claimed with:,A collection area,A complete verified risk assessment and design,A flash density,A catalogue,B,Not otherwise.
+Q10.4,10,"Voltage unbalance for 400, 404, 396 V is:",0.5 %,1 %,2 %,4 %,B,4/400.
+Q11.1,11,Tags are used to:,Decorate drawings,"Join drawings, schedules and calculations",Number pages,Replace revision control,B,The shared key.
+Q11.2,11,A preliminary PASS on unverified inputs reads overall:,PASS,NOT VERIFIED,FAIL,WARNING,B,A pass is not evidence.
+Q11.3,11,Approval fields are filled by:,The software,The people who approve,The author,Nobody,B,Never by the software.
+Q11.4,11,A drawing rating without a calculation or datasheet is:,Acceptable,"A sketch, not evidence",Verified,Approved,B,It must trace to something.
+Q12.1,12,FAT stands for:,Final assembly test,Factory acceptance test,Fault analysis test,Field alarm test,B,A unit test at the factory.
+Q12.2,12,Integrated systems testing proves:,A single unit,The whole chain under failure,Only the UPS,Cable insulation,B,The chain under failure.
+Q12.3,12,A load bank result proves:,Behaviour under real non-linear IT load,"Capacity at a known resistive load, not the full behaviour",Nothing,Harmonics,B,It is a different load.
+Q12.4,12,Acceptance criteria come from:,This course,The specification and manufacturer data,A random choice,The load bank,B,Not from training material.

@@ -1,0 +1,5 @@
+# Supplied manufacturer, utility and site data. The master configuration is never edited by an import: values here are applied over it.
+# Fill with `python -m ohmetry_dc import-manufacturer-data --file <csv>`, or by hand. Every entry needs a source document.
+# Format: - parameter: <id from the manufacturer-data register>, value: <number>, unit: <same unit as the master>, source: <manufacturer, model, document, revision>, datasheet_reference: <page or table>
+schema_version: 1
+overrides: []

@@ -1,0 +1,228 @@
+# Standards and regulatory register. A starting list, NOT a declaration that any standard applies.
+# Edition, scope and applicability are NOT_VERIFIED until a reviewer checks the current edition and local requirements.
+# Local requirements (for example Saudi Building Code, utility and civil defence rules) must be added by the project team. None are invented here.
+schema_version: 1
+standards:
+- id: IEC_61936_1
+  reference: IEC 61936-1
+  title: Power installations exceeding 1 kV AC
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60364
+  reference: IEC 60364
+  title: Low-voltage electrical installations (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60076
+  reference: IEC 60076
+  title: Power transformers (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62271
+  reference: IEC 62271
+  title: High-voltage switchgear and controlgear (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_61439
+  reference: IEC 61439
+  title: Low-voltage switchgear and controlgear assemblies (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60909
+  reference: IEC 60909
+  title: Short-circuit currents in three-phase AC systems (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62040
+  reference: IEC 62040
+  title: Uninterruptible power systems (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60287
+  reference: IEC 60287
+  title: 'Electric cables: current rating calculation (series)'
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60502
+  reference: IEC 60502
+  title: Power cables with extruded insulation (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_62305
+  reference: IEC 62305
+  title: Protection against lightning (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60364_5_54
+  reference: IEC 60364-5-54
+  title: Earthing arrangements and protective conductors
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_61000
+  reference: IEC 61000
+  title: Electromagnetic compatibility and power quality (series)
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEEE_80
+  reference: IEEE 80
+  title: Safety in AC substation grounding
+  issuing_organisation: IEEE
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEEE_485
+  reference: IEEE 485
+  title: Sizing lead-acid batteries for stationary applications
+  issuing_organisation: IEEE
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEEE_519
+  reference: IEEE 519
+  title: Harmonic control in electric power systems
+  issuing_organisation: IEEE
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: ASHRAE_90_4
+  reference: ASHRAE 90.4
+  title: Energy Standard for Data Centers
+  issuing_organisation: ASHRAE
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: ISO_8528
+  reference: ISO 8528
+  title: Reciprocating internal combustion engine driven alternating current generating
+    sets (series)
+  issuing_organisation: ISO
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+- id: IEC_60076_7
+  reference: IEC 60076-7
+  title: Loading guide for mineral-oil-immersed power transformers
+  issuing_organisation: IEC
+  edition: null
+  scope: null
+  relevant_modules: []
+  applicability_status: NOT_VERIFIED
+  verification_source: null
+  reviewer: null
+  review_date: null
+  notes: Review action - verify current edition, amendments, scope and applicability.
+local_requirements:
+- id: LOCAL_REQ_1
+  reference: 'null'
+  title: Local authority, utility and project-specific requirements
+  applicability_status: NOT_VERIFIED
+  notes: To be supplied by the project team. Not invented.

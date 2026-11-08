@@ -1,0 +1,950 @@
+{
+  "project_code": "OHM-DC-2000",
+  "revision": "A1",
+  "load_estimate": {
+    "items": [
+      {
+        "id": "IT-1",
+        "category": "it_critical",
+        "description": "IT equipment, all halls (dual-corded)",
+        "quantity": 1.0,
+        "unit_rating_kw": 2000.0,
+        "connected_kw": 2000.0,
+        "power_factor": 0.95,
+        "demand_factor": 1.0,
+        "demand_kw": 2000.0,
+        "demand_kvar": 657.3682103577264,
+        "demand_kva": 2105.263157894737,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      },
+      {
+        "id": "MC-1",
+        "category": "mechanical_cooling",
+        "description": "Chillers (3 of 4 run)",
+        "quantity": 4.0,
+        "unit_rating_kw": 120.0,
+        "connected_kw": 480.0,
+        "power_factor": 0.9,
+        "demand_factor": 0.75,
+        "demand_kw": 360.0,
+        "demand_kvar": 174.35595774162692,
+        "demand_kva": 400.0,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      },
+      {
+        "id": "MC-2",
+        "category": "mechanical_cooling",
+        "description": "CRAH fan units",
+        "quantity": 20.0,
+        "unit_rating_kw": 6.0,
+        "connected_kw": 120.0,
+        "power_factor": 0.95,
+        "demand_factor": 1.0,
+        "demand_kw": 120.0,
+        "demand_kvar": 39.44209262146359,
+        "demand_kva": 126.31578947368422,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      },
+      {
+        "id": "MC-3",
+        "category": "mechanical_cooling",
+        "description": "Chilled-water and condenser pumps (4 of 6 run)",
+        "quantity": 6.0,
+        "unit_rating_kw": 15.0,
+        "connected_kw": 90.0,
+        "power_factor": 0.85,
+        "demand_factor": 0.67,
+        "demand_kw": 60.300000000000004,
+        "demand_kvar": 37.37058360570707,
+        "demand_kva": 70.94117647058825,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      },
+      {
+        "id": "LS-1",
+        "category": "lighting_small_power",
+        "description": "Lighting",
+        "quantity": 1.0,
+        "unit_rating_kw": 15.0,
+        "connected_kw": 15.0,
+        "power_factor": 0.9,
+        "demand_factor": 0.8,
+        "demand_kw": 12.0,
+        "demand_kvar": 5.8118652580542305,
+        "demand_kva": 13.333333333333332,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      },
+      {
+        "id": "LS-2",
+        "category": "lighting_small_power",
+        "description": "Small power and maintenance sockets",
+        "quantity": 1.0,
+        "unit_rating_kw": 20.0,
+        "connected_kw": 20.0,
+        "power_factor": 0.9,
+        "demand_factor": 0.5,
+        "demand_kw": 10.0,
+        "demand_kvar": 4.843221048378526,
+        "demand_kva": 11.11111111111111,
+        "path_a_fraction": 0.5,
+        "on_generator": false
+      },
+      {
+        "id": "AUX-1",
+        "category": "auxiliary",
+        "description": "Fire, security, BMS and EPMS",
+        "quantity": 1.0,
+        "unit_rating_kw": 25.0,
+        "connected_kw": 25.0,
+        "power_factor": 0.9,
+        "demand_factor": 1.0,
+        "demand_kw": 25.0,
+        "demand_kvar": 12.108052620946314,
+        "demand_kva": 27.77777777777778,
+        "path_a_fraction": 0.5,
+        "on_generator": true
+      }
+    ],
+    "category_demand_kw": {
+      "it_critical": 2000.0,
+      "mechanical_cooling": 540.3,
+      "lighting_small_power": 22.0,
+      "auxiliary": 25.0
+    },
+    "it_demand_kw": 2000.0,
+    "items_demand_kw": 2587.3,
+    "ups_efficiency_pct": 96.0,
+    "ups_loss": {
+      "kw": 83.33333333333348,
+      "kvar": 27.39034209823865
+    },
+    "distribution_loss_pct": 1.0,
+    "distribution_loss": {
+      "kw": 26.706333333333337,
+      "kvar": 8.777947274275116
+    },
+    "facility_kw": 2697.339666666667,
+    "facility_kvar": 967.4682726264168,
+    "facility_kva": 2865.595249841155,
+    "power_factor": 0.9412842468999018,
+    "pue": 1.3486698333333336,
+    "growth_pct": 0.0,
+    "design_demand_kw": 2697.339666666667,
+    "design_demand_kva": 2865.595249841155,
+    "path_a": {
+      "kw": 1348.6698333333336,
+      "kvar": 483.7341363132084
+    },
+    "path_b": {
+      "kw": 1348.6698333333336,
+      "kvar": 483.7341363132084
+    },
+    "scenarios": {
+      "NORMAL_PATH_A": {
+        "kw": 1348.6698333333336,
+        "kvar": 483.7341363132084
+      },
+      "NORMAL_PATH_B": {
+        "kw": 1348.6698333333336,
+        "kvar": 483.7341363132084
+      },
+      "PATH_B_OUT_PATH_A_CARRIES_ALL": {
+        "kw": 2697.339666666667,
+        "kvar": 967.4682726264168
+      },
+      "PATH_A_OUT_PATH_B_CARRIES_ALL": {
+        "kw": 2697.339666666667,
+        "kvar": 967.4682726264168
+      }
+    },
+    "connected_kw": 2750.0
+  },
+  "sizing": {
+    "transformer": {
+      "equipment": "transformer",
+      "metric": "kVA",
+      "derating": {
+        "ambient": 1.0,
+        "altitude": 1.0,
+        "installation": 1.0,
+        "combined": 1.0
+      },
+      "rating_each": 3150.0,
+      "derated_each": 3150.0,
+      "units_per_path": 1,
+      "required_derated_each_for_target": 3183.9947220457275,
+      "required_derated_each_for_limit": 2865.595249841155,
+      "required_rating_each_for_target": 3183.9947220457275,
+      "required_rating_each_for_limit": 2865.595249841155,
+      "suggested_size_for_target": 4000.0,
+      "suggested_size_for_limit": 3150.0,
+      "missing_data": [],
+      "notes": [
+        "Loading is taken against the derated continuous rating. Short-duration emergency overload (for example IEC 60076-7) is not used to justify continuous loading.",
+        "The surviving transformer is evaluated under loss of the other supply path with the contingency derating factor.",
+        "Transformer impedance, losses, cooling class and the manufacturer's loading guide are manufacturer data: present as an assumption."
+      ],
+      "policy": {
+        "target_pct": 90.0,
+        "limit_pct": 100.0
+      },
+      "status": "WARNING",
+      "worst_credible": "TX-PATH-OUT",
+      "scenarios": [
+        {
+          "id": "TX-NORMAL",
+          "description": "Normal operation: the more heavily loaded path on its own units",
+          "credible": true,
+          "load": 1432.7976249205774,
+          "units_available": 1,
+          "capacity_each": 3150.0,
+          "capacity_total": 3150.0,
+          "loading": 0.45485638886367535,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "TX-PATH-OUT",
+          "description": "Loss of the other path: the surviving path carries the whole load",
+          "credible": true,
+          "load": 2865.595249841155,
+          "units_available": 1,
+          "capacity_each": 3150.0,
+          "capacity_total": 3150.0,
+          "loading": 0.9097127777273507,
+          "note": "",
+          "status": "WARNING"
+        }
+      ]
+    },
+    "ups_kw": {
+      "equipment": "ups",
+      "metric": "kW",
+      "derating": {
+        "ambient": 1.0,
+        "altitude": 1.0,
+        "installation": 1.0,
+        "combined": 1.0
+      },
+      "rating_each": 2500.0,
+      "derated_each": 2500.0,
+      "units_per_path": 1,
+      "required_derated_each_for_target": 2500.0,
+      "required_derated_each_for_limit": 2000.0,
+      "required_rating_each_for_target": 2500.0,
+      "required_rating_each_for_limit": 2000.0,
+      "suggested_size_for_target": 2500.0,
+      "suggested_size_for_limit": 2000.0,
+      "missing_data": [],
+      "notes": [
+        "Both the kW and kVA limits are checked. Overload capability is not used. Each UPS is assumed to carry the whole critical load when the other path is lost (2N)."
+      ],
+      "policy": {
+        "target_pct": 80.0,
+        "limit_pct": 100.0
+      },
+      "status": "PASS",
+      "worst_credible": "UPS-PATH-OUT",
+      "scenarios": [
+        {
+          "id": "UPS-NORMAL",
+          "description": "Normal operation: the more heavily loaded path on its own units",
+          "credible": true,
+          "load": 1000.0,
+          "units_available": 1,
+          "capacity_each": 2500.0,
+          "capacity_total": 2500.0,
+          "loading": 0.4,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "UPS-PATH-OUT",
+          "description": "Loss of the other path: the surviving path carries the whole load",
+          "credible": true,
+          "load": 2000.0,
+          "units_available": 1,
+          "capacity_each": 2500.0,
+          "capacity_total": 2500.0,
+          "loading": 0.8,
+          "note": "",
+          "status": "PASS"
+        }
+      ]
+    },
+    "ups_kva": {
+      "equipment": "ups",
+      "metric": "kVA",
+      "derating": {
+        "ambient": 1.0,
+        "altitude": 1.0,
+        "installation": 1.0,
+        "combined": 1.0
+      },
+      "rating_each": 2500.0,
+      "derated_each": 2500.0,
+      "units_per_path": 1,
+      "required_derated_each_for_target": 2631.5789473684213,
+      "required_derated_each_for_limit": 2105.263157894737,
+      "required_rating_each_for_target": 2631.5789473684213,
+      "required_rating_each_for_limit": 2105.263157894737,
+      "suggested_size_for_target": 3000.0,
+      "suggested_size_for_limit": 2250.0,
+      "missing_data": [],
+      "notes": [
+        "Both the kW and kVA limits are checked. Overload capability is not used. Each UPS is assumed to carry the whole critical load when the other path is lost (2N)."
+      ],
+      "policy": {
+        "target_pct": 80.0,
+        "limit_pct": 100.0
+      },
+      "status": "WARNING",
+      "worst_credible": "UPS-PATH-OUT",
+      "scenarios": [
+        {
+          "id": "UPS-NORMAL",
+          "description": "Normal operation: the more heavily loaded path on its own units",
+          "credible": true,
+          "load": 1052.6315789473686,
+          "units_available": 1,
+          "capacity_each": 2500.0,
+          "capacity_total": 2500.0,
+          "loading": 0.4210526315789474,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "UPS-PATH-OUT",
+          "description": "Loss of the other path: the surviving path carries the whole load",
+          "credible": true,
+          "load": 2105.263157894737,
+          "units_available": 1,
+          "capacity_each": 2500.0,
+          "capacity_total": 2500.0,
+          "loading": 0.8421052631578948,
+          "note": "",
+          "status": "WARNING"
+        }
+      ]
+    },
+    "generator": {
+      "equipment": "generator",
+      "metric": "kVA",
+      "derating": {
+        "ambient": 1.0,
+        "altitude": 1.0,
+        "installation": 1.0,
+        "combined": 1.0
+      },
+      "rating_each": 2000.0,
+      "derated_each": 2000.0,
+      "units_per_path": 3,
+      "required_derated_each_for_target": 1189.3509505364732,
+      "required_derated_each_for_limit": 951.4807604291786,
+      "required_rating_each_for_target": 1189.3509505364732,
+      "required_rating_each_for_limit": 951.4807604291786,
+      "suggested_size_for_target": 1250.0,
+      "suggested_size_for_limit": 1000.0,
+      "missing_data": [
+        "generators.prp_max_average_load_factor_pct",
+        "generators.operating_hours_restriction",
+        "generators.max_step_load_pct",
+        "generators.max_frequency_dip_pct",
+        "generators.max_voltage_dip_pct",
+        "generators.ups_rectifier_walk_in_s",
+        "generators.ups_input_current_thd_pct",
+        "generators.overload_capability"
+      ],
+      "notes": [
+        "Rating basis: PRP. PRP (Prime Power), ESP (Emergency Standby Power) and COP (Continuous Power) are different ISO 8528 ratings and are not interchangeable.",
+        "PRP is the default basis. ESP is selectable but should not be relied on for prolonged outages.",
+        "No overload capability is used. Final selection must be verified against manufacturer data for load steps, UPS interaction, harmonics, altitude and ambient temperature.",
+        "Lightly loaded generators need the manufacturer's minimum-load guidance. A low loading percentage is not automatically better."
+      ],
+      "policy": {
+        "target_pct": 80.0,
+        "limit_pct": 100.0
+      },
+      "status": "PASS",
+      "worst_credible": "GEN-PATH-OUT",
+      "scenarios": [
+        {
+          "id": "GEN-NORMAL",
+          "description": "Normal operation: the more heavily loaded path on its own units",
+          "credible": true,
+          "load": 1427.221140643768,
+          "units_available": 3,
+          "capacity_each": 2000.0,
+          "capacity_total": 6000.0,
+          "loading": 0.23787019010729465,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-PATH-OUT",
+          "description": "Loss of the other path: the surviving path carries the whole load",
+          "credible": true,
+          "load": 2854.442281287536,
+          "units_available": 3,
+          "capacity_each": 2000.0,
+          "capacity_total": 6000.0,
+          "loading": 0.4757403802145893,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-UNIT-OUT",
+          "description": "Loss of one unit (N+1): the path load on the remaining units",
+          "credible": true,
+          "load": 1427.221140643768,
+          "units_available": 2,
+          "capacity_each": 2000.0,
+          "capacity_total": 4000.0,
+          "loading": 0.356805285160942,
+          "note": "",
+          "status": "PASS"
+        },
+        {
+          "id": "GEN-PATH-OUT-UNIT-OUT",
+          "description": "Loss of the other path and one unit: beyond an N+1 design basis",
+          "credible": false,
+          "load": 2854.442281287536,
+          "units_available": 2,
+          "capacity_each": 2000.0,
+          "capacity_total": 4000.0,
+          "loading": 0.713610570321884,
+          "note": "Informational: not judged against the limits (redundancy.double_contingency_credible is False)",
+          "status": "NOT APPLICABLE"
+        }
+      ]
+    },
+    "generator_steps": {
+      "blocks": [
+        {
+          "id": "STEP-1",
+          "description": "UPS input (IT load and UPS losses)",
+          "step_kva": 2214.9122807017548,
+          "cumulative_kva": 2214.9122807017548,
+          "percent_of_running_capacity": 36.91520467836258
+        },
+        {
+          "id": "STEP-2",
+          "description": "Mechanical and cooling plant",
+          "step_kva": 601.4754288143025,
+          "cumulative_kva": 2813.180617172338,
+          "percent_of_running_capacity": 10.024590480238375
+        },
+        {
+          "id": "STEP-3",
+          "description": "Lighting, small power and auxiliary",
+          "step_kva": 41.497153405369744,
+          "cumulative_kva": 2854.442281287536,
+          "percent_of_running_capacity": 0.691619223422829
+        }
+      ],
+      "running_capacity_kva": 6000.0,
+      "status": "NOT VERIFIED",
+      "requirements": [
+        "Manufacturer maximum single load step (%) at the site conditions",
+        "Frequency and voltage dip limits of the loads and the UPS during a step",
+        "UPS rectifier walk-in time and input harmonic current on generator supply",
+        "Generator transient response (frequency and voltage recovery) for the proposed step sequence",
+        "Motor starting current and method for each mechanical load",
+        "Harmonic voltage distortion with the UPS rectifier load, and the effect on the alternator rating"
+      ],
+      "note": "Upper bound: each block applied at once at its steady-state demand. Soft starting, rectifier walk-in and sequencing are not modelled."
+    },
+    "battery": {
+      "autonomy_min": 10.0,
+      "ups_output_kw": 2000.0,
+      "energy_at_ups_output_kwh": 333.3333333333333,
+      "indicative_nominal_energy_kwh": null,
+      "status": "NOT VERIFIED",
+      "missing_data": [
+        "battery.dc_bus_voltage_v",
+        "battery.inverter_efficiency_pct",
+        "battery.end_of_life_capacity_factor",
+        "battery.temperature_correction_factor",
+        "battery.design_margin_factor",
+        "battery.constant_power_discharge_data"
+      ],
+      "notes": [
+        "Energy at the UPS output = critical load x autonomy. It is arithmetic, not a battery size.",
+        "A battery is sized from the manufacturer's constant-power discharge table (W per cell to the end-of-discharge voltage at the autonomy time), at the end-of-life and temperature conditions. That data is missing, so no battery is sized.",
+        "String configuration, DC bus voltage and cell count cannot be determined without it."
+      ]
+    }
+  },
+  "checks": [
+    {
+      "id": "required_user_inputs",
+      "title": "Inputs needed up to Stage 3 are supplied",
+      "status": "PASS",
+      "detail": "All required user inputs for the current stage are present.",
+      "values": {
+        "missing": []
+      },
+      "next_action": ""
+    },
+    {
+      "id": "manufacturer_data_pending",
+      "title": "Manufacturer data needed up to Stage 3 is supplied",
+      "status": "NOT VERIFIED",
+      "detail": "15 manufacturer data item(s) pending: equipment.generator_esp_rating, equipment.generator_cop_rating, generators.prp_max_average_load_factor_pct, generators.operating_hours_restriction, generators.overload_capability, generators.max_step_load_pct, generators.max_frequency_dip_pct, generators.max_voltage_dip_pct, generators.ups_rectifier_walk_in_s, generators.ups_input_current_thd_pct, battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_of_life_capacity_factor, battery.temperature_correction_factor, battery.constant_power_discharge_data",
+      "values": {
+        "pending": [
+          "equipment.generator_esp_rating",
+          "equipment.generator_cop_rating",
+          "generators.prp_max_average_load_factor_pct",
+          "generators.operating_hours_restriction",
+          "generators.overload_capability",
+          "generators.max_step_load_pct",
+          "generators.max_frequency_dip_pct",
+          "generators.max_voltage_dip_pct",
+          "generators.ups_rectifier_walk_in_s",
+          "generators.ups_input_current_thd_pct",
+          "battery.dc_bus_voltage_v",
+          "battery.inverter_efficiency_pct",
+          "battery.end_of_life_capacity_factor",
+          "battery.temperature_correction_factor",
+          "battery.constant_power_discharge_data"
+        ]
+      },
+      "next_action": "Obtain the data sheets and enter the values with their source."
+    },
+    {
+      "id": "inputs_deferred",
+      "title": "Inputs needed in later stages",
+      "status": "NOT VERIFIED",
+      "detail": "installation.cable_installation_method (Stage 4); earthing.earthing_system_type (Stage 5); earthing.soil_resistivity (Stage 5)",
+      "values": {
+        "deferred": [
+          {
+            "id": "installation.cable_installation_method",
+            "stage": 4
+          },
+          {
+            "id": "earthing.earthing_system_type",
+            "stage": 5
+          },
+          {
+            "id": "earthing.soil_resistivity",
+            "stage": 5
+          }
+        ]
+      },
+      "next_action": "Supply these before the stage that needs them. Release stays blocked from approval while any remain."
+    },
+    {
+      "id": "pue_arithmetic",
+      "title": "Facility demand equals IT load times target PUE",
+      "status": "PASS",
+      "detail": "2000 kW x 1.35 = 2,700.0 kW against 2700 kW stated (0.00 % apart).",
+      "values": {
+        "it_kw": 2000,
+        "target_pue": 1.35,
+        "expected_demand_kw": 2700.0,
+        "stated_demand_kw": 2700,
+        "difference_pct": 0.0
+      },
+      "next_action": ""
+    },
+    {
+      "id": "lv_phase_relation",
+      "title": "LV line and phase voltages are consistent",
+      "status": "PASS",
+      "detail": "400 V / 230 V = 1.739 against sqrt(3) = 1.732.",
+      "values": {
+        "ratio": 1.7391304347826086,
+        "sqrt3": 1.7320508075688772
+      },
+      "next_action": ""
+    },
+    {
+      "id": "lv_voltage_frequency",
+      "title": "LV voltage and frequency pairing",
+      "status": "NOT VERIFIED",
+      "detail": "400/230 V at 60 Hz is an unusual pairing. The project owner's decision is recorded and has not been independently verified: Project owner selected 400/230 V at 60 Hz for this reference project and stated that the serving utility confirmed it. Not independently verified.",
+      "values": {
+        "lv_line_voltage_v": 400,
+        "frequency_hz": 60
+      },
+      "next_action": "For a real project, obtain the serving utility's written confirmation."
+    },
+    {
+      "id": "equipment_vs_paths",
+      "title": "Equipment quantities divide evenly between power paths",
+      "status": "PASS",
+      "detail": "Transformer and UPS quantities divide evenly between 2 paths.",
+      "values": {
+        "paths": 2
+      },
+      "next_action": ""
+    },
+    {
+      "id": "transformer_secondary_current",
+      "title": "Transformer secondary full-load current",
+      "status": "NOT VERIFIED",
+      "detail": "3150 kVA at 400 V gives 4,547 A. Whether LV switchgear and busduct exist at this current, and the prospective fault level, must be verified in Stages 4 and 5. No limit is applied here.",
+      "values": {
+        "rating_kva": 3150,
+        "lv_voltage_v": 400,
+        "full_load_current_a": 4546.633369868303
+      },
+      "next_action": "Verify LV equipment availability and fault level with manufacturer data."
+    },
+    {
+      "id": "load_it_matches_design_basis",
+      "title": "IT load in the schedule matches the design basis",
+      "status": "PASS",
+      "detail": "Connected IT load in the schedule 2,000.0 kW against the design basis 2000 kW.",
+      "values": {
+        "schedule_kw": 2000.0,
+        "design_basis_kw": 2000
+      },
+      "next_action": ""
+    },
+    {
+      "id": "load_pue_vs_target",
+      "title": "Design-point PUE against the target",
+      "status": "PASS",
+      "detail": "Design-point PUE 1.349 against a target of 1.35. A design-point power ratio under the stated assumptions, not an annual energy PUE.",
+      "values": {
+        "pue": 1.3486698333333336,
+        "target": 1.35
+      },
+      "next_action": ""
+    },
+    {
+      "id": "load_demand_vs_initial_estimate",
+      "title": "Load model against the initial facility demand estimate",
+      "status": "PASS",
+      "detail": "Load model 2,697.3 kW against the initial estimate 2700 kW (-0.10 %). The initial estimate is not adjusted to match. 2 % is a review trigger, not an engineering limit.",
+      "values": {
+        "model_kw": 2697.339666666667,
+        "initial_estimate_kw": 2700,
+        "difference_pct": -0.09853086419751114
+      },
+      "next_action": ""
+    },
+    {
+      "id": "load_pf_vs_design",
+      "title": "Facility power factor against the design assumption",
+      "status": "PASS",
+      "detail": "Facility power factor 0.941 against the design assumption 0.95. 0.02 is a review trigger, not an engineering limit.",
+      "values": {
+        "model_pf": 0.9412842468999018,
+        "design_pf": 0.95
+      },
+      "next_action": ""
+    },
+    {
+      "id": "load_path_allocation_consistent",
+      "title": "A/B path allocation adds up to the facility load",
+      "status": "PASS",
+      "detail": "Path A 1,348.7 kW + path B 1,348.7 kW against 2,697.3 kW. A software consistency check, not an engineering verification.",
+      "values": {
+        "path_a_kw": 1348.6698333333336,
+        "path_b_kw": 1348.6698333333336,
+        "facility_kw": 2697.339666666667
+      },
+      "next_action": ""
+    },
+    {
+      "id": "transformer_loading",
+      "title": "Transformer loading, worst credible contingency",
+      "status": "WARNING",
+      "detail": "Worst credible case TX-PATH-OUT: 2,866 kVA on 1 x 3,150 kVA derated = 3,150 kVA, loading 91.0 % (target 90 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 3,184 kVA (suggested size 4,000). ",
+      "values": {
+        "worst_scenario": "TX-PATH-OUT",
+        "loading_pct": 90.97127777273506,
+        "target_pct": 90.0,
+        "limit_pct": 100.0,
+        "derating": {
+          "ambient": 1.0,
+          "altitude": 1.0,
+          "installation": 1.0,
+          "combined": 1.0
+        },
+        "scenarios": [
+          {
+            "id": "TX-NORMAL",
+            "credible": true,
+            "load": 1432.7976249205774,
+            "units": 1,
+            "capacity_total": 3150.0,
+            "loading_pct": 45.48563888636753,
+            "status": "PASS"
+          },
+          {
+            "id": "TX-PATH-OUT",
+            "credible": true,
+            "load": 2865.595249841155,
+            "units": 1,
+            "capacity_total": 3150.0,
+            "loading_pct": 90.97127777273506,
+            "status": "WARNING"
+          }
+        ],
+        "required_rating_each_for_target": 3183.9947220457275,
+        "required_rating_each_for_limit": 2865.595249841155,
+        "suggested_size_for_target": 4000.0,
+        "missing_manufacturer_data": []
+      },
+      "next_action": "Above the preferred target: review the concept or accept the exception in the design record."
+    },
+    {
+      "id": "ups_loading_kw",
+      "title": "UPS loading in kW, worst credible contingency",
+      "status": "PASS",
+      "detail": "Worst credible case UPS-PATH-OUT: 2,000 kW on 1 x 2,500 kW derated = 2,500 kW, loading 80.0 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 2,500 kW (suggested size 2,500). ",
+      "values": {
+        "worst_scenario": "UPS-PATH-OUT",
+        "loading_pct": 80.0,
+        "target_pct": 80.0,
+        "limit_pct": 100.0,
+        "derating": {
+          "ambient": 1.0,
+          "altitude": 1.0,
+          "installation": 1.0,
+          "combined": 1.0
+        },
+        "scenarios": [
+          {
+            "id": "UPS-NORMAL",
+            "credible": true,
+            "load": 1000.0,
+            "units": 1,
+            "capacity_total": 2500.0,
+            "loading_pct": 40.0,
+            "status": "PASS"
+          },
+          {
+            "id": "UPS-PATH-OUT",
+            "credible": true,
+            "load": 2000.0,
+            "units": 1,
+            "capacity_total": 2500.0,
+            "loading_pct": 80.0,
+            "status": "PASS"
+          }
+        ],
+        "required_rating_each_for_target": 2500.0,
+        "required_rating_each_for_limit": 2000.0,
+        "suggested_size_for_target": 2500.0,
+        "missing_manufacturer_data": []
+      },
+      "next_action": ""
+    },
+    {
+      "id": "ups_loading_kva",
+      "title": "UPS loading in kVA, worst credible contingency",
+      "status": "WARNING",
+      "detail": "Worst credible case UPS-PATH-OUT: 2,105 kVA on 1 x 2,500 kVA derated = 2,500 kVA, loading 84.2 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 2,632 kVA (suggested size 3,000). ",
+      "values": {
+        "worst_scenario": "UPS-PATH-OUT",
+        "loading_pct": 84.21052631578948,
+        "target_pct": 80.0,
+        "limit_pct": 100.0,
+        "derating": {
+          "ambient": 1.0,
+          "altitude": 1.0,
+          "installation": 1.0,
+          "combined": 1.0
+        },
+        "scenarios": [
+          {
+            "id": "UPS-NORMAL",
+            "credible": true,
+            "load": 1052.6315789473686,
+            "units": 1,
+            "capacity_total": 2500.0,
+            "loading_pct": 42.10526315789474,
+            "status": "PASS"
+          },
+          {
+            "id": "UPS-PATH-OUT",
+            "credible": true,
+            "load": 2105.263157894737,
+            "units": 1,
+            "capacity_total": 2500.0,
+            "loading_pct": 84.21052631578948,
+            "status": "WARNING"
+          }
+        ],
+        "required_rating_each_for_target": 2631.5789473684213,
+        "required_rating_each_for_limit": 2105.263157894737,
+        "suggested_size_for_target": 3000.0,
+        "missing_manufacturer_data": []
+      },
+      "next_action": "Above the preferred target: review the concept or accept the exception in the design record."
+    },
+    {
+      "id": "generator_loading",
+      "title": "Generator loading, worst credible N+1 contingency",
+      "status": "PASS",
+      "detail": "Worst credible case GEN-PATH-OUT: 2,854 kVA on 3 x 2,000 kVA derated = 6,000 kVA, loading 47.6 % (target 80 %, maximum 100 %). Preliminary: ideal-condition derating assumptions, no overload used. Rating per unit to meet the target 1,189 kVA (suggested size 1,250). ",
+      "values": {
+        "worst_scenario": "GEN-PATH-OUT",
+        "loading_pct": 47.57403802145893,
+        "target_pct": 80.0,
+        "limit_pct": 100.0,
+        "derating": {
+          "ambient": 1.0,
+          "altitude": 1.0,
+          "installation": 1.0,
+          "combined": 1.0
+        },
+        "scenarios": [
+          {
+            "id": "GEN-NORMAL",
+            "credible": true,
+            "load": 1427.221140643768,
+            "units": 3,
+            "capacity_total": 6000.0,
+            "loading_pct": 23.787019010729466,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-PATH-OUT",
+            "credible": true,
+            "load": 2854.442281287536,
+            "units": 3,
+            "capacity_total": 6000.0,
+            "loading_pct": 47.57403802145893,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-UNIT-OUT",
+            "credible": true,
+            "load": 1427.221140643768,
+            "units": 2,
+            "capacity_total": 4000.0,
+            "loading_pct": 35.6805285160942,
+            "status": "PASS"
+          },
+          {
+            "id": "GEN-PATH-OUT-UNIT-OUT",
+            "credible": false,
+            "load": 2854.442281287536,
+            "units": 2,
+            "capacity_total": 4000.0,
+            "loading_pct": 71.3610570321884,
+            "status": "NOT APPLICABLE"
+          }
+        ],
+        "required_rating_each_for_target": 1189.3509505364732,
+        "required_rating_each_for_limit": 951.4807604291786,
+        "suggested_size_for_target": 1250.0,
+        "missing_manufacturer_data": [
+          "generators.prp_max_average_load_factor_pct",
+          "generators.operating_hours_restriction",
+          "generators.max_step_load_pct",
+          "generators.max_frequency_dip_pct",
+          "generators.max_voltage_dip_pct",
+          "generators.ups_rectifier_walk_in_s",
+          "generators.ups_input_current_thd_pct",
+          "generators.overload_capability"
+        ]
+      },
+      "next_action": ""
+    },
+    {
+      "id": "generator_step_load",
+      "title": "Generator load steps and transient performance",
+      "status": "NOT VERIFIED",
+      "detail": "Upper-bound steps: STEP-1 2,215 kVA (36.9 % of running capacity), STEP-2 601 kVA (10.0 % of running capacity), STEP-3 41 kVA (0.7 % of running capacity). Upper bound: each block applied at once at its steady-state demand. Soft starting, rectifier walk-in and sequencing are not modelled. Transient performance is not verified: manufacturer step, dip, walk-in and harmonic data are required.",
+      "values": {
+        "blocks": [
+          {
+            "id": "STEP-1",
+            "description": "UPS input (IT load and UPS losses)",
+            "step_kva": 2214.9122807017548,
+            "cumulative_kva": 2214.9122807017548,
+            "percent_of_running_capacity": 36.91520467836258
+          },
+          {
+            "id": "STEP-2",
+            "description": "Mechanical and cooling plant",
+            "step_kva": 601.4754288143025,
+            "cumulative_kva": 2813.180617172338,
+            "percent_of_running_capacity": 10.024590480238375
+          },
+          {
+            "id": "STEP-3",
+            "description": "Lighting, small power and auxiliary",
+            "step_kva": 41.497153405369744,
+            "cumulative_kva": 2854.442281287536,
+            "percent_of_running_capacity": 0.691619223422829
+          }
+        ],
+        "requirements": [
+          "Manufacturer maximum single load step (%) at the site conditions",
+          "Frequency and voltage dip limits of the loads and the UPS during a step",
+          "UPS rectifier walk-in time and input harmonic current on generator supply",
+          "Generator transient response (frequency and voltage recovery) for the proposed step sequence",
+          "Motor starting current and method for each mechanical load",
+          "Harmonic voltage distortion with the UPS rectifier load, and the effect on the alternator rating"
+        ],
+        "max_step_load_pct": null
+      },
+      "next_action": "Obtain the manufacturer's step-load and UPS interaction data."
+    },
+    {
+      "id": "generator_prp_load_factor",
+      "title": "Generator PRP load-factor and operating-hour limits",
+      "status": "NOT VERIFIED",
+      "detail": "Worst credible loading 47.6 % is an upper bound on the average load factor during an outage. The manufacturer's average load factor limit and operating-hour restriction for the PRP rating are not yet supplied.",
+      "values": {
+        "missing": [
+          "generators.prp_max_average_load_factor_pct",
+          "generators.operating_hours_restriction"
+        ]
+      },
+      "next_action": "Record the manufacturer's PRP load factor and hour restrictions."
+    },
+    {
+      "id": "battery_sizing",
+      "title": "Battery sizing",
+      "status": "NOT VERIFIED",
+      "detail": "2,000 kW for 10 min is 333 kWh at the UPS output (arithmetic, not a battery size). No battery is sized without the manufacturer's constant-power discharge data. Missing: battery.dc_bus_voltage_v, battery.inverter_efficiency_pct, battery.end_of_life_capacity_factor, battery.temperature_correction_factor, battery.design_margin_factor, battery.constant_power_discharge_data.",
+      "values": {
+        "energy_at_ups_output_kwh": 333.3333333333333,
+        "missing": [
+          "battery.dc_bus_voltage_v",
+          "battery.inverter_efficiency_pct",
+          "battery.end_of_life_capacity_factor",
+          "battery.temperature_correction_factor",
+          "battery.design_margin_factor",
+          "battery.constant_power_discharge_data"
+        ]
+      },
+      "next_action": "Obtain the battery manufacturer's constant-power discharge data."
+    },
+    {
+      "id": "derating_factors",
+      "title": "Derating factors",
+      "status": "NOT VERIFIED",
+      "detail": "10 derating factor(s) are placeholders of 1.00 for ideal conditions (30 degC, 0 m): no derating is applied. Replace them with the manufacturer's values at the site conditions: derating.transformer_ambient_factor, derating.transformer_altitude_factor, derating.transformer_installation_factor, derating.ups_ambient_factor, derating.ups_altitude_factor, derating.ups_installation_factor, derating.generator_ambient_factor, derating.generator_altitude_factor, derating.generator_installation_factor, derating.transformer_contingency_factor",
+      "values": {
+        "placeholders": [
+          "derating.transformer_ambient_factor",
+          "derating.transformer_altitude_factor",
+          "derating.transformer_installation_factor",
+          "derating.ups_ambient_factor",
+          "derating.ups_altitude_factor",
+          "derating.ups_installation_factor",
+          "derating.generator_ambient_factor",
+          "derating.generator_altitude_factor",
+          "derating.generator_installation_factor",
+          "derating.transformer_contingency_factor"
+        ]
+      },
+      "next_action": "Obtain the manufacturers' derating data for the site conditions."
+    }
+  ]
+}

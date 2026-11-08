@@ -1,0 +1,11 @@
+# Document revision convention for the OHM-DC-2000 package.
+#   Revision   the package (design basis) revision, e.g. A5. It changes when the master configuration changes.
+#   Issue      the document's own preliminary issue, P1, P2, ... It changes when the document's content is reissued.
+#   Neither is an approval. No document in this package carries an approved issue.
+# A document with no entry below is at issue P1. Add an entry when a document is reissued; keep the history.
+schema_version: 1
+default_issue: P1
+overrides: {}
+history:
+- date: 2026-11-06
+  note: First preliminary issue (P1) of the specification templates, customer README, commercial licence draft, master index, reviewer checklist and review guide.

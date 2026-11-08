@@ -1,0 +1,19 @@
+# Accepted design-target exceptions. An exception NEVER turns a WARNING into a PASS. The check keeps its status and is annotated.
+# An exception covers a result only up to accepted_ceiling_pct. A result above it is reported as not covered and needs re-review.
+schema_version: 1
+exceptions:
+  - id: EX-001
+    check_id: transformer_loading
+    title: Surviving transformer above the 90 % preferred design target
+    accepted_ceiling_pct: 91.0
+    basis: The 90 % is a preferred design target, not an absolute equipment operating limit. The maximum is 100 % of the site-derated continuous rating.
+    accepted_by: Project owner
+    accepted_date: 2026-11-05
+    status: CONDITIONALLY ACCEPTED
+    conditions:
+      - Loading is calculated against the site-derated continuous rating, not automatically the nameplate rating.
+      - The surviving transformer must support the worst credible contingency load without exceeding its applicable continuous rating.
+      - The exception holds only while the result stays at or below the accepted ceiling.
+    verification_action: Independent technical verification against the manufacturer's rating, cooling class, derating and loss data.
+    verified_by: null
+    verification_date: null

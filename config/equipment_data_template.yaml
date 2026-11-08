@@ -1,0 +1,17 @@
+# Template for manufacturer-specific equipment data. Copy an entry per equipment item and fill it from the data sheet.
+# No value here is real: every field is null until the data sheet supplies it.
+schema_version: 1
+equipment_template:
+  tag: null
+  description: null
+  manufacturer: null
+  model: null
+  datasheet_reference: null
+  rated_voltage_v: null
+  rated_current_a: null
+  rated_power: { value: null, unit: null }
+  short_circuit_rating_ka: null
+  status: MANUFACTURER_DATA
+  technical_status: PENDING
+  procurement_status: NOT_STARTED
+  remarks: null

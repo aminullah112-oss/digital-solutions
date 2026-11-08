@@ -1,0 +1,245 @@
+schema_version: 1
+revisions:
+- revision: A0
+  date: 2026-11-05
+  description: Initial design basis from the master prompt. IT load 2,000 kW, facility
+    demand estimate 2,700 kW, preliminary equipment concept, all values assumptions.
+  changed_parameters: {}
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes: {}
+  reviewer: null
+  review_status: NOT REVIEWED
+- revision: A1
+  date: 2026-11-05
+  description: Stage 3 policies. Loading targets and maxima per equipment type (project
+    owner decision), PRP as the generator sizing basis, derating placeholders for
+    ideal conditions, demand data section, no change to the 2,000 kW IT load or the
+    equipment concept.
+  changed_parameters:
+    design_criteria: Loading targets and maxima added (transformer 90/100 %, UPS 80/100
+      %, generator 80/100 %).
+    generators.rating_basis:
+    - null
+    - PRP
+    demand_data: Section added. general.it_critical_load and general.estimated_facility_demand
+      now read from it.
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes:
+    transformer_loading:
+    - NOT VERIFIED
+    - WARNING
+    ups_loading_kva:
+    - NOT VERIFIED
+    - WARNING
+    ups_loading_kw:
+    - NOT VERIFIED
+    - PASS
+    generator_loading:
+    - NOT VERIFIED
+    - PASS
+  reviewer: null
+  review_status: NOT REVIEWED
+- revision: A2
+  date: '2026-11-05'
+  description: Stage 4. EX-001 conditional acceptance of transformer loading at 91.0
+    percent, generator kW check, distribution framework (cables, busduct, switchgear
+    data checks), manufacturer-data register, manufacturer-verification flags. No
+    change to loads or equipment concept.
+  changed_parameters:
+    cable_data.conductor_operating_temperature:
+    - null
+    - 90.0
+    cable_data.lv_reactance_ohm_per_km:
+    - null
+    - 0.08
+    cable_data.mv_reactance_ohm_per_km:
+    - null
+    - 0.1
+    design_criteria.busduct_max_loading:
+    - null
+    - 100.0
+    design_criteria.cable_max_loading:
+    - null
+    - 100.0
+    design_criteria.switchgear_max_loading:
+    - null
+    - 100.0
+    design_criteria.voltage_drop_limit_pct:
+    - null
+    - 3.0
+    equipment.generator_rating_power_factor:
+    - null
+    - 0.8
+    equipment.ups_input_power_factor:
+    - null
+    - 0.99
+    generators.largest_unit_loss_required:
+    - null
+    - true
+    generators.rating_basis_confirmed:
+    - null
+    - false
+    installation.cable_installation_method:
+    - null
+    - Single-core cables in trefoil on ventilated cable tray in air
+  load_changes: {}
+  equipment_sizing_changes:
+    generator_kw:
+      worst_loading_pct:
+      - null
+      - 55.98415972222222
+      status:
+      - NOT VERIFIED
+      - PASS
+      required_rating_each_for_target:
+      - null
+      - 1119.6831944444443
+      required_rating_each_for_limit:
+      - null
+      - 895.7465555555556
+  check_status_changes:
+    cable_voltage_drop:
+    - NOT VERIFIED
+    - PASS
+    generator_loading_kw:
+    - NOT VERIFIED
+    - PASS
+    manufacturer_register:
+    - FAIL
+    - NOT VERIFIED
+  reviewer: null
+  review_status: NOT REVIEWED
+- revision: A3
+  date: '2026-11-05'
+  description: Stage 5. Short-circuit levels (IEC 60909 placeholders), equipment and
+    cable withstand checks, protection device data requirements, earthing screening
+    (TN-S and 100 ohm.m assumed). No change to loads or equipment concept.
+  changed_parameters:
+    earthing.earthing_system_type:
+    - null
+    - TN-S
+    earthing.soil_resistivity:
+    - null
+    - 100
+    earthing_study.grid_area_m2:
+    - null
+    - 2500
+    earthing_study.grid_burial_depth_m:
+    - null
+    - 0.5
+    earthing_study.grid_conductor_length_m:
+    - null
+    - 1200
+    short_circuit.assumed_clearing_time_s:
+    - null
+    - 0.5
+    short_circuit.cable_short_circuit_k_factor:
+    - null
+    - 143
+    short_circuit.generator_parallel_with_utility:
+    - null
+    - false
+    short_circuit.generator_subtransient_reactance_pct:
+    - null
+    - 14
+    short_circuit.generator_x_r_ratio:
+    - null
+    - 20
+    short_circuit.lv_fault_level_limit_ka:
+    - null
+    - 100
+    short_circuit.transformer_x_r_ratio:
+    - null
+    - 8
+    short_circuit.utility_fault_level_mva:
+    - null
+    - 500
+    short_circuit.utility_x_r_ratio:
+    - null
+    - 10
+    short_circuit.voltage_factor_c_max_lv:
+    - null
+    - 1.05
+    short_circuit.voltage_factor_c_max_mv:
+    - null
+    - 1.1
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes:
+    cable_thermal_withstand:
+    - NOT VERIFIED
+    - PASS
+    fault_level_vs_limit:
+    - NOT VERIFIED
+    - PASS
+    inputs_deferred:
+    - NOT VERIFIED
+    - PASS
+  reviewer: null
+  review_status: NOT REVIEWED
+- revision: A4
+  date: '2026-11-05'
+  description: A4. Withdrew invented utility, transformer, generator and site values
+    (utility fault level and X/R, transformer impedance and X/R, generator x''d and
+    X/R, soil resistivity, grid geometry) on project owner instruction. Short-circuit
+    and earthing results now NOT CALCULATED until data is supplied. Added data classes
+    and the data import mechanism.
+  changed_parameters:
+    earthing.soil_resistivity:
+    - 100
+    - null
+    earthing_study.grid_area_m2:
+    - 2500
+    - null
+    earthing_study.grid_burial_depth_m:
+    - 0.5
+    - null
+    earthing_study.grid_conductor_length_m:
+    - 1200
+    - null
+    equipment.transformer_impedance:
+    - 6
+    - null
+    short_circuit.generator_subtransient_reactance_pct:
+    - 14
+    - null
+    short_circuit.generator_x_r_ratio:
+    - 20
+    - null
+    short_circuit.transformer_x_r_ratio:
+    - 8
+    - null
+    short_circuit.utility_fault_level_mva:
+    - 500
+    - null
+    short_circuit.utility_x_r_ratio:
+    - 10
+    - null
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes:
+    cable_thermal_withstand:
+    - PASS
+    - NOT VERIFIED
+    fault_level_vs_limit:
+    - PASS
+    - NOT VERIFIED
+  reviewer: null
+  review_status: NOT REVIEWED
+- revision: A5
+  date: '2026-11-05'
+  description: A5. Retained preliminary concept values (transformer 6 percent impedance
+    restored as a preliminary assumption). Added the four-status model, the data override
+    system with history, and workbooks 04, 05, 06, 08 and 10. No load or equipment
+    concept change.
+  changed_parameters:
+    equipment.transformer_impedance:
+    - null
+    - 6
+  load_changes: {}
+  equipment_sizing_changes: {}
+  check_status_changes: {}
+  reviewer: null
+  review_status: NOT REVIEWED

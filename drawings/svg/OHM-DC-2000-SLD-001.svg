@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1180" width="1700" height="1180">
+<rect width="1700" height="1180" fill="#fff"/>
+<rect x="12" y="12" width="1676" height="1156" fill="none" stroke="#0e171e" stroke-width="2"/>
+<rect x="12" y="12" width="1676" height="34" fill="#b04a00"/>
+<text x="850.0" y="36" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#fff" >PRELIMINARY CONCEPT DIAGRAM: NOT FOR CONSTRUCTION. NOT VERIFIED. ALL RATINGS ARE PRELIMINARY ASSUMPTIONS.</text>
+<circle cx="330" cy="86" r="16" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="358" y="82" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >Utility supply, path A</text>
+<text x="358" y="98" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >13.8 kV, 60 Hz (utility data pending)</text>
+<line x1="330" y1="102" x2="330" y2="138" stroke="#0e171e" stroke-width="2.2" />
+<rect x="321" y="138" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="346" y="151" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >MV-CB-A</text>
+<text x="346" y="166" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >MV incomer</text>
+<line x1="330" y1="156" x2="330" y2="198" stroke="#0e171e" stroke-width="2.2" />
+<rect x="255" y="198" width="150" height="10" fill="#0e171e"/>
+<text x="255" y="191" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >MV-SWG-A</text>
+<text x="255" y="227" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >13.8 kV</text>
+<line x1="330" y1="208" x2="330" y2="252" stroke="#0e171e" stroke-width="2.2" />
+<text x="338" y="246" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-MV-A</text>
+<circle cx="330" cy="274" r="20" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<circle cx="330" cy="296" r="20" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="364" y="279" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >TX-A1</text>
+<text x="364" y="295" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >3,150 kVA, 13.8/0.4 kV, Z 6 %</text>
+<text x="364" y="310" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Preliminary rating and impedance</text>
+<line x1="330" y1="317" x2="330" y2="372" stroke="#0e171e" stroke-width="2.2" />
+<text x="338" y="345" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >BD-TX-A busduct</text>
+<rect x="321" y="372" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="346" y="385" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-TX-A</text>
+<text x="346" y="400" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >LV incomer</text>
+<line x1="330" y1="390" x2="330" y2="438" stroke="#0e171e" stroke-width="2.2" />
+<rect x="70" y="438" width="520" height="10" fill="#0e171e"/>
+<text x="70" y="431" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >LV-MSB-A</text>
+<text x="70" y="467" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >LV main switchboard, 400 V, 3-phase</text>
+<text x="70" y="483" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Fault level: NOT CALCULATED (utility data pending)</text>
+<line x1="140" y1="448" x2="140" y2="520" stroke="#0e171e" stroke-width="2.2" />
+<rect x="131" y="521" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="156" y="534" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-GEN-A</text>
+<text x="156" y="549" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >generator breaker</text>
+<line x1="140" y1="539" x2="140" y2="575" stroke="#0e171e" stroke-width="2.2" />
+<rect x="25" y="575" width="230" height="10" fill="#0e171e"/>
+<text x="25" y="568" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >GENBUS-A</text>
+<text x="25" y="604" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >Generator bus (3 x parallel)</text>
+<line x1="55" y1="585" x2="55" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="55" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="55" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="55" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-A1</text>
+<text x="55" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<line x1="140" y1="585" x2="140" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="140" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="140" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="140" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-A2</text>
+<text x="140" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<line x1="225" y1="585" x2="225" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="225" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="225" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="225" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-A3</text>
+<text x="225" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<text x="20" y="745" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Rating assumed PRP, NOT confirmed. N+1 per path.</text>
+<line x1="460" y1="448" x2="460" y2="500" stroke="#0e171e" stroke-width="2.2" />
+<rect x="451" y="500" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="476" y="513" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-UPS-IN-A</text>
+<text x="476" y="528" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >UPS input</text>
+<line x1="460" y1="518" x2="460" y2="556" stroke="#0e171e" stroke-width="2.2" />
+<rect x="398" y="556" width="124" height="62" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="460.0" y="578" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >UPS-A1</text>
+<text x="460.0" y="596" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,500 kW / 2,500 kVA</text>
+<text x="460.0" y="612" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >96 % (preliminary)</text>
+<line x1="430" y1="618" x2="430" y2="668" stroke="#0e171e" stroke-width="2.2" />
+<rect x="368" y="668" width="124" height="46" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="430.0" y="690" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >BAT-A1</text>
+<text x="430.0" y="708" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >Not sized</text>
+<text x="430.0" y="724" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >no discharge data</text>
+<line x1="500" y1="618" x2="500" y2="760" stroke="#0e171e" stroke-width="2.2" />
+<text x="508" y="742" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-UPS-OUT-A</text>
+<rect x="385" y="760" width="230" height="10" fill="#0e171e"/>
+<text x="385" y="753" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >IT-DIST-A</text>
+<text x="385" y="789" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >IT distribution A</text>
+<line x1="500" y1="770" x2="500" y2="815" stroke="#0e171e" stroke-width="2.2" />
+<rect x="438" y="815" width="124" height="56" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="500.0" y="837" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >IT LOAD A</text>
+<text x="500.0" y="855" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kW total (2N, both paths)</text>
+<line x1="592" y1="448" x2="592" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<text x="600" y="560" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-MECH-A</text>
+<rect x="530" y="640" width="124" height="58" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="592.0" y="662" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >MECH A</text>
+<text x="592.0" y="680" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >Cooling plant</text>
+<text x="592.0" y="696" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >load model</text>
+<circle cx="1180" cy="86" r="16" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1208" y="82" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >Utility supply, path B</text>
+<text x="1208" y="98" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >13.8 kV, 60 Hz (utility data pending)</text>
+<line x1="1180" y1="102" x2="1180" y2="138" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1171" y="138" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1196" y="151" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >MV-CB-B</text>
+<text x="1196" y="166" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >MV incomer</text>
+<line x1="1180" y1="156" x2="1180" y2="198" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1105" y="198" width="150" height="10" fill="#0e171e"/>
+<text x="1105" y="191" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >MV-SWG-B</text>
+<text x="1105" y="227" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >13.8 kV</text>
+<line x1="1180" y1="208" x2="1180" y2="252" stroke="#0e171e" stroke-width="2.2" />
+<text x="1188" y="246" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-MV-B</text>
+<circle cx="1180" cy="274" r="20" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<circle cx="1180" cy="296" r="20" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1214" y="279" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >TX-B1</text>
+<text x="1214" y="295" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >3,150 kVA, 13.8/0.4 kV, Z 6 %</text>
+<text x="1214" y="310" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Preliminary rating and impedance</text>
+<line x1="1180" y1="317" x2="1180" y2="372" stroke="#0e171e" stroke-width="2.2" />
+<text x="1188" y="345" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >BD-TX-B busduct</text>
+<rect x="1171" y="372" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1196" y="385" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-TX-B</text>
+<text x="1196" y="400" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >LV incomer</text>
+<line x1="1180" y1="390" x2="1180" y2="438" stroke="#0e171e" stroke-width="2.2" />
+<rect x="920" y="438" width="520" height="10" fill="#0e171e"/>
+<text x="920" y="431" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >LV-MSB-B</text>
+<text x="920" y="467" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >LV main switchboard, 400 V, 3-phase</text>
+<text x="920" y="483" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Fault level: NOT CALCULATED (utility data pending)</text>
+<line x1="990" y1="448" x2="990" y2="520" stroke="#0e171e" stroke-width="2.2" />
+<rect x="981" y="521" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1006" y="534" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-GEN-B</text>
+<text x="1006" y="549" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >generator breaker</text>
+<line x1="990" y1="539" x2="990" y2="575" stroke="#0e171e" stroke-width="2.2" />
+<rect x="875" y="575" width="230" height="10" fill="#0e171e"/>
+<text x="875" y="568" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >GENBUS-B</text>
+<text x="875" y="604" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >Generator bus (3 x parallel)</text>
+<line x1="905" y1="585" x2="905" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="905" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="905" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="905" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-B1</text>
+<text x="905" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<line x1="990" y1="585" x2="990" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="990" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="990" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="990" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-B2</text>
+<text x="990" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<line x1="1075" y1="585" x2="1075" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<circle cx="1075" cy="662" r="22" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1075" y="667" font-family="Arial, Helvetica, sans-serif" font-size="16" text-anchor="middle" font-weight="bold" fill="#0e171e" >G</text>
+<text x="1075" y="702" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="bold" fill="#0e171e" >GEN-B3</text>
+<text x="1075" y="716" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kVA</text>
+<text x="870" y="745" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#b04a00" >Rating assumed PRP, NOT confirmed. N+1 per path.</text>
+<line x1="1310" y1="448" x2="1310" y2="500" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1301" y="500" width="18" height="18" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1326" y="513" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >ACB-UPS-IN-B</text>
+<text x="1326" y="528" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >UPS input</text>
+<line x1="1310" y1="518" x2="1310" y2="556" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1248" y="556" width="124" height="62" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1310.0" y="578" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >UPS-B1</text>
+<text x="1310.0" y="596" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,500 kW / 2,500 kVA</text>
+<text x="1310.0" y="612" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >96 % (preliminary)</text>
+<line x1="1280" y1="618" x2="1280" y2="668" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1218" y="668" width="124" height="46" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1280.0" y="690" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >BAT-B1</text>
+<text x="1280.0" y="708" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >Not sized</text>
+<text x="1280.0" y="724" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >no discharge data</text>
+<line x1="1350" y1="618" x2="1350" y2="760" stroke="#0e171e" stroke-width="2.2" />
+<text x="1358" y="742" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-UPS-OUT-B</text>
+<rect x="1235" y="760" width="230" height="10" fill="#0e171e"/>
+<text x="1235" y="753" font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="start" font-weight="bold" fill="#0e171e" >IT-DIST-B</text>
+<text x="1235" y="789" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6770" >IT distribution B</text>
+<line x1="1350" y1="770" x2="1350" y2="815" stroke="#0e171e" stroke-width="2.2" />
+<rect x="1288" y="815" width="124" height="56" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1350.0" y="837" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >IT LOAD B</text>
+<text x="1350.0" y="855" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >2,000 kW total (2N, both paths)</text>
+<line x1="1442" y1="448" x2="1442" y2="640" stroke="#0e171e" stroke-width="2.2" />
+<text x="1450" y="560" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="start" font-weight="normal" fill="#5b6770" >CAB-MECH-B</text>
+<rect x="1380" y="640" width="124" height="58" fill="#fff" stroke="#0e171e" stroke-width="2.2"/>
+<text x="1442.0" y="662" font-family="Arial, Helvetica, sans-serif" font-size="14" text-anchor="middle" font-weight="bold" fill="#0e171e" >MECH B</text>
+<text x="1442.0" y="680" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="middle" font-weight="normal" fill="#5b6770" >Cooling plant</text>
+<text x="1442.0" y="696" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#b04a00" >load model</text>
+<text x="330" y="68" font-family="Arial, Helvetica, sans-serif" font-size="20" text-anchor="middle" font-weight="bold" fill="#5b6770" >PATH A</text>
+<text x="1180" y="68" font-family="Arial, Helvetica, sans-serif" font-size="20" text-anchor="middle" font-weight="bold" fill="#5b6770" >PATH B</text>
+<line x1="760" y1="70" x2="760" y2="880" stroke="#0e171e" stroke-width="1.4" stroke-dasharray="6 6"/>
+<text x="760" y="905" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >No electrical tie between paths (2N). Path independence of the two utility supplies is a design decision, not shown.</text>
+<text x="850.0" y="925" font-family="Arial, Helvetica, sans-serif" font-size="11" text-anchor="middle" font-weight="normal" fill="#5b6770" >Equipment in path B is identical to path A (assumed by symmetry). Dual-corded IT loads are fed from both IT distribution boards.</text>
+<rect x="24" y="960" width="1652" height="190" fill="none" stroke="#0e171e" stroke-width="1.5"/>
+<line x1="24" y1="1000" x2="1676" y2="1000" stroke="#0e171e" stroke-width="1" />
+<line x1="1060" y1="960" x2="1060" y2="1150" stroke="#0e171e" stroke-width="1" />
+<text x="40" y="987" font-family="Arial, Helvetica, sans-serif" font-size="17" text-anchor="start" font-weight="bold" fill="#0e171e" >OHMETRY 2 MW DATA CENTRE: PRELIMINARY SINGLE-LINE DIAGRAM</text>
+<text x="1076" y="987" font-family="Arial, Helvetica, sans-serif" font-size="15" text-anchor="start" font-weight="bold" fill="#0e171e" >Drawing OHM-DC-2000-SLD-001   Rev A5</text>
+<text x="40" y="1026" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >1. Generated from the master configuration. Every rating shown is a PRELIMINARY ASSUMPTION or UNVERIFIED PLACEHOLDER (see the registers).</text>
+<text x="40" y="1052" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >2. Fault levels, device ratings, cable sizes, settings and earthing are NOT shown: not calculated or not verified (data pending).</text>
+<text x="40" y="1078" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >3. Generator basis (ISO 8528 PRP) assumed, not confirmed. Battery not sized. Open transition is a design decision.</text>
+<text x="40" y="1104" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >4. Educational and reference use only. Independent review and manufacturer data are needed before any project use.</text>
+<text x="1076" y="1026" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >Project:</text>
+<text x="1290" y="1026" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >OHM-DC-2000</text>
+<text x="1076" y="1052" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >Revision:</text>
+<text x="1290" y="1052" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >A5</text>
+<text x="1076" y="1078" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >Release state:</text>
+<text x="1290" y="1078" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >DEVELOPMENT</text>
+<text x="1076" y="1104" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >Generated:</text>
+<text x="1290" y="1104" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >2026-11-05 07:48 UTC</text>
+<text x="1076" y="1130" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="bold" fill="#0e171e" >Drawn / checked / approved:</text>
+<text x="1290" y="1130" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="start" font-weight="normal" fill="#0e171e" >not assigned / not assigned / not assigned</text>
+</svg>

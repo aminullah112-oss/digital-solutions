@@ -1,0 +1,96 @@
+# Itemised load schedule for OHM-DC-2000. Every item is an ILLUSTRATIVE ASSUMPTION for the sample project (ideal conditions),
+# not a measured or manufacturer value. UPS losses and distribution losses are added by the load model, not listed here.
+# unit_rating_ref reads the rating from the design basis so the number lives in one place.
+schema_version: 2
+load_items:
+- id: IT-1
+  category: it_critical
+  description: IT equipment, all halls (dual-corded)
+  quantity: 1
+  unit_rating_ref: general.it_critical_load
+  power_factor: 0.95
+  demand_factor: 1.0
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: Rating is read from the design basis. Each path carries half in normal operation.
+  on_generator: true
+- id: MC-1
+  category: mechanical_cooling
+  description: Chillers (3 of 4 run)
+  quantity: 4
+  unit_rating_kw: 120
+  power_factor: 0.9
+  demand_factor: 0.75
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: Operating arrangement assumed N+1.
+  on_generator: true
+- id: MC-2
+  category: mechanical_cooling
+  description: CRAH fan units
+  quantity: 20
+  unit_rating_kw: 6
+  power_factor: 0.95
+  demand_factor: 1.0
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: ''
+  on_generator: true
+- id: MC-3
+  category: mechanical_cooling
+  description: Chilled-water and condenser pumps (4 of 6 run)
+  quantity: 6
+  unit_rating_kw: 15
+  power_factor: 0.85
+  demand_factor: 0.67
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: ''
+  on_generator: true
+- id: LS-1
+  category: lighting_small_power
+  description: Lighting
+  quantity: 1
+  unit_rating_kw: 15
+  power_factor: 0.9
+  demand_factor: 0.8
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: ''
+  on_generator: true
+- id: LS-2
+  category: lighting_small_power
+  description: Small power and maintenance sockets
+  quantity: 1
+  unit_rating_kw: 20
+  power_factor: 0.9
+  demand_factor: 0.5
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: Assumed not on the generator (maintenance sockets are not essential).
+  on_generator: false
+- id: AUX-1
+  category: auxiliary
+  description: Fire, security, BMS and EPMS
+  quantity: 1
+  unit_rating_kw: 25
+  power_factor: 0.9
+  demand_factor: 1.0
+  path_a_fraction: 0.5
+  status: ASSUMPTION
+  source: 'Ohmetry illustrative assumption for the sample project (project owner instruction: ideal conditions)'
+  revision: A0
+  notes: ''
+  on_generator: true
