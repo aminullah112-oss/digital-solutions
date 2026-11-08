@@ -41,3 +41,20 @@ New load figures go in `demand_data.*` only. Re-run `validate-config`, `run-calc
 
 ## Limitations
 Illustrative inputs. No manufacturer data. No transient, harmonic, short-circuit or protection analysis. Single derating factor per type. Loads transfer fully in path-out cases. Generator light-load behaviour is not assessed. A passing check shows the code behaves as specified, not that the engineering is correct.
+
+## Architecture functions that are not designed (revision A6)
+
+The single-line diagram OHM-DC-2000-SLD-001 and the `FUNCTIONS` sheet of `03_POWER_ARCHITECTURE.xlsx` list twelve architecture functions. The list is held in `models/architecture.py`, so the drawing, the workbook and the outstanding-items register read the same source.
+
+| Function | Status |
+|---|---|
+| Independence of utility A and utility B | **Not claimed.** Two supplies are drawn; separate feeders, substations and upstream network are not established. |
+| Utility to generator transfer and interlocking (ACB-TX / ACB-GEN) | Concept symbol only. Not designed. |
+| Generator paralleling and synchronising (a breaker per generator, GCB, onto a generator bus) | Concept symbol only. Not designed. |
+| PMS: load sharing and load shedding | Concept symbol only. No shed feeders are selected. |
+| UPS static bypass and maintenance bypass | Concept symbol only. Whether the bypass has its own feed is a design decision. |
+| Battery isolator and DC protection | Concept symbol only. The battery is not sized, so no rating exists. |
+| Protection and measurement boundaries | Not drawn. Relays, CTs, VTs, metering and settings are outside this revision. Arc-flash is out of scope. |
+| Utility point of connection; UPS vendor-scope boundary | Boundary markers, to be agreed. |
+
+The load and sizing results do **not** change because of these symbols. They model steady-state loading on the preliminary ratings; transfer times, synchronising behaviour, step loading and bypass operation are not modelled.

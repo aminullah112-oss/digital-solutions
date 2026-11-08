@@ -8,6 +8,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 
 from ohmetry_dc.calculations import assess_distribution, estimate_loads, size_power_system
 from ohmetry_dc.models import ProjectConfig
+from ohmetry_dc.models.architecture import ARCHITECTURE_FUNCTIONS
 from ohmetry_dc.models import data_status as ds
 from ohmetry_dc.validation import CheckResult
 
@@ -140,7 +141,7 @@ def build_basis_workbook(cfg: ProjectConfig, checks: list[CheckResult], path: st
 # ------------------------------------------------------------------ 03
 def build_architecture_workbook(cfg: ProjectConfig, path: str | Path, stamp: str) -> Path:
     wb, _ = new_workbook(cfg, stamp, "power architecture")
-    ws0, iw, calc, res, rev = _sheets(wb, ["README", "INPUTS", "CALCULATIONS", "RESULTS", "REVISION_LOG"])
+    ws0, iw, calc, res, fn, rev = _sheets(wb, ["README", "INPUTS", "CALCULATIONS", "RESULTS", "FUNCTIONS", "REVISION_LOG"])
     est = estimate_loads(cfg)
     sizing = size_power_system(cfg, est)
     inp = Inputs(iw, "Power architecture: inputs", "Quantities and loads from the master configuration and load estimate (preliminary). Replace with your design.")
@@ -222,6 +223,12 @@ def build_architecture_workbook(cfg: ProjectConfig, path: str | Path, stamp: str
         _put(res, f"B{r}", f_, bold, FILL_RESULT, "0.00")
         _put(res, f"C{r}", pv, base, None, "0.00")
         _put(res, f"D{r}", f'=IF(ABS(B{r}-C{r})<=0.000001,"MATCH","DIFFERENT (inputs changed since generation)")', note)
+    fn["A1"].value, fn["A1"].font = "Architecture functions shown on the single-line diagram (concept only)", title
+    fn["A2"].value, fn["A2"].font = "None of these is designed. They are shown so a reviewer can see what is missing. Utility A/B independence is NOT claimed.", note
+    _header(fn, 4, ["Ref", "Function", "Drawing tags", "Shown as", "Status", "Needed before it can be designed"], [10, 44, 34, 44, 34, 90])
+    for k, a_ in enumerate(ARCHITECTURE_FUNCTIONS):
+        for col, v in zip("ABCDEF", (a_.id, a_.function, a_.drawing_tags, a_.shown_as, a_.status, a_.needed)):
+            _put(fn, f"{col}{5 + k}", v)
     agg = agg_status(inp.status_range())
     _put(res, "A8", "Scenario results (judged scenarios)")
     _put(res, "B8", '=IF(COUNTIF(CALCULATIONS!J5:J10,"FAIL")>0,"FAIL","PASS")', bold)
@@ -232,8 +239,8 @@ def build_architecture_workbook(cfg: ProjectConfig, path: str | Path, stamp: str
     colour_statuses(res, "B8:B10")
     readme(ws0, "Power architecture: " + cfg.project.name, FILES["arch"], cfg, stamp,
            "Normal and maintenance operating modes, load transfer on loss of a path, a UPS or a generator, redundancy checks for the dual-path concept, and the equipment dependency summary.",
-           "Loads are preliminary. Static transfer, switching sequences, load shedding, mechanical plant behaviour and the transfer times are not modelled. Utility supply independence of the two paths is a design decision "
-           "not assessed here.", ["README", "INPUTS", "CALCULATIONS", "RESULTS", "REVISION_LOG"])
+           "Loads are preliminary. Static transfer, switching sequences, generator transfer and interlocking, paralleling and synchronising, PMS and load sharing, load shedding, UPS bypass, battery isolation, protection and metering, and the transfer times are not "
+           "modelled; the FUNCTIONS sheet lists them as concept symbols that are NOT designed. Independence of utility supply A and B is NOT claimed.", ["README", "INPUTS", "CALCULATIONS", "RESULTS", "FUNCTIONS", "REVISION_LOG"])
     revision_sheet(rev, cfg, stamp, FILES["arch"])
     return _save(wb, path)
 

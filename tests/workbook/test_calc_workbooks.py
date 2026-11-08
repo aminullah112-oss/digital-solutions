@@ -436,3 +436,16 @@ def test_fuel_workbook_estimates_nothing_without_the_manufacturer_curve(root, tm
     assert res["B6"].value == pytest.approx(18000 / (3 * per), rel=1e-9) and res["B9"].value.startswith("NOT VERIFIED")
     _set(path, "INPUTS", {f"E{rows['load_pct']}": 110, f"H{rows['load_pct']}": "Test"})
     assert openpyxl.load_workbook(recalc(path, tmp_path / "rc2"), data_only=True)["RESULTS"]["B3"].value == "OUTSIDE CURVE"
+
+
+def test_architecture_workbook_lists_every_concept_function_as_not_designed_and_does_not_claim_utility_independence(root, tmp_path):
+    from openpyxl import load_workbook
+    from ohmetry_dc.models.architecture import ARCHITECTURE_FUNCTIONS
+    cfg = load_config(root / "config" / "project_config.yaml", root / "config" / "load_schedule.yaml")
+    path = build_architecture_workbook(cfg, tmp_path / "w" / ARCH_FILES["arch"], STAMP)
+    ws = load_workbook(path)["FUNCTIONS"]
+    rows = [[c.value for c in r] for r in ws.iter_rows(min_row=5, max_col=6) if r[0].value]
+    assert [r[0] for r in rows] == [a.id for a in ARCHITECTURE_FUNCTIONS]
+    independence = next(r for r in rows if "Independence of utility" in r[1])
+    assert independence[4] == "NOT CLAIMED"
+    assert all(r[4] != "VERIFIED" for r in rows)
