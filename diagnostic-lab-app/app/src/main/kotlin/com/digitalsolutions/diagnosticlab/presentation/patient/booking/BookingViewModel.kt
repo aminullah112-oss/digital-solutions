@@ -47,7 +47,13 @@ class BookingViewModel(
         val scheduledDate: LocalDate? = null,
         val scheduledTimeSlot: String? = null,
         val address: Address? = null,
-        val paymentMethod: PaymentMethod = PaymentMethod.ONLINE,
+        // Defaults to UPI_DIRECT, not ONLINE: Razorpay is still on a test-mode key (see
+        // Secret Manager), so routing a real customer through PaymentMethod.ONLINE right now
+        // would launch Razorpay checkout against a key that can't actually take their money.
+        // UPI_DIRECT is the interim path until the live Razorpay keys are in. ONLINE stays
+        // wired in code (payOnline, functions/src/index.ts) for when that's ready — nothing
+        // to undo here later, just flip the default and the Store listing back.
+        val paymentMethod: PaymentMethod = PaymentMethod.UPI_DIRECT,
         val submitting: Boolean = false,
         val error: String? = null,
         val createdBookingId: String? = null
@@ -166,10 +172,10 @@ class BookingViewModel(
                 scheduledDate = date,
                 scheduledTimeSlot = slot
             )
-            val result = if (s.paymentMethod == PaymentMethod.CASH) {
-                bookingRepository.payCash(bookingId)
-            } else {
-                payOnline(activity, bookingId)
+            val result = when (s.paymentMethod) {
+                PaymentMethod.CASH -> bookingRepository.payCash(bookingId)
+                PaymentMethod.UPI_DIRECT -> bookingRepository.payUpiDirect(bookingId)
+                PaymentMethod.ONLINE -> payOnline(activity, bookingId)
             }
             when (result) {
                 is PaymentGatewayResult.Success ->

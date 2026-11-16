@@ -97,10 +97,20 @@ fun BookingReviewScreen(
             SectionCard("Payment method") {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     PaymentOptionRow(
-                        label = "Pay online now",
-                        selected = state.paymentMethod == PaymentMethod.ONLINE,
-                        onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.ONLINE) }
+                        label = "Pay via UPI / GPay",
+                        selected = state.paymentMethod == PaymentMethod.UPI_DIRECT,
+                        onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.UPI_DIRECT) }
                     )
+                    // TODO(Sheela): confirm the real UPI ID to pay to — this is a placeholder.
+                    if (state.paymentMethod == PaymentMethod.UPI_DIRECT) {
+                        Text(
+                            "Pay ₹${"%.0f".format(state.totalAmount)} to UPI ID medwynlabs@upi " +
+                                "(or scan the QR shown on the next screen), then tap Confirm. " +
+                                "Our team verifies payment before your sample collection visit.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
                     PaymentOptionRow(
                         label = "Cash at collection",
                         selected = state.paymentMethod == PaymentMethod.CASH,
@@ -114,7 +124,7 @@ fun BookingReviewScreen(
             }
             Spacer(Modifier.height(20.dp))
             BigPrimaryButton(
-                text = if (state.paymentMethod == PaymentMethod.ONLINE) "Pay ₹${"%.0f".format(state.totalAmount)} & Confirm" else "Confirm Booking",
+                text = if (state.paymentMethod == PaymentMethod.CASH) "Confirm Booking" else "I've Paid — Confirm Booking",
                 enabled = !state.submitting,
                 onClick = { bookingViewModel.submitAndPay(activity) }
             )

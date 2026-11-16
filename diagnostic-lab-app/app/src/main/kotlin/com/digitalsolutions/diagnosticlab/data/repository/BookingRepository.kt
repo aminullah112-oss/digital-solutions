@@ -134,6 +134,25 @@ class BookingRepository(
         return result
     }
 
+    /** UPI-direct: the patient pays Medwyn Labs' own UPI ID outside the app (GPay/any UPI app)
+     * and the booking is trusted the same way cash is — no gateway signature verifies this
+     * actually happened. Interim path while Razorpay is in test mode; see PaymentGateway.kt. */
+    suspend fun payUpiDirect(bookingId: String): PaymentGatewayResult {
+        val booking = bookingsRef().document(bookingId).get().await()
+        val totalAmount = booking.getDouble("totalAmount") ?: return PaymentGatewayResult.Failure("Booking not found")
+        val result = paymentGateway.charge(totalAmount, PaymentMethod.UPI_DIRECT)
+        bookingsRef().document(bookingId).update(
+            "payment", mapOf(
+                "method" to PaymentMethod.UPI_DIRECT.name,
+                "status" to PaymentStatus.UPI_DIRECT_SELECTED.name,
+                "transactionId" to (result as? PaymentGatewayResult.Success)?.transactionId,
+                "timestampMillis" to System.currentTimeMillis()
+            )
+        ).await()
+        transitionBooking(bookingId, booking.toStatus(), BookingStatus.CONFIRMED, booking.getString("bookedByUserId").orEmpty(), "PATIENT")
+        return result
+    }
+
     // ---------- Online payment (Razorpay) ----------
     //
     // Split into two server round-trips deliberately: creating the order needs the account's
