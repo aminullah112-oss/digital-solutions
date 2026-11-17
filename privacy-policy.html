@@ -175,7 +175,7 @@ footer.foot {
 
 <header class="top">
   <span class="label">Privacy Policy</span>
-  <span class="label" id="updated-label">Last updated 16 November 2026</span>
+  <span class="label" id="updated-label">Last updated 17 November 2026</span>
 </header>
 
 <main>
@@ -217,7 +217,7 @@ footer.foot {
           </tr>
           <tr>
             <td>Payment</td>
-            <td>Transaction ID, amount, payment status</td>
+            <td>Payment method, amount, payment status (and a transaction reference where a payment gateway is used)</td>
             <td>Confirming and recording payment for a booking</td>
           </tr>
           <tr>
@@ -238,7 +238,8 @@ footer.foot {
 
   <section>
     <h2><span class="num">3</span> Payment information</h2>
-    <p>Payments are processed by <strong>Razorpay</strong>, a licensed Indian payment gateway. Card, UPI, and net-banking details are entered directly into Razorpay's own secure checkout screen — they pass through Razorpay, never through our servers or this app's own storage. We only ever receive and store a transaction reference, the amount, and whether the payment succeeded.</p>
+    <p>You can pay in cash when your sample is collected, or by UPI. For UPI, you pay our business UPI ID directly from your own UPI app (for example GPay) — this app never sees or stores your UPI PIN, bank account, or card details. For each booking we record the payment method you chose, the amount, and a payment status.</p>
+    <p>The app does not currently offer card or net-banking checkout. It contains an integration with <strong>Razorpay</strong>, a licensed Indian payment gateway, that may be switched on in future. If that happens, card, UPI, and net-banking details would be entered directly into Razorpay's own secure checkout screen and would not pass through our servers or this app's own storage, and we will update this policy before it is offered.</p>
   </section>
 
   <section>
@@ -246,7 +247,7 @@ footer.foot {
     <ul>
       <li><strong>The diagnostic laboratory fulfilling your booking</strong> — your name, contact details, address, and the tests ordered, so they can collect your sample and deliver your results.</li>
       <li><strong>The phlebotomist assigned to your booking</strong> — your name, address, and contact number, for sample collection.</li>
-      <li><strong>Razorpay</strong> — for payment processing, as described above.</li>
+      <li><strong>Razorpay</strong> — only if online checkout is switched on in future (see section 3); not used for payments at present.</li>
       <li><strong>Google Firebase / Google Cloud</strong> — our backend infrastructure provider. Firebase stores app data, authenticates sign-in via SMS, and delivers push notifications. Google's service terms and privacy practices apply to their handling of this data on our behalf.</li>
       <li><strong>Google's speech recognition service</strong> — only the audio you record when using the optional microphone/dictation feature, processed to return text to the app.</li>
     </ul>
@@ -263,7 +264,7 @@ footer.foot {
     <ul>
       <li>All data in transit between the app and our servers is encrypted (HTTPS/TLS).</li>
       <li>Access to your data is restricted by role: a patient can only see their own bookings and family members' records, a lab can only see bookings assigned to it, and a phlebotomist can only see bookings assigned to them.</li>
-      <li>Payment confirmation is verified server-side against Razorpay's own cryptographic signature before any booking is marked paid — the app itself can never mark a payment successful on its own.</li>
+      <li>Cash and UPI payments are recorded when you confirm your booking, and our team may check them at sample collection. If online checkout through Razorpay is enabled in future, each payment will be verified server-side against Razorpay's own cryptographic signature before a booking is marked paid.</li>
     </ul>
   </section>
 
