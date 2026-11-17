@@ -138,70 +138,76 @@ fun BookingReviewScreen(
     }
 }
 
-/** For a bank account that refuses payment links and typed IDs and only accepts scanned QR
- * payments: shows the QR for the patient to screenshot and scan from their UPI app's gallery
- * option. The QR carries no amount, so the amount to type is spelled out. */
+/** UPI checkout. What shows is decided by config/payment: a pay button that opens the patient's
+ * UPI app with the amount filled in (linkEnabled), and/or the business's QR for accounts that
+ * refuse links and typed IDs and only accept scanned QR payments (qrPayload). The UPI ID stays
+ * visible and selectable either way, as a manual fallback. */
 @Composable
-private fun UpiQrPayment(config: PaymentConfig, qrPayload: String, amount: Double) {
+private fun UpiPaymentDetails(config: PaymentConfig, amount: Double, activity: Activity) {
     val amountText = if (amount % 1.0 == 0.0) "₹${"%.0f".format(amount)}" else "₹${"%.2f".format(amount)}"
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("Scan to pay $amountText", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-        QrCodeImage(qrPayload, Modifier.size(240.dp))
-        Text(config.payeeName, style = MaterialTheme.typography.bodyMedium)
-        SelectionContainer { Text(config.upiId, style = MaterialTheme.typography.bodyLarge) }
         Text(
-            "1. Take a screenshot of this screen.\n" +
-                "2. Open GPay, PhonePe or Paytm, tap Scan, then choose the screenshot from your gallery.\n" +
-                "3. Enter exactly $amountText and pay.\n\n" +
-                "After paying, tap the button below. Keep your payment confirmation handy — our team may ask to see it at sample collection.",
+            "Pay $amountText to ${config.payeeName}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        SelectionContainer { Text(config.upiId, style = MaterialTheme.typography.bodyLarge) }
+        if (config.linkEnabled) {
+            UpiPayButton(config, amount, activity)
+        }
+        config.qrPayload?.let { qr ->
+            Text(
+                if (config.linkEnabled) "Or scan to pay" else "Scan to pay",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            QrCodeImage(qr, Modifier.size(240.dp))
+            Text(
+                "1. Take a screenshot of this screen.\n" +
+                    "2. Open GPay, PhonePe or Paytm, tap Scan, then choose the screenshot from your gallery.\n" +
+                    "3. Enter exactly $amountText and pay.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Text(
+            "After paying, tap the button below. Keep your payment confirmation handy — our team may ask to see it at sample collection.",
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-/** Shows who to pay and opens the patient's UPI app with the amount pre-filled. The UPI ID stays
- * visible and selectable regardless, because some UPI apps decline pre-filled intents to certain
- * accounts — paying by hand to the ID is always a working fallback. */
 @Composable
-private fun UpiPaymentDetails(config: PaymentConfig, amount: Double, activity: Activity) {
-    if (config.qrPayload != null) {
-        UpiQrPayment(config, config.qrPayload, amount)
-        return
-    }
+private fun UpiPayButton(config: PaymentConfig, amount: Double, activity: Activity) {
     var notice by remember { mutableStateOf<String?>(null) }
-    Column(Modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            "Pay ₹${"%.0f".format(amount)} to ${config.payeeName}",
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        SelectionContainer { Text(config.upiId, style = MaterialTheme.typography.bodyLarge) }
-        OutlinedButton(onClick = {
-            val uri = Uri.Builder().scheme("upi").authority("pay")
-                .appendQueryParameter("pa", config.upiId)
-                .appendQueryParameter("pn", config.payeeName)
-                .appendQueryParameter("am", String.format(Locale.US, "%.2f", amount))
-                .appendQueryParameter("cu", "INR")
-                .appendQueryParameter("tn", "Medwyn Labs booking")
-                .build()
-            try {
-                activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
-                notice = null
-            } catch (e: ActivityNotFoundException) {
-                notice = "No UPI app found. Pay to the UPI ID above from any UPI app."
-            }
-        }) { Text("Open UPI app to pay") }
-        notice?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-        Text(
-            "After paying, tap the button below. Keep your payment confirmation handy — our team may ask to see it at sample collection.",
-            style = MaterialTheme.typography.bodySmall
-        )
-    }
+    OutlinedButton(onClick = {
+        try {
+            activity.startActivity(Intent(Intent.ACTION_VIEW, buildUpiLink(config, amount)))
+            notice = null
+        } catch (e: ActivityNotFoundException) {
+            notice = "No UPI app found. Pay to the UPI ID above from any UPI app."
+        }
+    }) { Text("Open UPI app to pay") }
+    notice?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+}
+
+/** The link the pay button opens: the configured template if there is one (some banks accept only
+ * a particular form), otherwise a standard UPI pay link. Locale.US so the decimal is always a dot. */
+private fun buildUpiLink(config: PaymentConfig, amount: Double): Uri {
+    val amountValue = String.format(Locale.US, "%.2f", amount)
+    config.linkTemplate?.let { return Uri.parse(it.replace("{amount}", amountValue)) }
+    return Uri.Builder().scheme("upi").authority("pay")
+        .appendQueryParameter("pa", config.upiId)
+        .appendQueryParameter("pn", config.payeeName)
+        .appendQueryParameter("am", amountValue)
+        .appendQueryParameter("cu", "INR")
+        .appendQueryParameter("tn", "Medwyn Labs booking")
+        .build()
 }
 
 @Composable

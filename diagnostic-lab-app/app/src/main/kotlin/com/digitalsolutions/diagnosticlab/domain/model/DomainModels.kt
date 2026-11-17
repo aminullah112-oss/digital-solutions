@@ -168,9 +168,17 @@ data class Report(
 )
 
 /** Where patients pay by UPI — loaded from Firestore config/payment, see PaymentConfigRepository.
- * [qrPayload] is the bank-issued UPI QR content when the account only accepts scanned QR payments
- * (links and typed IDs get refused); null means the account accepts a pre-filled payment link. */
-data class PaymentConfig(val upiId: String, val payeeName: String, val qrPayload: String? = null)
+ * [qrPayload] is the bank-issued UPI QR content, shown for the patient to scan, for accounts that
+ * refuse payment links. [linkEnabled] shows the pay button that opens the patient's UPI app, and
+ * [linkTemplate] overrides how that link is built ("{amount}" is replaced with the amount) so the
+ * exact form a given bank accepts can be set without an app release. */
+data class PaymentConfig(
+    val upiId: String,
+    val payeeName: String,
+    val qrPayload: String? = null,
+    val linkEnabled: Boolean = true,
+    val linkTemplate: String? = null
+)
 
 data class MedicalRecord(
     val id: String,
