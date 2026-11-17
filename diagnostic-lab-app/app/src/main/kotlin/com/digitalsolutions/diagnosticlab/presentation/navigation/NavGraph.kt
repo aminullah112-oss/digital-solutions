@@ -62,7 +62,7 @@ fun DiagnosticLabNavGraph() {
     // booking starts from PatientHomeScreen/LabListScreen — see BookingViewModel kdoc.
     val bookingViewModel: BookingViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { BookingViewModel(container.catalogRepository, container.bookingRepository, container.patientRepository, container.sessionManager) }
+            initializer { BookingViewModel(container.catalogRepository, container.bookingRepository, container.patientRepository, container.sessionManager, container.paymentConfigRepository) }
         }
     )
 

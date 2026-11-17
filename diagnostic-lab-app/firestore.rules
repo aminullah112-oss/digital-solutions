@@ -180,6 +180,14 @@ service cloud.firestore {
       allow update: if isAdmin();
     }
 
+    // Business payment settings (UPI ID and payee name shown to patients at checkout). Any signed-
+    // in user can read them; only an admin can change them — whoever can write this document can
+    // redirect where patients' UPI payments go, so keep admin access tight.
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
     // Precomputed dashboard aggregate — admin reads it, only Cloud Functions write it.
     match /stats/{doc} {
       allow read: if isAdmin();

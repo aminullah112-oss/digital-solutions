@@ -167,6 +167,9 @@ data class Report(
     val generatedAtMillis: Long?
 )
 
+/** Where patients pay by UPI — loaded from Firestore config/payment, see PaymentConfigRepository. */
+data class PaymentConfig(val upiId: String, val payeeName: String)
+
 data class MedicalRecord(
     val id: String,
     val type: String,

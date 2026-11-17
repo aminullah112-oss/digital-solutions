@@ -6,17 +6,20 @@ import androidx.lifecycle.viewModelScope
 import com.digitalsolutions.diagnosticlab.data.repository.BookingRepository
 import com.digitalsolutions.diagnosticlab.data.repository.CatalogRepository
 import com.digitalsolutions.diagnosticlab.data.repository.PatientRepository
+import com.digitalsolutions.diagnosticlab.data.repository.PaymentConfigRepository
 import com.digitalsolutions.diagnosticlab.data.repository.PaymentGatewayResult
 import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
 import com.digitalsolutions.diagnosticlab.domain.model.Address
 import com.digitalsolutions.diagnosticlab.domain.model.Laboratory
 import com.digitalsolutions.diagnosticlab.domain.model.Patient
+import com.digitalsolutions.diagnosticlab.domain.model.PaymentConfig
 import com.digitalsolutions.diagnosticlab.domain.model.PaymentMethod
 import com.digitalsolutions.diagnosticlab.domain.model.PricedInvestigation
 import com.digitalsolutions.diagnosticlab.domain.model.TestPackage
 import com.digitalsolutions.diagnosticlab.payment.RazorpayCheckoutResult
 import com.digitalsolutions.diagnosticlab.payment.RazorpayResultBridge
 import com.razorpay.Checkout
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +37,8 @@ class BookingViewModel(
     private val catalogRepository: CatalogRepository,
     private val bookingRepository: BookingRepository,
     private val patientRepository: PatientRepository,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val paymentConfigRepository: PaymentConfigRepository
 ) : ViewModel() {
 
     data class UiState(
@@ -47,13 +51,11 @@ class BookingViewModel(
         val scheduledDate: LocalDate? = null,
         val scheduledTimeSlot: String? = null,
         val address: Address? = null,
-        // Defaults to UPI_DIRECT, not ONLINE: Razorpay is still on a test-mode key (see
-        // Secret Manager), so routing a real customer through PaymentMethod.ONLINE right now
-        // would launch Razorpay checkout against a key that can't actually take their money.
-        // UPI_DIRECT is the interim path until the live Razorpay keys are in. ONLINE stays
-        // wired in code (payOnline, functions/src/index.ts) for when that's ready — nothing
-        // to undo here later, just flip the default and the Store listing back.
-        val paymentMethod: PaymentMethod = PaymentMethod.UPI_DIRECT,
+        // Defaults to CASH, the one option that always works; UPI_DIRECT is switched on
+        // automatically once the business's UPI details load (refreshPaymentConfig). ONLINE
+        // (Razorpay) is never offered while its key is still test-mode (see Secret Manager) — it
+        // stays wired in code (payOnline, functions/src/index.ts) for when live keys land.
+        val paymentMethod: PaymentMethod = PaymentMethod.CASH,
         val submitting: Boolean = false,
         val error: String? = null,
         val createdBookingId: String? = null
@@ -81,8 +83,40 @@ class BookingViewModel(
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
+    /** The business's UPI details, or null — then checkout offers cash only. */
+    private val _upiConfig = MutableStateFlow<PaymentConfig?>(null)
+    val upiConfig: StateFlow<PaymentConfig?> = _upiConfig.asStateFlow()
+    private var paymentMethodTouched = false
+
+    init {
+        refreshPaymentConfig()
+    }
+
+    private fun refreshPaymentConfig() {
+        viewModelScope.launch {
+            val config = try {
+                paymentConfigRepository.load()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            _upiConfig.value = config
+            val method = _state.value.paymentMethod
+            if (config != null && !paymentMethodTouched && method == PaymentMethod.CASH) {
+                _state.value = _state.value.copy(paymentMethod = PaymentMethod.UPI_DIRECT)
+            } else if (config == null && method == PaymentMethod.UPI_DIRECT) {
+                _state.value = _state.value.copy(paymentMethod = PaymentMethod.CASH)
+            }
+        }
+    }
+
     fun reset() {
-        _state.value = UiState()
+        paymentMethodTouched = false
+        _state.value = UiState(
+            paymentMethod = if (_upiConfig.value != null) PaymentMethod.UPI_DIRECT else PaymentMethod.CASH
+        )
+        refreshPaymentConfig()
     }
 
     fun selectPatient(patient: Patient) {
@@ -141,6 +175,7 @@ class BookingViewModel(
     }
 
     fun setPaymentMethod(method: PaymentMethod) {
+        paymentMethodTouched = true
         _state.value = _state.value.copy(paymentMethod = method)
     }
 
@@ -155,6 +190,10 @@ class BookingViewModel(
         val slot = s.scheduledTimeSlot ?: return
         val address = s.address ?: return
         if (s.selectedInvestigationIds.isEmpty()) return
+        if (s.paymentMethod == PaymentMethod.UPI_DIRECT && _upiConfig.value == null) {
+            _state.value = s.copy(error = "UPI payment isn't available right now. Please choose another method.")
+            return
+        }
 
         viewModelScope.launch {
             _state.value = s.copy(submitting = true, error = null)

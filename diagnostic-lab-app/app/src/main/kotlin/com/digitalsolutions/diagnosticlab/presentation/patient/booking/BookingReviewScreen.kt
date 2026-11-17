@@ -1,12 +1,16 @@
 package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.digitalsolutions.diagnosticlab.domain.model.PaymentConfig
 import com.digitalsolutions.diagnosticlab.domain.model.PaymentMethod
 import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +37,7 @@ fun BookingReviewScreen(
     onBack: () -> Unit
 ) {
     val state by bookingViewModel.state.collectAsState()
+    val upiConfig by bookingViewModel.upiConfig.collectAsState()
     val activity = LocalContext.current as Activity
 
     LaunchedEffect(state.createdBookingId) {
@@ -96,20 +103,17 @@ fun BookingReviewScreen(
             }
             SectionCard("Payment method") {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    PaymentOptionRow(
-                        label = "Pay via UPI / GPay",
-                        selected = state.paymentMethod == PaymentMethod.UPI_DIRECT,
-                        onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.UPI_DIRECT) }
-                    )
-                    // TODO(Sheela): confirm the real UPI ID to pay to — this is a placeholder.
-                    if (state.paymentMethod == PaymentMethod.UPI_DIRECT) {
-                        Text(
-                            "Pay ₹${"%.0f".format(state.totalAmount)} to UPI ID medwynlabs@upi " +
-                                "(or scan the QR shown on the next screen), then tap Confirm. " +
-                                "Our team verifies payment before your sample collection visit.",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(horizontal = 4.dp)
+                    // Only offered once the business's real UPI details exist in Firestore
+                    // (config/payment) — never a hardcoded or placeholder ID.
+                    upiConfig?.let { upi ->
+                        PaymentOptionRow(
+                            label = "Pay via UPI / GPay",
+                            selected = state.paymentMethod == PaymentMethod.UPI_DIRECT,
+                            onClick = { bookingViewModel.setPaymentMethod(PaymentMethod.UPI_DIRECT) }
                         )
+                        if (state.paymentMethod == PaymentMethod.UPI_DIRECT) {
+                            UpiPaymentDetails(upi, state.totalAmount, activity)
+                        }
                     }
                     PaymentOptionRow(
                         label = "Cash at collection",
@@ -130,6 +134,42 @@ fun BookingReviewScreen(
             )
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+/** Shows who to pay and opens the patient's UPI app with the amount pre-filled. The UPI ID stays
+ * visible and selectable regardless, because some UPI apps decline pre-filled intents to certain
+ * accounts — paying by hand to the ID is always a working fallback. */
+@Composable
+private fun UpiPaymentDetails(config: PaymentConfig, amount: Double, activity: Activity) {
+    var notice by remember { mutableStateOf<String?>(null) }
+    Column(Modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            "Pay ₹${"%.0f".format(amount)} to ${config.payeeName}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        SelectionContainer { Text(config.upiId, style = MaterialTheme.typography.bodyLarge) }
+        OutlinedButton(onClick = {
+            val uri = Uri.Builder().scheme("upi").authority("pay")
+                .appendQueryParameter("pa", config.upiId)
+                .appendQueryParameter("pn", config.payeeName)
+                .appendQueryParameter("am", String.format(Locale.US, "%.2f", amount))
+                .appendQueryParameter("cu", "INR")
+                .appendQueryParameter("tn", "Medwyn Labs booking")
+                .build()
+            try {
+                activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                notice = null
+            } catch (e: ActivityNotFoundException) {
+                notice = "No UPI app found. Pay to the UPI ID above from any UPI app."
+            }
+        }) { Text("Open UPI app to pay") }
+        notice?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Text(
+            "After paying, tap the button below. Keep your payment confirmation handy — our team may ask to see it at sample collection.",
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 

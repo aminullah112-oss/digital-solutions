@@ -84,6 +84,8 @@ class AppContainer(context: Context) {
 
     val reportRepository = ReportRepository(firestore, storage)
 
+    val paymentConfigRepository = PaymentConfigRepository(firestore)
+
     val medicalRecordRepository = MedicalRecordRepository(firestore)
 
     val complaintRepository = ComplaintRepository(firestore, notificationRepository)
