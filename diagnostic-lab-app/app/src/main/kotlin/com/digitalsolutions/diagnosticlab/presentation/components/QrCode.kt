@@ -30,10 +30,13 @@ fun QrCodeImage(content: String, modifier: Modifier = Modifier) {
 }
 
 private fun renderQr(content: String, sizePx: Int): Bitmap {
+    // No CHARACTER_SET hint on purpose: setting one (even UTF-8) makes zxing prepend an ECI header,
+    // which some scanners handle poorly. UPI payloads are plain ASCII (PaymentConfigRepository
+    // rejects anything else), so the default encoding is exact and produces a header-free QR like
+    // the ones UPI apps scan every day.
     val hints = mapOf(
         EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
-        EncodeHintType.MARGIN to 4,
-        EncodeHintType.CHARACTER_SET to "UTF-8"
+        EncodeHintType.MARGIN to 4
     )
     val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
     val pixels = IntArray(sizePx * sizePx) { i ->

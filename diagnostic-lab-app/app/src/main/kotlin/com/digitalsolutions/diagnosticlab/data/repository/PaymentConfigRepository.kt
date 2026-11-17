@@ -56,11 +56,13 @@ class PaymentConfigRepository(private val firestore: FirebaseFirestore) {
         )
     }
 
-    /** True only for a upi:// link that pays [upiId] — anything else means the document is wrong,
-     * and UPI is switched off rather than risk sending money to the wrong place. */
+    /** True only for a plain-ASCII upi:// link that pays [upiId] — anything else means the document
+     * is wrong, and UPI is switched off rather than risk sending money to the wrong place. (ASCII
+     * only because the QR is drawn without a character-set header, see QrCode.kt; UPI links
+     * percent-encode everything else anyway.) */
     private fun paysTo(link: String, upiId: String): Boolean {
         val uri = Uri.parse(link)
-        return link.length <= MAX_LINK_LENGTH && uri.scheme == "upi" &&
+        return link.length <= MAX_LINK_LENGTH && link.all { it.code in 32..126 } && uri.scheme == "upi" &&
             uri.getQueryParameter("pa").equals(upiId, ignoreCase = true)
     }
 
