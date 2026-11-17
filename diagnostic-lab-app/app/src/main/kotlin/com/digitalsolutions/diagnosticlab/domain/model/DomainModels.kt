@@ -161,7 +161,8 @@ data class Report(
     val patientId: String,
     val laboratoryName: String,
     val investigationNames: List<String>,
-    val fileUri: String?,
+    /** Firebase Storage path of the report PDF (reports/{bookingId}/report.pdf), null until uploaded. */
+    val storagePath: String?,
     val status: ReportStatus,
     val generatedAtMillis: Long?
 )

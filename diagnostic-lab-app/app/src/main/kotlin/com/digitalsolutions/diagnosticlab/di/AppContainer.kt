@@ -9,6 +9,7 @@ import com.digitalsolutions.diagnosticlab.notification.SystemNotifier
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -66,6 +67,11 @@ class AppContainer(context: Context) {
     // Firestore triggers and doesn't apply to plain callables like these.
     private val functions = FirebaseFunctions.getInstance()
 
+    // A provider, not an instance: FirebaseStorage.getInstance() throws if the project has no
+    // default Storage bucket, and building it here would take the whole app down at launch
+    // instead of just failing the report upload/download that actually needs it.
+    private val storage: () -> FirebaseStorage = { FirebaseStorage.getInstance() }
+
     val notificationRepository = NotificationRepository(firestore, systemNotifier)
 
     val authRepository = AuthRepository(firebaseAuth, firestore, sessionManager)
@@ -74,9 +80,9 @@ class AppContainer(context: Context) {
 
     val catalogRepository = CatalogRepository(firestore)
 
-    val bookingRepository = BookingRepository(firestore, notificationRepository, paymentGateway, functions)
+    val bookingRepository = BookingRepository(firestore, notificationRepository, paymentGateway, functions, storage)
 
-    val reportRepository = ReportRepository(firestore)
+    val reportRepository = ReportRepository(firestore, storage)
 
     val medicalRecordRepository = MedicalRecordRepository(firestore)
 

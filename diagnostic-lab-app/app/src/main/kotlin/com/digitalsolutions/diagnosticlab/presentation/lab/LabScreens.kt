@@ -35,7 +35,9 @@ import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import com.digitalsolutions.diagnosticlab.presentation.components.StatusChip
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusColor
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.statusLabel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -158,7 +160,29 @@ class LabOrderViewModel(
     fun rejectSample(bookingId: String, reason: SampleRejectionReason, notes: String?, userId: String) =
         viewModelScope.launch { bookingRepository.rejectSample(bookingId, reason, notes, userId) }
     fun startProcessing(bookingId: String, userId: String) = viewModelScope.launch { bookingRepository.startProcessing(bookingId, userId) }
-    fun uploadReport(bookingId: String, fileUri: String, userId: String) = viewModelScope.launch { bookingRepository.uploadReport(bookingId, fileUri, userId) }
+    private val _uploading = MutableStateFlow(false)
+    val uploading: StateFlow<Boolean> = _uploading
+    private val _uploadError = MutableStateFlow<String?>(null)
+    val uploadError: StateFlow<String?> = _uploadError
+
+    /** A real network upload now, so it can fail (weak lab connection, file too large, rules
+     * rejection) — surfaced as a message instead of letting the exception kill the app. */
+    fun uploadReport(bookingId: String, fileUri: String, userId: String) {
+        if (_uploading.value) return
+        viewModelScope.launch {
+            _uploading.value = true
+            _uploadError.value = null
+            try {
+                bookingRepository.uploadReport(bookingId, fileUri, userId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uploadError.value = "Upload failed. Check the connection and try again."
+            } finally {
+                _uploading.value = false
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -170,6 +194,8 @@ fun LabOrderDetailScreen(bookingId: String, onBack: () -> Unit) {
         factory = viewModelFactory { initializer { LabOrderViewModel(container.bookingRepository, bookingId) } }
     )
     val booking by viewModel.booking.collectAsState()
+    val uploading by viewModel.uploading.collectAsState()
+    val uploadError by viewModel.uploadError.collectAsState()
     val session by container.sessionManager.session.collectAsState(initial = null)
     var showRejectDialog by remember { mutableStateOf(false) }
     val userId = session?.userId ?: return
@@ -195,7 +221,17 @@ fun LabOrderDetailScreen(bookingId: String, onBack: () -> Unit) {
                         BigPrimaryButton(text = "Start processing", modifier = Modifier.weight(1f), onClick = { viewModel.startProcessing(bookingId, userId) })
                         BigSecondaryButton(text = "Reject sample", modifier = Modifier.weight(1f), onClick = { showRejectDialog = true })
                     }
-                    BookingStatus.PROCESSING -> BigPrimaryButton(text = "Upload report (PDF)", onClick = { filePicker.launch(arrayOf("application/pdf")) })
+                    BookingStatus.PROCESSING -> Column {
+                        BigPrimaryButton(
+                            text = if (uploading) "Uploading…" else "Upload report (PDF)",
+                            enabled = !uploading,
+                            onClick = { filePicker.launch(arrayOf("application/pdf")) }
+                        )
+                        uploadError?.let {
+                            Spacer(Modifier.height(8.dp))
+                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
                     BookingStatus.REPORT_READY, BookingStatus.REPORT_DELIVERED -> Text("Report uploaded.", style = MaterialTheme.typography.bodyLarge)
                     else -> Text("Waiting for sample to arrive...", style = MaterialTheme.typography.bodyLarge)
                 }

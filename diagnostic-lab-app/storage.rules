@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function me() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+    function bookingOf(bookingId) {
+      return firestore.get(/databases/(default)/documents/bookings/$(bookingId)).data;
+    }
+
+    // Report PDFs live at reports/{bookingId}/report.pdf. Access is decided from the booking
+    // document, not from anything in the file path, so a path can't be guessed into access:
+    // the patient account that owns the booking, the lab the booking belongs to, or an admin.
+    // Only that lab may upload (PDF only, capped at 15 MB), and only an admin may delete —
+    // report files follow the same retention rules as the records they belong to.
+    match /reports/{bookingId}/{fileName} {
+      allow read: if isSignedIn() && (
+        bookingOf(bookingId).patientAccountOwnerUserId == request.auth.uid ||
+        (me().role == 'LABORATORY' && bookingOf(bookingId).laboratoryId == me().linkedEntityId) ||
+        me().role == 'ADMIN'
+      );
+      allow create, update: if isSignedIn() &&
+        me().role == 'LABORATORY' &&
+        bookingOf(bookingId).laboratoryId == me().linkedEntityId &&
+        request.resource.contentType == 'application/pdf' &&
+        request.resource.size < 15 * 1024 * 1024;
+      allow delete: if isSignedIn() && me().role == 'ADMIN';
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,11 +1,14 @@
 package com.digitalsolutions.diagnosticlab.data.repository
 
+import android.net.Uri
 import com.digitalsolutions.diagnosticlab.domain.model.*
 import com.digitalsolutions.diagnosticlab.domain.util.AssignmentStatusMachine
 import com.digitalsolutions.diagnosticlab.domain.util.BookingStatusMachine
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -30,7 +33,8 @@ class BookingRepository(
     private val firestore: FirebaseFirestore,
     private val notificationRepository: NotificationRepository,
     private val paymentGateway: PaymentGateway,
-    private val functions: FirebaseFunctions
+    private val functions: FirebaseFunctions,
+    private val storage: () -> FirebaseStorage
 ) {
 
     private fun bookingsRef() = firestore.collection("bookings")
@@ -287,8 +291,15 @@ class BookingRepository(
         transitionBooking(bookingId, booking.toStatus(), BookingStatus.PROCESSING, labUserId, "LABORATORY")
     }
 
+    /** Uploads the PDF to Storage first, then writes the report record and moves the booking to
+     * REPORT_READY — so a failed upload never leaves a "ready" report with no file behind it.
+     * A retry overwrites the same path, so there's nothing to clean up after a partial failure. */
     suspend fun uploadReport(bookingId: String, fileUri: String, verifiedByUserId: String) {
         val booking = bookingsRef().document(bookingId).get().await()
+        val storagePath = "reports/$bookingId/report.pdf"
+        storage().reference.child(storagePath)
+            .putFile(Uri.parse(fileUri), StorageMetadata.Builder().setContentType("application/pdf").build())
+            .await()
         @Suppress("UNCHECKED_CAST")
         val items = booking.get("items") as? List<Map<String, Any?>> ?: emptyList()
         firestore.collection("reports").document("RPT-$bookingId").set(
@@ -299,7 +310,7 @@ class BookingRepository(
                 "laboratoryId" to booking.getString("laboratoryId").orEmpty(),
                 "laboratoryName" to booking.getString("laboratoryName").orEmpty(),
                 "investigationNames" to items.map { it["name"] as? String ?: "" },
-                "fileUri" to fileUri,
+                "storagePath" to storagePath,
                 "status" to ReportStatus.READY.name,
                 "generatedAtMillis" to System.currentTimeMillis(),
                 "verifiedByUserId" to verifiedByUserId

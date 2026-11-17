@@ -99,6 +99,15 @@ repository and has since been deleted as dead code. Collections include `patient
 `relation`), `bookings`, and `laboratories` (with a per-lab `packages` subcollection for
 bundled fixed-price test panels) — see `firestore.rules` for the full access model.
 
+### Reports
+
+The lab uploads a PDF to Firebase Storage at `reports/{bookingId}/report.pdf`
+(`BookingRepository.uploadReport`), and only then writes the `reports/RPT-{bookingId}`
+Firestore record and moves the booking to `REPORT_READY`. The patient's "View" button downloads
+the file into the app cache and opens it through `FileProvider` in the device's PDF viewer.
+Access is enforced by `storage.rules` (patient owner, the booking's lab, or admin); deploy it
+alongside the Firestore rules with `firebase deploy --only firestore:rules,storage`.
+
 ### Status machines
 
 `BookingStatusMachine` and `AssignmentStatusMachine` (in `domain/util`) are the single

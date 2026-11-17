@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Report PDFs are downloaded here (cache, not external storage) just long enough to hand
+         to the device's PDF viewer through FileProvider. -->
+    <cache-path name="reports" path="reports/" />
+</paths>

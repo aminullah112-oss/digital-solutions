@@ -4,11 +4,30 @@ import com.digitalsolutions.diagnosticlab.domain.model.Report
 import com.digitalsolutions.diagnosticlab.domain.model.ReportStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import java.io.File
 
-class ReportRepository(private val firestore: FirebaseFirestore) {
+/** [storage] is a provider, not an instance, so a missing Storage bucket fails the one call
+ * that needs it instead of crashing the app at startup when AppContainer is built. */
+class ReportRepository(
+    private val firestore: FirebaseFirestore,
+    private val storage: () -> FirebaseStorage
+) {
+
+    /** Downloads the report PDF into [cacheDir]/reports and returns the file. Throws
+     * IllegalStateException (with a user-readable message) if no file was ever uploaded. */
+    suspend fun downloadReport(report: Report, cacheDir: File): File {
+        val path = report.storagePath?.takeIf { it.startsWith("reports/") }
+            ?: throw IllegalStateException("This report's file isn't available yet. Please contact the lab.")
+        val dir = File(cacheDir, "reports").apply { mkdirs() }
+        val file = File(dir, "${report.bookingId}.pdf")
+        storage().reference.child(path).getFile(file).await()
+        return file
+    }
 
     private fun collection() = firestore.collection("reports")
 
@@ -57,7 +76,7 @@ private fun DocumentSnapshot.toReport(): Report? {
         patientId = getString("patientId").orEmpty(),
         laboratoryName = getString("laboratoryName") ?: "Laboratory",
         investigationNames = names,
-        fileUri = getString("fileUri"),
+        storagePath = getString("storagePath"),
         status = runCatching { ReportStatus.valueOf(getString("status") ?: "PENDING") }.getOrDefault(ReportStatus.PENDING),
         generatedAtMillis = getLong("generatedAtMillis")
     )

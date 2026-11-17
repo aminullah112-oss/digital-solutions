@@ -166,6 +166,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-functions-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     // Razorpay's own checkout UI (card/UPI/wallet selection, OTP-based 2FA) — RBI mandates
     // this be a real payment gateway UI, not a plain API call. Order creation and payment
