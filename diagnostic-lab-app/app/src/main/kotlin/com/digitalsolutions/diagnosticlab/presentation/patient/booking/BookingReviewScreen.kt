@@ -2,6 +2,9 @@ package com.digitalsolutions.diagnosticlab.presentation.patient.booking
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
@@ -28,6 +31,7 @@ import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
 import com.digitalsolutions.diagnosticlab.presentation.components.QrCodeImage
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
+import com.digitalsolutions.diagnosticlab.presentation.components.saveQrToGallery
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,9 +170,25 @@ private fun UpiPaymentDetails(config: PaymentConfig, amount: Double, activity: A
                 fontWeight = FontWeight.SemiBold
             )
             QrCodeImage(qr, Modifier.size(240.dp))
+            var saveNotice by remember { mutableStateOf<String?>(null) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = {
+                    saveNotice = if (saveQrToGallery(activity, qr, "medwyn-labs-pay")) {
+                        "Saved to your gallery. Now open GPay, PhonePe or Paytm, tap Scan, then the gallery icon, and pick it."
+                    } else {
+                        "Couldn't save the image. Take a screenshot of this screen instead."
+                    }
+                }) { Text("Save QR to gallery") }
+                OutlinedButton(onClick = {
+                    val cm = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("amount", amountText.removePrefix("₹")))
+                    saveNotice = "Amount copied. Paste it when your UPI app asks for the amount."
+                }) { Text("Copy $amountText") }
+            }
+            saveNotice?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth()) }
             Text(
-                "1. Take a screenshot of this screen.\n" +
-                    "2. Open GPay, PhonePe or Paytm, tap Scan, then choose the screenshot from your gallery.\n" +
+                "1. Tap Save QR to gallery (or take a screenshot of this screen).\n" +
+                    "2. Open GPay, PhonePe or Paytm, tap Scan, then choose the saved image from your gallery.\n" +
                     "3. Enter exactly $amountText and pay.",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth()

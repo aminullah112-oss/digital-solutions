@@ -1,7 +1,11 @@
 package com.digitalsolutions.diagnosticlab.presentation.components
 
 import android.graphics.Bitmap
+import android.content.ContentValues
+import android.content.Context
 import android.graphics.Color
+import android.os.Build
+import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -43,4 +47,31 @@ private fun renderQr(content: String, sizePx: Int): Bitmap {
         if (matrix.get(i % sizePx, i / sizePx)) Color.BLACK else Color.WHITE
     }
     return Bitmap.createBitmap(pixels, sizePx, sizePx, Bitmap.Config.ARGB_8888)
+}
+
+/** Saves [content] as a QR image in the phone's gallery (Pictures/MedwynLabs) so the patient can
+ * pick it from their UPI app's gallery scan without taking a screenshot. Needs no permission on
+ * Android 10+; on older versions returns false and the caller falls back to "take a screenshot". */
+fun saveQrToGallery(context: Context, content: String, name: String): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+    return runCatching {
+        val bitmap = renderQr(content, 800)
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MedwynLabs")
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
+        val ok = resolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } ?: false
+        if (!ok) {
+            resolver.delete(uri, null, null)
+            return false
+        }
+        values.clear()
+        values.put(MediaStore.Images.Media.IS_PENDING, 0)
+        resolver.update(uri, values, null, null)
+        true
+    }.getOrDefault(false)
 }
