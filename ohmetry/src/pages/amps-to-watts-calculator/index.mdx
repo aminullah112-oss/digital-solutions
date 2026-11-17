@@ -1,0 +1,78 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Amps to Watts Calculator (DC, AC, 3-Phase) | Ohmetry"
+description: "Convert amps to watts for DC, single-phase and three-phase AC, with power factor. Formulas and a worked example."
+h1: "Amps to Watts Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Amps to watts"
+---
+import AmpsToWatts from '../../components/AmpsToWatts.tsx';
+import Related from '../../components/Related.astro';
+
+<AmpsToWatts client:load />
+
+Amps measure current. Watts measure power. You can't convert one to the other from the current alone, because power also depends on voltage and, for AC, on how much of the current does useful work. That is why the calculator asks for volts and, on AC, a power factor.
+
+## Formulas
+
+<div class="formula">DC: P = V × I<br/>AC single-phase: P = V × I × PF<br/>AC three-phase: P = √3 × V<sub>LL</sub> × I × PF</div>
+
+P is real power in watts, V is voltage, I is current in amps, and PF is power factor between 0 and 1. For three-phase, V<sub>LL</sub> is the line-to-line voltage, the one you measure between any two phases, and I is the current in each line. The calculator assumes a balanced load.
+
+## Worked example
+
+A single-phase 120 V circuit carries 15 A at a power factor of 0.9.
+
+P = 120 × 15 × 0.9 = 1,620 W, or 1.62 kW.
+
+Now the same current on a 400 V three-phase supply at 0.8 power factor, 10 A per line:
+
+P = 1.732 × 400 × 10 × 0.8 = 5,543 W, or 5.54 kW.
+
+You can enter both sets of numbers above and compare.
+
+## What power factor to use
+
+For resistive loads like heaters and incandescent lamps, use 1. Induction motors typically run at 0.8 to 0.9 near full load and much lower when lightly loaded. Switch-mode power supplies and drives vary widely, so use the nameplate or the measured value. If you don't know it, measure it or take it from the nameplate rather than guessing, because the wattage scales directly with it. To go the other way and find the current for a known power, use the <a href="/kw-to-amps-calculator/">kW to amps calculator</a>.
+
+## Quick reference examples
+
+- **DC:** 5 A at 24 V is 5 × 24 = 120 W.
+- **Single-phase, resistive:** 10 A at 230 V and PF 1 is 2,300 W.
+- **Three-phase motor:** 25 A at 400 V and PF 0.85 is 1.732 × 400 × 25 × 0.85 = 14,722 W.
+
+## Watts versus watt-hours
+
+Watts are an instantaneous rate. Energy is watts multiplied by time, so a 1,620 W load running for two hours uses 3,240 Wh, or 3.24 kWh. This is the figure on an electricity bill. For battery runtime, divide the battery's usable watt-hours by the load in watts.
+
+## Reading an appliance label
+
+Labels give power in different ways. If the label shows watts, use that figure for the real power. If it shows only amps and volts, multiplying them gives volt-amps, which is the upper limit of the real power. The two are equal only when the power factor is 1. The same applies to a breaker or a socket: its amp rating limits the current, so the watts it can supply grow with the voltage, which is why 230 V circuits deliver almost twice the power of 120 V circuits on the same cable.
+
+## Common mistakes
+
+- **Using the wrong voltage on three-phase.** Using the line-to-neutral voltage (for example 230 V) with the √3 formula understates power by a factor of 1.732. Use 400 V with √3, or use three times 230 V × I × PF.
+- **Treating apparent power as real power.** Volt-amps (VA) and watts only match at a power factor of 1. A UPS rated 1,000 VA may deliver 600 to 900 W.
+- **Ignoring DC.** On DC there is no power factor. Choose DC in the supply menu and the field is hidden.
+
+## Questions
+
+### How many watts is 1 amp?
+It depends on voltage. At 120 V it is 120 W for a resistive load, at 230 V it is 230 W, and at 12 V DC it is 12 W.
+
+### Is amps to watts the same as amps to VA?
+Not on AC. VA is V × I with no power factor. Watts include the power factor. On DC and for purely resistive loads they are equal.
+
+### Does this work for a motor?
+Yes for the electrical input power, using the motor's power factor. It does not give shaft output power, which is lower by the motor's efficiency.
+
+### Can I use this for a battery?
+Yes, choose DC. Watts are volts times amps at that instant, and watt-hours need the runtime as well.
+
+<Related items={[
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/ohms-law-calculator/', label: "Ohm's law calculator" },
+]} />

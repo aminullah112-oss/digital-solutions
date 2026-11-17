@@ -1,0 +1,78 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Ohm's Law Calculator | Ohmetry"
+description: "Enter any two of voltage, current, resistance and power to get the other two. Formulas and a worked example included."
+h1: "Ohm's Law Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Ohm's law"
+---
+import OhmsLaw from '../../components/OhmsLaw.tsx';
+import Related from '../../components/Related.astro';
+
+<OhmsLaw client:load />
+
+## Formulas
+
+<div class="formula">V = I × R<br/>P = V × I = I² × R = V² / R</div>
+
+Enter any two of V, I, R, P and the other two follow. All values are for DC or for the RMS values of a purely resistive AC load.
+
+## Worked example
+
+A 6 Ω heating element runs from 12 V. Current is 12 / 6 = 2 A. Power is 12 × 2 = 24 W. Enter 12 V and 6 Ω above to confirm.
+
+## How to use the calculator
+
+Fill in any two of the four boxes and leave the other two empty. The calculator solves for the remaining pair. If you fill in three, it asks you to clear one, because three values over-determine the circuit and may not agree with each other. Values must be positive, and results show to six significant figures.
+
+## All six combinations
+
+Each pair of known values leads to a different pair of formulas:
+
+- **V and I:** R = V / I, P = V × I
+- **V and R:** I = V / R, P = V² / R
+- **V and P:** I = P / V, R = V² / P
+- **I and R:** V = I × R, P = I² × R
+- **I and P:** V = P / I, R = P / I²
+- **R and P:** V = √(P × R), I = √(P / R)
+
+## More worked examples
+
+A 60 W lamp on a 120 V supply: R = 120² / 60 = 240 Ω and I = 60 / 120 = 0.5 A. That 240 Ω is the hot resistance. Measured with a meter while cold, a tungsten filament reads far lower, which is why incandescent lamps draw a surge when switched on.
+
+A 2,300 W heater on 230 V: I = 2,300 / 230 = 10 A and R = 230² / 2,300 = 23 Ω. Check: 10 A × 23 Ω = 230 V.
+
+## Why current matters more than voltage for heating
+
+The form P = I² × R explains why cables get warm. Heat in a conductor rises with the square of the current, so doubling the current quadruples the loss in the same cable. This is the reason conductor size is chosen from the current and not from the voltage.
+
+## Where Ohm's law stops applying
+
+The law holds for a fixed resistance. It does not describe devices whose resistance changes with voltage or temperature, such as diodes, LEDs, and filament lamps (resistance rises with temperature). For AC circuits with inductors or capacitors, replace R with impedance Z, and note that P = V × I then needs the power factor: P = V × I × PF. The <a href="/amps-to-watts-calculator/">amps to watts calculator</a> handles that case. With RMS values on a purely resistive AC load, the formulas on this page apply directly.
+
+## Common mistakes
+
+- **Unit slips.** Milliamps and kilohms are the usual culprits. Convert to amps and ohms first.
+- **Mixing peak and RMS.** Mains is quoted as RMS. A 325 V peak is a 230 V RMS supply.
+- **Using the wrong voltage.** In a series circuit the voltage across one resistor is not the supply voltage.
+
+## Questions
+
+### What is the formula triangle for Ohm's law?
+It is a memory aid with V on top and I and R below. Cover the quantity you want and the other two show the formula, so V = I × R, I = V / R and R = V / I.
+
+### Can Ohm's law be used for AC?
+For resistive loads, yes. For motors, transformers and other reactive loads, use impedance and power factor.
+
+### Does it matter if the current is DC or AC?
+Not for a pure resistance. For DC the formulas always hold.
+
+### What is the unit of resistance?
+The ohm, written Ω, equal to one volt per amp.
+
+<Related items={[
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+]} />
