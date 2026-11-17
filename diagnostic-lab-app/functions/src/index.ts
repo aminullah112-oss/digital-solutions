@@ -573,13 +573,16 @@ const INVESTIGATIONS = [
 ];
 
 /**
- * One-time (safe to re-run — it just overwrites the same doc IDs) catalog seed, replicating
- * the labs/investigations/pricing the customer already reviewed in the demo app. Visit this
- * function's URL once in a browser after deploying to populate Firestore; there's no UI path
- * to seed this data since it's operator-managed catalog content, not something a patient or
- * even the admin role creates through the app itself yet.
+ * One-time catalog seed, replicating the labs/investigations/pricing the customer already
+ * reviewed in the demo app. It OVERWRITES those documents with the built-in sample values, so
+ * running it against a live project resets any prices, packages or lab details edited since —
+ * it is deliberately private: it used to be a public URL with no access check, which let anyone
+ * on the internet reset the production catalog. Only a caller holding Cloud Run invoker rights
+ * (a project owner) can reach it, with an identity token:
+ *   curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" <function URL>
+ * There's no UI path to seed this data since it's operator-managed catalog content.
  */
-export const seedCatalog = onRequest(async (req, res) => {
+export const seedCatalog = onRequest({ invoker: "private" }, async (req, res) => {
   const batch = db.batch();
 
   LABS.forEach((lab) => {
