@@ -167,8 +167,10 @@ data class Report(
     val generatedAtMillis: Long?
 )
 
-/** Where patients pay by UPI — loaded from Firestore config/payment, see PaymentConfigRepository. */
-data class PaymentConfig(val upiId: String, val payeeName: String)
+/** Where patients pay by UPI — loaded from Firestore config/payment, see PaymentConfigRepository.
+ * [qrPayload] is the bank-issued UPI QR content when the account only accepts scanned QR payments
+ * (links and typed IDs get refused); null means the account accepts a pre-filled payment link. */
+data class PaymentConfig(val upiId: String, val payeeName: String, val qrPayload: String? = null)
 
 data class MedicalRecord(
     val id: String,

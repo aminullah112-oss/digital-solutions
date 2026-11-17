@@ -26,6 +26,7 @@ import com.digitalsolutions.diagnosticlab.domain.model.PaymentConfig
 import com.digitalsolutions.diagnosticlab.domain.model.PaymentMethod
 import com.digitalsolutions.diagnosticlab.presentation.components.AddressCard
 import com.digitalsolutions.diagnosticlab.presentation.components.BigPrimaryButton
+import com.digitalsolutions.diagnosticlab.presentation.components.QrCodeImage
 import com.digitalsolutions.diagnosticlab.presentation.components.SectionCard
 import java.util.Locale
 
@@ -137,11 +138,41 @@ fun BookingReviewScreen(
     }
 }
 
+/** For a bank account that refuses payment links and typed IDs and only accepts scanned QR
+ * payments: shows the QR for the patient to screenshot and scan from their UPI app's gallery
+ * option. The QR carries no amount, so the amount to type is spelled out. */
+@Composable
+private fun UpiQrPayment(config: PaymentConfig, qrPayload: String, amount: Double) {
+    val amountText = if (amount % 1.0 == 0.0) "₹${"%.0f".format(amount)}" else "₹${"%.2f".format(amount)}"
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text("Scan to pay $amountText", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        QrCodeImage(qrPayload, Modifier.size(240.dp))
+        Text(config.payeeName, style = MaterialTheme.typography.bodyMedium)
+        SelectionContainer { Text(config.upiId, style = MaterialTheme.typography.bodyLarge) }
+        Text(
+            "1. Take a screenshot of this screen.\n" +
+                "2. Open GPay, PhonePe or Paytm, tap Scan, then choose the screenshot from your gallery.\n" +
+                "3. Enter exactly $amountText and pay.\n\n" +
+                "After paying, tap the button below. Keep your payment confirmation handy — our team may ask to see it at sample collection.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
 /** Shows who to pay and opens the patient's UPI app with the amount pre-filled. The UPI ID stays
  * visible and selectable regardless, because some UPI apps decline pre-filled intents to certain
  * accounts — paying by hand to the ID is always a working fallback. */
 @Composable
 private fun UpiPaymentDetails(config: PaymentConfig, amount: Double, activity: Activity) {
+    if (config.qrPayload != null) {
+        UpiQrPayment(config, config.qrPayload, amount)
+        return
+    }
     var notice by remember { mutableStateOf<String?>(null) }
     Column(Modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
