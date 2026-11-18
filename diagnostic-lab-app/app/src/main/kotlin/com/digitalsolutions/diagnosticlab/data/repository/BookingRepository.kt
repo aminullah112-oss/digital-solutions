@@ -306,6 +306,7 @@ class BookingRepository(
             mapOf(
                 "bookingId" to bookingId,
                 "patientId" to booking.getString("patientId").orEmpty(),
+                "patientName" to booking.getString("patientName").orEmpty(),
                 "patientAccountOwnerUserId" to booking.getString("patientAccountOwnerUserId").orEmpty(),
                 "laboratoryId" to booking.getString("laboratoryId").orEmpty(),
                 "laboratoryName" to booking.getString("laboratoryName").orEmpty(),

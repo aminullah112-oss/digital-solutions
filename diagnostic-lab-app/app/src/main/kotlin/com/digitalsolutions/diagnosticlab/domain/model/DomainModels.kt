@@ -164,7 +164,10 @@ data class Report(
     /** Firebase Storage path of the report PDF (reports/{bookingId}/report.pdf), null until uploaded. */
     val storagePath: String?,
     val status: ReportStatus,
-    val generatedAtMillis: Long?
+    val generatedAtMillis: Long?,
+    /** Who the report is for (a family member can differ from the account holder). Null on
+     * reports uploaded before this field existed. */
+    val patientName: String? = null
 )
 
 /** Where patients pay by UPI — loaded from Firestore config/payment, see PaymentConfigRepository.

@@ -51,6 +51,23 @@ class ReportRepository(
         awaitClose { registration.remove() }
     }
 
+    /** Every report on the account, for all family members. A patient who books for a child still
+     * needs to find the result, even when the child's profile isn't the active one. */
+    fun observeForOwner(ownerUserId: String): Flow<List<Report>> = callbackFlow {
+        val registration = collection().whereEqualTo("patientAccountOwnerUserId", ownerUserId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(
+                    snapshot?.documents.orEmpty().mapNotNull { it.toReport() }
+                        .sortedByDescending { it.generatedAtMillis ?: 0L }
+                )
+            }
+        awaitClose { registration.remove() }
+    }
+
     fun observePendingForLab(laboratoryId: String): Flow<List<Report>> = callbackFlow {
         val registration = collection()
             .whereEqualTo("laboratoryId", laboratoryId)
@@ -78,6 +95,7 @@ private fun DocumentSnapshot.toReport(): Report? {
         investigationNames = names,
         storagePath = getString("storagePath"),
         status = runCatching { ReportStatus.valueOf(getString("status") ?: "PENDING") }.getOrDefault(ReportStatus.PENDING),
-        generatedAtMillis = getLong("generatedAtMillis")
+        generatedAtMillis = getLong("generatedAtMillis"),
+        patientName = getString("patientName")?.takeIf { it.isNotBlank() }
     )
 }

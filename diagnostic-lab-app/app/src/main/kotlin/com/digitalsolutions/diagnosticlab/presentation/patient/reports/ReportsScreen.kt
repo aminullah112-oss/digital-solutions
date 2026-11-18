@@ -50,9 +50,9 @@ class ReportsViewModel(
     private val reportRepository: ReportRepository,
     sessionManager: SessionManager
 ) : ViewModel() {
+    // All reports on the account, not just the active family member's.
     val reports: StateFlow<List<Report>?> = sessionManager.session.filterNotNull()
-        .combine(sessionManager.activePatientId.filterNotNull()) { session, patientId -> session.userId to patientId }
-        .flatMapLatest { (ownerUserId, patientId) -> reportRepository.observeForPatient(ownerUserId, patientId) }
+        .flatMapLatest { reportRepository.observeForOwner(it.userId) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _openingReportId = MutableStateFlow<String?>(null)
@@ -161,7 +161,11 @@ private fun ReportRow(report: Report, opening: Boolean, onView: () -> Unit) {
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(report.investigationNames.joinToString(", "), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(report.laboratoryName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    listOfNotNull(report.patientName, report.laboratoryName).joinToString(" · "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(Modifier.width(8.dp))
             StatusChip(if (ready) "READY" else "PENDING", if (ready) HealthGreen else WarningAmber)
