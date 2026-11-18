@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.digitalsolutions.diagnosticlab.data.repository.ComplaintRepository
 import com.digitalsolutions.diagnosticlab.data.repository.SessionManager
+import com.digitalsolutions.diagnosticlab.data.repository.SupportContact
 import com.digitalsolutions.diagnosticlab.di.LocalAppContainer
 import com.digitalsolutions.diagnosticlab.domain.model.Complaint
 import com.digitalsolutions.diagnosticlab.domain.model.ComplaintCategory
@@ -38,6 +39,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+private const val DEFAULT_SUPPORT_EMAIL = "drsheelafeverlab@gmail.com"
 
 class ComplaintViewModel(
     private val complaintRepository: ComplaintRepository,
@@ -67,6 +70,9 @@ fun HelpSupportScreen(onRaiseComplaint: () -> Unit, onBack: () -> Unit) {
     )
     val complaints by viewModel.complaints.collectAsState()
     val context = LocalContext.current
+    var contact by remember { mutableStateOf<SupportContact?>(null) }
+    LaunchedEffect(Unit) { contact = container.complaintRepository.supportContact() }
+    val supportEmail = contact?.email ?: DEFAULT_SUPPORT_EMAIL
 
     Scaffold(
         topBar = {
@@ -77,12 +83,29 @@ fun HelpSupportScreen(onRaiseComplaint: () -> Unit, onBack: () -> Unit) {
         }
     ) { padding ->
         LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            contact?.phone?.let { phone ->
+                item {
+                    SectionCard("Call us") {
+                        contact?.hours?.let {
+                            Text("Open $it.", style = MaterialTheme.typography.bodyLarge)
+                            Spacer(Modifier.height(12.dp))
+                        }
+                        BigPrimaryButton(text = "Call $phone") {
+                            context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' })))
+                        }
+                    }
+                }
+            }
             item {
-                SectionCard("Call us") {
-                    Text("Our support line is open 7am–9pm every day.", style = MaterialTheme.typography.bodyLarge)
+                SectionCard("Email us") {
+                    Text("Write to $supportEmail and we'll reply as soon as we can.", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(12.dp))
-                    BigPrimaryButton(text = "Call +91 44 2000 1000") {
-                        context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:+914420001000")))
+                    BigPrimaryButton(text = "Send an email") {
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$supportEmail")))
+                        } catch (e: android.content.ActivityNotFoundException) {
+                            // no email app installed; the address above is still shown
+                        }
                     }
                 }
             }

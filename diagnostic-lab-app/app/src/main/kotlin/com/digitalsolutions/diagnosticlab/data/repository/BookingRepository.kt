@@ -328,6 +328,40 @@ class BookingRepository(
         transitionBooking(bookingId, booking.toStatus(), BookingStatus.REPORT_DELIVERED, booking.getString("bookedByUserId").orEmpty(), "PATIENT")
     }
 
+    /** Moves the visit to a new date/time. Only before the lab assistant is on the way. */
+    suspend fun updateSchedule(bookingId: String, date: LocalDate, timeSlot: String, actorUserId: String) {
+        val ref = bookingsRef().document(bookingId)
+        val status = ref.get().await().toStatus()
+        check(BookingStatusMachine.canModifyVisit(status)) { VISIT_LOCKED_MESSAGE }
+        ref.update(mapOf("scheduledDate" to date.toString(), "scheduledTimeSlot" to timeSlot, "updatedAtMillis" to System.currentTimeMillis())).await()
+        recordTrackingEvent(bookingId, status.name, actorUserId, "PATIENT", notes = "Rescheduled to $date, $timeSlot")
+    }
+
+    /** Points the collection visit at another saved address of the same account. Only before the
+     * lab assistant is on the way. */
+    suspend fun updateAddress(bookingId: String, ownerUserId: String, addressId: String, actorUserId: String) {
+        val ref = bookingsRef().document(bookingId)
+        val status = ref.get().await().toStatus()
+        check(BookingStatusMachine.canModifyVisit(status)) { VISIT_LOCKED_MESSAGE }
+        val address = firestore.collection("users").document(ownerUserId)
+            .collection("addresses").document(addressId).get().await()
+        check(address.exists()) { "That address couldn't be found. Please pick another." }
+        val line = listOfNotNull(
+            address.getString("line1"), address.getString("line2"),
+            address.getString("city"), address.getString("state"), address.getString("pincode")
+        ).joinToString(", ")
+        ref.update(
+            mapOf(
+                "addressLabel" to address.getString("label").orEmpty(),
+                "addressLine" to line,
+                "addressLatitude" to address.getDouble("latitude"),
+                "addressLongitude" to address.getDouble("longitude"),
+                "updatedAtMillis" to System.currentTimeMillis()
+            )
+        ).await()
+        recordTrackingEvent(bookingId, status.name, actorUserId, "PATIENT", notes = "Collection address changed to $line")
+    }
+
     suspend fun cancelBooking(bookingId: String, reason: String, cancelledByUserId: String, byLab: Boolean) {
         val bookingRef = bookingsRef().document(bookingId)
         val booking = bookingRef.get().await()
@@ -490,6 +524,9 @@ class BookingRepository(
         ).await()
     }
 }
+
+private const val VISIT_LOCKED_MESSAGE =
+    "The lab assistant is already on the way, so this can no longer be changed here. Please contact support."
 
 data class RazorpayOrder(val orderId: String, val amountPaise: Int, val currency: String, val keyId: String)
 

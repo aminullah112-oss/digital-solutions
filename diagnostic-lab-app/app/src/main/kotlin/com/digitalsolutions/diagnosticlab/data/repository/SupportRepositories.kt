@@ -69,11 +69,27 @@ private fun DocumentSnapshot.toMedicalRecord(): MedicalRecord? {
     )
 }
 
+data class SupportContact(val phone: String?, val email: String?, val hours: String?)
+
 class ComplaintRepository(
     private val firestore: FirebaseFirestore,
     private val notificationRepository: NotificationRepository
 ) {
     private fun collection() = firestore.collection("complaints")
+
+    /** Support contact details from Firestore config/support: { phone, email, hours }. Kept out of
+     * the app so the business can change them without a release. Returns null when no document
+     * exists or it can't be read; the help screen then falls back to email only. */
+    suspend fun supportContact(): SupportContact? = try {
+        val doc = firestore.collection("config").document("support").get().await()
+        if (!doc.exists()) null else SupportContact(
+            phone = doc.getString("phone")?.trim()?.takeIf { it.matches(Regex("^\\+?[0-9 ]{7,16}$")) },
+            email = doc.getString("email")?.trim()?.takeIf { it.contains('@') },
+            hours = doc.getString("hours")?.trim()?.takeIf { it.isNotEmpty() }
+        )
+    } catch (e: Exception) {
+        null
+    }
 
     /**
      * Firestore validates a list/listen query against security rules using the query's own

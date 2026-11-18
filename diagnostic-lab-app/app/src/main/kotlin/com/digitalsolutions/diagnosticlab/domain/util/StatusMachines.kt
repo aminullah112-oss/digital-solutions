@@ -37,6 +37,13 @@ object BookingStatusMachine {
         return index in 0 until forwardFlow.indexOf(BookingStatus.SAMPLE_COLLECTED)
     }
 
+    /** Address and time can be changed until the lab assistant is on the way; after that the visit
+     * is already in motion and a change has to go through support. */
+    fun canModifyVisit(status: BookingStatus): Boolean =
+        status == BookingStatus.PENDING_PAYMENT ||
+            status == BookingStatus.CONFIRMED ||
+            status == BookingStatus.PHLEBOTOMIST_ASSIGNED
+
     fun canTransition(from: BookingStatus, to: BookingStatus): Boolean {
         if (isTerminal(from)) return false
         if (to == BookingStatus.CANCELLED_BY_PATIENT || to == BookingStatus.CANCELLED_BY_LAB) {

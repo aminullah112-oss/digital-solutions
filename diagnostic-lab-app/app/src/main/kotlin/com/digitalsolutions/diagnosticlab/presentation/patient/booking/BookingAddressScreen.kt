@@ -106,6 +106,17 @@ fun BookingAddressScreen(
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
+    AddressPickerScreen(
+        title = "Collection address",
+        onPicked = { address -> bookingViewModel.setAddress(address); onContinue() },
+        onBack = onBack
+    )
+}
+
+/** Pick a saved address or add a new one. Shared by the booking flow and "change address". */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddressPickerScreen(title: String, onPicked: (Address) -> Unit, onBack: () -> Unit) {
     val container = LocalAppContainer.current
     val viewModel: AddressBookViewModel = viewModel(
         factory = viewModelFactory { initializer { AddressBookViewModel(container.patientRepository, container.sessionManager) } }
@@ -120,7 +131,7 @@ fun BookingAddressScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Collection address") },
+                title = { Text(title) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, null) } }
             )
         }
@@ -136,7 +147,7 @@ fun BookingAddressScreen(
                         items(resolvedAddresses) { address ->
                             SectionCard(
                                 modifier = Modifier.testTag("address_row")
-                                    .clickable(onClick = { bookingViewModel.setAddress(address); onContinue() })
+                                    .clickable(onClick = { onPicked(address) })
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     IconChip(icon = Icons.Filled.LocationOn, containerColor = ChipRoseContainer, contentColor = MaterialTheme.colorScheme.primary)
@@ -153,7 +164,7 @@ fun BookingAddressScreen(
                     TextButton(onClick = { userOverride = true }) { Text("+ Add a new address") }
                 } else {
                     AddAddressForm(
-                        onSaved = { address -> bookingViewModel.setAddress(address); onContinue() },
+                        onSaved = onPicked,
                         viewModel = viewModel,
                         onCancel = { if (resolvedAddresses.isNotEmpty()) userOverride = false }
                     )

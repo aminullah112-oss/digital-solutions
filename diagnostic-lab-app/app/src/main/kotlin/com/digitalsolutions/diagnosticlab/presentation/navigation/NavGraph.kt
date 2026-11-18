@@ -26,6 +26,7 @@ import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingRe
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingConfirmationScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.booking.BookingViewModel
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.BookingDetailScreen
+import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.ChangeAddressScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.bookings.MyBookingsScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.family.BookingPatientSelectScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.family.FamilyScreen
@@ -194,7 +195,18 @@ fun DiagnosticLabNavGraph() {
             arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
         ) { backStackEntry ->
             val bookingId = backStackEntry.arguments?.getString("bookingId").orEmpty()
-            BookingDetailScreen(bookingId = bookingId, onBack = { navController.popBackStack() })
+            BookingDetailScreen(
+                bookingId = bookingId,
+                onChangeAddress = { navController.navigate(Routes.changeAddress(bookingId)) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            Routes.CHANGE_ADDRESS,
+            arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookingId = backStackEntry.arguments?.getString("bookingId").orEmpty()
+            ChangeAddressScreen(bookingId = bookingId, onDone = { navController.popBackStack() })
         }
         composable(Routes.REPORTS) { ReportsScreen(onBack = { navController.popBackStack() }) }
         composable(Routes.MEDICAL_HISTORY) { MedicalHistoryScreen(onBack = { navController.popBackStack() }) }

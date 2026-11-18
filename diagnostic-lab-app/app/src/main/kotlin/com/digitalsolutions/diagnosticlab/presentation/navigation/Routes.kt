@@ -23,6 +23,8 @@ object Routes {
     const val MY_BOOKINGS = "my_bookings"
     const val BOOKING_DETAIL = "booking_detail/{bookingId}"
     fun bookingDetail(bookingId: String) = "booking_detail/${encode(bookingId)}"
+    const val CHANGE_ADDRESS = "change_address/{bookingId}"
+    fun changeAddress(bookingId: String) = "change_address/${encode(bookingId)}"
     const val REPORTS = "reports"
     const val MEDICAL_HISTORY = "medical_history"
     const val HELP_SUPPORT = "help_support"
