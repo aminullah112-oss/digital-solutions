@@ -39,6 +39,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -50,9 +51,19 @@ class ReportsViewModel(
     private val reportRepository: ReportRepository,
     sessionManager: SessionManager
 ) : ViewModel() {
+    private val _loadError = MutableStateFlow<String?>(null)
+    /** Set when the reports listener fails (for example a permission or network error), so the
+     * screen can say so instead of claiming there are no reports. */
+    val loadError: StateFlow<String?> = _loadError
+
     // All reports on the account, not just the active family member's.
     val reports: StateFlow<List<Report>?> = sessionManager.session.filterNotNull()
-        .flatMapLatest { reportRepository.observeForOwner(it.userId) }
+        .flatMapLatest { session ->
+            reportRepository.observeForOwner(session.userId).catch { e ->
+                _loadError.value = e.message ?: e.javaClass.simpleName
+                emit(emptyList())
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _openingReportId = MutableStateFlow<String?>(null)
@@ -108,6 +119,7 @@ fun ReportsScreen(onBack: () -> Unit) {
     val reports by viewModel.reports.collectAsState()
     val openingReportId by viewModel.openingReportId.collectAsState()
     val message by viewModel.message.collectAsState()
+    val loadError by viewModel.loadError.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(message) {
@@ -128,6 +140,7 @@ fun ReportsScreen(onBack: () -> Unit) {
     ) { padding ->
         when {
             reports == null -> LoadingState(Modifier.padding(padding))
+            loadError != null -> EmptyState("Couldn't load your reports: $loadError", Modifier.padding(padding))
             reports!!.isEmpty() -> EmptyState("No reports yet. They'll appear here once ready.", Modifier.padding(padding))
             else -> LazyColumn(Modifier.padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(reports!!, key = { it.id }) { report ->
