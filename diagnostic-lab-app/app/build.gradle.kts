@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -167,6 +168,8 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-functions-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    // Crash reports from testers' phones; no code needed, it hooks in automatically.
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
 
     // Draws the business's UPI QR code on the payment screen (pure Java, no camera or Play
     // Services involved — encoding only).

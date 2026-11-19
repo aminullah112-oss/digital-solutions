@@ -72,6 +72,10 @@ fun SettingsScreen(
         factory = viewModelFactory { initializer { ProfileHeaderViewModel(container.patientRepository, container.sessionManager) } }
     )
     val header by headerViewModel.header.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteConfirmText by remember { mutableStateOf("") }
+    var deleting by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -129,7 +133,11 @@ fun SettingsScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
+            TextButton(onClick = { showDeleteDialog = true }) {
+                Text("Delete my account", color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(Modifier.height(12.dp))
             BigSecondaryButton(text = stringResource(R.string.sign_out)) {
                 scope.launch {
                     container.sessionManager.signOut()
@@ -138,6 +146,79 @@ fun SettingsScreen(
             }
         }
     }
+
+    if (showDeleteDialog) {
+        DeleteAccountDialog(
+            confirmText = deleteConfirmText,
+            onConfirmTextChange = { deleteConfirmText = it },
+            deleting = deleting,
+            error = deleteError,
+            onDelete = {
+                deleting = true
+                deleteError = null
+                scope.launch {
+                    try {
+                        container.accountRepository.deleteMyAccount()
+                        withContext(Dispatchers.Main.immediate) { onSignedOut() }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        deleteError = e.message ?: "Couldn't delete the account. Please try again."
+                    } finally {
+                        deleting = false
+                    }
+                }
+            },
+            onDismiss = { showDeleteDialog = false; deleteConfirmText = ""; deleteError = null }
+        )
+    }
+}
+
+@Composable
+private fun DeleteAccountDialog(
+    confirmText: String,
+    onConfirmTextChange: (String) -> Unit,
+    deleting: Boolean,
+    error: String?,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!deleting) onDismiss() },
+        title = { Text("Delete your account?") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text("This can't be undone.", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Text("Deleted now: your profile, saved addresses, family profiles, notifications, medical history notes, and any prescriptions or reports you stored in My Documents.")
+                Spacer(Modifier.height(8.dp))
+                Text("Kept for legal reasons: booking and lab test records (up to 7 years) and payment records (up to 8 years). They are no longer linked to your profile.")
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = confirmText,
+                    onValueChange = onConfirmTextChange,
+                    label = { Text("Type DELETE to confirm") },
+                    singleLine = true,
+                    enabled = !deleting,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (deleting) {
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                }
+                error?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDelete, enabled = !deleting && confirmText.trim() == "DELETE") {
+                Text("Delete permanently", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !deleting) { Text("Cancel") } }
+    )
 }
 
 @Composable

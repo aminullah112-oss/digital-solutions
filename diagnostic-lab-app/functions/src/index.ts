@@ -4,6 +4,8 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
+import { getStorage } from "firebase-admin/storage";
 import * as crypto from "crypto";
 import * as https from "https";
 
@@ -668,4 +670,59 @@ export const seedCatalog = onRequest({ invoker: "private" }, async (req, res) =>
   res.status(200).send(
     `Seeded ${LABS.length} labs, ${INVESTIGATIONS.length} investigations, and ${FEVER_LABS_PACKAGES.length} packages.`
   );
+});
+
+
+/**
+ * In-app account deletion (Play policy requires a way to start deletion inside the app, not only
+ * on a web page). Deletes what the published account-deletion page promises — profile, saved
+ * addresses, family profiles, notification tokens and history — plus what patients store
+ * themselves (My Documents files and records, medical history notes), then the sign-in account.
+ *
+ * Deliberately kept: bookings, lab reports and payment records. Diagnostic laboratories must keep
+ * test records for 7 years and payment records for 8 (see the account-deletion page); they
+ * stay linked only to the now-deleted account ID. Lab, phlebotomist and admin accounts are
+ * refused: removing one could orphan a laboratory's orders, so they go through support.
+ *
+ * The sign-in account is removed last, so a failure part-way leaves the user signed in and able
+ * to simply retry; every step is safe to repeat.
+ */
+export const deleteMyAccount = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Please sign in again.");
+
+  const userRef = db.collection("users").doc(uid);
+  const userSnap = await userRef.get();
+  const role = userSnap.exists ? userSnap.get("role") : undefined;
+  if (role && role !== "PATIENT") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Staff and laboratory accounts can't be deleted from the app. Please contact support."
+    );
+  }
+
+  // 1. Files the patient stored themselves.
+  await getStorage().bucket().deleteFiles({ prefix: `userDocuments/${uid}/` });
+
+  // 2. Records tied to the account.
+  const owned: Array<[string, string]> = [
+    ["patientDocuments", "ownerUserId"],
+    ["medicalRecords", "accountOwnerUserId"],
+    ["patients", "accountOwnerUserId"],
+  ];
+  for (const [collection, field] of owned) {
+    const snap = await db.collection(collection).where(field, "==", uid).get();
+    for (const doc of snap.docs) await db.recursiveDelete(doc.ref);
+  }
+
+  // 3. The account document and its subcollections (addresses, notifications).
+  await db.recursiveDelete(userRef);
+
+  // 4. The sign-in account itself, last.
+  try {
+    await getAuth().deleteUser(uid);
+  } catch (e: any) {
+    if (e?.code !== "auth/user-not-found") throw e;
+  }
+  return { deleted: true };
 });

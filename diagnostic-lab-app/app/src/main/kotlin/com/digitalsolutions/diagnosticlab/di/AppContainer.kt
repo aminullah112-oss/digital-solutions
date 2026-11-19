@@ -86,6 +86,8 @@ class AppContainer(context: Context) {
 
     val documentRepository = DocumentRepository(firestore, storage)
 
+    val accountRepository = AccountRepository(functions, authRepository)
+
     val paymentConfigRepository = PaymentConfigRepository(firestore)
 
     val medicalRecordRepository = MedicalRecordRepository(firestore)
