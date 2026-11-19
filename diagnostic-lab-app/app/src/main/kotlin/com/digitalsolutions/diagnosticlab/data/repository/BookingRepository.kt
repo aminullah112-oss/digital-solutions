@@ -87,7 +87,7 @@ class BookingRepository(
         val addressLine = listOfNotNull(
             addressSnap.getString("line1"), addressSnap.getString("line2"),
             addressSnap.getString("city"), addressSnap.getString("state"), addressSnap.getString("pincode")
-        ).joinToString(", ")
+        ).filter { it.isNotBlank() }.joinToString(", ")
 
         bookingsRef().document(bookingId).set(
             mapOf(
@@ -350,7 +350,7 @@ class BookingRepository(
         val line = listOfNotNull(
             address.getString("line1"), address.getString("line2"),
             address.getString("city"), address.getString("state"), address.getString("pincode")
-        ).joinToString(", ")
+        ).filter { it.isNotBlank() }.joinToString(", ")
         ref.update(
             mapOf(
                 "addressLabel" to address.getString("label").orEmpty(),

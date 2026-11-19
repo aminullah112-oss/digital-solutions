@@ -41,7 +41,7 @@ data class Address(
     val longitude: Double?,
     val isDefault: Boolean
 ) {
-    val displayLine: String get() = listOfNotNull(line1, line2, city, state, pincode).joinToString(", ")
+    val displayLine: String get() = listOfNotNull(line1, line2, city, state, pincode).filter { it.isNotBlank() }.joinToString(", ")
 }
 
 data class Laboratory(
