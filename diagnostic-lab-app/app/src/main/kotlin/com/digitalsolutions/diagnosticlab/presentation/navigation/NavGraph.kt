@@ -38,6 +38,7 @@ import com.digitalsolutions.diagnosticlab.presentation.patient.notifications.Not
 import com.digitalsolutions.diagnosticlab.presentation.patient.reports.ReportsScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.settings.SettingsScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.support.ComplaintScreen
+import com.digitalsolutions.diagnosticlab.presentation.patient.documents.DocumentsScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.support.HelpSupportScreen
 import com.digitalsolutions.diagnosticlab.presentation.phlebotomist.PhlebotomistAssignmentScreen
 import com.digitalsolutions.diagnosticlab.presentation.phlebotomist.PhlebotomistHomeScreen
@@ -113,6 +114,7 @@ fun DiagnosticLabNavGraph() {
                 onReports = { navController.navigate(Routes.REPORTS) },
                 onFamily = { navController.navigate(Routes.FAMILY) },
                 onHelp = { navController.navigate(Routes.HELP_SUPPORT) },
+                onDocuments = { navController.navigate(Routes.DOCUMENTS) },
                 onNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
                 onMedicalHistory = { navController.navigate(Routes.MEDICAL_HISTORY) },
@@ -208,6 +210,7 @@ fun DiagnosticLabNavGraph() {
             val bookingId = backStackEntry.arguments?.getString("bookingId").orEmpty()
             ChangeAddressScreen(bookingId = bookingId, onDone = { navController.popBackStack() })
         }
+        composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
         composable(Routes.REPORTS) { ReportsScreen(onBack = { navController.popBackStack() }) }
         composable(Routes.MEDICAL_HISTORY) { MedicalHistoryScreen(onBack = { navController.popBackStack() }) }
         composable(Routes.HELP_SUPPORT) {

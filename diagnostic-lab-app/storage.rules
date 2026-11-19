@@ -31,6 +31,18 @@ service firebase.storage {
       allow delete: if isSignedIn() && me().role == 'ADMIN';
     }
 
+    // Files patients store themselves (prescriptions and reports from outside this app) live at
+    // userDocuments/{ownerUid}/{docId}. Private to the uploading account: no lab, admin or other
+    // patient can read them. PDF, JPEG or PNG only, capped at 10 MB; files are never edited in
+    // place, only created or deleted by their owner.
+    match /userDocuments/{ownerUid}/{docId} {
+      allow read, delete: if isSignedIn() && request.auth.uid == ownerUid;
+      allow create: if isSignedIn() && request.auth.uid == ownerUid &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('application/pdf|image/jpeg|image/png');
+      allow update: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

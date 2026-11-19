@@ -3,4 +3,5 @@
     <!-- Report PDFs are downloaded here (cache, not external storage) just long enough to hand
          to the device's PDF viewer through FileProvider. -->
     <cache-path name="reports" path="reports/" />
+    <cache-path name="documents" path="documents/" />
 </paths>

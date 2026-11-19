@@ -155,6 +155,22 @@ data class Sample(
     val rejectionReason: SampleRejectionReason?
 )
 
+enum class DocumentCategory(val label: String) {
+    PRESCRIPTION("Prescription"), REPORT("Report"), OTHER("Other")
+}
+
+/** A file the patient stored themselves (a prescription or a report from somewhere else). Not a
+ * lab result from this app — those are [Report]s. Private to the account that uploaded it. */
+data class PatientDocument(
+    val id: String,
+    val title: String,
+    val category: DocumentCategory,
+    val mimeType: String,
+    val storagePath: String,
+    val sizeBytes: Long,
+    val uploadedAtMillis: Long
+)
+
 data class Report(
     val id: String,
     val bookingId: String,

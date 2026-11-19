@@ -25,6 +25,7 @@ object Routes {
     fun bookingDetail(bookingId: String) = "booking_detail/${encode(bookingId)}"
     const val CHANGE_ADDRESS = "change_address/{bookingId}"
     fun changeAddress(bookingId: String) = "change_address/${encode(bookingId)}"
+    const val DOCUMENTS = "documents"
     const val REPORTS = "reports"
     const val MEDICAL_HISTORY = "medical_history"
     const val HELP_SUPPORT = "help_support"

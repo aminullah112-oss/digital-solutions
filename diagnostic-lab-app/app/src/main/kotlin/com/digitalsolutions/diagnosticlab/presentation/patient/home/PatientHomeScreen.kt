@@ -44,6 +44,7 @@ fun PatientHomeScreen(
     onReports: () -> Unit,
     onFamily: () -> Unit,
     onHelp: () -> Unit,
+    onDocuments: () -> Unit,
     onNotifications: () -> Unit,
     onSettings: () -> Unit,
     onMedicalHistory: () -> Unit,
@@ -142,7 +143,7 @@ fun PatientHomeScreen(
 
             Text(stringResource(R.string.quick_actions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(12.dp))
-            HomeActionGrid(onMyBookings, onReports, onFamily, onMedicalHistory, onHelp)
+            HomeActionGrid(onMyBookings, onReports, onFamily, onMedicalHistory, onDocuments, onHelp)
             Spacer(Modifier.height(20.dp))
         }
     }
@@ -173,6 +174,7 @@ private fun HomeActionGrid(
     onReports: () -> Unit,
     onFamily: () -> Unit,
     onMedicalHistory: () -> Unit,
+    onDocuments: () -> Unit,
     onHelp: () -> Unit
 ) {
     val actions = listOf(
@@ -180,6 +182,7 @@ private fun HomeActionGrid(
         QuickAction(stringResource(R.string.action_my_reports), Icons.Filled.Description, ChipMintContainer, HealthGreen, onReports),
         QuickAction(stringResource(R.string.action_my_family), Icons.Filled.People, ChipRoseContainer, MaterialTheme.colorScheme.primary, onFamily),
         QuickAction(stringResource(R.string.action_previous_records), Icons.Filled.History, ChipAmberContainer, WarningAmber, onMedicalHistory),
+        QuickAction("My Documents", Icons.Filled.FolderOpen, ChipMintContainer, HealthGreen, onDocuments),
         QuickAction(stringResource(R.string.action_help_support), Icons.Filled.Help, ChipBlueContainer, InfoBlue, onHelp)
     )
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
