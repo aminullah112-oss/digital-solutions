@@ -544,9 +544,9 @@ const LABS = [
   // Real onboarded customer (feverlabs.in) — a fever/infectious-disease-focused lab, not a
   // fictional demo entry like LAB-1..5 above. openTime/closeTime reflect their Mon-Sat hours;
   // their shorter Sunday hours (7:00-14:00) aren't representable since this schema has no
-  // per-day-of-week field. rating is a placeholder (their site shows only individual 5-star
-  // testimonials, no aggregate) — replace with their real Google Business rating once known.
-  { id: "LAB-6", name: "Dr. Sheela Fever Labs & Diagnostics", city: "Chennai", address: "143, 144, LIC Jeevan Pallava, 142, Thiruvottiyur High Rd, New Washermenpet, Tondiarpet, Chennai, Tamil Nadu 600081", phone: "+91 99627 03342", openTime: "07:00", closeTime: "20:00", estimatedReportHours: 8, rating: 4.8 },
+  // per-day-of-week field. rating is null: no aggregate rating exists, and an invented one
+  // would mislead patients.
+  { id: "LAB-6", name: "Dr. Sheela Fever Labs & Diagnostics", city: "Chennai", address: "143, 144, LIC Jeevan Pallava, 142, Thiruvottiyur High Rd, New Washermenpet, Tondiarpet, Chennai, Tamil Nadu 600081", phone: "+91 99627 03342", openTime: "07:00", closeTime: "20:00", estimatedReportHours: 8, rating: null },
 ];
 
 const INVESTIGATIONS = [
@@ -614,8 +614,11 @@ export const seedCatalog = onRequest({ invoker: "private" }, async (req, res) =>
   });
 
   // Not every lab offers every test, and pricing varies slightly by lab — mirrors a real
-  // marketplace and matches the ~80%-overlap pattern the demo data already used.
+  // marketplace and matches the ~80%-overlap pattern the demo data already used. LAB-6 is the real
+  // customer: it gets no invented per-test prices (only its own published packages below) until
+  // its actual price list is supplied.
   LABS.forEach((lab, labIndex) => {
+    if (lab.id === "LAB-6") return;
     INVESTIGATIONS.forEach((inv, invIndex) => {
       const offeredHere = (invIndex + labIndex) % 5 !== 4;
       if (!offeredHere) return;
