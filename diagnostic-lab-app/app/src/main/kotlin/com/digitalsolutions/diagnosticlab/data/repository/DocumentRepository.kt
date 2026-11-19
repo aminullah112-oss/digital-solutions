@@ -1,6 +1,10 @@
 package com.digitalsolutions.diagnosticlab.data.repository
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.digitalsolutions.diagnosticlab.domain.model.DocumentCategory
@@ -9,10 +13,12 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -56,28 +62,89 @@ class DocumentRepository(
         return null to null
     }
 
-    /** Throws IllegalArgumentException with a user-readable message for a file we won't store. */
+    /** Throws IllegalArgumentException with a user-readable message for a file we won't store.
+     * Photos are shrunk to JPEG first (long edge 2048 px), so a 12 MB camera photo uploads as a
+     * few hundred KB and stays readable; PDFs are stored as they are, up to 10 MB. */
     suspend fun upload(context: Context, ownerUserId: String, uri: Uri, title: String, category: DocumentCategory) {
         val mime = context.contentResolver.getType(uri)
-        require(mime in ALLOWED_TYPES) { "Only PDF, JPG or PNG files can be stored." }
-        val size = describe(context, uri).second
-        require(size == null || size < MAX_BYTES) { "That file is larger than 10 MB. Please choose a smaller one." }
-        val docRef = collection().document()
-        val path = "userDocuments/$ownerUserId/${docRef.id}"
-        val uploaded = storage().reference.child(path)
-            .putFile(uri, StorageMetadata.Builder().setContentType(mime).build())
-            .await()
-        docRef.set(
-            mapOf(
-                "ownerUserId" to ownerUserId,
-                "title" to title.trim().ifBlank { "Document" },
-                "category" to category.name,
-                "mimeType" to mime,
-                "storagePath" to path,
-                "sizeBytes" to (size ?: uploaded.metadata?.sizeBytes ?: 0L),
-                "uploadedAtMillis" to System.currentTimeMillis()
-            )
-        ).await()
+        val isImage = mime?.startsWith("image/") == true
+        require(mime == "application/pdf" || isImage) { "Only photos and PDF files can be stored." }
+
+        var tempFile: File? = null
+        val source: Uri
+        val uploadMime: String
+        val size: Long?
+        if (isImage) {
+            val shrunk = withContext(Dispatchers.IO) { shrinkImage(context, uri) }
+                ?: throw IllegalArgumentException("Couldn't read that photo. Please choose another.")
+            tempFile = shrunk
+            source = Uri.fromFile(shrunk)
+            uploadMime = "image/jpeg"
+            size = shrunk.length()
+        } else {
+            size = describe(context, uri).second
+            require(size == null || size < MAX_BYTES) { "That PDF is larger than 10 MB. Please choose a smaller one." }
+            source = uri
+            uploadMime = "application/pdf"
+        }
+
+        try {
+            val docRef = collection().document()
+            val path = "userDocuments/$ownerUserId/${docRef.id}"
+            val uploaded = storage().reference.child(path)
+                .putFile(source, StorageMetadata.Builder().setContentType(uploadMime).build())
+                .await()
+            docRef.set(
+                mapOf(
+                    "ownerUserId" to ownerUserId,
+                    "title" to title.trim().ifBlank { "Document" },
+                    "category" to category.name,
+                    "mimeType" to uploadMime,
+                    "storagePath" to path,
+                    "sizeBytes" to (size ?: uploaded.metadata?.sizeBytes ?: 0L),
+                    "uploadedAtMillis" to System.currentTimeMillis()
+                )
+            ).await()
+        } finally {
+            tempFile?.delete()
+        }
+    }
+
+    /** Decodes [uri], applies the camera's rotation, scales so the long edge is at most
+     * [MAX_EDGE_PX], and writes a JPEG into the cache. Null if the image can't be read. */
+    private fun shrinkImage(context: Context, uri: Uri): File? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+        // Decode at reduced size first so a 200-megapixel photo can't exhaust memory.
+        var sample = 1
+        while (maxOf(bounds.outWidth, bounds.outHeight) / sample > MAX_EDGE_PX * 2) sample *= 2
+        val decoded = context.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+        } ?: return null
+
+        val rotation = runCatching {
+            context.contentResolver.openInputStream(uri)?.use { stream ->
+                when (ExifInterface(stream).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                    ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                    ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                    else -> 0f
+                }
+            }
+        }.getOrNull() ?: 0f
+
+        val scale = minOf(1f, MAX_EDGE_PX.toFloat() / maxOf(decoded.width, decoded.height))
+        val matrix = Matrix().apply {
+            if (scale < 1f) postScale(scale, scale)
+            if (rotation != 0f) postRotate(rotation)
+        }
+        val finalBitmap = if (matrix.isIdentity) decoded
+        else Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
+
+        val out = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+        out.outputStream().use { finalBitmap.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+        return out
     }
 
     /** Downloads into [cacheDir]/documents and returns the file, named so viewers recognise it. */
@@ -102,7 +169,7 @@ class DocumentRepository(
 
     companion object {
         const val MAX_BYTES = 10L * 1024 * 1024
-        val ALLOWED_TYPES = setOf("application/pdf", "image/jpeg", "image/png")
+        const val MAX_EDGE_PX = 2048
     }
 }
 
