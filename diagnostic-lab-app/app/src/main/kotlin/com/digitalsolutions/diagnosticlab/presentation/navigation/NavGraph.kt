@@ -39,6 +39,7 @@ import com.digitalsolutions.diagnosticlab.presentation.patient.reports.ReportsSc
 import com.digitalsolutions.diagnosticlab.presentation.patient.settings.SettingsScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.support.ComplaintScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.documents.DocumentsScreen
+import com.digitalsolutions.diagnosticlab.presentation.patient.fever.FeverCheckScreen
 import com.digitalsolutions.diagnosticlab.presentation.patient.support.HelpSupportScreen
 import com.digitalsolutions.diagnosticlab.presentation.phlebotomist.PhlebotomistAssignmentScreen
 import com.digitalsolutions.diagnosticlab.presentation.phlebotomist.PhlebotomistHomeScreen
@@ -115,6 +116,7 @@ fun DiagnosticLabNavGraph() {
                 onFamily = { navController.navigate(Routes.FAMILY) },
                 onHelp = { navController.navigate(Routes.HELP_SUPPORT) },
                 onDocuments = { navController.navigate(Routes.DOCUMENTS) },
+                onFeverCheck = { navController.navigate(Routes.FEVER_CHECK) },
                 onNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onSettings = { navController.navigate(Routes.SETTINGS) },
                 onMedicalHistory = { navController.navigate(Routes.MEDICAL_HISTORY) },
@@ -209,6 +211,16 @@ fun DiagnosticLabNavGraph() {
         ) { backStackEntry ->
             val bookingId = backStackEntry.arguments?.getString("bookingId").orEmpty()
             ChangeAddressScreen(bookingId = bookingId, onDone = { navController.popBackStack() })
+        }
+        composable(Routes.FEVER_CHECK) {
+            FeverCheckScreen(
+                onBack = { navController.popBackStack() },
+                onBookTests = { ids ->
+                    bookingViewModel.reset()
+                    bookingViewModel.setSuggestedTests(ids)
+                    navController.navigate(Routes.BOOKING_PATIENT_SELECT)
+                }
+            )
         }
         composable(Routes.DOCUMENTS) { DocumentsScreen(onBack = { navController.popBackStack() }) }
         composable(Routes.REPORTS) { ReportsScreen(onBack = { navController.popBackStack() }) }

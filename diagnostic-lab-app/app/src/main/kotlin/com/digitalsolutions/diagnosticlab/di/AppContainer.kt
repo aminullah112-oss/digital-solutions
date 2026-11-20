@@ -88,6 +88,8 @@ class AppContainer(context: Context) {
 
     val accountRepository = AccountRepository(functions, authRepository)
 
+    val featureFlagRepository = FeatureFlagRepository(firestore)
+
     val paymentConfigRepository = PaymentConfigRepository(firestore)
 
     val medicalRecordRepository = MedicalRecordRepository(firestore)

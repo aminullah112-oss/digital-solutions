@@ -111,7 +111,18 @@ class BookingViewModel(
         }
     }
 
+    // Tests suggested by Fever Check, pre-selected once the patient picks a lab that offers them.
+    private var suggestedTestIds: Set<String> = emptySet()
+    private var suggestionsApplied = false
+
+    fun setSuggestedTests(ids: Set<String>) {
+        suggestedTestIds = ids
+        suggestionsApplied = false
+    }
+
     fun reset() {
+        suggestedTestIds = emptySet()
+        suggestionsApplied = false
         paymentMethodTouched = false
         _state.value = UiState(
             paymentMethod = if (_upiConfig.value != null) PaymentMethod.UPI_DIRECT else PaymentMethod.CASH
@@ -132,7 +143,13 @@ class BookingViewModel(
         )
         viewModelScope.launch {
             catalogRepository.observePricedInvestigations(laboratory.id).collect { list ->
-                _state.value = _state.value.copy(availableInvestigations = list)
+                var next = _state.value.copy(availableInvestigations = list)
+                if (!suggestionsApplied && suggestedTestIds.isNotEmpty() && list.isNotEmpty()) {
+                    val offered = list.map { it.investigation.id }.toSet()
+                    next = next.copy(selectedInvestigationIds = next.selectedInvestigationIds + (suggestedTestIds intersect offered))
+                    suggestionsApplied = true
+                }
+                _state.value = next
             }
         }
         viewModelScope.launch {

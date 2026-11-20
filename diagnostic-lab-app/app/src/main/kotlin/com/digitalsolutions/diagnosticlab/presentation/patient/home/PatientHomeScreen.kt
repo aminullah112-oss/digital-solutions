@@ -45,6 +45,7 @@ fun PatientHomeScreen(
     onFamily: () -> Unit,
     onHelp: () -> Unit,
     onDocuments: () -> Unit,
+    onFeverCheck: () -> Unit,
     onNotifications: () -> Unit,
     onSettings: () -> Unit,
     onMedicalHistory: () -> Unit,
@@ -59,6 +60,9 @@ fun PatientHomeScreen(
         }
     )
     val state by viewModel.state.collectAsState()
+    // Fever Check is switched on from the database once its rules have been reviewed.
+    var feverCheckEnabled by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { feverCheckEnabled = container.featureFlagRepository.feverCheckEnabled() }
 
     Scaffold(
         topBar = {
@@ -143,7 +147,7 @@ fun PatientHomeScreen(
 
             Text(stringResource(R.string.quick_actions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(12.dp))
-            HomeActionGrid(onMyBookings, onReports, onFamily, onMedicalHistory, onDocuments, onHelp)
+            HomeActionGrid(onMyBookings, onReports, onFamily, onMedicalHistory, onDocuments, if (feverCheckEnabled) onFeverCheck else null, onHelp)
             Spacer(Modifier.height(20.dp))
         }
     }
@@ -175,14 +179,16 @@ private fun HomeActionGrid(
     onFamily: () -> Unit,
     onMedicalHistory: () -> Unit,
     onDocuments: () -> Unit,
+    onFeverCheck: (() -> Unit)?,
     onHelp: () -> Unit
 ) {
-    val actions = listOf(
+    val actions = listOfNotNull(
         QuickAction(stringResource(R.string.action_my_bookings), Icons.Filled.CalendarMonth, ChipBlueContainer, InfoBlue, onMyBookings),
         QuickAction(stringResource(R.string.action_my_reports), Icons.Filled.Description, ChipMintContainer, HealthGreen, onReports),
         QuickAction(stringResource(R.string.action_my_family), Icons.Filled.People, ChipRoseContainer, MaterialTheme.colorScheme.primary, onFamily),
         QuickAction(stringResource(R.string.action_previous_records), Icons.Filled.History, ChipAmberContainer, WarningAmber, onMedicalHistory),
         QuickAction("My Documents", Icons.Filled.FolderOpen, ChipMintContainer, HealthGreen, onDocuments),
+        onFeverCheck?.let { QuickAction("Fever Check", Icons.Filled.Thermostat, ChipAmberContainer, WarningAmber, it) },
         QuickAction(stringResource(R.string.action_help_support), Icons.Filled.Help, ChipBlueContainer, InfoBlue, onHelp)
     )
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
