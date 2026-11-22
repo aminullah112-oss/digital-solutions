@@ -1,0 +1,78 @@
+name: Send test build to Firebase App Distribution
+
+# Builds the debug APK and sends it to the "fever-lab-testers" group in Firebase App Distribution.
+# It runs only when a tag starting with "testers-" is pushed, e.g. testers-2026-11-25, so testers
+# are not emailed on every commit. A tag can be created from a phone: GitHub > Releases > Draft a
+# new release > create the tag on the working branch > Publish (mark it as a pre-release).
+#
+# One-time setup (see the README note in the chat that came with this file):
+#   1. Firebase console > App Distribution > Get started, then create the group below.
+#   2. Create a Google Cloud service account with the role "Firebase App Distribution Admin"
+#      in project labconnect-bfd41, make a JSON key, and save the WHOLE file's text as the GitHub
+#      Actions secret FIREBASE_SERVICE_ACCOUNT_JSON.
+
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - "testers-*"
+
+env:
+  # Public identifiers (also in google-services.json). Not secrets.
+  FIREBASE_APP_ID: "1:860861482984:android:54c20e06b2c6a4eeadc65d"
+  TESTER_GROUP: "fever-lab-testers"
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: diagnostic-lab-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the service account secret exists
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::error::Secret FIREBASE_SERVICE_ACCOUNT_JSON is not set. See the header of this workflow file."
+            exit 1
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.11.1"
+
+      # Same build as the normal debug APK: no -Pci flag, so Play Integrity / reCAPTCHA stays on.
+      - name: Build debug APK
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: gradle assembleDebug -PMAPS_API_KEY="$MAPS_API_KEY" --stacktrace
+
+      - name: Send to Firebase App Distribution
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          TAG_NAME: ${{ github.ref_name }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          # Key goes to the runner's temp folder, outside the checkout, and is removed afterwards.
+          KEY_FILE="$RUNNER_TEMP/firebase-sa.json"
+          printf '%s' "$SA_JSON" > "$KEY_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -n 1)
+          NOTES="Build ${TAG_NAME}. $(printf '%s' "$COMMIT_MSG" | head -n 1)"
+          npx --yes firebase-tools@13.29.1 appdistribution:distribute "$APK" \
+            --app "$FIREBASE_APP_ID" \
+            --groups "$TESTER_GROUP" \
+            --release-notes "$NOTES"
+          rm -f "$KEY_FILE"
