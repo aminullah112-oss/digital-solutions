@@ -2,10 +2,12 @@ package com.digitalsolutions.diagnosticlab.data.repository
 
 import android.app.Activity
 import android.util.Log
+import com.digitalsolutions.diagnosticlab.BuildConfig
 import com.digitalsolutions.diagnosticlab.domain.model.Relation
 import com.digitalsolutions.diagnosticlab.domain.model.UserRole
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -55,7 +57,7 @@ class AuthRepository(
 
             override fun onVerificationFailed(e: FirebaseException) {
                 Log.e("AuthDebug", "onVerificationFailed for $mobileNumber", e)
-                trySend(OtpRequestOutcome.Failed(e.message ?: "Verification failed"))
+                trySend(OtpRequestOutcome.Failed(failureMessage(e)))
                 close()
             }
 
@@ -141,4 +143,24 @@ class AuthRepository(
         auth.signOut()
         sessionManager.signOut()
     }
+}
+
+/**
+ * Debug builds append the exception type, Firebase error code and cause chain so a tester can read
+ * why phone verification failed straight off the screen (no USB or logcat needed). Release builds
+ * show only the plain message.
+ */
+private fun failureMessage(e: Throwable): String {
+    val base = e.message ?: "Verification failed"
+    if (!BuildConfig.DEBUG) return base
+    val parts = mutableListOf<String>()
+    var cur: Throwable? = e
+    var depth = 0
+    while (cur != null && depth < 4) {
+        val code = (cur as? FirebaseAuthException)?.errorCode?.let { " [$it]" }.orEmpty()
+        parts += "${cur.javaClass.simpleName}$code: ${cur.message ?: "no message"}"
+        cur = cur.cause
+        depth++
+    }
+    return base + "\n\nDebug detail:\n" + parts.joinToString("\n")
 }
