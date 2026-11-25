@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 297" width="420mm" height="297mm" font-family="DejaVu Sans, Arial, sans-serif">
-<title>Sample project · 400 A ATS R1 single-line diagram</title>
+<title>Sample project - 400 A ATS R1 single-line diagram</title>
 <g stroke="currentColor" fill="none" stroke-linecap="round" class="drawing">
 <style>text{fill:currentColor;stroke:none}</style>
 <rect x="5" y="5" width="410" height="287" stroke-width="0.7" fill="none"/>
 <g class="title-block">
+<rect x="235" y="242" width="180" height="8" stroke-width="0.7" fill="none"/>
+<text x="237" y="247.4" font-size="2.2" text-anchor="start">Prepared by</text>
+<text x="252" y="247.6" font-size="3.6" text-anchor="start" font-weight="bold" class="company">ARR Digital Solutions</text>
 <rect x="235" y="250" width="180" height="42" stroke-width="0.7" fill="none"/>
 <line x1="235" y1="260" x2="415" y2="260" stroke-width="0.35"/>
 <line x1="235" y1="270" x2="415" y2="270" stroke-width="0.35"/>
 <line x1="235" y1="280" x2="415" y2="280" stroke-width="0.35"/>
 <line x1="355" y1="250" x2="355" y2="280" stroke-width="0.35"/>
-<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project · 400 A ATS</text>
+<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project - 400 A ATS</text>
 <text x="357" y="257" font-size="3.2" text-anchor="start" font-weight="bold">Rev R1</text>
 <text x="237" y="267" font-size="3.2" text-anchor="start">Single-line diagram — ATS</text>
 <text x="357" y="267" font-size="3" text-anchor="start">DRAFT</text>
 <text x="237" y="277" font-size="2.6" text-anchor="start">Customer: Acme</text>
-<text x="357" y="277" font-size="2.6" text-anchor="start">B4C6C269-SLD-01</text>
+<text x="357" y="277" font-size="2.6" text-anchor="start">08A9B403-SLD-01</text>
 <text x="237" y="285" font-size="2.2" text-anchor="start">Design data as of 2026-11-25 · ARR Panel Builder drawing engine 1.1.0</text>
 <text x="237" y="289.5" font-size="2.1" text-anchor="start" font-weight="bold">PRELIMINARY: generated from design data, not approved for manufacture without engineering review</text>
 </g>
@@ -43,7 +46,7 @@
 </g>
 <line x1="120" y1="86" x2="120" y2="96" stroke-width="0.35"/>
 <line x1="280" y1="86" x2="280" y2="96" stroke-width="0.35"/>
-<g class="component" data-role="transfer_device" data-tag="-Q3" data-instance-id="1c00fbac-4077-4494-b9aa-e3f64f03abd2">
+<g class="component" data-role="transfer_device" data-tag="-Q3" data-instance-id="19b13b57-536a-40fc-9134-e61d5e02218d">
 <path d="M 120.0 96.0 L 120.0 100.0 L 194.0 100.0 L 194.0 106.0" stroke-width="0.35" fill="none"/>
 <path d="M 280.0 96.0 L 280.0 100.0 L 206.0 100.0 L 206.0 106.0" stroke-width="0.35" fill="none"/>
 <line x1="192.5" y1="106" x2="195.5" y2="106" stroke-width="0.35"/>
@@ -64,7 +67,7 @@
 <line x1="200" y1="138" x2="200" y2="152" stroke-width="0.35"/>
 <path d="M 198.0 149.0 L 200.0 153.0 L 202.0 149.0" stroke-width="0.35" fill="none"/>
 <text x="200" y="158" font-size="2.8" text-anchor="middle">To load</text>
-<g class="component" data-role="controller" data-tag="-A1" data-instance-id="2b22d87e-0399-4f01-9074-955db337d5fd">
+<g class="component" data-role="controller" data-tag="-A1" data-instance-id="7e999a30-1e91-4134-8b4e-1c29ac258598">
 <rect x="330" y="92" width="70" height="22" stroke-width="0.35" fill="none"/>
 <text x="333" y="98" font-size="3" text-anchor="start" font-weight="bold">-A1 ATS controller</text>
 <text x="333" y="101.6" font-size="2.3" text-anchor="start">TestCo ATC-8 (cat. v1)</text>

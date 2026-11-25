@@ -1,27 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 297" width="420mm" height="297mm" font-family="DejaVu Sans, Arial, sans-serif">
-<title>Sample project · 400 A ATS R1 control circuit</title>
+<title>Sample project - 400 A ATS R1 control circuit</title>
 <g stroke="currentColor" fill="none" stroke-linecap="round" class="drawing">
 <style>text{fill:currentColor;stroke:none}</style>
 <rect x="5" y="5" width="410" height="287" stroke-width="0.7" fill="none"/>
 <g class="title-block">
+<rect x="235" y="242" width="180" height="8" stroke-width="0.7" fill="none"/>
+<text x="237" y="247.4" font-size="2.2" text-anchor="start">Prepared by</text>
+<text x="252" y="247.6" font-size="3.6" text-anchor="start" font-weight="bold" class="company">ARR Digital Solutions</text>
 <rect x="235" y="250" width="180" height="42" stroke-width="0.7" fill="none"/>
 <line x1="235" y1="260" x2="415" y2="260" stroke-width="0.35"/>
 <line x1="235" y1="270" x2="415" y2="270" stroke-width="0.35"/>
 <line x1="235" y1="280" x2="415" y2="280" stroke-width="0.35"/>
 <line x1="355" y1="250" x2="355" y2="280" stroke-width="0.35"/>
-<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project · 400 A ATS</text>
+<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project - 400 A ATS</text>
 <text x="357" y="257" font-size="3.2" text-anchor="start" font-weight="bold">Rev R1</text>
 <text x="237" y="267" font-size="3.2" text-anchor="start">Control circuit — ATS</text>
 <text x="357" y="267" font-size="3" text-anchor="start">DRAFT</text>
 <text x="237" y="277" font-size="2.6" text-anchor="start">Customer: Acme</text>
-<text x="357" y="277" font-size="2.6" text-anchor="start">B4C6C269-CTL-01</text>
+<text x="357" y="277" font-size="2.6" text-anchor="start">08A9B403-CTL-01</text>
 <text x="237" y="285" font-size="2.2" text-anchor="start">Design data as of 2026-11-25 · ARR Panel Builder drawing engine 1.1.0</text>
 <text x="237" y="289.5" font-size="2.1" text-anchor="start" font-weight="bold">PRELIMINARY: generated from design data, not approved for manufacture without engineering review</text>
 </g>
 <text x="15" y="14" font-size="4.5" text-anchor="start" font-weight="bold">Control circuit</text>
 <text x="15" y="20" font-size="2.6" text-anchor="start">Control supply 24 V DC · controller -A1 · terminal numbers per terminal plan</text>
-<g class="component" data-role="control_mcb" data-tag="-F1" data-instance-id="99e6ce18-c96b-459d-9b6d-3b18345a5b49">
+<g class="component" data-role="control_mcb" data-tag="-F1" data-instance-id="c54d2c99-dfa6-4e6d-af1b-80a774fdb710">
 <circle cx="30" cy="26" r="1" stroke-width="0.35" fill="none"/>
 <text x="31.8" y="26.9" font-size="2" text-anchor="start">X0:1</text>
 <line x1="30" y1="27" x2="30" y2="33" stroke-width="0.35"/>
@@ -41,7 +44,7 @@
 <line x1="30" y1="228" x2="400" y2="228" stroke-width="0.7"/>
 <text x="27" y="51" font-size="2.5" text-anchor="end">+/L</text>
 <text x="27" y="229" font-size="2.5" text-anchor="end">−/N</text>
-<g class="component" data-role="controller" data-tag="-A1" data-instance-id="2b22d87e-0399-4f01-9074-955db337d5fd">
+<g class="component" data-role="controller" data-tag="-A1" data-instance-id="7e999a30-1e91-4134-8b4e-1c29ac258598">
 <rect x="150" y="110" width="95" height="60" stroke-width="0.7" fill="none"/>
 <text x="197.5" y="117" font-size="2.8" text-anchor="middle" font-weight="bold">-A1 ATS controller</text>
 <text x="197.5" y="122" font-size="2.3" text-anchor="middle">TestCo ATC-8 (cat. v1)</text>

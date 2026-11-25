@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 297" width="420mm" height="297mm" font-family="DejaVu Sans, Arial, sans-serif">
+<title>Sample project - 400 A ATS R1 panel layout</title>
+<g stroke="currentColor" fill="none" stroke-linecap="round" class="drawing">
+<style>text{fill:currentColor;stroke:none}</style>
+<rect x="5" y="5" width="410" height="287" stroke-width="0.7" fill="none"/>
+<g class="title-block">
+<rect x="235" y="242" width="180" height="8" stroke-width="0.7" fill="none"/>
+<text x="237" y="247.4" font-size="2.2" text-anchor="start">Prepared by</text>
+<text x="252" y="247.6" font-size="3.6" text-anchor="start" font-weight="bold" class="company">ARR Digital Solutions</text>
+<rect x="235" y="250" width="180" height="42" stroke-width="0.7" fill="none"/>
+<line x1="235" y1="260" x2="415" y2="260" stroke-width="0.35"/>
+<line x1="235" y1="270" x2="415" y2="270" stroke-width="0.35"/>
+<line x1="235" y1="280" x2="415" y2="280" stroke-width="0.35"/>
+<line x1="355" y1="250" x2="355" y2="280" stroke-width="0.35"/>
+<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project - 400 A ATS</text>
+<text x="357" y="257" font-size="3.2" text-anchor="start" font-weight="bold">Rev R1</text>
+<text x="237" y="267" font-size="3.2" text-anchor="start">Panel layout — ATS</text>
+<text x="357" y="267" font-size="3" text-anchor="start">DRAFT</text>
+<text x="237" y="277" font-size="2.6" text-anchor="start">Customer: Acme</text>
+<text x="357" y="277" font-size="2.6" text-anchor="start">08A9B403-LAY-01</text>
+<text x="237" y="285" font-size="2.2" text-anchor="start">Design data as of 2026-11-25 · ARR Panel Builder drawing engine 1.1.0</text>
+<text x="237" y="289.5" font-size="2.1" text-anchor="start" font-weight="bold">PRELIMINARY: generated from design data, not approved for manufacture without engineering review</text>
+</g>
+<text x="15" y="16" font-size="4.5" text-anchor="start" font-weight="bold">Panel layout (mounting plate and door, inside view)</text>
+<text x="15" y="22" font-size="2.6" text-anchor="start">Enclosure 800 x 1200 x 400 mm (W x H x D) · plate 700 x 1100 mm · cable entry bottom · 60 mm ducts, 20 mm minimum gap</text>
+<text x="15" y="27" font-size="2.4" text-anchor="start">Scale 1:5.9 (sheet A3)</text>
+<g class="plate">
+<rect x="18" y="34" width="119.583" height="187.917" stroke-width="0.7" fill="none"/>
+<text x="18" y="32.5" font-size="2.4" text-anchor="start" font-weight="bold">Mounting plate 700 x 1100</text>
+<rect x="21.4167" y="130.863" width="112.75" height="10.25" stroke-width="0.35" stroke-dasharray="1.5 1" fill="none"/>
+<text x="21.7583" y="136.788" font-size="1.8" text-anchor="start">duct 60</text>
+<rect x="21.4167" y="151.405" width="112.75" height="1.28125" stroke-width="0.2" fill="none"/>
+</g>
+<g class="component" data-tag="-Q3" data-instance-id="19b13b57-536a-40fc-9134-e61d5e02218d" data-x-mm="20" data-y-mm="20">
+<rect x="21.4167" y="37.4167" width="77.7292" height="90.0292" stroke-width="0.7" fill="none"/>
+<text x="60.2812" y="82.4313" font-size="3" text-anchor="middle" font-weight="bold">-Q3</text>
+<text x="60.2812" y="85.9313" font-size="2" text-anchor="middle">455 x 527</text>
+</g>
+<g class="component" data-tag="-F1" data-instance-id="c54d2c99-dfa6-4e6d-af1b-80a774fdb710" data-x-mm="20" data-y-mm="647">
+<rect x="21.4167" y="144.529" width="5.97917" height="15.0333" stroke-width="0.35" fill="none"/>
+<text x="24.4062" y="152.046" font-size="2" text-anchor="middle" font-weight="bold">-F1</text>
+</g>
+<g class="door">
+<rect x="147.833" y="34" width="136.667" height="205" stroke-width="0.7" fill="none"/>
+<text x="147.833" y="32.5" font-size="2.4" text-anchor="start" font-weight="bold">Door 800 x 1200 (inside view)</text>
+</g>
+<g class="component" data-tag="-A1" data-instance-id="7e999a30-1e91-4134-8b4e-1c29ac258598">
+<rect x="195.667" y="40.8333" width="41" height="30.75" stroke-width="0.35" fill="none"/>
+<text x="216.167" y="56.2083" font-size="2.6" text-anchor="middle" font-weight="bold">-A1</text>
+</g>
+<text x="15" y="250" font-size="2.8" text-anchor="start" font-weight="bold">Layout checks</text>
+<text x="15" y="254" font-size="2.2" text-anchor="start">WARNING: Terminal rail not sized: assign a terminal block part (24 terminals)</text>
+</g>
+</svg>
