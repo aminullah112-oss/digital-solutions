@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 297" width="420mm" height="297mm" font-family="DejaVu Sans, Arial, sans-serif">
+<title>Sample project - 400 A ATS R1 power circuit</title>
+<g stroke="currentColor" fill="none" stroke-linecap="round" class="drawing">
+<style>text{fill:currentColor;stroke:none}</style>
+<rect x="5" y="5" width="410" height="287" stroke-width="0.7" fill="none"/>
+<g class="title-block">
+<rect x="235" y="242" width="180" height="8" stroke-width="0.7" fill="none"/>
+<text x="237" y="247.4" font-size="2.2" text-anchor="start">Prepared by</text>
+<text x="252" y="247.6" font-size="3.6" text-anchor="start" font-weight="bold" class="company">ARR Digital Solutions</text>
+<rect x="235" y="250" width="180" height="42" stroke-width="0.7" fill="none"/>
+<line x1="235" y1="260" x2="415" y2="260" stroke-width="0.35"/>
+<line x1="235" y1="270" x2="415" y2="270" stroke-width="0.35"/>
+<line x1="235" y1="280" x2="415" y2="280" stroke-width="0.35"/>
+<line x1="355" y1="250" x2="355" y2="280" stroke-width="0.35"/>
+<text x="237" y="257" font-size="3.6" text-anchor="start" font-weight="bold">Sample project - 400 A ATS</text>
+<text x="357" y="257" font-size="3.2" text-anchor="start" font-weight="bold">Rev R1</text>
+<text x="237" y="267" font-size="3.2" text-anchor="start">Power circuit — ATS</text>
+<text x="357" y="267" font-size="3" text-anchor="start">DRAFT</text>
+<text x="237" y="277" font-size="2.6" text-anchor="start">Customer: Acme</text>
+<text x="357" y="277" font-size="2.6" text-anchor="start">08A9B403-PWR-01</text>
+<text x="237" y="285" font-size="2.2" text-anchor="start">Design data as of 2026-11-25 · ARR Panel Builder drawing engine 1.1.0</text>
+<text x="237" y="289.5" font-size="2.1" text-anchor="start" font-weight="bold">PRELIMINARY: generated from design data, not approved for manufacture without engineering review</text>
+</g>
+<text x="15" y="16" font-size="4.5" text-anchor="start" font-weight="bold">Power circuit</text>
+<text x="15" y="23" font-size="2.7" text-anchor="start">3~ + N  400 V  50 Hz · 4-pole switching</text>
+<text x="60" y="34" font-size="2.8" text-anchor="start" font-weight="bold">Utility (Source 1)</text>
+<text x="60" y="38.5" font-size="2.2" text-anchor="middle">L1</text>
+<circle cx="60" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="61.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="68" y="38.5" font-size="2.2" text-anchor="middle">L2</text>
+<circle cx="68" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="69.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="76" y="38.5" font-size="2.2" text-anchor="middle">L3</text>
+<circle cx="76" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="77.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="84" y="38.5" font-size="2.2" text-anchor="middle">N</text>
+<circle cx="84" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="85.8" y="40.9" font-size="2" text-anchor="start"></text>
+<g class="component" data-role="utility_protection" data-tag="-Q1">
+<line x1="60" y1="41" x2="60" y2="112" stroke-width="0.35"/>
+<line x1="68" y1="41" x2="68" y2="112" stroke-width="0.35"/>
+<line x1="76" y1="41" x2="76" y2="112" stroke-width="0.35"/>
+<line x1="84" y1="41" x2="84" y2="112" stroke-width="0.35"/>
+<text x="94" y="80" font-size="2.3" text-anchor="start">-Q1: protection upstream (not in panel)</text>
+</g>
+<text x="240" y="34" font-size="2.8" text-anchor="start" font-weight="bold">Generator (Source 2)</text>
+<text x="240" y="38.5" font-size="2.2" text-anchor="middle">L1</text>
+<circle cx="240" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="241.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="248" y="38.5" font-size="2.2" text-anchor="middle">L2</text>
+<circle cx="248" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="249.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="256" y="38.5" font-size="2.2" text-anchor="middle">L3</text>
+<circle cx="256" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="257.8" y="40.9" font-size="2" text-anchor="start"></text>
+<text x="264" y="38.5" font-size="2.2" text-anchor="middle">N</text>
+<circle cx="264" cy="40" r="1" stroke-width="0.35" fill="none"/>
+<text x="265.8" y="40.9" font-size="2" text-anchor="start"></text>
+<g class="component" data-role="generator_protection" data-tag="-Q2">
+<line x1="240" y1="41" x2="240" y2="112" stroke-width="0.35"/>
+<line x1="248" y1="41" x2="248" y2="112" stroke-width="0.35"/>
+<line x1="256" y1="41" x2="256" y2="112" stroke-width="0.35"/>
+<line x1="264" y1="41" x2="264" y2="112" stroke-width="0.35"/>
+<text x="274" y="80" font-size="2.3" text-anchor="start">-Q2: protection upstream (not in panel)</text>
+</g>
+<g class="component" data-role="transfer_device" data-tag="-Q3" data-instance-id="19b13b57-536a-40fc-9134-e61d5e02218d">
+<rect x="125" y="130" width="85" height="34" stroke-width="0.7" fill="none"/>
+<text x="167.5" y="137" font-size="2.6" text-anchor="middle" font-weight="bold">-Q3 transfer switching device</text>
+<text x="167.5" y="142" font-size="2.3" text-anchor="middle">I – 0 – II (open transition)</text>
+<path d="M 60.0 112.0 L 60.0 123.0 L 131.0 123.0 L 131.0 130.0" stroke-width="0.35" fill="none"/>
+<path d="M 240.0 112.0 L 240.0 114.0 L 192.0 114.0 L 192.0 130.0" stroke-width="0.35" fill="none"/>
+<line x1="140" y1="164" x2="140" y2="205" stroke-width="0.35"/>
+<path d="M 68.0 112.0 L 68.0 120.0 L 135.0 120.0 L 135.0 130.0" stroke-width="0.35" fill="none"/>
+<path d="M 248.0 112.0 L 248.0 117.0 L 196.0 117.0 L 196.0 130.0" stroke-width="0.35" fill="none"/>
+<line x1="148" y1="164" x2="148" y2="205" stroke-width="0.35"/>
+<path d="M 76.0 112.0 L 76.0 117.0 L 139.0 117.0 L 139.0 130.0" stroke-width="0.35" fill="none"/>
+<path d="M 256.0 112.0 L 256.0 120.0 L 200.0 120.0 L 200.0 130.0" stroke-width="0.35" fill="none"/>
+<line x1="156" y1="164" x2="156" y2="205" stroke-width="0.35"/>
+<path d="M 84.0 112.0 L 84.0 114.0 L 143.0 114.0 L 143.0 130.0" stroke-width="0.35" fill="none"/>
+<path d="M 264.0 112.0 L 264.0 123.0 L 204.0 123.0 L 204.0 130.0" stroke-width="0.35" fill="none"/>
+<line x1="164" y1="164" x2="164" y2="205" stroke-width="0.35"/>
+<text x="127" y="149" font-size="3" text-anchor="start" font-weight="bold"></text>
+<text x="127" y="152.6" font-size="2.3" text-anchor="start">TestCo TSE-400-4P (cat. v1)</text>
+<text x="127" y="156.2" font-size="2.3" text-anchor="start">4P, Ie 400 A, Isc 50 kA</text>
+</g>
+<line x1="134" y1="205" x2="170" y2="205" stroke-width="1.4"/>
+<text x="140" y="210" font-size="2.2" text-anchor="middle">L1</text>
+<text x="148" y="210" font-size="2.2" text-anchor="middle">L2</text>
+<text x="156" y="210" font-size="2.2" text-anchor="middle">L3</text>
+<text x="164" y="210" font-size="2.2" text-anchor="middle">N</text>
+<text x="174" y="206" font-size="2.8" text-anchor="start" font-weight="bold">Load</text>
+<text x="15" y="250" font-size="2.8" text-anchor="start" font-weight="bold">Notes</text>
+<text x="15" y="254" font-size="2.3" text-anchor="start">1. Symbols simplified in the style of IEC 60617. Ratings shown are catalogue values of the pinned catalogue version.</text>
+<text x="15" y="257.6" font-size="2.3" text-anchor="start">2. Protection coordination, cable sizing and short-circuit conditions are not verified by this drawing.</text>
+</g>
+</svg>
