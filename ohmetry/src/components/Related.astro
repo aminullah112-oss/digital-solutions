@@ -1,0 +1,5 @@
+---
+const { items } = Astro.props as { items: { href: string; label: string }[] };
+---
+<h2>Related calculators</h2>
+<ul>{items.map((i) => <li><a href={i.href}>{i.label}</a></li>)}</ul>

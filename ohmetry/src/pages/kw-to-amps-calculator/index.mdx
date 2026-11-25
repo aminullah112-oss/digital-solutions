@@ -1,0 +1,79 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "kW to Amps Calculator (Single and Three-Phase) | Ohmetry"
+description: "Convert kW to amps for single-phase and three-phase loads with power factor. Formula and worked example included."
+h1: "kW to Amps Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "kW to amps"
+---
+import KwToAmps from '../../components/KwToAmps.tsx';
+import Related from '../../components/Related.astro';
+
+<KwToAmps client:load />
+
+## Formulas
+
+<div class="formula">Single-phase: I = kW × 1000 / (V × PF)<br/>Three-phase: I = kW × 1000 / (√3 × V × PF)</div>
+
+For three-phase, V is the line-to-line voltage.
+
+## Worked example
+
+A 10 kW three-phase motor load at 400 V and 0.8 power factor: I = 10 000 / (1.732 × 400 × 0.8) = 18.04 A. This is the load current. Conductor and breaker sizing add further factors that are covered on their own pages.
+
+## How to use the calculator
+
+Enter the power in kW, the supply voltage, the power factor, and choose single-phase or three-phase. The result is the current in each line, in amps. The default values are a 10 kW three-phase load at 400 V and a power factor of 0.8.
+
+For three-phase, enter the line-to-line voltage, the one measured between any two phase conductors. Common values are 400 V, 415 V, 480 V and 690 V. For single-phase, use the voltage between the line and neutral, or between the two lines on a split-phase supply.
+
+## Quick reference examples
+
+These are hand-calculated, and you can enter each one above to confirm:
+
+- **5 kW, 230 V single-phase, PF 1:** 5,000 / 230 = 21.7 A. This is a resistive heater.
+- **10 kW, 230 V single-phase, PF 0.9:** 10,000 / (230 × 0.9) = 48.3 A.
+- **15 kW, 400 V three-phase, PF 0.85:** 15,000 / (1.732 × 400 × 0.85) = 25.5 A.
+- **75 kW, 480 V three-phase, PF 0.9:** 75,000 / (1.732 × 480 × 0.9) = 100.2 A.
+
+## Power factor changes the answer a lot
+
+The current is inversely proportional to power factor. The same 10 kW at 400 V three-phase draws 14.4 A at unity power factor but 18.0 A at 0.8. A low power factor means more current for the same useful work, which means larger cables, larger breakers and more loss in the supply. This is the reason utilities penalize poor power factor and why correction capacitors are fitted.
+
+## Motors: kW rating versus input power
+
+A motor's nameplate kW is normally the shaft output. The electrical input is higher by the efficiency. A 15 kW motor at 90% efficiency draws 16.7 kW from the supply, so use the input figure for the current. Many nameplates also list the rated current directly, and that value should be preferred over a calculated one.
+
+The result is the running current at full load. Starting current on a direct-on-line induction motor is commonly five to eight times that value for a few seconds. Protection and cable selection have to allow for it, using the motor-circuit rules of the governing code.
+
+## What to do with the current
+
+Full-load current is an input to the next step, not a final answer. Cable sizing needs the current plus derating for temperature, grouping and installation method. In the US, the overcurrent device for a continuous load is sized at 125% of the current, which the <a href="/breaker-size-calculator/">breaker size calculator</a> handles.
+
+## Common mistakes
+
+- **Using the phase voltage with √3.** Use 400 V with √3, or 230 V without it.
+- **Forgetting efficiency.** Shaft kW understates the supply current.
+- **Assuming PF = 1.** Only resistive loads reach it.
+
+## Questions
+
+### How many amps is 1 kW?
+At 230 V single-phase and unity power factor, 4.35 A. At 400 V three-phase and a power factor of 0.8, 1.8 A.
+
+### How do I convert kW to amps at 120 V?
+Divide watts by volts times power factor. 1 kW at 120 V, PF 1, is 8.33 A.
+
+### Is the result the same at 50 Hz and 60 Hz?
+Yes. Frequency does not appear in the formula.
+
+### Should I use kW or kVA?
+Use kW with a power factor, or kVA without one. The <a href="/kva-to-amps-calculator/">kVA to amps calculator</a> covers the second.
+
+<Related items={[
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/three-phase-power-calculator/', label: 'Three-phase power calculator' },
+  { href: '/breaker-size-calculator/', label: 'Breaker size calculator' },
+]} />

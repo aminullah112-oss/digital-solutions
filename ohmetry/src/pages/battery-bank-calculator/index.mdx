@@ -1,0 +1,70 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Battery Bank Calculator: Size and Runtime | Ohmetry"
+description: "Calculate battery capacity in Ah and kWh from your daily load and days of autonomy, or find how long a battery will run a load."
+h1: "Battery Bank Size and Runtime Calculator"
+hub: Solar and EV
+hubHref: /solar-ev/
+crumb: "Battery bank"
+---
+import BatteryBank from '../../components/BatteryBank.tsx';
+import Related from '../../components/Related.astro';
+
+<BatteryBank client:load />
+
+Two questions come up with batteries: how big a bank do I need, and how long will the one I have last. The calculator answers either one. Both use the same four quantities: energy, voltage, usable depth of discharge and inverter efficiency.
+
+## Formulas
+
+<div class="formula">Capacity (Ah) = daily energy (Wh) × days / (DoD × V × efficiency)<br/>Runtime (h) = capacity (Ah) × V × DoD × efficiency / load (W)</div>
+
+**Depth of discharge (DoD)** is the fraction of the capacity you are willing to use. Repeatedly draining a lead-acid battery deeply shortens its life, so about 50 % is a common design limit. Lithium iron phosphate (LiFePO4) batteries are commonly specified for 80 to 90 % or more. Use the figure in the battery's datasheet, not a rule of thumb, because warranty terms often depend on it.
+
+**Efficiency** accounts for the loss in the inverter between the battery and an AC load. Typical inverters convert at 85 to 95 %, and the default here is 0.9. If your load is DC and connects directly, set it to 1.
+
+## Worked example: sizing
+
+A home uses 5,000 Wh per day and wants 2 days of autonomy on a 48 V lead-acid bank limited to 50 % DoD:
+
+Capacity = 5,000 × 2 / (0.5 × 48 × 0.9) = 463 Ah.
+
+That is a nominal 22.2 kWh bank, of which 10 kWh is usable. With a 48 V LiFePO4 bank at 80 % DoD the same autonomy needs 5,000 × 2 / (0.8 × 48 × 0.9) = 289 Ah, which is why lithium banks are much smaller for the same duty.
+
+## Worked example: runtime
+
+A 200 Ah, 48 V battery with 80 % usable depth and a 0.9 inverter runs a 1,000 W load for 200 × 48 × 0.8 × 0.9 / 1,000 = 6.9 hours.
+
+## Choosing system voltage
+
+The same energy at a higher voltage means less current. A 5 kW load draws about 420 A from a 12 V bank but about 104 A from a 48 V bank, so cable sizes, fuses and connector losses shrink considerably. For anything above about 2 kW, 48 V is a standard choice. Batteries are then wired in series to reach the voltage and in parallel to reach the amp-hours: four 12 V batteries in series make 48 V, and a second string in parallel doubles the Ah.
+
+## What the calculator leaves out
+
+- **Temperature.** Batteries deliver less capacity in the cold, and lead-acid more so than lithium. Size for the coldest conditions the bank will see.
+- **Discharge rate.** A lead-acid battery gives less than its rated capacity at fast discharge, a behaviour described by Peukert's law. The rated Ah is normally quoted at the 20-hour rate.
+- **Ageing.** Capacity falls over the years. Some designers add 10 to 20 % to cover it.
+- **Charging.** The bank needs a source that can recharge it between uses. See the <a href="/off-grid-solar-calculator/">off-grid calculator</a>.
+
+## Common mistakes
+
+- **Comparing Ah across voltages.** 100 Ah at 12 V is 1.2 kWh, while 100 Ah at 48 V is 4.8 kWh.
+- **Counting the full capacity as usable.**
+- **Ignoring inverter loss.**
+
+## Questions
+
+### How many batteries do I need?
+Divide the required Ah by one battery's Ah for parallel strings, and divide the bank voltage by one battery's voltage for series count.
+
+### How many kWh is a 100 Ah battery?
+At 12 V, 1.2 kWh nominal. At 24 V, 2.4 kWh. At 48 V, 4.8 kWh.
+
+### How many days of autonomy should I choose?
+One to three days is common for homes. More days cost more, and a generator can be cheaper than the extra batteries.
+
+<Related items={[
+  { href: '/off-grid-solar-calculator/', label: 'Off-grid solar system calculator' },
+  { href: '/solar-panel-calculator/', label: 'Solar panel system size calculator' },
+  { href: '/inverter-size-calculator/', label: 'Inverter size calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+]} />

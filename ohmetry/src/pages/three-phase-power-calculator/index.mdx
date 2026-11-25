@@ -1,0 +1,76 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Three-Phase Power Calculator (kW, kVA, kvar) | Ohmetry"
+description: "Calculate real, apparent and reactive power for a balanced three-phase load from voltage, current and power factor."
+h1: "Three-Phase Power Calculator"
+hub: Electrical
+hubHref: /electrical/
+crumb: "Three-phase power"
+---
+import ThreePhasePower from '../../components/ThreePhasePower.tsx';
+import Related from '../../components/Related.astro';
+
+<ThreePhasePower client:load />
+
+For a balanced three-phase load, one set of readings gives all three power quantities: apparent power in kVA, real power in kW and reactive power in kvar. They form the power triangle, where kVA is the hypotenuse.
+
+## Formulas
+
+<div class="formula">S = √3 × V<sub>LL</sub> × I / 1000 (kVA)<br/>P = S × PF (kW)<br/>Q = S × √(1 − PF²) (kvar)</div>
+
+V<sub>LL</sub> is the line-to-line voltage, I is the line current and PF is the power factor. The three quantities satisfy S² = P² + Q², and the calculator's tests check this identity.
+
+## Worked example
+
+A load draws 10 A from a 400 V three-phase supply at a power factor of 0.8.
+
+- S = 1.732 × 400 × 10 / 1000 = 6.928 kVA
+- P = 6.928 × 0.8 = 5.543 kW
+- Q = 6.928 × 0.6 = 4.157 kvar
+
+The check: 5.543² + 4.157² = 30.72 + 17.28 = 48.0, and 6.928² = 48.0.
+
+## Where this applies
+
+The formulas assume the three phases carry equal current and are equally loaded, with a symmetrical supply. That is a good model for motors, transformers and most industrial loads. It is not right for a panel with uneven single-phase loads, where each phase has to be calculated separately and the powers added. It also ignores harmonics, so loads dominated by drives or rectifiers may read differently on a true-RMS power meter.
+
+The reactive power figure is what you need for power factor correction. To raise a power factor, capacitors supply some of the kvar locally. The size of the bank is the difference between the load's kvar and the kvar at the target power factor.
+
+## How to use the calculator
+
+Enter the line-to-line voltage, the current in each line, and the power factor. The calculator returns kVA, kW and kvar. Use a true-RMS meter reading for the current where you can, since loads with harmonics read incorrectly on average-responding meters.
+
+## Example: sizing power factor correction
+
+Take the earlier load of 5.543 kW at a power factor of 0.8. The reactive power is 5.543 × tan(cos⁻¹ 0.8) = 5.543 × 0.75 = 4.157 kvar. To raise the power factor to 0.95, the remaining reactive power is 5.543 × tan(cos⁻¹ 0.95) = 5.543 × 0.3287 = 1.822 kvar. The capacitor bank must supply the difference, 4.157 − 1.822 = 2.335 kvar. This is how a power factor correction capacitor bank is sized.
+
+The line current falls too. At 0.95 the same 5.543 kW needs 5,543 / (1.732 × 400 × 0.95) = 8.42 A, down from 10 A.
+
+## Unbalanced loads
+
+If the three line currents differ, the single-formula result is wrong. Calculate each phase separately as V<sub>phase</sub> × I<sub>phase</sub> × PF, then add the three real powers. Do the same for reactive power, keeping the sign, since inductive and capacitive kvar offset each other.
+
+## Typical power factors
+
+Induction motors run at about 0.8 to 0.9 near full load, and can fall well below 0.5 at light load, which is why oversized motors waste current. Resistive heating is at 1. Fluorescent lighting with magnetic ballasts and welding equipment sit lower, while variable-speed drives and electronic loads depend on their input stage. If the meter shows both kW and kVA, divide the two to get the power factor and use the measured value instead of an assumed one.
+
+## Questions
+
+### Why is there a √3 in three-phase power?
+Line-to-line voltage is √3 times the phase voltage in a star-connected system. Summing three phases each carrying V<sub>phase</sub> × I gives 3 × V<sub>phase</sub> × I, which equals √3 × V<sub>LL</sub> × I.
+
+### Do I need the neutral for this calculation?
+No. On a balanced load the neutral carries no current and the line-to-line formula holds.
+
+### Delta or star connection?
+The line-to-line formula is the same for both. Only the phase quantities inside the load differ.
+
+### What power factor should I enter if I don't know it?
+Use the nameplate or a meter reading. Induction motors near full load are often 0.8 to 0.9.
+
+<Related items={[
+  { href: '/kva-to-amps-calculator/', label: 'kVA to amps calculator' },
+  { href: '/kw-to-amps-calculator/', label: 'kW to amps calculator' },
+  { href: '/amps-to-watts-calculator/', label: 'Amps to watts calculator' },
+  { href: '/ohms-law-calculator/', label: "Ohm's law calculator" },
+]} />

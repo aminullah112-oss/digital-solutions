@@ -1,0 +1,72 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Earth Resistance Calculator (Single Rod) | Ohmetry"
+description: "Estimate the resistance to earth of one driven rod from soil resistivity, length and diameter, and the rod length for a target value."
+h1: "Earth Rod Resistance Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Earth rod resistance"
+---
+import EarthRod from '../../components/EarthRod.tsx';
+import Related from '../../components/Related.astro';
+
+<EarthRod client:load />
+
+The resistance of an earth electrode to the general mass of earth decides how much the electrode's potential rises when fault current flows into it. That rise, the earth potential rise (EPR = fault current × resistance), drives touch and step voltages and the operation of earth-fault protection. This calculator estimates the resistance of a single vertical rod.
+
+## Formula
+
+<div class="formula">R = ρ / (2π L) × (ln(4L / a) − 1)</div>
+
+ρ is the soil resistivity in Ω·m, L the driven length of the rod in metres and a its radius in metres. This is the classical Dwight (Sunde) result for a vertical rod in uniform soil. The resistance is proportional to the soil resistivity and falls as the rod gets longer, but not in proportion.
+
+## Worked example
+
+A 16 mm rod driven 3 m into soil of 100 Ω·m:
+
+- a = 0.008 m, and ln(4 × 3 / 0.008) = ln 1,500 = 7.313.
+- ρ / (2π L) = 100 / 18.85 = 5.305.
+- R = 5.305 × (7.313 − 1) = 33.5 Ω.
+
+Doubling the rod to 6 m gives 18.6 Ω, which is 55 % of the 3 m value, not 50 %. To reach 10 Ω in the same soil with a single rod needs about 12.3 m, which is impractical to drive, and that is why electrodes are installed as several rods, a ring or a mesh.
+
+## The soil number is the weak point
+
+Soil resistivity ranges from tens of Ω·m in wet clay to over a thousand in dry sand, gravel or rock, and it changes with moisture, temperature and depth. A value taken from a table is only a rough guide. Measure it on site, with the Wenner four-pin method, at a range of spacings, and design for the dry season, when resistivity peaks. Layered soils, such as a wet topsoil over dry sand, make a single resistivity figure unreliable and call for a two-layer analysis.
+
+## Using several rods
+
+Rods in parallel do not divide the resistance by the number of rods unless they are far apart, because their fields overlap. At a spacing equal to the rod length the combined resistance is noticeably higher than R divided by the number of rods, and larger spacings help. This calculator handles a single rod only, so apply a factor from a design guide or a software tool for groups, rings and grids.
+
+## Verifying the installation
+
+A calculation is a design estimate. The installed system is tested by a fall-of-potential method, for which IEEE Std 81 is the usual reference, using current and potential probes set far enough away from the electrode. The results are compared with the design target, and a connected system also has to be checked against touch and step voltage limits, which depend on the fault current and clearing time as well as the resistance.
+
+## Targets
+
+The required resistance comes from the standard, the utility or the application. Lightning protection, building services, a distribution substation and a high-voltage substation all have different targets, and some are set by a permitted EPR rather than by an ohmic value. This page does not state one for you.
+
+## Common mistakes
+
+- **Using a typical soil resistivity as a measured one.**
+- **Ignoring seasonal variation.**
+- **Counting parallel rods as ideal.**
+- **Assuming a low resistance alone makes a safe system.** Touch and step voltages are the real test.
+
+## Questions
+
+### What is the effect of rod diameter?
+Little. Resistance depends on the logarithm of the ratio of length to radius, so a thicker rod lowers the value only slightly. Corrosion and mechanical strength decide the diameter.
+
+### Does chemical treatment help?
+It can lower the resistivity of the soil around the electrode, but it needs maintenance and checking over time.
+
+### Is the formula valid for horizontal conductors?
+No. This is for a vertical rod. Horizontal strips, rings and meshes have their own formulae.
+
+<Related items={[
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/idmt-relay-calculator/', label: 'IDMT relay time calculator' },
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+  { href: '/ct-burden-calculator/', label: 'CT burden calculator' },
+]} />

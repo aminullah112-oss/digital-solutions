@@ -1,0 +1,71 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "CT Burden Calculation and Calculator | Ohmetry"
+description: "Check a current transformer's connected burden from lead length, lead size and relay burden, and the resulting effective accuracy limit factor."
+h1: "CT Burden Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "CT burden"
+---
+import CtBurden from '../../components/CtBurden.tsx';
+import Related from '../../components/Related.astro';
+
+<CtBurden client:load />
+
+A current transformer is rated to drive a stated load, its burden, with its stated accuracy. The load is the relay or meter plus the leads that connect it. Too much burden means the CT saturates at lower fault current than its nameplate suggests, and a relay that sees a distorted or reduced current can operate late or not at all. Checking the burden is a standard step in any protection design.
+
+## Formulas
+
+<div class="formula">R<sub>lead</sub> = 2 × ρ × L / A<br/>S<sub>lead</sub> = I<sub>sn</sub>² × R<sub>lead</sub><br/>S = S<sub>lead</sub> + S<sub>relay</sub><br/>ALF′ = ALF × (S<sub>n</sub> + S<sub>ct</sub>) / (S + S<sub>ct</sub>), with S<sub>ct</sub> = I<sub>sn</sub>² × R<sub>ct</sub></div>
+
+L is the one-way lead length, doubled for the out-and-back loop, ρ the resistivity of copper and A the lead cross-section. I<sub>sn</sub> is the rated secondary current, 1 A or 5 A. S<sub>relay</sub> is the relay's burden at rated current, from its datasheet. S<sub>n</sub> is the CT's rated burden in VA, and ALF is the rated accuracy limit factor. R<sub>ct</sub> is the CT's own secondary winding resistance, from the test report. ALF′ is the factor at the actual burden: a lighter burden than rated gives a higher effective accuracy limit, and a heavier burden gives a lower one.
+
+## Worked example
+
+A 5 A CT rated 15 VA 5P20, with a secondary winding resistance of 0.2 Ω, feeds a relay burdening 1 VA through 20 m of 4 mm² copper, at 20 °C.
+
+- Lead loop resistance: 2 × 20 × 0.017241 / 4 = 0.172 Ω.
+- Lead burden: 5² × 0.172 = 4.31 VA.
+- Total burden: 4.31 + 1 = 5.31 VA, which is 35 % of the rated 15 VA.
+- S<sub>ct</sub> = 25 × 0.2 = 5 VA.
+- ALF′ = 20 × (15 + 5) / (5.31 + 5) = 38.8.
+
+The CT is comfortably within its rating, and its effective accuracy limit is well above 20.
+
+## Why 1 A secondaries exist
+
+Lead burden scales with the square of the secondary current. The same 0.172 Ω loop burdens a 5 A CT with 4.31 VA but a 1 A CT with only 0.17 VA. For long runs, as between a switchyard and a control room, a 1 A secondary can be the difference between a CT that works and one that doesn't. A 200 m run of 2.5 mm² on a 5 A CT has 2.76 Ω of loop resistance, or 69 VA of lead burden alone, which far exceeds a 15 VA CT. On a 1 A CT the same cable is 2.8 VA.
+
+## Reading the CT designation
+
+A designation such as 15 VA 5P20 reads as follows: 15 VA rated burden, protection class 5P, with a composite error of no more than 5 % at 20 times the rated current. Standard rated burdens under IEC 61869-2 include 2.5, 5, 10, 15 and 30 VA. For high-speed schemes such as differential and distance protection, the manufacturer may require a class PX or TPY CT specified by its knee-point voltage, and the burden check is then done against that voltage.
+
+## Limits of this check
+
+- **It is a burden check, not a saturation study.** Whether the CT saturates for a given fault depends on the fault current, the X/R ratio, the remanent flux and the relay's requirement. The relay manufacturer's guidance sets the required knee point.
+- **Connection matters.** The lead loop resistance used here is the full out-and-back path, which suits a single-phase or earth-fault burden. In a three-phase star connection the burden seen by each CT on a balanced fault is lower, and the relay manual states the factors.
+- **Temperature.** Copper resistance rises with temperature, so use a realistic lead temperature, not the 20 °C default, if the run is outdoors in a hot climate.
+
+## Common mistakes
+
+- **Forgetting the lead loop is twice the length.**
+- **Ignoring the CT's own resistance.**
+- **Adding burdens in ohms and VA as if they were the same unit.**
+
+## Questions
+
+### What is a typical relay burden?
+Modern numerical relays burden the CT at well under 1 VA at rated current. Older electromechanical relays could draw several VA.
+
+### Can I connect two relays to one CT?
+Yes, in series, and their burdens add. Check the total, with the leads, against the rated burden.
+
+### What happens if the burden is too high?
+The CT saturates earlier, its output distorts and the relay may under-read the fault current.
+
+<Related items={[
+  { href: '/idmt-relay-calculator/', label: 'IDMT relay time calculator' },
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/solar-wire-size-calculator/', label: 'Solar DC cable size calculator' },
+  { href: '/cable-size-calculator/', label: 'IEC cable size calculator' },
+]} />

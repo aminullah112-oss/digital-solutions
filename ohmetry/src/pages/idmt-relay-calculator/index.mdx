@@ -1,0 +1,78 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "IDMT Relay Calculator (IEC 60255) | Ohmetry"
+description: "Calculate IDMT overcurrent relay operating time for IEC standard, very, extremely and long-time inverse curves from TMS, pickup and fault current."
+h1: "IDMT Overcurrent Relay Time Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "IDMT relay"
+---
+import IdmtRelay from '../../components/IdmtRelay.tsx';
+import Related from '../../components/Related.astro';
+
+<IdmtRelay client:load />
+
+An inverse definite minimum time (IDMT) overcurrent relay trips faster for larger currents. The characteristics are standardised, so a relay time can be calculated, checked against another relay and plotted on a grading curve. This calculator gives the operating time for the four IEC curves.
+
+## Formula
+
+<div class="formula">t = TMS × k / ((I / I<sub>s</sub>)<sup>α</sup> − 1)</div>
+
+TMS is the time multiplier setting, I the fault current, I<sub>s</sub> the pickup current setting, and k and α are the constants of the curve, from IEC 60255-151:
+
+| Curve | k | α |
+|---|---|---|
+| Standard inverse (SI) | 0.14 | 0.02 |
+| Very inverse (VI) | 13.5 | 1 |
+| Extremely inverse (EI) | 80 | 2 |
+| Long-time inverse (LTI) | 120 | 1 |
+
+Currents must be on the same side of the CT: either both primary amps, or both relay secondary amps. The formula is defined for I/I<sub>s</sub> greater than 1. A real relay starts to operate a little above its setting, and the manufacturer states the start ratio.
+
+## Worked example
+
+A standard inverse relay with TMS 0.2 and a pickup of 100 A primary sees a 1,000 A fault, ten times the pickup.
+
+t = 0.2 × 0.14 / (10<sup>0.02</sup> − 1) = 0.028 / 0.04713 = 0.594 s.
+
+The same relay trips in 2.0 s at twice the pickup and in 0.45 s at twenty times. At TMS 1 and ten times the setting, the four curves give 2.97 s for SI, 1.50 s for VI, 0.81 s for EI and 13.3 s for LTI, which are widely tabulated values you can use to check any implementation.
+
+## Choosing a curve
+
+- **Standard inverse** is the general choice for feeders and incomers, and its flat shape suits cases where the fault level varies little.
+- **Very and extremely inverse** curves are steeper, which helps discrimination where the fault current falls off sharply with distance from the source, and the extremely inverse curve coordinates well with fuses and with the thermal characteristics of motors and transformers.
+- **Long-time inverse** is used for earth-fault relays and where the relay must ride through long starting currents.
+
+## Grading in practice
+
+To grade two relays in series, the upstream relay must be slower than the downstream relay at the maximum fault current by a margin that covers the downstream breaker's opening time, the relay's reset and overshoot, and the timing tolerances. Margins of 0.3 to 0.5 s are common in practice, with the tighter end for modern relays and faster breakers. The usual sequence is to set the downstream relay first, work upstream, and check at the maximum fault level at the downstream busbar.
+
+Pickup settings are generally chosen above the maximum load current and below the minimum fault current the relay must see, with a margin on both sides. Common practice puts the pickup at 1.1 to 1.5 times full-load current, but follow your utility or project criteria.
+
+## What it does not cover
+
+This is the IEC characteristic. North American relays often use the IEEE C37.112 curves, which have a different form. Relays may also add an instantaneous element, a definite-time element or a minimum operating time, which change the real curve at high currents, and this calculator does not model them.
+
+## Common mistakes
+
+- **Mixing primary and secondary amps.** Convert both to the same side.
+- **Setting TMS to make a single point work.** Grading must be checked across the whole fault range.
+- **Forgetting the relay's tolerance.** Time accuracy classes allow a few percent of error.
+
+## Questions
+
+### What does TMS mean?
+Time multiplier setting. It scales the whole curve in time, so TMS 0.5 gives half the time of TMS 1 at every current.
+
+### Why does the time go very high near the pickup?
+The denominator approaches zero as the current approaches the setting. It is a property of the curve.
+
+### Which curve should I use for transformer protection?
+Practice varies by utility. The extremely inverse curve is common on the primary of distribution transformers because it grades with fuses and tolerates inrush.
+
+<Related items={[
+  { href: '/ct-burden-calculator/', label: 'CT burden calculator' },
+  { href: '/short-circuit-current-calculator/', label: 'Short-circuit current calculator' },
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+  { href: '/earth-resistance-calculator/', label: 'Earth rod resistance calculator' },
+]} />

@@ -1,0 +1,67 @@
+---
+layout: ../../layouts/CalcPage.astro
+title: "Short Circuit Current Calculator (Transformer %Z) | Ohmetry"
+description: "Estimate the three-phase symmetrical fault current at a transformer secondary from kVA, voltage, percent impedance and source fault level."
+h1: "Short-Circuit Current Calculator"
+hub: Protection and MV
+hubHref: /protection/
+crumb: "Short-circuit current"
+---
+import ShortCircuit from '../../components/ShortCircuit.tsx';
+import Related from '../../components/Related.astro';
+
+<ShortCircuit client:load />
+
+The fault current at a transformer secondary is the number that decides whether a breaker can break it, whether a busbar can survive it and how fast a relay should clear it. This calculator gives a quick, conservative estimate of the three-phase symmetrical value from the transformer's rating and impedance, and optionally the strength of the supply behind it.
+
+## Formulas
+
+<div class="formula">I<sub>FL</sub> = kVA × 1000 / (√3 × V)<br/>Z<sub>total</sub> = Z<sub>transformer</sub> + Z<sub>source</sub> (per unit, on the transformer rating)<br/>Z<sub>source</sub> = transformer MVA / source fault MVA<br/>I<sub>sc</sub> = I<sub>FL</sub> / Z<sub>total</sub></div>
+
+The transformer %Z is on the nameplate. With the source left blank, the supply is treated as an infinite bus, which gives the highest possible fault current and is the usual first check. Entering the source fault level, taken from the utility, adds the source impedance in series and lowers the answer.
+
+## Worked examples
+
+**Infinite bus.** A 1,000 kVA, 400 V transformer with 5 % impedance has a full-load current of 1,443 A.
+I<sub>sc</sub> = 1,443 / 0.05 = 28.9 kA, or 20 MVA.
+
+**500 MVA source.** Z<sub>source</sub> = 1 / 500 = 0.002 per unit, so Z<sub>total</sub> = 0.05 + 0.002 = 0.052.
+I<sub>sc</sub> = 1,443 / 0.052 = 27.8 kA. A strong source changes the answer by about 4 %.
+
+**Primary side.** A three-phase fault on the secondary also draws current through the 11 kV winding: 52.5 A / 0.05 = 1.05 kA. That is the current the primary relay or fuse sees for a secondary fault, and it is much lower than the secondary value because of the turns ratio.
+
+## How to use the result
+
+- **Breaking capacity.** A breaker or fuse on the secondary must be rated to interrupt at least the prospective fault current at its terminals.
+- **Busbar and cable withstand.** Busbars and cable screens have short-time current ratings that must exceed the fault level for the time the protection takes to clear it.
+- **Relay settings.** Time-grading studies need the maximum fault current to check the operating time and the minimum fault current to check that the relay will see a remote fault. This calculator gives the maximum.
+
+## What the simple method leaves out
+
+This is a screening calculation. IEC 60909, the standard for short-circuit calculation in three-phase AC systems, applies a voltage factor c (1.05 or 1.10 for maximum currents, depending on the voltage tolerance) and a correction factor for network transformer impedance. It also takes account of cable impedance between the transformer and the fault, which reduces the current. Induction motors connected to the bus feed current into the fault for the first few cycles, and the commonly used estimate is a few times their rated current, which can add materially to the peak at a motor control centre. Asymmetry is also omitted. The first-cycle peak current is higher than the symmetrical RMS value, by a factor that depends on the X/R ratio of the circuit and can reach roughly 1.5 to 2.5. That peak governs the making capacity of breakers and the mechanical forces on busbars.
+
+For a final design, use a short-circuit study or a calculation method that follows the standard your project cites.
+
+## Common mistakes
+
+- **Using the primary voltage for a secondary fault.**
+- **Mixing %Z bases.** The impedance is on the transformer's own kVA base, as on the nameplate.
+- **Taking the infinite-bus result as the actual value.** It is an upper bound, which is the right way to err for equipment ratings and the wrong way for checking sensitivity.
+
+## Questions
+
+### Where do I find the transformer impedance?
+On the nameplate, as a percentage, often 4 to 6 % for distribution transformers and higher for larger units.
+
+### Why does a lower impedance raise the fault current?
+There is less impedance limiting the current, so more flows. Lower %Z also means better voltage regulation, which is why the choice is a trade-off.
+
+### Does the answer include a phase-to-earth fault?
+No. The calculation covers the three-phase fault. Earth-fault levels depend on the winding connection and the earthing arrangement.
+
+<Related items={[
+  { href: '/transformer-full-load-current-calculator/', label: 'Transformer full-load current calculator' },
+  { href: '/idmt-relay-calculator/', label: 'IDMT relay time calculator' },
+  { href: '/ct-burden-calculator/', label: 'CT burden calculator' },
+  { href: '/earth-resistance-calculator/', label: 'Earth rod resistance calculator' },
+]} />
