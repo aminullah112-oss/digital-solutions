@@ -37,6 +37,11 @@
   --warning: #f5b94a;
   --warning-soft: rgba(245, 185, 74, 0.12);
 
+  /* Chart lines (Backtest equity curve) */
+  --chart-strategy: var(--accent);
+  --chart-index: var(--warning);
+  --chart-same: var(--text-muted);
+
   /* Shape, type, layout */
   --radius: 14px;
   --radius-sm: 9px;

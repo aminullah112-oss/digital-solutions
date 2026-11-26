@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { runSmaCrossover } from "../api.js";
+import { formatDate, formatPrice } from "../utils/format.js";
 
 // The four inputs. Edit this list to change labels, hints, limits or defaults.
 const FIELDS = [
@@ -256,14 +257,4 @@ function validate(form) {
     return { problem: "Short SMA must be smaller than Long SMA." };
   }
   return { values };
-}
-
-// "2026-11-25" -> "25 Nov 2026". Parsed by hand so time zones can't shift the day.
-function formatDate(iso) {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function formatPrice(n) {
-  return n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

@@ -74,3 +74,31 @@ export const runSmaCrossover = ({ shortSma, longSma, lookbackDays, maxStocks }) 
       max_stocks: maxStocks,
     }),
   });
+
+// Replays the SMA crossover rule over past prices. The first run downloads
+// prices from Kite (about 0.4 s per stock); later runs reuse the saved prices.
+export const runBacktest = ({
+  shortSma,
+  longSma,
+  years,
+  maxStocks,
+  startingCapital,
+  maxPositions,
+  stopLossPct,
+  slippagePct,
+  includeCharges,
+}) =>
+  request("/api/backtest/sma-crossover", {
+    method: "POST",
+    body: JSON.stringify({
+      short_sma: shortSma,
+      long_sma: longSma,
+      years,
+      max_stocks: maxStocks,
+      starting_capital: startingCapital,
+      max_positions: maxPositions,
+      stop_loss_pct: stopLossPct,
+      slippage_pct: slippagePct,
+      include_charges: includeCharges,
+    }),
+  });

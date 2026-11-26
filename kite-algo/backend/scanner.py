@@ -12,6 +12,7 @@ Steps for one scan:
 import math
 import threading
 import time
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 
@@ -33,7 +34,7 @@ _sleep = time.sleep
 _wall_clock = lambda: datetime.now(IST)  # noqa: E731
 
 _scan_lock = threading.Lock()
-_instruments: Dict[str, object] = {"at": 0.0, "map": None}
+_instruments: Dict[str, object] = {"at": 0.0, "map": None, "indices": {}}
 _candle_cache: Dict[int, dict] = {}
 _last_call = [0.0]
 
@@ -48,27 +49,39 @@ class HistoricalAccessDenied(Exception):
 
 def reset_caches() -> None:
     """Forget cached instruments and candles (used by tests)."""
-    _instruments.update(at=0.0, map=None)
+    _instruments.update(at=0.0, map=None, indices={})
     _candle_cache.clear()
     _last_call[0] = 0.0
 
 
 # ------------------------------------------------------------------ Kite ----
-def _get_instruments(kite) -> Dict[str, dict]:
+def get_instruments(kite) -> Dict[str, dict]:
     """{tradingsymbol: {token, name}} for NSE equities. Cached for 6 hours."""
     cached = _instruments["map"]
     if cached and _now() - float(_instruments["at"]) < INSTRUMENTS_TTL_SECONDS:
         return cached  # type: ignore[return-value]
+    rows = kite.instruments("NSE")
     mapping = {
         row["tradingsymbol"]: {"token": row["instrument_token"], "name": row.get("name")}
-        for row in kite.instruments("NSE")
+        for row in rows
         if row.get("segment") == "NSE" and row.get("instrument_type") == "EQ"
     }
-    _instruments.update(at=_now(), map=mapping)
+    indices = {row["tradingsymbol"]: row["instrument_token"] for row in rows if row.get("segment") == "INDICES"}
+    _instruments.update(at=_now(), map=mapping, indices=indices)
     return mapping
 
 
-def _throttled(call):
+def get_index_token(kite, name: str):
+    """Instrument token of an NSE index such as "NIFTY 100", or None if Kite doesn't list it."""
+    get_instruments(kite)
+    return _instruments["indices"].get(name)  # type: ignore[union-attr]
+
+
+def now_ist() -> datetime:
+    return _wall_clock()
+
+
+def throttled(call):
     """Run `call()` while respecting Kite's 3-requests-per-second limit."""
     wait = THROTTLE_SECONDS - (_now() - _last_call[0])
     if wait > 0:
@@ -90,7 +103,7 @@ def _get_candles(kite, token: int, from_date: date, to_date: date) -> List[Tuple
     if hit and hit["from"] <= from_date and hit["to"] == to_date and _now() - hit["at"] < CANDLES_TTL_SECONDS:
         return hit["rows"]
 
-    raw = _throttled(
+    raw = throttled(
         lambda: kite.historical_data(
             token,
             datetime.combine(from_date, datetime.min.time()),
@@ -110,19 +123,26 @@ def _market_is_open(now: datetime) -> bool:
     return now.weekday() < 5 and 9 * 60 + 15 <= minutes <= 15 * 60 + 30
 
 
-def run_scan(kite, short_sma: int, long_sma: int, lookback_days: int, max_stocks: int) -> dict:
+@contextmanager
+def exclusive():
+    """Only one scan or backtest at a time: Kite's rate limit is shared by all of them."""
     if not _scan_lock.acquire(blocking=False):
         raise ScanBusy()
     try:
-        return _scan(kite, short_sma, long_sma, lookback_days, max_stocks)
+        yield
     finally:
         _scan_lock.release()
+
+
+def run_scan(kite, short_sma: int, long_sma: int, lookback_days: int, max_stocks: int) -> dict:
+    with exclusive():
+        return _scan(kite, short_sma, long_sma, lookback_days, max_stocks)
 
 
 def _scan(kite, short_sma: int, long_sma: int, lookback_days: int, max_stocks: int) -> dict:
     constituents, meta = nifty100.load_constituents()
     selected = constituents[:max_stocks]
-    instruments = _get_instruments(kite)
+    instruments = get_instruments(kite)
 
     now = _wall_clock()
     today = now.date()

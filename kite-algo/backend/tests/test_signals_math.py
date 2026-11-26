@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest  # noqa: E402
 
-from signals import latest_crossover, sma  # noqa: E402
+from signals import crossovers, latest_crossover, sma  # noqa: E402
 
 
 def d(n):
@@ -86,3 +86,22 @@ def test_flat_day_does_not_hide_a_real_reversal():
 
 def test_too_little_data_returns_none():
     assert latest_crossover(d(3), [1, 2, 3], 2, 30, lookback=10) is None
+
+
+def test_crossovers_lists_every_crossover_oldest_first_with_the_sma_values():
+    # SMA2 vs SMA3 worked out by hand: bullish on index 4, a touch on 7 (equal, skipped), bearish on 8
+    out = crossovers([10, 9, 8, 9, 11, 13, 14, 12, 9, 7, 6], 2, 3)
+    assert [(i, kind) for i, kind, _, _ in out] == [(4, "bullish"), (8, "bearish")]
+    assert out[0][2] == pytest.approx(10) and out[0][3] == pytest.approx(9.3333, abs=1e-3)
+    assert out[1][2] == pytest.approx(10.5) and out[1][3] == pytest.approx(11.6667, abs=1e-3)
+
+
+def test_crossovers_is_empty_for_a_trend_without_reversal():
+    assert crossovers([1, 2, 3, 4, 5, 6, 7], 2, 3) == []
+
+
+def test_latest_crossover_is_the_last_of_crossovers():
+    closes = [10, 11, 12, 11, 9, 7, 6, 9, 13, 18]
+    everything = crossovers(closes, 2, 3)
+    assert len(everything) >= 2
+    assert latest_crossover(d(10), closes, 2, 3, lookback=10)["date"] == f"d{everything[-1][0]}"
