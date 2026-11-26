@@ -75,30 +75,39 @@ export const runSmaCrossover = ({ shortSma, longSma, lookbackDays, maxStocks }) 
     }),
   });
 
-// Replays the SMA crossover rule over past prices. The first run downloads
-// prices from Kite (about 0.4 s per stock); later runs reuse the saved prices.
-export const runBacktest = ({
-  shortSma,
-  longSma,
-  years,
-  maxStocks,
-  startingCapital,
-  maxPositions,
-  stopLossPct,
-  slippagePct,
-  includeCharges,
-}) =>
+// Replays a strategy over past prices. The first run downloads prices from Kite
+// (about 0.4 s per stock); later runs reuse the saved prices.
+const backtestCommon = (v) => ({
+  years: v.years,
+  max_stocks: v.maxStocks,
+  starting_capital: v.startingCapital,
+  stop_loss_pct: v.stopLossPct,
+  slippage_pct: v.slippagePct,
+  include_charges: v.includeCharges,
+  regime_filter: v.regimeFilter,
+  regime_sma: v.regimeSma,
+  holdout_pct: v.holdoutPct,
+});
+
+export const runBacktest = (v) =>
   request("/api/backtest/sma-crossover", {
     method: "POST",
     body: JSON.stringify({
-      short_sma: shortSma,
-      long_sma: longSma,
-      years,
-      max_stocks: maxStocks,
-      starting_capital: startingCapital,
-      max_positions: maxPositions,
-      stop_loss_pct: stopLossPct,
-      slippage_pct: slippagePct,
-      include_charges: includeCharges,
+      ...backtestCommon(v),
+      short_sma: v.shortSma,
+      long_sma: v.longSma,
+      max_positions: v.maxPositions,
+    }),
+  });
+
+export const runMomentum = (v) =>
+  request("/api/backtest/momentum", {
+    method: "POST",
+    body: JSON.stringify({
+      ...backtestCommon(v),
+      lookback_days: v.lookbackDays,
+      skip_days: v.skipDays,
+      top_n: v.topN,
+      keep_rank: v.keepRank,
     }),
   });

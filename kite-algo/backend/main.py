@@ -117,11 +117,38 @@ class BacktestRequest(BaseModel):
     stop_loss_pct: Optional[float] = Field(None, gt=0, le=50)  # None = no stop-loss
     slippage_pct: float = Field(0.05, ge=0, le=2)
     include_charges: bool = True
+    regime_filter: bool = False  # only open positions while the Nifty 100 is above its average
+    regime_sma: int = Field(200, ge=20, le=400)
+    holdout_pct: int = Field(40, ge=0, le=80)  # report the last N% of the period separately; 0 = off
 
     @model_validator(mode="after")
     def short_must_be_shorter(self):
         if self.short_sma >= self.long_sma:
             raise ValueError("Short SMA must be smaller than Long SMA.")
+        return self
+
+
+class MomentumRequest(BaseModel):
+    lookback_days: int = Field(252, ge=20, le=500)  # trading days, about 12 months
+    skip_days: int = Field(21, ge=0, le=60)  # ignore the latest ~month
+    top_n: int = Field(10, ge=1, le=50)  # stocks held
+    keep_rank: Optional[int] = Field(None, ge=1, le=100)  # keep a holding while it ranks this well (default 2 x top_n)
+    years: int = Field(5, ge=1, le=5)
+    max_stocks: int = Field(100, ge=1, le=100)
+    starting_capital: float = Field(1_000_000, ge=10_000, le=1_000_000_000)
+    stop_loss_pct: Optional[float] = Field(None, gt=0, le=50)
+    slippage_pct: float = Field(0.05, ge=0, le=2)
+    include_charges: bool = True
+    regime_filter: bool = False
+    regime_sma: int = Field(200, ge=20, le=400)
+    holdout_pct: int = Field(40, ge=0, le=80)
+
+    @model_validator(mode="after")
+    def check_relations(self):
+        if self.skip_days >= self.lookback_days:
+            raise ValueError("Skip days must be smaller than the lookback.")
+        if self.keep_rank is not None and self.keep_rank < self.top_n:
+            raise ValueError("Keep-until rank can't be smaller than the number of stocks held.")
         return self
 
 
@@ -251,20 +278,15 @@ def sma_crossover(body: SmaCrossoverRequest):
         raise HTTPException(status_code=502, detail="Scan failed. Check your internet connection and try again.")
 
 
-@app.post("/api/backtest/sma-crossover")
-def sma_crossover_backtest(body: BacktestRequest):
-    """Replay the SMA crossover rule over the last N years of Nifty 100 prices.
-
-    The first run downloads prices (about 0.4 s per stock, Kite's rate limit).
-    Prices are then saved on disk, so later runs are much faster.
-    """
+def _run_backtest(fn):
+    """Shared by both backtest routes: login check, then one run with friendly errors."""
     try:
         kite = _authed_kite()
     except SessionExpired:
         raise _expired_http_error()
 
     try:
-        return backtest_runner.run_backtest(kite, **body.model_dump())
+        return fn(kite)
     except scanner.ScanBusy:
         raise HTTPException(status_code=409, detail="A scan or backtest is already running. Wait for it to finish.")
     except scanner.HistoricalAccessDenied:
@@ -284,3 +306,23 @@ def sma_crossover_backtest(body: BacktestRequest):
         raise HTTPException(status_code=502, detail=f"Kite API error: {exc}")
     except Exception:
         raise HTTPException(status_code=502, detail="Backtest failed. Check your internet connection and try again.")
+
+
+@app.post("/api/backtest/sma-crossover")
+def sma_crossover_backtest(body: BacktestRequest):
+    """Replay the SMA crossover rule over the last N years of Nifty 100 prices.
+
+    The first run downloads prices (about 0.4 s per stock, Kite's rate limit).
+    Prices are then saved on disk, so later runs are much faster.
+    """
+    return _run_backtest(lambda kite: backtest_runner.run_backtest(kite, **body.model_dump()))
+
+
+@app.post("/api/backtest/momentum")
+def momentum_backtest(body: MomentumRequest):
+    """Monthly momentum rotation: hold the top-ranked Nifty 100 stocks by past return.
+
+    Needs about a year more history than the crossover test, so the first run
+    downloads more and takes longer.
+    """
+    return _run_backtest(lambda kite: backtest_runner.run_momentum_backtest(kite, **body.model_dump()))

@@ -1,40 +1,65 @@
 import { useRef, useState } from "react";
-import { runBacktest } from "../api.js";
+import { runBacktest, runMomentum } from "../api.js";
 import EquityChart from "../components/EquityChart.jsx";
 import { formatDate, formatMoney, formatPct, formatPrice, signClass } from "../utils/format.js";
 
-// The inputs. Edit these lists to change labels, hints, limits or defaults.
-const BASIC_FIELDS = [
-  { key: "shortSma", label: "Short SMA", hint: "Fast average, in days.", min: 2, max: 200, initial: "6" },
-  { key: "longSma", label: "Long SMA", hint: "Slow average, in days.", min: 3, max: 400, initial: "30" },
-  { key: "years", label: "Years of history", hint: "How far back to test (1 to 5).", min: 1, max: 5, initial: "5" },
-  { key: "maxStocks", label: "Max Stocks", hint: "How many Nifty 100 stocks to test (1 to 100).", min: 1, max: 100, initial: "100" },
-  { key: "startingCapital", label: "Starting capital (₹)", hint: "Money at the start of the test.", min: 10000, max: 1000000000, initial: "1000000" },
-  { key: "maxPositions", label: "Max open positions", hint: "Each position gets capital ÷ this.", min: 1, max: 100, initial: "10" },
-];
-const ADVANCED_FIELDS = [
-  { key: "stopLossPct", label: "Stop-loss (%)", hint: "Sell if the price falls this far below your buy price. Empty = no stop-loss.", min: 0.1, max: 50, decimal: true, optional: true, initial: "" },
-  { key: "slippagePct", label: "Slippage per side (%)", hint: "How much worse each buy and sell is than the quoted price.", min: 0, max: 2, decimal: true, initial: "0.05" },
-];
+// ------------------------------------------------------------------ inputs ---
+// Every input lives in these lists. Edit them to change labels, hints, limits or defaults.
+const F = {
+  shortSma: { key: "shortSma", label: "Short SMA", hint: "Fast average, in days.", min: 2, max: 200, initial: "6" },
+  longSma: { key: "longSma", label: "Long SMA", hint: "Slow average, in days.", min: 3, max: 400, initial: "30" },
+  maxPositions: { key: "maxPositions", label: "Max open positions", hint: "Each position gets capital ÷ this.", min: 1, max: 100, initial: "10" },
+  lookbackDays: { key: "lookbackDays", label: "Lookback (trading days)", hint: "How far back to measure each stock's return. 252 is about a year.", min: 20, max: 500, initial: "252" },
+  skipDays: { key: "skipDays", label: "Skip latest (trading days)", hint: "Ignore the most recent days when ranking. 21 is about a month.", min: 0, max: 60, initial: "21" },
+  topN: { key: "topN", label: "Stocks to hold", hint: "Hold this many top-ranked stocks, equal money in each.", min: 1, max: 50, initial: "10" },
+  years: { key: "years", label: "Years of history", hint: "How far back to test (1 to 5).", min: 1, max: 5, initial: "5" },
+  maxStocks: { key: "maxStocks", label: "Max Stocks", hint: "How many Nifty 100 stocks to test (1 to 100).", min: 1, max: 100, initial: "100" },
+  startingCapital: { key: "startingCapital", label: "Starting capital (₹)", hint: "Money at the start of the test.", min: 10000, max: 1000000000, initial: "1000000" },
+  keepRank: { key: "keepRank", label: "Keep until rank", hint: "A holding is sold only when it falls below this rank. Empty = twice the stocks held.", min: 1, max: 100, optional: true, initial: "" },
+  stopLossPct: { key: "stopLossPct", label: "Stop-loss (%)", hint: "Sell if the price falls this far below your buy price. Empty = no stop-loss.", min: 0.1, max: 50, decimal: true, optional: true, initial: "" },
+  slippagePct: { key: "slippagePct", label: "Slippage per side (%)", hint: "How much worse each buy and sell is than the quoted price.", min: 0, max: 2, decimal: true, initial: "0.05" },
+  holdoutPct: { key: "holdoutPct", label: "Hold out the last (%)", hint: "Reported separately so you can judge on days the strategy wasn't tuned on. 0 = off.", min: 0, max: 80, initial: "40" },
+  regimeSma: { key: "regimeSma", label: "Index average (days)", hint: "The Nifty 100 must close above this many days' average.", min: 20, max: 400, initial: "200" },
+};
 
-const SECONDS_PER_STOCK = 0.4; // Kite allows 3 history requests per second
+const STRATEGIES = {
+  sma_crossover: {
+    label: "SMA crossover",
+    blurb: "Buys the day after the short average crosses above the long one, sells the day after it crosses below.",
+    basic: [F.shortSma, F.longSma, F.years, F.maxStocks, F.startingCapital, F.maxPositions],
+    advanced: [F.stopLossPct, F.slippagePct, F.holdoutPct],
+    secondsPerStock: 0.4, // Kite allows 3 history requests per second
+    run: runBacktest,
+  },
+  momentum: {
+    label: "Momentum rotation",
+    blurb: "Once a month, holds the stocks that rose the most (skipping the latest weeks) and sells any that drop out of the ranking.",
+    basic: [F.lookbackDays, F.skipDays, F.topN, F.years, F.maxStocks, F.startingCapital],
+    advanced: [F.keepRank, F.stopLossPct, F.slippagePct, F.holdoutPct],
+    secondsPerStock: 0.8, // needs about a year more history, so two requests per stock the first time
+    run: runMomentum,
+  },
+};
+
+const ALL_FIELDS = Object.values(F);
 
 export default function BacktestTab({ onSessionExpired }) {
-  const [form, setForm] = useState(() =>
-    Object.fromEntries([...BASIC_FIELDS, ...ADVANCED_FIELDS].map((f) => [f.key, f.initial]))
-  );
+  const [strategy, setStrategy] = useState("sma_crossover");
+  const [form, setForm] = useState(() => Object.fromEntries(ALL_FIELDS.map((f) => [f.key, f.initial])));
   const [includeCharges, setIncludeCharges] = useState(true);
+  const [regimeFilter, setRegimeFilter] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
   const expiredRef = useRef(onSessionExpired);
   expiredRef.current = onSessionExpired;
 
-  const estimateSeconds = Math.ceil(((Number(form.maxStocks) || 0) + 1) * SECONDS_PER_STOCK);
+  const spec = STRATEGIES[strategy];
+  const estimateSeconds = Math.ceil(((Number(form.maxStocks) || 0) + 1) * spec.secondsPerStock);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const { values, problem } = validate(form, includeCharges);
+    const { values, problem } = validate(strategy, form, includeCharges, regimeFilter);
     if (problem) {
       setError(problem);
       return;
@@ -43,7 +68,7 @@ export default function BacktestTab({ onSessionExpired }) {
     setData(null); // drop the previous results so an error never sits above stale data
     setLoading(true);
     try {
-      setData(await runBacktest(values));
+      setData(await spec.run(values));
     } catch (err) {
       if (err.status === 401) {
         expiredRef.current();
@@ -83,31 +108,52 @@ export default function BacktestTab({ onSessionExpired }) {
   return (
     <div className="stack">
       <form className="card panel" onSubmit={handleSubmit} noValidate>
-        <h2>SMA crossover backtest</h2>
-        <p className="muted">
-          Replays the Signals rule on past Nifty 100 prices: buy the day after a bullish crossover, sell the day
-          after a bearish one, with Zerodha charges and slippage.
-        </p>
+        <h2>Backtest</h2>
+        <p className="muted">Replays a strategy on past Nifty 100 prices, with Zerodha charges and slippage, next to two benchmarks.</p>
 
-        <div className="form-grid">{BASIC_FIELDS.map(renderField)}</div>
+        <div className="field strategy-field">
+          <label className="field-label" htmlFor="bt-strategy">
+            Strategy
+          </label>
+          <select id="bt-strategy" value={strategy} onChange={(e) => setStrategy(e.target.value)} aria-describedby="bt-strategy-hint" disabled={loading}>
+            {Object.entries(STRATEGIES).map(([id, s]) => (
+              <option key={id} value={id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <span className="field-hint" id="bt-strategy-hint">
+            {spec.blurb}
+          </span>
+        </div>
+
+        <div className="form-grid">{spec.basic.map(renderField)}</div>
 
         <details className="details advanced">
           <summary>Advanced</summary>
           <div className="form-grid">
-            {ADVANCED_FIELDS.map(renderField)}
+            {spec.advanced.map(renderField)}
             <div className="field">
               <span className="field-label">Zerodha charges</span>
               <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={includeCharges}
-                  onChange={(e) => setIncludeCharges(e.target.checked)}
-                  disabled={loading}
-                />
+                <input type="checkbox" checked={includeCharges} onChange={(e) => setIncludeCharges(e.target.checked)} disabled={loading} />
                 <span>Include charges</span>
               </label>
               <span className="field-hint">Turn off only to see how much costs matter.</span>
             </div>
+            <div className="field">
+              <span className="field-label">Regime filter</span>
+              <label className="checkbox-field">
+                <input type="checkbox" checked={regimeFilter} onChange={(e) => setRegimeFilter(e.target.checked)} disabled={loading} />
+                <span>Only trade in an uptrend</span>
+              </label>
+              <span className="field-hint">
+                {strategy === "momentum"
+                  ? "When the Nifty 100 is below its average at a rebalance, sell everything and wait in cash."
+                  : "Skip new buys while the Nifty 100 is below its average. Open positions still exit normally."}
+              </span>
+            </div>
+            {regimeFilter && renderField(F.regimeSma)}
           </div>
         </details>
 
@@ -125,9 +171,8 @@ export default function BacktestTab({ onSessionExpired }) {
             <div className="scan-status" role="status">
               <div className="progress" aria-hidden="true" />
               <span>
-                Testing up to {form.maxStocks} stocks over {form.years} {Number(form.years) === 1 ? "year" : "years"}. The
-                first run downloads prices from Kite, about {estimateSeconds} seconds. Later runs reuse the saved
-                prices and finish much faster.
+                Testing up to {form.maxStocks} stocks over {form.years} {Number(form.years) === 1 ? "year" : "years"}. The first run
+                downloads prices from Kite, about {estimateSeconds} seconds. Later runs reuse the saved prices and finish much faster.
               </span>
             </div>
           )}
@@ -142,6 +187,25 @@ export default function BacktestTab({ onSessionExpired }) {
 // ---------------------------------------------------------------- results ---
 const TRADES_SHOWN = 200;
 
+const REASONS = {
+  "bearish crossover": "Bearish crossover",
+  "rank dropped": "Dropped out of ranking",
+  "regime off": "Regime filter off",
+  "stop-loss": "Stop-loss",
+  "end of test": "End of test",
+};
+
+function describe(data) {
+  const p = data.params;
+  const rules =
+    data.strategy === "momentum"
+      ? `Momentum: top ${p.top_n} by ${p.lookback_days}-day return, skipping ${p.skip_days} · ${data.summary.rebalances} rebalances`
+      : `SMA ${p.short_sma}/${p.long_sma} · ${formatMoney(p.starting_capital)} in ${p.max_positions} slots`;
+  return `${rules} · ${data.universe.used} of ${data.universe.requested} stocks${p.stop_loss_pct ? ` · ${p.stop_loss_pct}% stop` : ""}${
+    p.regime_filter ? ` · regime filter ${p.regime_sma}d` : ""
+  }`;
+}
+
 function Results({ data }) {
   const { summary, benchmarks, params, period, universe, trades, costs } = data;
   const [showAll, setShowAll] = useState(false);
@@ -150,6 +214,7 @@ function Results({ data }) {
   const shown = showAll ? trades : trades.slice(0, TRADES_SHOWN);
   const skipped = data.signals_skipped;
   const skippedTotal = skipped.no_free_slot + skipped.not_enough_cash;
+  const isMomentum = data.strategy === "momentum";
 
   return (
     <section aria-label="Backtest results" className="stack">
@@ -157,17 +222,13 @@ function Results({ data }) {
         <strong>
           {formatDate(period.start)} to {formatDate(period.end)}
         </strong>
-        <span className="muted-inline">
-          SMA {params.short_sma}/{params.long_sma} · {universe.used} of {universe.requested} stocks ·{" "}
-          {formatMoney(params.starting_capital)} in {params.max_positions} slots
-          {params.stop_loss_pct ? ` · ${params.stop_loss_pct}% stop` : ""}
-        </span>
+        <span className="muted-inline">{describe(data)}</span>
       </div>
 
       <div className="alert alert-warning" role="note">
         Survivorship bias: this test uses today's Nifty 100 members. Stocks that dropped out of the index are
-        missing, which flatters a long-only test. Compare with "Same stocks, buy and hold" to see how much comes
-        from the signal.
+        missing, which flatters a long-only test, and momentum most of all. Compare with "Same stocks, buy and hold" to see
+        how much comes from the strategy.
       </div>
       {data.market_open && (
         <div className="alert alert-warning" role="note">
@@ -184,6 +245,8 @@ function Results({ data }) {
           {n}
         </div>
       ))}
+
+      {data.segments && <Holdout segments={data.segments} />}
 
       <div className="grid cards">
         <Card
@@ -241,14 +304,15 @@ function Results({ data }) {
 
       <div className="card chart-card">
         <h3>Equity curve</h3>
-        <EquityChart curve={data.equity_curve} />
+        <EquityChart curve={data.equity_curve} splitDate={data.segments?.split_date} />
+        {data.segments && <p className="footnote chart-note">The shaded part is the held-out period.</p>}
       </div>
 
       <h3 className="section-title">Trades ({trades.length})</h3>
       {trades.length === 0 ? (
         <div className="card empty">
           <strong>No trades.</strong>
-          <span>No bullish crossover led to a trade in this period. Try a shorter Short SMA or more years.</span>
+          <span>The strategy never bought anything in this period. Try more years or different settings.</span>
         </div>
       ) : (
         <div className="table-wrap">
@@ -295,7 +359,11 @@ function Results({ data }) {
         Fills happen at the next day's open. Positions still open on the last day are sold at that day's close ("End of
         test"). Prices exclude dividends for the strategy and both benchmarks.
         {skippedTotal > 0 &&
-          ` ${skippedTotal} signals were skipped: ${skipped.no_free_slot} with no free slot, ${skipped.not_enough_cash} that didn't fit the cash available.`}
+          ` ${skippedTotal} buys were skipped: ${skipped.no_free_slot} with no free slot, ${skipped.not_enough_cash} that didn't fit the cash available.`}
+        {skipped.regime_off > 0 &&
+          (isMomentum
+            ? ` The Nifty 100 was below its ${params.regime_sma}-day average at ${skipped.regime_off} monthly rebalances, so the portfolio sat in cash.`
+            : ` ${skipped.regime_off} signals were skipped because the Nifty 100 was below its ${params.regime_sma}-day average.`)}
       </p>
 
       {data.excluded.length > 0 && (
@@ -330,23 +398,78 @@ function Results({ data }) {
       <details className="details">
         <summary>How to read these results</summary>
         <p>
-          The strategy only matters if it beats both benchmarks after costs. If it trails "Same stocks, buy and hold",
-          the crossover rule is costing you money compared with simply holding the same shares.
+          The strategy only matters if it beats both benchmarks after costs, on the held-out period. If it trails "Same stocks,
+          buy and hold", the rules are costing you money compared with simply holding the same shares.
         </p>
         <p>
-          A good result on past data does not predict future returns, and trying many SMA lengths on the same years
-          will eventually find one that looks good by luck.
+          Change settings and re-run until the held-out numbers look good, and that period stops being held out: you will have
+          tuned to it. Pick your settings first, look once, and treat anything else as a new test on new data.
         </p>
       </details>
     </section>
   );
 }
 
-const REASONS = {
-  "bearish crossover": "Bearish crossover",
-  "stop-loss": "Stop-loss",
-  "end of test": "End of test",
-};
+// The held-out check: the same numbers for the first part and the last part of the period.
+function Holdout({ segments }) {
+  const { in_sample: ins, out_of_sample: oos } = segments;
+  // [label, how to read the value, whether to color it green/red by sign]
+  const rows = [
+    ["Period", (s) => `${formatDate(s.period.start)} to ${formatDate(s.period.end)}`, false],
+    ["Strategy return", (s) => pct(s.strategy?.total_return_pct), true],
+    ["Nifty 100 index return", (s) => pct(s.nifty100?.total_return_pct), true],
+    ["Same stocks, buy and hold", (s) => pct(s.same_stocks?.total_return_pct), true],
+    ["Strategy max drawdown", (s) => pct(s.strategy?.max_drawdown_pct), true],
+    ["Trades closed", (s) => String(s.trades.trades), false],
+    ["Win rate", (s) => (s.trades.win_rate_pct === null ? "n/a" : `${s.trades.win_rate_pct.toFixed(1)}%`), false],
+  ];
+  const verdict = (s) =>
+    ["nifty100", "same_stocks"]
+      .filter((k) => s[k])
+      .map((k) => {
+        const diff = s.strategy.total_return_pct - s[k].total_return_pct;
+        return `${diff >= 0 ? "ahead of" : "behind"} ${k === "nifty100" ? "the Nifty 100" : "the same stocks held"} by ${Math.abs(diff).toFixed(1)} points`;
+      })
+      .join(" and ");
+
+  return (
+    <div className="card holdout">
+      <h3>Held-out check</h3>
+      <p className="muted-inline">
+        The last {segments.holdout_pct}% of the period is reported separately. Judge the strategy on the right-hand column.
+      </p>
+      <div className="table-wrap flat">
+        <table className="table">
+          <caption className="sr-only">In-sample and held-out results</caption>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">First part (in-sample)</th>
+              <th scope="col">Last part (held out)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([label, get, colored]) => (
+              <tr key={label}>
+                <th scope="row">{label}</th>
+                <td className={colored ? signed(get(ins)) : ""}>{get(ins)}</td>
+                <td className={colored ? signed(get(oos)) : ""}>{get(oos)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {oos.strategy && (
+        <p className="holdout-verdict">
+          Held out: the strategy finished {verdict(oos) || "with no benchmark to compare"}.
+        </p>
+      )}
+    </div>
+  );
+}
+
+const pct = (n) => (n === null || n === undefined ? "n/a" : formatPct(n));
+const signed = (text) => (text.startsWith("+") ? "pos" : text.startsWith("-") ? "neg" : "");
 
 function Card({ label, value, sub, tone = "" }) {
   return (
@@ -366,9 +489,11 @@ function versus(strategy, other) {
 }
 
 // ---------------------------------------------------------------- helpers ---
-function validate(form, includeCharges) {
-  const values = { includeCharges };
-  for (const f of [...BASIC_FIELDS, ...ADVANCED_FIELDS]) {
+function validate(strategy, form, includeCharges, regimeFilter) {
+  const spec = STRATEGIES[strategy];
+  const fields = [...spec.basic, ...spec.advanced, ...(regimeFilter ? [F.regimeSma] : [])];
+  const values = { includeCharges, regimeFilter };
+  for (const f of fields) {
     const raw = String(form[f.key]).trim();
     if (raw === "" && f.optional) {
       values[f.key] = null;
@@ -383,8 +508,15 @@ function validate(form, includeCharges) {
     }
     values[f.key] = n;
   }
-  if (values.shortSma >= values.longSma) {
+  if (!regimeFilter) values.regimeSma = Number(F.regimeSma.initial);
+  if (strategy === "sma_crossover" && values.shortSma >= values.longSma) {
     return { problem: "Short SMA must be smaller than Long SMA." };
+  }
+  if (strategy === "momentum") {
+    if (values.skipDays >= values.lookbackDays) return { problem: "Skip latest must be smaller than the lookback." };
+    if (values.keepRank !== null && values.keepRank < values.topN) {
+      return { problem: "Keep until rank must be at least the number of stocks held." };
+    }
   }
   return { values };
 }

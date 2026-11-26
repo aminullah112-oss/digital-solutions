@@ -384,4 +384,227 @@ def test_defaults_match_the_design_doc():
         "stop_loss_pct": None,
         "slippage_pct": 0.05,
         "include_charges": True,
+        "regime_filter": False,
+        "regime_sma": 200,
+        "holdout_pct": 40,
     }
+
+
+def test_momentum_defaults():
+    assert main.MomentumRequest().model_dump() == {
+        "lookback_days": 252,
+        "skip_days": 21,
+        "top_n": 10,
+        "keep_rank": None,
+        "years": 5,
+        "max_stocks": 100,
+        "starting_capital": 1_000_000,
+        "stop_loss_pct": None,
+        "slippage_pct": 0.05,
+        "include_charges": True,
+        "regime_filter": False,
+        "regime_sma": 200,
+        "holdout_pct": 40,
+    }
+
+
+# =============================================================== momentum ====
+def post_m(client, **overrides):
+    body = {
+        "lookback_days": 120,
+        "skip_days": 10,
+        "top_n": 4,
+        "years": 1,
+        "max_stocks": 12,
+        "starting_capital": 1_000_000,
+        "stop_loss_pct": None,
+        "slippage_pct": 0.05,
+        "include_charges": True,
+    }
+    body.update(overrides)
+    return client.post("/api/backtest/momentum", json=body)
+
+
+def month_starts(data):
+    """The first trading day of each month inside the test, plus the first test day: the only days momentum trades."""
+    days = [c["date"] for c in data["equity_curve"]]
+    return {days[0]} | {d for prev, d in zip(days, days[1:]) if d[:7] != prev[:7]}
+
+
+def test_momentum_response_and_invariants(client):
+    res = post_m(client)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["strategy"] == "momentum"
+    assert data["params"]["lookback_days"] == 120 and data["params"]["top_n"] == 4 and data["params"]["keep_rank"] == 8
+    assert data["universe"]["used"] == 12
+    assert data["summary"]["rebalances"] >= 11  # about one a month for a year
+    assert data["trades"], "momentum should trade"
+    total = sum(t["pnl"] for t in data["trades"])
+    assert data["summary"]["final_value"] - 1_000_000 == pytest.approx(total, abs=0.01 * len(data["trades"]) + 0.01)
+    for point in data["equity_curve"]:
+        assert len([t for t in data["trades"] if t["entry_date"] <= point["date"] < t["exit_date"]]) <= 4
+    assert {t["exit_reason"] for t in data["trades"]} <= {"rank dropped", "stop-loss", "end of test"}
+
+
+def test_momentum_only_trades_on_rebalance_days(client):
+    data = post_m(client).json()
+    days = month_starts(data)
+    assert {t["entry_date"] for t in data["trades"]} <= days
+    rotated = [t for t in data["trades"] if t["exit_reason"] == "rank dropped"]
+    assert rotated and {t["exit_date"] for t in rotated} <= days
+
+
+def test_momentum_uses_each_stock_for_a_slot_not_more(client):
+    data = post_m(client, top_n=3, starting_capital=300_000).json()
+    assert all(t["shares"] * t["entry_price"] <= 100_000 for t in data["trades"])  # capital / top_n per position
+
+
+def test_momentum_second_run_downloads_nothing(client):
+    post_m(client, max_stocks=5)
+    n = len(FakeKite.calls)
+    assert n == 6  # 5 stocks + the index
+    post_m(client, max_stocks=5, top_n=2, keep_rank=3, slippage_pct=0.2)  # rule changes only
+    assert len(FakeKite.calls) == n
+
+
+def test_switching_from_crossover_to_momentum_downloads_only_earlier_days(client):
+    post(client, max_stocks=3)
+    first = list(FakeKite.calls)
+    post_m(client, max_stocks=3)  # momentum needs more warm-up history than a 30-day SMA
+    extra = FakeKite.calls[len(first):]
+    assert len(extra) == 4  # 3 stocks + the index, each a head request
+    assert all(to <= first[0][1] for _, _, to in extra)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"skip_days": 120},
+        {"skip_days": 300},
+        {"lookback_days": 10},
+        {"lookback_days": 600},
+        {"top_n": 0},
+        {"top_n": 51},
+        {"keep_rank": 2},  # smaller than top_n=4
+        {"regime_sma": 10},
+        {"holdout_pct": 81},
+        {"holdout_pct": -1},
+        {"years": 6},
+        {"stop_loss_pct": 0},
+    ],
+)
+def test_momentum_invalid_inputs_rejected(client, overrides):
+    assert post_m(client, **overrides).status_code == 422
+    assert FakeKite.calls == []
+
+
+def test_momentum_error_paths(client):
+    FakeKite.errors = {SYMBOLS[0]: kite_exc.PermissionException("Insufficient permission for that call.")}
+    assert post_m(client).status_code == 403
+    FakeKite.errors = {SYMBOLS[0]: kite_exc.TokenException("expired")}
+    assert post_m(client).status_code == 401 and token_store.load_session() is None
+    assert post_m(client).status_code == 401  # not logged in now
+    token_store.save_session("key123", ACCESS_TOKEN, "AB1234")
+    FakeKite.errors = {}
+    with scanner.exclusive():
+        assert post_m(client).status_code == 409
+
+
+# ================================================================== regime ====
+def index_regime(sma_period):
+    """Re-derive 'index close above its SMA' per date from the fake index prices (independent of the engine)."""
+    closes = wave(99)
+    days = [d.isoformat() for d in business_days_ending(TODAY, len(closes))]
+    avg = signals_sma(closes, sma_period)
+    return {days[i]: (avg[i] is not None and closes[i] > avg[i]) for i in range(len(days))}, days
+
+
+def signals_sma(values, n):
+    return [None if i < n - 1 else sum(values[i - n + 1 : i + 1]) / n for i in range(len(values))]
+
+
+def previous_day(days, d):
+    return days[days.index(d) - 1]
+
+
+def test_crossover_regime_filter_only_enters_when_the_index_was_above_its_average(client):
+    on, days = index_regime(100)
+    data = post(client, max_stocks=10, regime_filter=True, regime_sma=100).json()
+    assert data["trades"]
+    assert all(on[previous_day(days, t["entry_date"])] for t in data["trades"])  # the signal day's close was ON
+    assert data["signals_skipped"]["regime_off"] > 0 and data["params"]["regime_filter"] is True
+
+
+def test_the_regime_filter_really_changes_the_trades(client):
+    on, days = index_regime(100)
+    plain = post(client, max_stocks=10).json()
+    blocked = [t for t in plain["trades"] if not on[previous_day(days, t["entry_date"])]]
+    assert blocked, "negative control: without the filter some entries happen while the regime is OFF"
+    filtered = post(client, max_stocks=10, regime_filter=True, regime_sma=100).json()
+    assert len(filtered["trades"]) < len(plain["trades"])
+    assert plain["signals_skipped"]["regime_off"] == 0
+
+
+def test_momentum_regime_filter_sells_everything_when_the_index_turns_off(client):
+    on, days = index_regime(100)
+    data = post_m(client, regime_filter=True, regime_sma=100).json()
+    off_exits = [t for t in data["trades"] if t["exit_reason"] == "regime off"]
+    assert off_exits, "the fake index drops below its average during the year"
+    assert all(not on[previous_day(days, t["exit_date"])] for t in off_exits)
+    assert all(on[previous_day(days, t["entry_date"])] for t in data["trades"])  # never buys while OFF
+    assert data["signals_skipped"]["regime_off"] > 0
+
+
+def test_regime_filter_downloads_extra_index_history_only(client):
+    post(client, max_stocks=2, regime_filter=True, regime_sma=300)
+    stock_from = min(f for t, f, _ in FakeKite.calls if t != INDEX_TOKEN)
+    index_from = next(f for t, f, _ in FakeKite.calls if t == INDEX_TOKEN)
+    assert (stock_from - index_from).days > 300  # the index needs ~490 days of warm-up, stocks only ~58
+
+
+@pytest.mark.parametrize("call", ["crossover", "momentum"])
+def test_regime_filter_without_the_index_is_a_clear_error(client, call):
+    FakeKite.index_listed = False
+    res = post(client, regime_filter=True) if call == "crossover" else post_m(client, regime_filter=True)
+    assert res.status_code == 502 and "regime filter needs" in res.json()["detail"]
+
+
+def test_regime_filter_when_the_index_download_fails_is_a_clear_error(client):
+    FakeKite.errors = {"INDEX": kite_exc.DataException("nope")}
+    res = post(client, regime_filter=True)
+    assert res.status_code == 502 and "could not be downloaded" in res.json()["detail"]
+
+
+@pytest.mark.parametrize("overrides", [{"regime_sma": 10}, {"regime_sma": 500}, {"holdout_pct": 90}, {"holdout_pct": -5}])
+def test_crossover_new_options_are_validated(client, overrides):
+    assert post(client, **overrides).status_code == 422
+
+
+# ================================================================= hold-out ====
+def test_holdout_splits_the_period_and_every_trade_lands_in_one_part(client):
+    data = post(client, max_stocks=10).json()
+    seg = data["segments"]
+    assert seg["holdout_pct"] == 40
+    days = [c["date"] for c in data["equity_curve"]]
+    assert seg["split_date"] == days[round(len(days) * 0.6)]
+    ins, oos = seg["in_sample"], seg["out_of_sample"]
+    assert ins["period"]["start"] == days[0] and oos["period"]["end"] == days[-1]
+    assert ins["period"]["trading_days"] + oos["period"]["trading_days"] == len(days)
+    assert ins["trades"]["trades"] + oos["trades"]["trades"] == data["summary"]["trades"]
+    for part in (ins, oos):
+        assert part["strategy"] and part["nifty100"] and part["same_stocks"]
+    # the two parts chain together: (1 + in-sample return) * (1 + out-of-sample return) = whole-period return
+    whole = (1 + ins["strategy"]["total_return_pct"] / 100) * (1 + oos["strategy"]["total_return_pct"] / 100) - 1
+    assert whole * 100 == pytest.approx(data["summary"]["total_return_pct"], abs=0.05)
+
+
+def test_holdout_can_be_turned_off(client):
+    assert post(client, holdout_pct=0).json()["segments"] is None
+    assert post_m(client, holdout_pct=0).json()["segments"] is None
+
+
+def test_holdout_size_is_respected(client):
+    seg = post(client, holdout_pct=25).json()["segments"]
+    n = seg["in_sample"]["period"]["trading_days"] + seg["out_of_sample"]["period"]["trading_days"]
+    assert seg["out_of_sample"]["period"]["trading_days"] == pytest.approx(n * 0.25, abs=1)

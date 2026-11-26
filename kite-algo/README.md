@@ -107,7 +107,8 @@ The **API Secret is never saved.** It is only used once, in memory, to create th
 | POST | `/api/auth/logout` | Invalidates the token at Kite and deletes the saved file. |
 | GET | `/api/profile` | Returns `user_name`, `user_id`, `products`, `exchanges`. |
 | POST | `/api/signals/sma-crossover` | `{short_sma, long_sma, lookback_days, max_stocks}` → ranked crossover signals. Slow (see below). |
-| POST | `/api/backtest/sma-crossover` | `{short_sma, long_sma, years, max_stocks, starting_capital, max_positions, stop_loss_pct, slippage_pct, include_charges}` → trades, equity curve, metrics, benchmarks. Slow the first time. |
+| POST | `/api/backtest/sma-crossover` | `{short_sma, long_sma, years, max_stocks, starting_capital, max_positions, stop_loss_pct, slippage_pct, include_charges, regime_filter, regime_sma, holdout_pct}` → trades, equity curve, metrics, benchmarks, held-out segments. Slow the first time. |
+| POST | `/api/backtest/momentum` | `{lookback_days, skip_days, top_n, keep_rank, years, max_stocks, starting_capital, stop_loss_pct, slippage_pct, include_charges, regime_filter, regime_sma, holdout_pct}` → same shape. Needs about a year more history, so the first run is slower. |
 | GET | `/api/health` | Liveness check. |
 
 Interactive docs: <http://127.0.0.1:8000/docs>.
@@ -145,39 +146,59 @@ The results table shows **Rank, Ticker, Company, Crossover Type, Crossover Date,
 
 ## Backtest tab
 
-Open the **Backtest** tab, adjust the inputs, press **Run Backtest**. It replays the Signals rule on past Nifty 100 prices and shows what would have happened, after costs, next to two benchmarks.
+Open the **Backtest** tab, pick a **Strategy**, adjust the inputs, press **Run Backtest**. It replays the strategy on past Nifty 100 prices and shows what would have happened, after costs, next to two benchmarks.
+
+**Strategies**
+
+| Strategy | What it does | Trades |
+|---|---|---|
+| **SMA crossover** | Buys the day after the short average crosses above the long one, sells the day after it crosses below. The same rule as the Signals tab. | Often |
+| **Momentum rotation** | Once a month, ranks the stocks by past return and holds the top ones, selling any that drop out of the ranking. | Monthly, at most |
 
 | Input | Default | Meaning |
 |---|---|---|
-| Short SMA / Long SMA | 6 / 30 | Same as the Signals tab |
+| Short SMA / Long SMA | 6 / 30 | Crossover only |
+| Max open positions | 10 | Crossover only. Each position gets capital ÷ this |
+| Lookback (trading days) | 252 | Momentum only. How far back each stock's return is measured (about a year) |
+| Skip latest (trading days) | 21 | Momentum only. The most recent days are ignored when ranking (about a month) |
+| Stocks to hold | 10 | Momentum only. Equal money in each |
+| Keep until rank (advanced) | 2 × stocks held | Momentum only. A holding is sold only when it falls below this rank, which avoids selling a stock for slipping from 10th to 11th |
 | Years of history | 5 | 1 to 5 |
 | Max Stocks | 100 | First N stocks of the Nifty 100 list |
 | Starting capital | ₹10,00,000 | |
-| Max open positions | 10 | Each position gets capital ÷ this (₹1,00,000 by default) |
-| Stop-loss % (advanced) | Off | Optional |
+| Stop-loss % (advanced) | Off | Optional, for both strategies |
 | Slippage per side % (advanced) | 0.05 | How much worse each fill is than the quoted price |
 | Include charges (advanced) | On | Zerodha delivery charges on each buy and sell |
+| Regime filter (advanced) | Off | "Only trade in an uptrend", see below |
+| Index average (days) | 200 | The Nifty 100 must close above this many days' average |
+| Hold out the last % (advanced) | 40 | See "Held-out check" below. 0 turns it off |
 
 **The rules** (agreed in the design review)
 
-1. **Long-only.** A bullish crossover opens a position; a bearish one closes it. Delivery (CNC) can't short.
-2. **Next-day open.** A crossover is only known at the close, so the trade happens at the **open of the next trading day**, never at the close that produced the signal.
-3. **Fixed position size, no compounding.** Each position gets starting capital ÷ max positions, sized so that shares plus buy charges fit inside it. When all slots are full, new signals are **skipped and counted**; same-day signals are served in ticker order.
-4. **Stop-loss (optional).** If the day's low touches the stop, the position sells at the stop price, or at the open if the stock gapped below it. If a stop and a bearish exit fall on the same day, the stop wins.
+1. **Long-only.** Delivery (CNC) can't short. For the crossover, a bullish crossover opens a position and a bearish one closes it.
+2. **Next-day open.** Every decision is made at a close and executed at the **open of the next trading day**, never at the close that produced it.
+3. **Fixed position size, no compounding.** Each position gets starting capital ÷ slots (max positions, or stocks held for momentum), sized so that shares plus buy charges fit inside it. When all slots are full, new buys are **skipped and counted**; same-day candidates are served in ticker order (crossover) or rank order (momentum).
+4. **Stop-loss (optional).** If the day's low touches the stop, the position sells at the stop price, or at the open if the stock gapped below it. If a stop and a strategy exit fall on the same day, the stop wins. A stock stopped out of a momentum portfolio is bought again only at the next monthly rebalance, if it still ranks.
 5. **Costs.** Zerodha delivery charges plus slippage. A round trip on ₹1,00,000 costs about ₹340 (0.34%) with the defaults.
 6. Positions still open on the last day are sold at that day's close and marked "End of test". Prices exclude dividends, for the strategy and both benchmarks.
+
+**Momentum details.** On the first trading day of each month, and on the first day of the test, stocks are ranked by their return from `lookback` trading days ago to `skip` days ago, using the previous close. Held stocks stay while they rank inside "Keep until rank"; free slots are filled from the top "Stocks to hold", best first. Stocks without enough history yet are not ranked.
+
+**Regime filter.** When on, the Nifty 100 must have closed above its N-day average on the signal day. For the crossover it blocks new buys while the index is below the average (open positions still exit normally, and the skipped signals are counted). For momentum it sells everything at a rebalance when the index is below the average and waits in cash. It needs index history for the whole average, so the first run downloads extra index days.
+
+**Held-out check.** The last N% of the period (40% by default) is reported separately from the first part: strategy and benchmark returns, max drawdown, trades and win rate for each. The chart shades the held-out part. The rule for using it: choose your settings first, look at the held-out column once, and treat any further tweaking as a new test on new data. If you keep changing settings until the held-out numbers look good, you have tuned to that period and it no longer tells you anything. Note that with fixed rules and no fitted parameters it shows consistency across time, not a true out-of-sample proof, and five years is mostly one market regime.
 
 **The results page** shows summary cards (total return and CAGR, both benchmarks, max drawdown, win rate, profit factor, average win/loss, average holding days, costs paid), an equity curve with hover values, and the trades table (newest entry first). Benchmarks: the **Nifty 100 index**, and the **same stocks held equal-weight** from day one. The second one shows how much of the result comes from the stock list rather than the signal.
 
 **Things to know**
 
-- **Survivorship bias.** The test uses today's Nifty 100 members. Stocks that dropped out are missing, which flatters a long-only test. Kite has no history for delisted stocks, so this can't be fixed with free data. The page says so every time.
+- **Survivorship bias.** The test uses today's Nifty 100 members. Stocks that dropped out are missing, which flatters a long-only test, and momentum most of all: stocks that rose are the ones that are in the index today. Kite has no history for delisted stocks, so this can't be fixed with free data. The page says so every time.
 - **Possible unadjusted splits.** I don't know whether Kite's daily candles are adjusted for splits and bonuses. A stock with a one-day move above 35% is **excluded and listed**, because an unadjusted split would create fake crossovers and fake losses. Check this against a known split on your own account.
-- **Overfitting.** Trying many SMA lengths on the same years will find one that looks good by luck. There is deliberately no parameter sweep.
-- **The first run is slow, later runs are fast.** Candles are saved in `backend/.data/candles/`. The first 5-year run downloads about 100 stocks plus the index at 3 requests per second (about 40 seconds). After that only the newest few days are downloaded, and changing the rules (SMA lengths, slots, stop, costs) needs no download at all. A bigger Long SMA needs a little more history before the start, so only those extra earlier days are downloaded. Long SMAs above about 100 may need a second request per stock.
+- **Overfitting.** Trying many settings on the same years will find some that look good by luck. There is deliberately no parameter sweep, and the held-out check only helps if you respect it.
+- **The first run is slow, later runs are fast.** Candles are saved in `backend/.data/candles/`. The first 5-year run downloads about 100 stocks plus the index at 3 requests per second (about 40 seconds). After that only the newest few days are downloaded, and changing the rules (SMA lengths, slots, stop, costs) needs no download at all. A bigger Long SMA, a momentum lookback or a regime filter needs more history before the start, so only those extra earlier days are downloaded. Long SMAs above about 100, and the momentum strategy (about 250 extra trading days), need a second request per stock the first time, so the first momentum run takes roughly twice as long.
 - **Scans and backtests share one lock.** Only one runs at a time, because Kite's rate limit is shared.
 - **Edit the charge rates in `backend/charges.py`.** They are my best knowledge of Zerodha's delivery rates, not verified against your account. Compare one trade with Zerodha's brokerage calculator before relying on the numbers.
-- **It is not advice.** Don't assume the crossover rule has an edge; the tab exists to measure whether it does. Past results do not predict future returns.
+- **It is not advice.** Don't assume either strategy has an edge; the tab exists to measure whether they do. Past results do not predict future returns.
 
 ## Customize the look
 
@@ -200,7 +221,7 @@ pytest
 
 The tests use a fake Kite client and a saved copy of the NSE CSV, so they need no credentials or internet. They check that the token and secret never appear in a response, that the session survives a restart, that expired tokens are cleared, the SMA and crossover maths (with hand-worked examples), ranking, symbol mapping, rate-limit spacing, caching, and each error path of the scanner.
 
-The backtest tests check the engine against hand-worked trades (for example 8,333 shares bought at an open of 12 and sold at 8 lose exactly ₹33,332), gap-through-stop fills, charges, slot limits, benchmarks, the candle cache, and invariants that must hold for any run: total profit equals the sum of trade profits, and never more positions are open than slots.
+The backtest tests check the engine against hand-worked trades (for example 8,333 shares bought at an open of 12 and sold at 8 lose exactly ₹33,332), gap-through-stop fills, charges, slot limits, benchmarks, the candle cache, and invariants that must hold for any run: total profit equals the sum of trade profits, and never more positions are open than slots. The strategy tests check momentum rankings, the skip window, the buffer, the regime filter (re-derived independently from the index prices) and the held-out split against hand-worked numbers.
 
 ## Security notes (read these)
 

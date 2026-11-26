@@ -41,6 +41,7 @@
   --chart-strategy: var(--accent);
   --chart-index: var(--warning);
   --chart-same: var(--text-muted);
+  --chart-holdout: rgba(139, 151, 173, 0.09);
 
   /* Shape, type, layout */
   --radius: 14px;

@@ -208,7 +208,7 @@ def two_identical(**kw):
 def test_when_slots_are_full_extra_signals_are_skipped_in_ticker_order():
     res = two_identical(max_positions=1)
     assert [t["symbol"] for t in res["trades"]] == ["AAA"]  # alphabetical, whatever the input order
-    assert res["signals_skipped"] == {"no_free_slot": 1, "not_enough_cash": 0}
+    assert res["signals_skipped"] == {"no_free_slot": 1, "not_enough_cash": 0, "regime_off": 0}
 
 
 def test_with_enough_slots_both_trade_and_each_gets_capital_divided_by_slots():

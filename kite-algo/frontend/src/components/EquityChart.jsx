@@ -39,7 +39,7 @@ function monthTicks(curve, maxLabels) {
   return [];
 }
 
-export default function EquityChart({ curve }) {
+export default function EquityChart({ curve, splitDate }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(800);
   const [hover, setHover] = useState(null);
@@ -79,6 +79,9 @@ export default function EquityChart({ curve }) {
     });
     return { paths, x, y, yTicks: niceTicks(yMin, yMax), xTicks: monthTicks(curve, Math.min(7, Math.floor(plotW / 70))) };
   }, [curve, n, plotW, plotH]);
+
+  const splitIndex = splitDate ? curve.findIndex((p) => p.date >= splitDate) : -1;
+  const splitX = splitIndex > 0 ? model.x(splitIndex) : null;
 
   function handleMove(e) {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -120,6 +123,15 @@ export default function EquityChart({ curve }) {
                 {`${MONTHS[Number(curve[i].date.slice(5, 7)) - 1]} ${curve[i].date.slice(0, 4)}`}
               </text>
             ))}
+            {splitX !== null && (
+              <g>
+                <rect x={splitX} y={M.top} width={width - M.right - splitX} height={plotH} fill="var(--chart-holdout)" />
+                <line x1={splitX} x2={splitX} y1={M.top} y2={M.top + plotH} stroke="var(--text-muted)" strokeWidth="1" strokeDasharray="2 4" />
+                <text x={splitX + 8} y={M.top + 14} fontSize="11.5" fill="var(--text-muted)">
+                  Held out
+                </text>
+              </g>
+            )}
             {model.paths.map((p) => (
               <path key={p.key} d={p.d} fill="none" stroke={p.color} strokeWidth="2" strokeDasharray={p.dash} strokeLinejoin="round" />
             ))}
@@ -136,6 +148,7 @@ export default function EquityChart({ curve }) {
             )}
           </g>
           <rect
+            className="chart-hit"
             x={M.left}
             y={M.top}
             width={plotW}
