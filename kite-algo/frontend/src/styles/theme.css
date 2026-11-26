@@ -1,0 +1,43 @@
+/*
+  THEME - the only file you need to edit to restyle the app.
+
+  Every color, font, and radius used by the app comes from the variables
+  below. Change a value here and the whole UI updates.
+
+  Quick ideas:
+    - Different accent color:  change --accent and --accent-soft
+    - Rounder / sharper UI:    change --radius and --radius-sm
+    - Wider dashboard:         change --content-width
+*/
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0b0f17;
+  --surface: #121826;
+  --surface-2: #19212f;
+  --border: #243044;
+
+  /* Text */
+  --text: #e6eaf2;
+  --text-muted: #8b97ad;
+
+  /* Accent (buttons, links, active tab) */
+  --accent: #4f8cff;
+  --accent-hover: #6a9dff;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(79, 140, 255, 0.14);
+
+  /* Status colors */
+  --danger: #ff7b7b;
+  --danger-soft: rgba(255, 107, 107, 0.12);
+
+  /* Shape, type, layout */
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --content-width: 960px;
+}
