@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getProfile } from "../api.js";
 
 export default function UserTab({ onSessionExpired }) {
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Keep the latest callback in a ref so `load` stays the same function.
+  // Otherwise the profile would be re-fetched every time the dashboard re-renders.
+  const expiredRef = useRef(onSessionExpired);
+  expiredRef.current = onSessionExpired;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -13,14 +18,14 @@ export default function UserTab({ onSessionExpired }) {
       setProfile(await getProfile());
     } catch (err) {
       if (err.status === 401) {
-        onSessionExpired();
+        expiredRef.current();
         return;
       }
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [onSessionExpired]);
+  }, []);
 
   useEffect(() => {
     load();

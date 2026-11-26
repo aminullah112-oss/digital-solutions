@@ -9,8 +9,6 @@ export default function DashboardPage({ user, onLoggedOut }) {
   const [activeId, setActiveId] = useState(TABS[0].id);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const ActiveTab = TABS.find((t) => t.id === activeId)?.component ?? TABS[0].component;
-
   async function handleLogout() {
     setLoggingOut(true);
     try {
@@ -46,14 +44,20 @@ export default function DashboardPage({ user, onLoggedOut }) {
 
       <main className="content">
         <Tabs tabs={TABS} activeId={activeId} onChange={setActiveId} />
-        <section
-          className="tab-panel"
-          role="tabpanel"
-          id={`panel-${activeId}`}
-          aria-labelledby={`tab-${activeId}`}
-        >
-          <ActiveTab onSessionExpired={handleSessionExpired} />
-        </section>
+        {/* Every tab stays mounted and the inactive ones are just hidden, so
+            switching tabs never throws away results (e.g. a finished scan). */}
+        {TABS.map(({ id, component: TabComponent }) => (
+          <section
+            key={id}
+            className="tab-panel"
+            role="tabpanel"
+            id={`panel-${id}`}
+            aria-labelledby={`tab-${id}`}
+            hidden={id !== activeId}
+          >
+            <TabComponent onSessionExpired={handleSessionExpired} />
+          </section>
+        ))}
       </main>
     </div>
   );

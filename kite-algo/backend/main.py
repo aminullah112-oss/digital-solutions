@@ -19,8 +19,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from kiteconnect import KiteConnect
 from kiteconnect import exceptions as kite_exc
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
+import nifty100
+import scanner
 import token_store
 
 app = FastAPI(title="Kite Connect Login API")
@@ -86,6 +88,19 @@ class LoginRequest(BaseModel):
     # SecretStr keeps the value out of logs and error messages by accident.
     api_secret: SecretStr
     request_token: str = Field(min_length=1, max_length=128)
+
+
+class SmaCrossoverRequest(BaseModel):
+    short_sma: int = Field(6, ge=2, le=200)
+    long_sma: int = Field(30, ge=3, le=400)
+    lookback_days: int = Field(20, ge=1, le=250)  # trading days
+    max_stocks: int = Field(100, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def short_must_be_shorter(self):
+        if self.short_sma >= self.long_sma:
+            raise ValueError("Short SMA must be smaller than Long SMA.")
+        return self
 
 
 # -------------------------------------------------------------- endpoints ---
@@ -171,3 +186,44 @@ def profile():
         "products": data.get("products") or [],
         "exchanges": data.get("exchanges") or [],
     }
+
+
+@app.post("/api/signals/sma-crossover")
+def sma_crossover(body: SmaCrossoverRequest):
+    """Scan the Nifty 100 for SMA crossovers, newest first.
+
+    This takes a while (about 0.4 s per stock) because Kite limits historical
+    data requests to 3 per second.
+    """
+    try:
+        kite = _authed_kite()
+    except SessionExpired:
+        raise _expired_http_error()
+
+    try:
+        return scanner.run_scan(
+            kite,
+            short_sma=body.short_sma,
+            long_sma=body.long_sma,
+            lookback_days=body.lookback_days,
+            max_stocks=body.max_stocks,
+        )
+    except scanner.ScanBusy:
+        raise HTTPException(status_code=409, detail="A scan is already running. Wait for it to finish.")
+    except scanner.HistoricalAccessDenied:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Kite refused the historical data request. Your Kite Connect app probably "
+                "doesn't include the Historical Data add-on. Check your plan on developers.kite.trade."
+            ),
+        )
+    except kite_exc.TokenException:
+        token_store.clear_session()
+        raise _expired_http_error()
+    except nifty100.ConstituentsError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    except kite_exc.KiteException as exc:
+        raise HTTPException(status_code=502, detail=f"Kite API error: {exc}")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Scan failed. Check your internet connection and try again.")

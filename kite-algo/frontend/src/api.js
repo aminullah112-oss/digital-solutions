@@ -61,3 +61,16 @@ export const login = ({ apiKey, apiSecret, requestToken }) =>
 export const logout = () => request("/api/auth/logout", { method: "POST" });
 
 export const getProfile = () => request("/api/profile");
+
+// Scans the Nifty 100 for SMA crossovers. Slow on purpose: Kite allows only
+// 3 history requests per second, so 100 stocks take about 40 seconds.
+export const runSmaCrossover = ({ shortSma, longSma, lookbackDays, maxStocks }) =>
+  request("/api/signals/sma-crossover", {
+    method: "POST",
+    body: JSON.stringify({
+      short_sma: shortSma,
+      long_sma: longSma,
+      lookback_days: lookbackDays,
+      max_stocks: maxStocks,
+    }),
+  });

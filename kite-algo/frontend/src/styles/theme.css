@@ -32,6 +32,10 @@
   /* Status colors */
   --danger: #ff7b7b;
   --danger-soft: rgba(255, 107, 107, 0.12);
+  --success: #3ecf8e;
+  --success-soft: rgba(62, 207, 142, 0.14);
+  --warning: #f5b94a;
+  --warning-soft: rgba(245, 185, 74, 0.12);
 
   /* Shape, type, layout */
   --radius: 14px;
@@ -39,5 +43,5 @@
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --content-width: 960px;
+  --content-width: 1120px;
 }
