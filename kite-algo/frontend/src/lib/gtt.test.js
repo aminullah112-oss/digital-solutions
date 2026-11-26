@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MESSAGES, buildCandidate, buildCandidates, deriveRows, mergePlacementResults, selectReady, toMap } from "./gtt.js";
+import { MESSAGES, buildCandidate, buildCandidates, deriveRows, mergePlacementResults, selectReady, summarizeLive, toMap } from "./gtt.js";
 
 const signal = (symbol, breakoutLow = 3903.3) => ({ symbol, companyName: `${symbol} Ltd.`, instrumentToken: 1, breakoutLow });
 const prices = (map) => (s) => map[s.symbol] ?? null;
@@ -113,4 +113,9 @@ test("placement answers replace state answers", () => {
   assert.deepEqual([merged.A.buy_status, merged.B.buy_status], ["success", "blocked"]);
   assert.deepEqual(toMap([{ symbol: "A" }]), { A: { symbol: "A" } });
   assert.deepEqual(mergePlacementResults([], undefined), {});
+});
+
+test("the confirmation totals are exact to the paisa", () => {
+  assert.deepEqual(summarizeLive([{ buy_price: 3903.3, quantity: 1 }, { buy_price: 99, quantity: 1 }, { buy_price: 0.1, quantity: 1 }, { buy_price: 0.2, quantity: 1 }]), { count: 4, total: 4002.6 });
+  assert.deepEqual(summarizeLive([]), { count: 0, total: 0 });
 });

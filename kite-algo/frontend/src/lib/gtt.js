@@ -102,3 +102,9 @@ export function mergePlacementResults(stateResults, placedResults) {
   for (const r of placedResults || []) merged[r.symbol] = r; // a placement answer replaces the state answer
   return merged;
 }
+
+// What the confirmation dialog shows: how many orders and what they add up to (buy price x quantity).
+export function summarizeLive(rows) {
+  const cents = rows.reduce((sum, r) => sum + Math.round(r.buy_price * 100) * r.quantity, 0);
+  return { count: rows.length, total: cents / 100 };
+}

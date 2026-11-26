@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { getGttState, getOhlcSnapshot, getScannerData, refreshScannerData, runLiveGtt } from "../api.js";
+import { getAlgoMode, getGttState, getOhlcSnapshot, getScannerData, placeLiveGtt, previewLiveGtt, refreshScannerData, runLiveGtt } from "../api.js";
 import { scanStocks } from "../lib/breakoutScanner.js";
 import { buildCandidates, deriveRows, mergePlacementResults, selectReady, toMap } from "../lib/gtt.js";
 import { liveStatusText, useLiveTicks } from "./useLiveTicks.js";
@@ -8,7 +8,9 @@ import { liveStatusText, useLiveTicks } from "./useLiveTicks.js";
 //   scanner data -> signals (the source of truth) -> live ticks + price snapshot -> GTT rows.
 // Both tabs read from here, so there is a single websocket and a single set of signals.
 //
-// Nothing in this file can place a real order. "Run Live" only asks the backend to create DUMMY records.
+// By default nothing here can place a real order: "Run Live" asks the backend to create DUMMY records.
+// Only when the backend was started with ALGO_LIVE_ORDERS=1 does it work in LIVE mode, and even then
+// a real order is placed only after you confirm an exact preview (see confirmLive below).
 
 const AlgoContext = createContext(null);
 export const useAlgo = () => useContext(AlgoContext);
@@ -82,12 +84,32 @@ export function AlgoProvider({ onSessionExpired, enabled, children }) {
   const latest = useRef({});
   latest.current = { tickPrices, snapshot, signals };
 
-  // ---- 4. GTT state (read-only) and the Run Live button (dummy records only)
+  // ---- 3b. is real placement switched on? (decided by the backend's environment, never by this page)
+  const [mode, setMode] = useState({ live: false, limits: null });
+  useEffect(() => {
+    if (!enabled) return undefined;
+    let cancelled = false;
+    getAlgoMode()
+      .then((m) => !cancelled && setMode({ live: m.live_enabled, limits: m.limits }))
+      .catch((err) => !cancelled && sessionExpired(err));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]);
+
+  // ---- 4. GTT state (read-only) and the Run Live button
   const [gttResults, setGttResults] = useState({});
   const [gttChecking, setGttChecking] = useState(false);
   const [gttError, setGttError] = useState("");
   const [running, setRunning] = useState(false);
+  const [pendingLive, setPendingLive] = useState(null); // live mode: the preview waiting for your confirmation
+  const [placing, setPlacing] = useState(false);
+  const [notice, setNotice] = useState("");
   const runningRef = useRef(false);
+  const placingRef = useRef(false);
+  const pendingRef = useRef(null);
+  pendingRef.current = pendingLive;
   const requestRef = useRef(0); // the newest request wins; older answers are ignored
   const handledKeyRef = useRef(""); // a signal set that Run Live already checked itself
 
@@ -118,6 +140,8 @@ export function AlgoProvider({ onSessionExpired, enabled, children }) {
     runningRef.current = true;
     setRunning(true);
     setGttError(""); // 2. clear previous GTT placement errors
+    setNotice("");
+    setPendingLive(null);
     requestRef.current += 1; // forget any state check that is still in flight
     setGttChecking(false);
     let stage = "scanner";
@@ -154,7 +178,25 @@ export function AlgoProvider({ onSessionExpired, enabled, children }) {
       const state = await getGttState(candidates);
       // 9. only rows the backend calls ready, with buy price, stoploss and a price
       const ready = selectReady(candidates, toMap(state.results));
-      // 10. DUMMY records for those rows. Nothing is sent to Kite.
+      // The backend decides the mode. Ask it now rather than trusting what we loaded earlier.
+      const current = await getAlgoMode();
+      setMode({ live: current.live_enabled, limits: current.limits });
+      if (current.live_enabled) {
+        // LIVE: nothing is placed yet. Show exactly what WOULD be placed and wait for the person to confirm.
+        if (!ready.length) {
+          setGttResults(mergePlacementResults(state.results, []));
+          return;
+        }
+        const pv = await previewLiveGtt(ready);
+        const base = mergePlacementResults(state.results, pv.results);
+        setGttResults(base);
+        if (pv.would_place.length) {
+          const symbols = new Set(pv.would_place.map((r) => r.symbol));
+          setPendingLive({ token: pv.token, rows: pv.would_place, orders: ready.filter((o) => symbols.has(o.symbol)), base, limits: pv.limits });
+        }
+        return;
+      }
+      // 10. SIMULATION: DUMMY records for those rows. Nothing is sent to Kite.
       const placed = ready.length ? (await runLiveGtt(ready)).results : [];
       // 11-12. show placement answers for created rows, and the state answer for every skipped row
       setGttResults(mergePlacementResults(state.results, placed));
@@ -167,6 +209,35 @@ export function AlgoProvider({ onSessionExpired, enabled, children }) {
       setRunning(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // LIVE mode only: the person confirmed the preview, so place exactly those orders (with the preview's one-time token).
+  const confirmLive = useCallback(async () => {
+    const pending = pendingRef.current;
+    if (!pending || placingRef.current) return;
+    placingRef.current = true;
+    setPlacing(true);
+    setGttError("");
+    try {
+      const res = await placeLiveGtt(pending.orders, pending.token);
+      const merged = { ...pending.base };
+      for (const r of res.results) merged[r.symbol] = r;
+      setGttResults(merged);
+    } catch (err) {
+      if (!sessionExpired(err)) setGttError(err.message);
+    } finally {
+      // The token is single-use, so success or failure, a new Run Live is needed for another go.
+      setPendingLive(null);
+      placingRef.current = false;
+      setPlacing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cancelLive = useCallback(() => {
+    if (placingRef.current) return;
+    setPendingLive(null);
+    setNotice("Cancelled. Nothing was placed.");
   }, []);
 
   const gttRows = useMemo(() => deriveRows(signals, livePriceFor, gttResults, gttChecking), [signals, livePriceFor, gttResults, gttChecking]);
@@ -184,8 +255,15 @@ export function AlgoProvider({ onSessionExpired, enabled, children }) {
       runLive,
       gttRows,
       gttError,
+      liveMode: mode.live,
+      liveLimits: mode.limits,
+      pendingLive,
+      placing,
+      confirmLive,
+      cancelLive,
+      notice,
     }),
-    [data, signals, scan.scanned, currentPriceFor, tickStatus, tokens.length, running, runLive, gttRows, gttError]
+    [data, signals, scan.scanned, currentPriceFor, tickStatus, tokens.length, running, runLive, gttRows, gttError, mode, pendingLive, placing, confirmLive, cancelLive, notice]
   );
 
   return <AlgoContext.Provider value={value}>{children}</AlgoContext.Provider>;

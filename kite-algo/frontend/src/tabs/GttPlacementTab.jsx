@@ -29,23 +29,37 @@ const price = (n) => (n === null || n === undefined ? <span className="muted-cel
 const dash = (v) => (v === null || v === undefined || v === "" ? <span className="muted-cell">—</span> : v);
 
 export default function GttPlacementTab() {
-  const { scannerStatus, scannerError, gttRows, gttError } = useAlgo();
+  const { scannerStatus, scannerError, gttRows, gttError, liveMode, notice } = useAlgo();
   const loading = scannerStatus === "loading";
 
   return (
     <div className="stack">
       <div>
-        <h2>GTT Order Placement</h2>
+        <h2>
+          GTT Order Placement {liveMode && <span className="live-badge">LIVE: real orders</span>}
+        </h2>
         <p className="muted-inline">
           Read-only status from Algo Signals · Qty 1 · Buy GTT at breakout candle low · Stoploss 5% below buy · State from Kite orders, positions,
           holdings, and GTTs
         </p>
       </div>
 
-      <div className="alert alert-warning" role="note">
-        Simulation only. "Run Live" on the Algo Signals tab saves dummy records on this computer. No order or GTT is sent to Kite, and nothing
-        real is created, changed or cancelled.
-      </div>
+      {liveMode ? (
+        <div className="alert alert-danger" role="note">
+          LIVE mode. "Run Live" on the Algo Signals tab shows the real buy GTTs it would place, and places them on Zerodha only after you
+          confirm. A stoploss is never placed automatically, so a filled buy has no stoploss until you add one yourself.
+        </div>
+      ) : (
+        <div className="alert alert-warning" role="note">
+          Simulation only. "Run Live" on the Algo Signals tab saves dummy records on this computer. No order or GTT is sent to Kite, and
+          nothing real is created, changed or cancelled.
+        </div>
+      )}
+      {notice && (
+        <div className="alert alert-info" role="status">
+          {notice}
+        </div>
+      )}
 
       {scannerError && (
         <div className="alert alert-danger" role="alert">

@@ -221,11 +221,13 @@ def _result(symbol: str, **fields) -> dict:
     return out
 
 
-def evaluate(order: dict, state: KiteState, tick_size, dummies: List[dict], today: date) -> dict:
+def evaluate(order: dict, state: KiteState, tick_size, dummies: List[dict], today: date, live_recent: Optional[List[dict]] = None) -> dict:
     """Decide what would happen to one candidate. Pure: reads inputs, writes nothing.
 
     order: {symbol, quantity, buy_price, last_price}  (a stoploss sent by the client is ignored;
            the server computes it from the buy price so it can't be tampered with)
+    dummies: active DUMMY records (simulation mode). live_recent: GTTs the live mode placed a moment ago,
+           which Kite's own list may not show yet (live mode only).
     Returns the response row (the 17 fields of the API).
     """
     symbol = str(order.get("symbol") or "").upper()
@@ -281,6 +283,9 @@ def evaluate(order: dict, state: KiteState, tick_size, dummies: List[dict], toda
     same_trigger = next((g for g in own_gtts if any(to_decimal(v) == buy for v in (g.get("condition") or {}).get("trigger_values") or [])), None)
     if same_trigger:
         return already_active(active_buy_trigger_id=str(same_trigger["id"]), message=GTT_ACTIVE)
+    just_placed = next((d for d in (live_recent or []) if d.get("symbol") == symbol), None)
+    if just_placed:
+        return already_active(active_buy_trigger_id=str(just_placed["trigger_id"]), message=GTT_ACTIVE)
     dummy = next((d for d in dummies if d.get("symbol") == symbol and d.get("status") == "active" and d.get("transaction_type") == "BUY"), None)
     if dummy:
         return already_active(buy_trigger_id=dummy["trigger_id"], message=DUMMY_ACTIVE)

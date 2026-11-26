@@ -1,9 +1,10 @@
 import { useState } from "react";
+import LiveConfirmDialog from "../components/LiveConfirmDialog.jsx";
 import { useAlgo } from "../state/AlgoContext.jsx";
 import { formatDate, formatPct, formatPrice, signClass } from "../utils/format.js";
 
 export default function AlgoSignalsTab() {
-  const { scannerStatus, scannerError, signals, scannedCount, currentPriceFor, liveStatus, running, runLive, gttError } = useAlgo();
+  const { scannerStatus, scannerError, signals, scannedCount, currentPriceFor, liveStatus, running, runLive, gttError, liveMode, pendingLive, placing, confirmLive, cancelLive, notice } = useAlgo();
   const [selected, setSelected] = useState(null);
 
   const loading = scannerStatus === "loading";
@@ -13,7 +14,10 @@ export default function AlgoSignalsTab() {
     <div className="stack">
       <div className="page-head">
         <div>
-          <h2>High-volume breakout and retest setups</h2>
+          <h2>
+            High-volume breakout and retest setups{" "}
+            {liveMode && <span className="live-badge">LIVE: real orders</span>}
+          </h2>
           <p className="muted-inline">
             A green candle on at least 3x its 20-candle average volume, closing above the 20-candle high, followed by a higher high, and now back
             within 1% of the breakout candle's midpoint. Breakouts up to 20 candles old.
@@ -24,12 +28,20 @@ export default function AlgoSignalsTab() {
             type="button"
             className="btn btn-primary"
             onClick={runLive}
-            disabled={running || loading}
-            title="Simulation only: creates dummy records on this computer. Nothing is sent to Kite."
+            disabled={running || loading || Boolean(pendingLive) || placing}
+            title={
+              liveMode
+                ? "LIVE: finds the setups and shows the real GTT orders it would place. Nothing is placed until you confirm."
+                : "Simulation only: creates dummy records on this computer. Nothing is sent to Kite."
+            }
           >
             {running ? "Running..." : "Run Live"}
           </button>
-          <span className="dummy-note">Simulation only: dummy records, nothing is sent to Kite</span>
+          {liveMode ? (
+            <span className="live-note">LIVE: real GTT buy orders, placed only after you confirm</span>
+          ) : (
+            <span className="dummy-note">Simulation only: dummy records, nothing is sent to Kite</span>
+          )}
         </div>
       </div>
 
@@ -51,6 +63,11 @@ export default function AlgoSignalsTab() {
       {gttError && (
         <div className="alert alert-danger" role="alert">
           {gttError}
+        </div>
+      )}
+      {notice && (
+        <div className="alert alert-info" role="status">
+          {notice}
         </div>
       )}
 
@@ -113,6 +130,7 @@ export default function AlgoSignalsTab() {
           </table>
         </div>
       )}
+      {pendingLive && <LiveConfirmDialog pending={pendingLive} placing={placing} onConfirm={confirmLive} onCancel={cancelLive} />}
     </div>
   );
 }

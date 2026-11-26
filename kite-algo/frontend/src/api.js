@@ -130,3 +130,18 @@ export const getGttState = (orders) =>
 // backend. No order or GTT is ever sent to Kite.
 export const runLiveGtt = (orders) =>
   request("/api/algo-orders/live-gtt", { method: "POST", body: JSON.stringify({ confirm_live: true, orders }) });
+
+// ----------------------------------------------------------- live mode (real orders) ---
+// Is real placement switched on? Only when the backend was started with ALGO_LIVE_ORDERS=1.
+export const getAlgoMode = () => request("/api/algo-orders/mode");
+
+// Live mode, read-only: exactly which GTTs would be placed now, plus a one-time token for them.
+export const previewLiveGtt = (orders) =>
+  request("/api/algo-orders/live-gtt/preview", { method: "POST", body: JSON.stringify({ orders }) });
+
+// Live mode: places REAL buy GTTs, but only the previewed ones, and only with the preview's token.
+export const placeLiveGtt = (orders, previewToken) =>
+  request("/api/algo-orders/live-gtt", {
+    method: "POST",
+    body: JSON.stringify({ confirm_live: true, orders, preview_token: previewToken }),
+  });

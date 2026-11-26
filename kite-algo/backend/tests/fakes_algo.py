@@ -24,6 +24,11 @@ class SpyKite:
     net_positions = []
     holding_rows = []
     state_error = None  # an exception to raise from get_gtts
+    allow_place_gtt = False  # live-mode tests switch this on; every OTHER mutator stays forbidden
+    placed_gtts = []  # the calls place_gtt received while allowed
+    place_gtt_errors = []  # exceptions to raise on successive place_gtt calls (None = succeed)
+    next_trigger_id = 100000
+    GTT_TYPE_SINGLE = "single"
     instrument_rows = []  # NSE equity rows
     ohlc_data = {}
     candles = {}  # symbol -> list of candle dicts for historical_data
@@ -40,6 +45,10 @@ class SpyKite:
         cls.read_calls = []
         cls.gtts, cls.day_orders, cls.net_positions, cls.holding_rows = [], [], [], []
         cls.state_error = None
+        cls.allow_place_gtt = False
+        cls.placed_gtts = []
+        cls.place_gtt_errors = []
+        cls.next_trigger_id = 100000
         cls.instrument_rows = []
         cls.ohlc_data = {}
         cls.candles = {}
@@ -124,3 +133,22 @@ def position(symbol, qty, exchange="NSE"):
 
 def holding(symbol, qty, t1=0, exchange="NSE"):
     return {"tradingsymbol": symbol, "exchange": exchange, "quantity": qty, "t1_quantity": t1}
+
+
+def _place_gtt(self, trigger_type, tradingsymbol, exchange, trigger_values, last_price, orders):
+    """Refused (and the test fails) unless a live-mode test has explicitly allowed it."""
+    if not SpyKite.allow_place_gtt:
+        SpyKite.mutating_calls.append("place_gtt")
+        raise AssertionError("FORBIDDEN broker method called: place_gtt")
+    errors = SpyKite.place_gtt_errors
+    call = {"trigger_type": trigger_type, "tradingsymbol": tradingsymbol, "exchange": exchange, "trigger_values": trigger_values, "last_price": last_price, "orders": orders}
+    SpyKite.placed_gtts.append(call)
+    if errors:
+        err = errors.pop(0)
+        if err is not None:
+            raise err
+    SpyKite.next_trigger_id += 1
+    return {"trigger_id": SpyKite.next_trigger_id}
+
+
+SpyKite.place_gtt = _place_gtt

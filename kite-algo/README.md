@@ -9,8 +9,8 @@ A small starter app: **React + Vite** frontend, **Python FastAPI** backend.
   - **User**: your name, user ID, products and exchanges.
   - **Signals**: a Nifty 100 SMA crossover scanner (see [Signals tab](#signals-tab-sma-crossover-scanner)).
   - **Backtest**: replays the same rule on past prices, with costs and benchmarks (see [Backtest tab](#backtest-tab)).
-  - **Algo Signals**: a high-volume breakout and retest scanner, with live prices (see [Algo Signals and GTT Placement](#algo-signals-and-gtt-placement-simulation-only)).
-  - **GTT Placement**: a read-only view of what a buy GTT for each signal would look like. **Simulation only: nothing is ever sent to Kite.**
+  - **Algo Signals**: a high-volume breakout and retest scanner, with live prices (see [Algo Signals and GTT Placement](#algo-signals-and-gtt-placement)).
+  - **GTT Placement**: a read-only view of what a buy GTT for each signal would look like. **Simulation only unless you switch on live mode (see [Live mode](#live-mode-real-orders-off-by-default)).**
 
 ```
 kite-algo/
@@ -216,11 +216,11 @@ Open the **Backtest** tab, pick a **Strategy**, adjust the inputs, press **Run B
 - **Edit the charge rates in `backend/charges.py`.** They are my best knowledge of Zerodha's delivery rates, not verified against your account. Compare one trade with Zerodha's brokerage calculator before relying on the numbers.
 - **It is not advice.** Don't assume either strategy has an edge; the tab exists to measure whether they do. Past results do not predict future returns.
 
-## Algo Signals and GTT Placement (simulation only)
+## Algo Signals and GTT Placement
 
-> **Nothing in these two tabs can place, change, cancel or delete a real order or GTT.** "Run Live", the `/api/algo-orders/live-gtt` URL and the `confirm_live` field keep their names for compatibility, but they only write a **dummy record** to `backend/.data/dummy_gtts.json` on your computer. `confirm_live` authorises that simulation and nothing else.
+> **By default, nothing in these two tabs can place, change, cancel or delete a real order or GTT.** "Run Live", the `/api/algo-orders/live-gtt` URL and the `confirm_live` field keep their names for compatibility, but with live mode off (the default) they only write a **dummy record** to `backend/.data/dummy_gtts.json` on your computer. `confirm_live` authorises that simulation and nothing else. Real placement exists, but only when you start the backend with `ALGO_LIVE_ORDERS=1` ([Live mode](#live-mode-real-orders-off-by-default)).
 >
-> This is enforced in code, not just by convention: every Kite client the backend uses is wrapped by `broker_guard.py`, which allows only `profile`, `get_gtts`, `orders`, `positions`, `holdings`, `instruments`, `ohlc` and `historical_data`. Anything else (for example `place_gtt` or `place_order`) raises an error, and a test scans the source for such calls.
+> This is enforced in code, not just by convention: every Kite client the backend uses is wrapped by `broker_guard.py`, which allows only `profile`, `get_gtts`, `orders`, `positions`, `holdings`, `instruments`, `ohlc` and `historical_data`. Anything else (for example `place_gtt` or `place_order`) raises an error. The only code that can call `place_gtt` is `backend/live_gtt.py` (one call site), and a test scans the source to keep it that way.
 
 ### Algo Signals
 
@@ -274,6 +274,50 @@ Dummy records look like real ones (`DUMMY-SIEMENS-000001`, BUY, CNC, NSE, LIMIT,
 - The scanner treats a stock whose 20-candle average volume is zero as having no usable average, and drops candles with missing or non-numeric values.
 - To forget every dummy record, stop the backend and delete `backend/.data/dummy_gtts.json`.
 
+## Live mode (real orders, off by default)
+
+Live mode lets **Run Live** place **real buy GTT orders** on your Zerodha account. It is off unless you turn it on, and it still asks you to confirm every batch.
+
+**Turn it on** by setting an environment variable in the same PowerShell window before you start the backend:
+
+```powershell
+$env:ALGO_LIVE_ORDERS = "1"
+uvicorn main:app --port 8000
+```
+
+Anything else (unset, `0`, `false`) keeps the simulation. Both tabs show a red **LIVE** badge when it is on.
+
+**What happens**
+
+1. **Run Live** refreshes the scanner, checks Kite's state, and asks the backend for a **preview**. Nothing is placed yet.
+2. A dialog lists exactly the orders that would be placed (symbol, qty 1, trigger = limit price, planned stoploss, last price, total value). **Cancel has the focus.** Escape or Cancel places nothing.
+3. Only **Place N real GTT orders** sends them. The backend accepts the request only with a single-use preview token (valid 5 minutes) and re-checks everything on a fresh read of your GTTs, orders, positions and holdings. A request without a valid token is refused whatever the page does.
+
+**What is placed:** one single-trigger **BUY** GTT per row: NSE, CNC, LIMIT, quantity 1, trigger price = limit price = the breakout candle's low (rounded to the tick). The same blocking rules as the simulation apply (existing GTT, day order, position or holding, recent live placement), so repeated clicks, restarts and concurrent requests cannot place the same stock twice.
+
+**What is NOT placed: the stoploss.** The stoploss is shown as "planned after buy" and nothing is sent for it. If a buy GTT fires, you hold an unprotected position until you place a stoploss yourself. The app never places one.
+
+**Limits** (backend environment variables, set before `uvicorn`):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ALGO_LIVE_MAX_ORDERS` | 5 (max 20) | orders per run |
+| `ALGO_LIVE_MAX_ORDER_VALUE` | 25000 | rupees, per order (price × qty) |
+| `ALGO_LIVE_MAX_ORDERS_PER_DAY` | 10 (max 50) | orders per calendar day (IST) |
+
+Rows over a limit are shown as "Skipped: live order limit reached (...)".
+
+**Records.** `backend/.data/live_gtts.json` remembers what was placed (it is read back as a duplicate guard) and `backend/.data/live_gtt_audit.jsonl` logs every attempt, including rejections. If the live log is corrupt the backend refuses to place anything until you fix or delete it.
+
+**Failures.** If Kite rejects one order (for example an invalid trigger), that row shows `Unable to place buy GTT: <Kite's reason>` and the run continues. If the token expires, or the network or an unknown error happens mid-run, the run **stops** and says the remaining orders were not placed, or that the last one "may have been created": check Kite's GTT list before retrying.
+
+**Before you use it with money**
+
+- The strategy is untested with real money. The backtest tab measures history; it does not promise anything.
+- I could not test against the real Kite API from the build environment. Kite's own GTT validation (for example, a buy trigger below the current price) may reject orders; the app reports what Kite says. Start with one small order and look at it on Kite web.
+- A buy GTT can fill days later at a different market regime. Review and cancel stale GTTs on Kite yourself; this app never cancels or modifies anything.
+- Check Zerodha's and SEBI's current rules for API-placed orders (for example static IP requirements) for your account.
+
 ## Customize the look
 
 - **Colors, fonts, roundness, page width:** edit the variables in `frontend/src/styles/theme.css`. Every component reads from them. For example, change `--accent` and `--accent-soft` for a new brand color.
@@ -306,5 +350,5 @@ The backtest tests check the engine against hand-worked trades (for example 8,33
 - Never commit `backend/.data/` or any `.env` file. The included `.gitignore` already excludes them.
 - The API Secret passes through the browser form once on its way to the backend (over `localhost`). Keep it out of screenshots and chat messages.
 - Never paste an access token or API secret into an AI chat or an issue.
-- This app only reads data (your profile, historical prices, live prices, and your GTTs, orders, positions and holdings). It does not place orders. The GTT Placement feature is a simulation that writes a local file (see above).
+- By default this app only reads data (your profile, historical prices, live prices, and your GTTs, orders, positions and holdings) and GTT Placement is a simulation that writes a local file. Only with `ALGO_LIVE_ORDERS=1` can it place buy GTTs, after your confirmation (see Live mode).
 - The live price websocket only accepts connections from this app's own pages, and requires you to be logged in. If you add order placement later, add confirmation steps and test with small quantities first; the Kite API has no sandbox.

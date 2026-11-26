@@ -31,6 +31,7 @@ import backtest
 import backtest_runner
 import broker_guard
 import gtt_sim
+import live_gtt
 import nifty100
 import scanner
 import scanner_data
@@ -60,14 +61,18 @@ class SessionExpired(Exception):
     """Saved token is missing, or Kite says it is no longer valid."""
 
 
-def _authed_kite():
-    """The logged-in Kite client, wrapped so it can only READ (see broker_guard.py)."""
+def _raw_kite():
     session = token_store.load_session()
     if not session:
         raise SessionExpired()
     kite = KiteConnect(api_key=session["api_key"], timeout=KITE_TIMEOUT_SECONDS)
     kite.set_access_token(session["access_token"])
-    return broker_guard.ReadOnlyKite(kite)
+    return kite
+
+
+def _authed_kite():
+    """The logged-in Kite client, wrapped so it can only READ (see broker_guard.py)."""
+    return broker_guard.ReadOnlyKite(_raw_kite())
 
 
 def _fetch_profile() -> dict:
@@ -339,14 +344,18 @@ def momentum_backtest(body: MomentumRequest):
 
 
 # ====================================================== Algo Signals data ====
-def _guarded(fn):
-    """Login check, then one call with friendly errors. Used by the read-only Algo Signals / GTT endpoints."""
+def _guarded(fn, with_writer: bool = False):
+    """Login check, then one call with friendly errors. Used by the Algo Signals / GTT endpoints.
+
+    with_writer=True also passes the live GttWriter: only the live placement endpoint asks for it.
+    """
     try:
-        kite = _authed_kite()
+        raw = _raw_kite()
     except SessionExpired:
         raise _expired_http_error()
+    kite = broker_guard.ReadOnlyKite(raw)
     try:
-        return fn(kite)
+        return fn(kite, live_gtt.GttWriter(raw)) if with_writer else fn(kite)
     except scanner.ScanBusy:
         raise HTTPException(status_code=409, detail="A scan, backtest or scanner refresh is already running. Wait for it to finish.")
     except scanner.HistoricalAccessDenied:
@@ -364,6 +373,10 @@ def _guarded(fn):
         raise HTTPException(status_code=502, detail=str(exc))
     except gtt_sim.DummyStoreError as exc:
         raise HTTPException(status_code=500, detail=f"Dummy GTT store problem: {exc}")
+    except live_gtt.LiveStoreError as exc:
+        raise HTTPException(status_code=500, detail=f"Live GTT log problem: {exc}")
+    except live_gtt.PreviewRejected as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     except kite_exc.KiteException as exc:
@@ -410,39 +423,99 @@ class GttStateRequest(BaseModel):
 class LiveGttRequest(GttStateRequest):
     # Kept for compatibility. It authorises DUMMY records only; it can never enable real placement.
     confirm_live: StrictBool = False
+    preview_token: Optional[str] = Field(None, max_length=200)  # live mode only: from /live-gtt/preview
+
+
+def _tick_sizes(kite, symbols) -> dict:
+    instruments = scanner.get_instruments(kite)
+    return {sym: instruments[sym].get("tick_size") for sym in symbols if sym in instruments}
 
 
 def _gtt_results(kite, orders: List[GttOrder], create: bool) -> dict:
-    """Read Kite's state (read-only), then check, or check-and-create dummy records."""
+    """SIMULATION mode: read Kite's state (read-only), then check, or check-and-create dummy records."""
     state = gtt_sim.KiteState.read(kite)  # if this fails nothing is created
-    instruments = scanner.get_instruments(kite)
-    wanted = {o.symbol.upper() for o in orders}
-    tick_sizes = {sym: instruments[sym].get("tick_size") for sym in wanted if sym in instruments}
+    tick_sizes = _tick_sizes(kite, {o.symbol.upper() for o in orders})
     today = scanner.now_ist().date()
     rows = [o.model_dump() for o in orders]
     results = gtt_sim.create_dummy_orders(rows, state, tick_sizes, today) if create else gtt_sim.check_orders(rows, state, tick_sizes, today)
-    return {"dummy": True, "message": "Simulation only: no order is ever sent to Kite.", "results": results}
+    return {"mode": "simulation", "dummy": True, "message": "Simulation only: no order is ever sent to Kite.", "results": results}
+
+
+def _live_state_results(kite, orders: List[GttOrder]) -> dict:
+    """LIVE mode, read-only: what would happen to each candidate right now."""
+    state = gtt_sim.KiteState.read(kite)
+    tick_sizes = _tick_sizes(kite, {o.symbol.upper() for o in orders})
+    now = scanner.now_ist()
+    results = live_gtt.check_orders([o.model_dump() for o in orders], state, tick_sizes, now.date(), now)
+    return {"mode": "live", "dummy": False, "message": "Live mode: state only. Nothing was placed.", "results": results}
 
 
 @app.post("/api/algo-orders/gtt-state")
 def gtt_state(body: GttStateRequest):
     """Read-only: would each candidate get a buy GTT? Creates nothing, sends nothing."""
+    if live_gtt.live_enabled():
+        return _guarded(lambda kite: _live_state_results(kite, body.orders))
     return _guarded(lambda kite: _gtt_results(kite, body.orders, create=False))
 
 
-@app.post("/api/algo-orders/live-gtt")
-def live_gtt(body: LiveGttRequest):
-    """Create DUMMY buy GTT records for candidates that pass every check.
+@app.get("/api/algo-orders/mode")
+def algo_orders_mode():
+    """Is real placement switched on? (It is only on when the backend was started with ALGO_LIVE_ORDERS=1.)"""
+    on = live_gtt.live_enabled()
+    return {"mode": "live" if on else "simulation", "live_enabled": on, "limits": live_gtt.limits().as_dict() if on else None}
 
-    The name and `confirm_live` are kept for compatibility. This never sends an
-    order or a GTT to Kite: it only writes a local record (backend/.data/dummy_gtts.json).
+
+@app.post("/api/algo-orders/live-gtt/preview")
+def live_gtt_preview(body: GttStateRequest):
+    """LIVE mode only, read-only: exactly which GTTs would be placed now, plus a one-time token to confirm them."""
+    if not live_gtt.live_enabled():
+        raise HTTPException(status_code=409, detail="Live mode is not enabled. (Start the backend with ALGO_LIVE_ORDERS=1 to enable it.)")
+
+    def run(kite):
+        state = gtt_sim.KiteState.read(kite)
+        tick_sizes = _tick_sizes(kite, {o.symbol.upper() for o in body.orders})
+        now = scanner.now_ist()
+        return {"mode": "live", **live_gtt.preview([o.model_dump() for o in body.orders], state, tick_sizes, now.date(), now)}
+
+    return _guarded(run)
+
+
+@app.post("/api/algo-orders/live-gtt")
+def live_gtt_endpoint(body: LiveGttRequest):
+    """Place the GTTs.
+
+    * Default (simulation): creates DUMMY records only. Nothing is sent to Kite.
+    * Live mode (backend started with ALGO_LIVE_ORDERS=1): places REAL single-leg buy GTTs, but only
+      for orders in a valid one-time preview (see /live-gtt/preview), within the hard limits.
     """
+    live = live_gtt.live_enabled()
     if body.confirm_live is not True:
         raise HTTPException(
             status_code=400,
-            detail="confirm_live must be true. (It only authorises dummy simulation: no order is ever sent to Kite.)",
+            detail=(
+                "confirm_live must be true."
+                if live
+                else "confirm_live must be true. (It only authorises dummy simulation: no order is ever sent to Kite.)"
+            ),
         )
-    return _guarded(lambda kite: _gtt_results(kite, body.orders, create=True))
+    if not live:
+        return _guarded(lambda kite: _gtt_results(kite, body.orders, create=True))
+
+    def run(kite, writer):
+        now = scanner.now_ist()
+        orders = [o.model_dump() for o in body.orders]
+        rows = live_gtt.place(
+            orders,
+            body.preview_token,
+            read_state=lambda: gtt_sim.KiteState.read(kite),
+            tick_sizes_for=lambda symbols: _tick_sizes(kite, symbols),
+            writer=writer,
+            today=now.date(),
+            now=now,
+        )
+        return {"mode": "live", "dummy": False, "message": "LIVE: real GTT orders were placed on Kite for the rows marked success.", "results": rows}
+
+    return _guarded(run, with_writer=True)
 
 
 # ================================================================ live ticks ====
