@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../api.js";
 import Tabs from "../components/Tabs.jsx";
+import { AlgoProvider } from "../state/AlgoContext.jsx";
 import { TABS } from "../tabs/index.js";
 
 export default function DashboardPage({ user, onLoggedOut }) {
   const navigate = useNavigate();
   const [activeId, setActiveId] = useState(TABS[0].id);
   const [loggingOut, setLoggingOut] = useState(false);
+  // Load the Algo Signals data the first time one of its two tabs is opened, and keep it afterwards.
+  const algoOpened = useRef(false);
+  if (activeId === "algo-signals" || activeId === "gtt-placement") algoOpened.current = true;
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -43,6 +47,7 @@ export default function DashboardPage({ user, onLoggedOut }) {
       </header>
 
       <main className="content">
+        <AlgoProvider onSessionExpired={handleSessionExpired} enabled={algoOpened.current}>
         <Tabs tabs={TABS} activeId={activeId} onChange={setActiveId} />
         {/* Every tab stays mounted and the inactive ones are just hidden, so
             switching tabs never throws away results (e.g. a finished scan). */}
@@ -58,6 +63,7 @@ export default function DashboardPage({ user, onLoggedOut }) {
             <TabComponent onSessionExpired={handleSessionExpired} />
           </section>
         ))}
+        </AlgoProvider>
       </main>
     </div>
   );

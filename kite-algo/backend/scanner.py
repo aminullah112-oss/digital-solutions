@@ -56,13 +56,13 @@ def reset_caches() -> None:
 
 # ------------------------------------------------------------------ Kite ----
 def get_instruments(kite) -> Dict[str, dict]:
-    """{tradingsymbol: {token, name}} for NSE equities. Cached for 6 hours."""
+    """{tradingsymbol: {token, name, tick_size}} for NSE equities. Cached for 6 hours."""
     cached = _instruments["map"]
     if cached and _now() - float(_instruments["at"]) < INSTRUMENTS_TTL_SECONDS:
         return cached  # type: ignore[return-value]
     rows = kite.instruments("NSE")
     mapping = {
-        row["tradingsymbol"]: {"token": row["instrument_token"], "name": row.get("name")}
+        row["tradingsymbol"]: {"token": row["instrument_token"], "name": row.get("name"), "tick_size": row.get("tick_size")}
         for row in rows
         if row.get("segment") == "NSE" and row.get("instrument_type") == "EQ"
     }

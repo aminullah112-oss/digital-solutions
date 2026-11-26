@@ -13,20 +13,28 @@ Security rules this file follows:
     expose it to a network.
 """
 
+import asyncio
+import json
 import os
+from decimal import Decimal
+from typing import List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from kiteconnect import KiteConnect
 from kiteconnect import exceptions as kite_exc
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, StrictBool, model_validator
 
 import backtest
 import backtest_runner
+import broker_guard
+import gtt_sim
 import nifty100
 import scanner
+import scanner_data
+import ticks
 import token_store
 
 app = FastAPI(title="Kite Connect Login API")
@@ -36,9 +44,10 @@ app = FastAPI(title="Kite Connect Login API")
 _origins = os.environ.get(
     "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
 ).split(",")
+ALLOWED_ORIGINS = [o.strip() for o in _origins if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _origins if o.strip()],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
@@ -51,13 +60,14 @@ class SessionExpired(Exception):
     """Saved token is missing, or Kite says it is no longer valid."""
 
 
-def _authed_kite() -> KiteConnect:
+def _authed_kite():
+    """The logged-in Kite client, wrapped so it can only READ (see broker_guard.py)."""
     session = token_store.load_session()
     if not session:
         raise SessionExpired()
     kite = KiteConnect(api_key=session["api_key"], timeout=KITE_TIMEOUT_SECONDS)
     kite.set_access_token(session["access_token"])
-    return kite
+    return broker_guard.ReadOnlyKite(kite)
 
 
 def _fetch_profile() -> dict:
@@ -326,3 +336,167 @@ def momentum_backtest(body: MomentumRequest):
     downloads more and takes longer.
     """
     return _run_backtest(lambda kite: backtest_runner.run_momentum_backtest(kite, **body.model_dump()))
+
+
+# ====================================================== Algo Signals data ====
+def _guarded(fn):
+    """Login check, then one call with friendly errors. Used by the read-only Algo Signals / GTT endpoints."""
+    try:
+        kite = _authed_kite()
+    except SessionExpired:
+        raise _expired_http_error()
+    try:
+        return fn(kite)
+    except scanner.ScanBusy:
+        raise HTTPException(status_code=409, detail="A scan, backtest or scanner refresh is already running. Wait for it to finish.")
+    except scanner.HistoricalAccessDenied:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Kite refused the historical data request. Your Kite Connect app probably "
+                "doesn't include the Historical Data add-on. Check your plan on developers.kite.trade."
+            ),
+        )
+    except kite_exc.TokenException:
+        token_store.clear_session()
+        raise _expired_http_error()
+    except nifty100.ConstituentsError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    except gtt_sim.DummyStoreError as exc:
+        raise HTTPException(status_code=500, detail=f"Dummy GTT store problem: {exc}")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except kite_exc.KiteException as exc:
+        raise HTTPException(status_code=502, detail=f"Kite API error: {exc}")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Request failed. Check your internet connection and try again.")
+
+
+@app.get("/api/scanner-data")
+def get_scanner_data(days: int = Query(scanner_data.DEFAULT_DAYS, ge=scanner_data.MIN_DAYS, le=scanner_data.MAX_DAYS)):
+    """Nifty 100 daily candles (with volume) for the Algo Signals scanner. Cached for 5 minutes."""
+    return _guarded(lambda kite: scanner_data.get_scanner_data(kite, days=days))
+
+
+@app.post("/api/scanner-data/refresh")
+def refresh_scanner_data(days: int = Query(scanner_data.DEFAULT_DAYS, ge=scanner_data.MIN_DAYS, le=scanner_data.MAX_DAYS)):
+    """Rebuild the scanner response and re-download the newest candles."""
+    return _guarded(lambda kite: scanner_data.get_scanner_data(kite, days=days, force=True))
+
+
+@app.get("/api/ohlc")
+def get_ohlc_snapshot(symbols: str = Query(..., min_length=1, max_length=4000, description="Comma-separated NSE symbols")):
+    """Latest price snapshot (last_price and OHLC) for NSE symbols. Read-only."""
+    return _guarded(lambda kite: {"prices": scanner_data.ohlc_snapshot(kite, symbols.split(","))})
+
+
+# ================================================== GTT placement (DUMMY) ====
+class GttOrder(BaseModel):
+    """One GTT candidate. Prices are Decimals so rounding is exact."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    symbol: str = Field(pattern=r"^[A-Za-z0-9&\-]{1,20}$")
+    quantity: int = 1
+    buy_price: Optional[Decimal] = None
+    stoploss: Optional[Decimal] = None  # accepted for compatibility; the server computes its own (buy x 0.95)
+    last_price: Optional[Decimal] = None
+
+
+class GttStateRequest(BaseModel):
+    orders: List[GttOrder] = Field(max_length=100)
+
+
+class LiveGttRequest(GttStateRequest):
+    # Kept for compatibility. It authorises DUMMY records only; it can never enable real placement.
+    confirm_live: StrictBool = False
+
+
+def _gtt_results(kite, orders: List[GttOrder], create: bool) -> dict:
+    """Read Kite's state (read-only), then check, or check-and-create dummy records."""
+    state = gtt_sim.KiteState.read(kite)  # if this fails nothing is created
+    instruments = scanner.get_instruments(kite)
+    wanted = {o.symbol.upper() for o in orders}
+    tick_sizes = {sym: instruments[sym].get("tick_size") for sym in wanted if sym in instruments}
+    today = scanner.now_ist().date()
+    rows = [o.model_dump() for o in orders]
+    results = gtt_sim.create_dummy_orders(rows, state, tick_sizes, today) if create else gtt_sim.check_orders(rows, state, tick_sizes, today)
+    return {"dummy": True, "message": "Simulation only: no order is ever sent to Kite.", "results": results}
+
+
+@app.post("/api/algo-orders/gtt-state")
+def gtt_state(body: GttStateRequest):
+    """Read-only: would each candidate get a buy GTT? Creates nothing, sends nothing."""
+    return _guarded(lambda kite: _gtt_results(kite, body.orders, create=False))
+
+
+@app.post("/api/algo-orders/live-gtt")
+def live_gtt(body: LiveGttRequest):
+    """Create DUMMY buy GTT records for candidates that pass every check.
+
+    The name and `confirm_live` are kept for compatibility. This never sends an
+    order or a GTT to Kite: it only writes a local record (backend/.data/dummy_gtts.json).
+    """
+    if body.confirm_live is not True:
+        raise HTTPException(
+            status_code=400,
+            detail="confirm_live must be true. (It only authorises dummy simulation: no order is ever sent to Kite.)",
+        )
+    return _guarded(lambda kite: _gtt_results(kite, body.orders, create=True))
+
+
+# ================================================================ live ticks ====
+@app.websocket("/ws/ticks")
+async def ws_ticks(websocket: WebSocket):
+    """Live prices for the instrument tokens in ?tokens=1,2,3 (&mode=full|quote|ltp). Read-only."""
+    # A web page on another site must not be able to open this stream.
+    origin = websocket.headers.get("origin")
+    if origin and origin not in ALLOWED_ORIGINS:
+        await websocket.close(code=1008)
+        return
+    session = token_store.load_session()
+    if not session:
+        await websocket.close(code=4401)  # not logged in
+        return
+
+    await websocket.accept()
+    mode = websocket.query_params.get("mode", "full")
+    try:
+        if mode not in ticks.VALID_MODES:
+            raise ValueError("mode must be ltp, quote or full.")
+        tokens = ticks.parse_tokens(websocket.query_params.get("tokens", ""))
+    except ValueError as exc:
+        await websocket.send_text(json.dumps({"type": "error", "message": str(exc)}))
+        await websocket.close(code=1008)
+        return
+
+    hub = ticks.get_hub()
+    client = ticks.Client(asyncio.get_running_loop(), set(tokens), mode)
+    try:
+        hub.register(client, session["api_key"], session["access_token"])
+    except Exception:
+        await websocket.send_text(json.dumps({"type": "error", "message": "Could not start the live price connection."}))
+        await websocket.close(code=1011)
+        return
+    try:
+        await websocket.send_text(hub.status_message(client))
+
+        async def pump():
+            while True:
+                await websocket.send_text(await client.queue.get())
+
+        async def watch():
+            try:
+                while True:
+                    await websocket.receive_text()  # the browser sends nothing; this notices when it leaves
+            except WebSocketDisconnect:
+                pass
+
+        tasks = {asyncio.create_task(pump()), asyncio.create_task(watch())}
+        _, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for t in pending:
+            t.cancel()
+    except Exception:
+        pass
+    finally:
+        hub.unregister(client)

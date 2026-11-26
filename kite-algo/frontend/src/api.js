@@ -111,3 +111,22 @@ export const runMomentum = (v) =>
       keep_rank: v.keepRank,
     }),
   });
+
+// ---------------------------------------------------------------- Algo Signals ---
+export const getScannerData = () => request("/api/scanner-data");
+
+// Rebuilds the backend's scanner cache and re-downloads the newest candles.
+export const refreshScannerData = () => request("/api/scanner-data/refresh", { method: "POST" });
+
+// Latest price snapshot: { prices: { SYMBOL: { last_price, ... } } }
+export const getOhlcSnapshot = (symbols) => request(`/api/ohlc?symbols=${encodeURIComponent(symbols.join(","))}`);
+
+// ---------------------------------------------------------------- GTT (DUMMY) ---
+// Read-only: would each candidate get a buy GTT? Creates nothing.
+export const getGttState = (orders) =>
+  request("/api/algo-orders/gtt-state", { method: "POST", body: JSON.stringify({ orders }) });
+
+// The name and `confirm_live` are kept for compatibility. This only creates DUMMY records on the
+// backend. No order or GTT is ever sent to Kite.
+export const runLiveGtt = (orders) =>
+  request("/api/algo-orders/live-gtt", { method: "POST", body: JSON.stringify({ confirm_live: true, orders }) });

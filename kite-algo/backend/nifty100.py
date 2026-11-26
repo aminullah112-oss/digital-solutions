@@ -46,7 +46,7 @@ def _cache_path() -> Path:
     return Path(os.environ.get("NIFTY100_CACHE_FILE") or DEFAULT_CACHE_PATH)
 
 
-def parse_csv(text: str) -> List[dict]:
+def parse_csv(text: str, min_rows: int = MIN_EXPECTED_ROWS) -> List[dict]:
     """Turn the CSV text into [{symbol, company, industry}, ...]."""
     reader = csv.DictReader(io.StringIO(text.lstrip("﻿")))
     fields = {(f or "").strip() for f in (reader.fieldnames or [])}
@@ -63,8 +63,8 @@ def parse_csv(text: str) -> List[dict]:
         rows.append(
             {"symbol": symbol, "company": row.get("Company Name", ""), "industry": row.get("Industry", "")}
         )
-    if len(rows) < MIN_EXPECTED_ROWS:
-        raise ConstituentsError(f"Only {len(rows)} rows found; expected about 100.")
+    if len(rows) < min_rows:
+        raise ConstituentsError(f"Only {len(rows)} rows found; expected at least {min_rows}.")
     return rows
 
 
@@ -116,3 +116,33 @@ def load_constituents() -> Tuple[List[dict], dict]:
         raise ConstituentsError(
             "Could not download the Nifty 100 list (" + "; ".join(problems) + "). Check your internet connection."
         )
+
+
+# ----------------------------------------------------- other index lists ----
+_OTHER_URLS = {
+    "nifty50": (
+        "https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv",
+        "https://nsearchives.nseindia.com/content/indices/ind_nifty50list.csv",
+    ),
+}
+_other_memory: Dict[str, dict] = {}
+
+
+def load_index_symbols(index: str, min_rows: int = 40):
+    """Symbols in another NSE index (for example "nifty50"), or None if the list can't be loaded.
+
+    Only used to flag stocks, so a failure is not an error. Cached for 24 hours.
+    """
+    with _lock:
+        hit = _other_memory.get(index)
+        if hit and time.time() - hit["at"] < CACHE_TTL_SECONDS:
+            return hit["symbols"]
+        for url in _OTHER_URLS.get(index, ()):
+            try:
+                rows = parse_csv(_download(url), min_rows=min_rows)
+            except Exception:
+                continue
+            symbols = {r["symbol"] for r in rows}
+            _other_memory[index] = {"at": time.time(), "symbols": symbols}
+            return symbols
+        return hit["symbols"] if hit else None

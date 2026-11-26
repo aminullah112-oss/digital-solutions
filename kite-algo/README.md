@@ -9,6 +9,8 @@ A small starter app: **React + Vite** frontend, **Python FastAPI** backend.
   - **User**: your name, user ID, products and exchanges.
   - **Signals**: a Nifty 100 SMA crossover scanner (see [Signals tab](#signals-tab-sma-crossover-scanner)).
   - **Backtest**: replays the same rule on past prices, with costs and benchmarks (see [Backtest tab](#backtest-tab)).
+  - **Algo Signals**: a high-volume breakout and retest scanner, with live prices (see [Algo Signals and GTT Placement](#algo-signals-and-gtt-placement-simulation-only)).
+  - **GTT Placement**: a read-only view of what a buy GTT for each signal would look like. **Simulation only: nothing is ever sent to Kite.**
 
 ```
 kite-algo/
@@ -22,6 +24,10 @@ kite-algo/
 │   ├── charges.py      Zerodha delivery charges: edit the rates here
 │   ├── backtest.py     the backtest engine (pure, easy to read)
 │   ├── backtest_runner.py  gets the data for a backtest and calls the engine
+│   ├── scanner_data.py  Nifty 100 candles for the Algo Signals scanner, price snapshot
+│   ├── ticks.py        live price websocket (relays Kite's ticker to the browser)
+│   ├── gtt_sim.py      the GTT SIMULATION: checks Kite state, writes dummy records
+│   ├── broker_guard.py makes every Kite client read-only
 │   └── tests/          pytest tests (no real credentials needed)
 └── frontend/           React + Vite
     └── src/
@@ -30,6 +36,10 @@ kite-algo/
         ├── tabs/UserTab.jsx   the User tab
         ├── tabs/SignalsTab.jsx  the Signals tab
         ├── tabs/BacktestTab.jsx the Backtest tab
+        ├── tabs/AlgoSignalsTab.jsx, GttPlacementTab.jsx   the two Algo tabs
+        ├── lib/breakoutScanner.js  the scanner (pure functions, unit-tested)
+        ├── lib/gtt.js              GTT candidate and row helpers (pure, unit-tested)
+        ├── state/AlgoContext.jsx   state shared by both Algo tabs (signals, prices, GTT rows)
         ├── components/EquityChart.jsx  the equity curve (plain SVG)
         └── pages/             Login and Dashboard pages
 ```
@@ -109,6 +119,12 @@ The **API Secret is never saved.** It is only used once, in memory, to create th
 | POST | `/api/signals/sma-crossover` | `{short_sma, long_sma, lookback_days, max_stocks}` → ranked crossover signals. Slow (see below). |
 | POST | `/api/backtest/sma-crossover` | `{short_sma, long_sma, years, max_stocks, starting_capital, max_positions, stop_loss_pct, slippage_pct, include_charges, regime_filter, regime_sma, holdout_pct}` → trades, equity curve, metrics, benchmarks, held-out segments. Slow the first time. |
 | POST | `/api/backtest/momentum` | `{lookback_days, skip_days, top_n, keep_rank, years, max_stocks, starting_capital, stop_loss_pct, slippage_pct, include_charges, regime_filter, regime_sma, holdout_pct}` → same shape. Needs about a year more history, so the first run is slower. |
+| GET | `/api/scanner-data` | Nifty 100 daily candles with volume for the Algo Signals scanner. Cached for 5 minutes. |
+| POST | `/api/scanner-data/refresh` | Rebuild that cache and re-download the newest candles. |
+| GET | `/api/ohlc?symbols=A,B` | Latest price snapshot (`last_price`) for NSE symbols. Read-only. |
+| WS | `/ws/ticks?tokens=1,2&mode=full` | Live prices for those instrument tokens, relayed from Kite. Read-only. |
+| POST | `/api/algo-orders/gtt-state` | Read-only: would each candidate get a buy GTT? Creates nothing. |
+| POST | `/api/algo-orders/live-gtt` | Creates **dummy** buy GTT records only. Needs `confirm_live: true`. Never sends anything to Kite. |
 | GET | `/api/health` | Liveness check. |
 
 Interactive docs: <http://127.0.0.1:8000/docs>.
@@ -200,6 +216,64 @@ Open the **Backtest** tab, pick a **Strategy**, adjust the inputs, press **Run B
 - **Edit the charge rates in `backend/charges.py`.** They are my best knowledge of Zerodha's delivery rates, not verified against your account. Compare one trade with Zerodha's brokerage calculator before relying on the numbers.
 - **It is not advice.** Don't assume either strategy has an edge; the tab exists to measure whether they do. Past results do not predict future returns.
 
+## Algo Signals and GTT Placement (simulation only)
+
+> **Nothing in these two tabs can place, change, cancel or delete a real order or GTT.** "Run Live", the `/api/algo-orders/live-gtt` URL and the `confirm_live` field keep their names for compatibility, but they only write a **dummy record** to `backend/.data/dummy_gtts.json` on your computer. `confirm_live` authorises that simulation and nothing else.
+>
+> This is enforced in code, not just by convention: every Kite client the backend uses is wrapped by `broker_guard.py`, which allows only `profile`, `get_gtts`, `orders`, `positions`, `holdings`, `instruments`, `ohlc` and `historical_data`. Anything else (for example `place_gtt` or `place_order`) raises an error, and a test scans the source for such calls.
+
+### Algo Signals
+
+A scanner for **high-volume breakouts that are now being retested**. It runs in your browser on the candles from `/api/scanner-data`, with these fixed parameters: volume lookback 20 candles, volume multiplier 3, price lookback 20 candles, maximum breakout age 20 candles, midpoint tolerance 1%.
+
+A stock needs at least 25 daily candles. Starting at the second-last candle and walking back, a candle is a breakout when:
+
+1. its close is above its open,
+2. its volume is at least 3 times the average volume of the 20 candles before it,
+3. its close is above the highest high of the 20 candles before it,
+
+and afterwards price made a **higher high than the breakout candle's high**. The setup is accepted when the latest close is within **1% of the breakout candle's midpoint** (average of its high and low) and the breakout is at most 20 candles old. Each stock shows at most one setup, its most recent. Results are sorted by age, then by distance from the midpoint, and **the order stays fixed until the scanner runs again**, even while prices move.
+
+The table shows Rank, Symbol, Current Price, Breakout Date, Age, Breakout Vol (like `2.50x`), Retest Distance, Peak Gains and Retracement. **Current Price** is the live websocket price, else the price snapshot, else the latest candle's close. Click a row to highlight it.
+
+**Live prices.** The browser opens one websocket (`/ws/ticks`) for only the stocks currently shown. The backend relays Kite's ticker and keeps its subscriptions in line with what is shown. Both Algo tabs share that one connection. The backend refuses websocket connections from other websites (origin check) and never sends the access token to the browser.
+
+**The data loads when you first open one of the two tabs**, not at login, so it doesn't compete with Signals and Backtest for Kite's rate limit.
+
+### Run Live and GTT Placement
+
+**GTT Placement** is read-only: it has no buttons. Each row is a current Algo Signal, with:
+
+| What | Rule |
+|---|---|
+| Quantity | 1 |
+| Buy | the breakout candle's **low** (never the live price), rounded to the instrument's tick size |
+| Stoploss | buy × 0.95, rounded to the tick size. No ATR. It is only ever **planned after buy**: no stoploss order, real or dummy, is created before a buy exists, and no buy is ever simulated as filled |
+| State | read from Kite: GTTs, today's orders, positions and holdings |
+
+Tick sizes come from Kite's instrument list, and all price arithmetic uses exact decimals (no floating-point rounding). A stock whose tick size is unknown is shown as invalid, never guessed.
+
+**Run Live** (on the Algo Signals tab) refreshes the scanner data, reruns the scanner, loads a price snapshot, builds the candidates from the fresh signals, checks Kite's state, and then asks the backend to create dummy records for the rows that are clear. A row is **blocked** (no dummy record) when any of these holds, checked in this order:
+
+1. an active buy GTT for the stock already exists (or an active GTT with the same buy trigger),
+2. an active dummy GTT already exists for it,
+3. a BUY delivery order (CNC) placed today on NSE exists that is not cancelled or rejected,
+4. you hold a position or holding in it (settled or T+1 quantity above zero).
+
+A row with no buy price or no live/snapshot price is not created either ("Buy price is not available for this row.", "Waiting for LTP."). **The backend repeats every check itself** under a lock, on a fresh read of the dummy file, so repeated clicks, repeated requests, concurrent requests and backend restarts can never create a second dummy record for the same stock. The server also recomputes the stoploss from the buy price, so a tampered request can't change it.
+
+Dummy records look like real ones (`DUMMY-SIEMENS-000001`, BUY, CNC, NSE, LIMIT, qty 1, trigger price = order price) but are stored only on your computer and never change your Kite account. A stock that leaves Algo Signals leaves the GTT table, while its dummy record stays until you delete the file.
+
+**Things to know**
+
+- **Run one backend process** (the command in this README does). The duplicate lock lives inside the process.
+- **Day orders are judged by date in IST.** Kite stamps orders in IST. A time-zone-aware time is converted to IST.
+- **If Kite's state can't be read, nothing is created.** The error is shown above both tables.
+- **The first Algo Signals load takes about 40 seconds** if the candles aren't saved yet (100 stocks at Kite's 3 requests per second). After a code update the saved candles are in a new format (they now include volume), so the first run after updating downloads them once more.
+- **Live prices need `uvicorn[standard]`** (the install in this README includes it), which provides the websocket library.
+- The scanner treats a stock whose 20-candle average volume is zero as having no usable average, and drops candles with missing or non-numeric values.
+- To forget every dummy record, stop the backend and delete `backend/.data/dummy_gtts.json`.
+
 ## Customize the look
 
 - **Colors, fonts, roundness, page width:** edit the variables in `frontend/src/styles/theme.css`. Every component reads from them. For example, change `--accent` and `--accent-soft` for a new brand color.
@@ -221,6 +295,8 @@ pytest
 
 The tests use a fake Kite client and a saved copy of the NSE CSV, so they need no credentials or internet. They check that the token and secret never appear in a response, that the session survives a restart, that expired tokens are cleared, the SMA and crossover maths (with hand-worked examples), ranking, symbol mapping, rate-limit spacing, caching, and each error path of the scanner.
 
+The frontend has unit tests for the scanner and the GTT helpers (`cd frontend && npm test`, using Node's built-in test runner). The scanner tests build small candle series by hand and check each rule on both sides of its boundary (exactly 3x volume, a higher high that only equals the breakout high, exactly 1% from the midpoint, a breakout 20 versus 21 candles old, and so on). The GTT tests check the exact example from the design (buy 3903.3, stoploss 3708.1 on a 0.1 tick), tick-size rounding in exact decimals, every blocking rule, duplicate prevention under concurrent requests, backend restarts, failed writes and a corrupt store, and that no order-changing Kite method is ever called: a fake Kite fails the test if one is.
+
 The backtest tests check the engine against hand-worked trades (for example 8,333 shares bought at an open of 12 and sold at 8 lose exactly ₹33,332), gap-through-stop fills, charges, slot limits, benchmarks, the candle cache, and invariants that must hold for any run: total profit equals the sum of trade profits, and never more positions are open than slots. The strategy tests check momentum rankings, the skip window, the buffer, the regime filter (re-derived independently from the index prices) and the held-out split against hand-worked numbers.
 
 ## Security notes (read these)
@@ -230,4 +306,5 @@ The backtest tests check the engine against hand-worked trades (for example 8,33
 - Never commit `backend/.data/` or any `.env` file. The included `.gitignore` already excludes them.
 - The API Secret passes through the browser form once on its way to the backend (over `localhost`). Keep it out of screenshots and chat messages.
 - Never paste an access token or API secret into an AI chat or an issue.
-- This app only reads data (your profile and historical prices). It does not place orders. If you add order placement later, add confirmation steps and test with small quantities first; the Kite API has no sandbox.
+- This app only reads data (your profile, historical prices, live prices, and your GTTs, orders, positions and holdings). It does not place orders. The GTT Placement feature is a simulation that writes a local file (see above).
+- The live price websocket only accepts connections from this app's own pages, and requires you to be logged in. If you add order placement later, add confirmation steps and test with small quantities first; the Kite API has no sandbox.

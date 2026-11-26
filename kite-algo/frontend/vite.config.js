@@ -10,6 +10,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": "http://127.0.0.1:8000",
+      // live ticks: the browser talks to the dev server, which forwards the websocket to the backend
+      "/ws": { target: "ws://127.0.0.1:8000", ws: true },
     },
   },
 });

@@ -1,6 +1,8 @@
 import UserTab from "./UserTab.jsx";
 import SignalsTab from "./SignalsTab.jsx";
 import BacktestTab from "./BacktestTab.jsx";
+import AlgoSignalsTab from "./AlgoSignalsTab.jsx";
+import GttPlacementTab from "./GttPlacementTab.jsx";
 
 // The dashboard builds its tab bar from this list.
 // To add a tab: create a component in this folder, then add one line here.
@@ -14,4 +16,6 @@ export const TABS = [
   { id: "user", label: "User", component: UserTab },
   { id: "signals", label: "Signals", component: SignalsTab },
   { id: "backtest", label: "Backtest", component: BacktestTab },
+  { id: "algo-signals", label: "Algo Signals", component: AlgoSignalsTab },
+  { id: "gtt-placement", label: "GTT Placement", component: GttPlacementTab },
 ];

@@ -345,7 +345,8 @@ def simulate(
             i = data[sym]["pos"].get(day)
             if i is None:
                 continue
-            _, o, _, low, _ = data[sym]["rows"][i]
+            row = data[sym]["rows"][i]
+            o, low = row[1], row[3]
             stop = held[sym]["stop"]
             if stop is not None and low <= stop:
                 sell(sym, day, o if o <= stop else stop, "stop-loss")
@@ -362,7 +363,8 @@ def simulate(
             if len(held) >= max_positions:
                 skipped["no_free_slot"] += 1
                 continue
-            _, o, _, low, _ = data[sym]["rows"][i]
+            row = data[sym]["rows"][i]
+            o, low = row[1], row[3]
             entry_price = o * (1 + slip)
             # Size the position so that shares + charges fit inside one slot (and inside our cash).
             budget = min(position_size, cash)

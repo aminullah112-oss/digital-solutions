@@ -24,7 +24,8 @@ from typing import Dict, List, Optional, Tuple
 
 import scanner
 
-Row = Tuple[str, float, float, float, float]  # (date, open, high, low, close)
+Row = Tuple[str, float, float, float, float, float]  # (date, open, high, low, close, volume)
+CACHE_VERSION = 2  # version 1 files had no volume; they are ignored and downloaded again
 
 DEFAULT_DIR = Path(__file__).resolve().parent / ".data" / "candles"
 MAX_DAYS_PER_REQUEST = 1995  # Kite returns at most 2000 days of daily candles per request
@@ -55,6 +56,8 @@ def _load(token: int) -> Optional[dict]:
         return _memory[token]
     try:
         data = json.loads((_dir() / f"{token}.json").read_text(encoding="utf-8"))
+        if data.get("v") != CACHE_VERSION:
+            return None
         entry = {
             "from": data["from"],
             "to": data["to"],
@@ -68,6 +71,7 @@ def _load(token: int) -> Optional[dict]:
 
 
 def _save(token: int, entry: dict) -> None:
+    entry = {**entry, "v": CACHE_VERSION}
     _memory[token] = entry
     try:
         directory = _dir()
@@ -95,7 +99,7 @@ def _fetch(kite, token: int, start: date, end: date) -> List[Row]:
         )
         for c in raw:
             day = c["date"].date().isoformat()
-            rows[day] = (day, float(c["open"]), float(c["high"]), float(c["low"]), float(c["close"]))
+            rows[day] = (day, float(c["open"]), float(c["high"]), float(c["low"]), float(c["close"]), float(c.get("volume") or 0))
         chunk_start = chunk_end + timedelta(days=1)
     return [rows[k] for k in sorted(rows)]
 
@@ -110,8 +114,11 @@ def _is_fresh(entry: dict, end: date, now: datetime) -> bool:
     return (now - fetched).total_seconds() < PARTIAL_TTL_SECONDS
 
 
-def get_ohlc(kite, token: int, from_date: date, to_date: date) -> List[Row]:
-    """Daily candles from `from_date` up to `to_date`, oldest first. Uses and updates the disk cache."""
+def get_ohlc(kite, token: int, from_date: date, to_date: date, force: bool = False) -> List[Row]:
+    """Daily candles from `from_date` up to `to_date`, oldest first. Uses and updates the disk cache.
+
+    force=True always re-downloads the recent tail, even when the saved data looks fresh.
+    """
     now = scanner.now_ist()
     end = _last_weekday(min(to_date, now.date()))
     from_iso = from_date.isoformat()
@@ -133,7 +140,7 @@ def get_ohlc(kite, token: int, from_date: date, to_date: date) -> List[Row]:
         saved_from, changed = from_iso, True
 
     # Newest candle missing or still changing? Download only the recent tail.
-    if not _is_fresh(cached, end, now):
+    if force or not _is_fresh(cached, end, now):
         since = max(date.fromisoformat(saved_from), date.fromisoformat(saved_to) - timedelta(days=REFRESH_OVERLAP_DAYS))
         merged.update({r[0]: r for r in _fetch(kite, token, since, end)})
         saved_to, fetched_at, changed = end.isoformat(), stamp, True

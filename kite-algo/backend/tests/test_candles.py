@@ -160,8 +160,8 @@ def test_each_instrument_has_its_own_cache():
 
 def test_rows_have_open_high_low_close():
     rows = candles.get_ohlc(FakeKite(), 5, date(2026, 11, 2), date(2026, 11, 3))
-    day, o, h, low, c = rows[0]
-    assert (h, low, c) == (o + 1, o - 1, o + 0.5)
+    day, o, h, low, c, volume = rows[0]
+    assert (h, low, c, volume) == (o + 1, o - 1, o + 0.5, 1.0)
 
 
 def test_suspect_moves_flags_a_halving_but_not_normal_days():
@@ -170,3 +170,22 @@ def test_suspect_moves_flags_a_halving_but_not_normal_days():
     assert candles.suspect_moves(rows[:2]) == []
     assert candles.suspect_moves([("a", 0, 0, 0, 100.0), ("b", 0, 0, 0, 134.0)]) == []  # +34% is under the line
     assert candles.suspect_moves([("a", 0, 0, 0, 100.0), ("b", 0, 0, 0, 136.0)])[0]["change_pct"] == 36.0
+
+
+def test_cache_files_without_volume_are_ignored_and_downloaded_again(tmp_path):
+    (tmp_path / "c").mkdir()
+    old = {"from": "2026-11-02", "to": "2026-11-26", "fetched_at": "2026-11-26T20:00:00+05:30", "rows": [["2026-11-02", 1, 2, 0.5, 1.5]]}
+    (tmp_path / "c" / "5.json").write_text(__import__("json").dumps(old))  # no "v": a version 1 file
+    kite = FakeKite()
+    rows = candles.get_ohlc(kite, 5, date(2026, 11, 2), date(2026, 11, 26))
+    assert len(kite.calls) == 1 and len(rows[0]) == 6
+
+
+def test_force_downloads_the_tail_even_when_the_saved_data_is_fresh():
+    kite = FakeKite()
+    candles.get_ohlc(kite, 5, date(2026, 11, 2), date(2026, 11, 26))
+    candles.get_ohlc(kite, 5, date(2026, 11, 2), date(2026, 11, 26))
+    assert len(kite.calls) == 1  # fresh: no request
+    rows = candles.get_ohlc(kite, 5, date(2026, 11, 2), date(2026, 11, 26), force=True)
+    assert len(kite.calls) == 2 and kite.calls[1] == (date(2026, 11, 19), date(2026, 11, 26))
+    assert len(rows) == 19
